@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Soccer Picks</title>
+
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 36px;
+    }
+
+    .controls {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    select,
+    input[type="date"],
+    button {
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: none;
+      margin: 6px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    select,
+    input[type="date"] {
+      background: #1e293b;
+      color: white;
+      border: 1px solid #334155;
+    }
+
+    button {
+      background: #22c55e;
+      color: white;
+      cursor: pointer;
+    }
+
+    .game {
+      background: #1e293b;
+      padding: 16px;
+      margin: 14px 0;
+      border-radius: 12px;
+    }
+
+    .teams {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .league {
+      font-size: 13px;
+      opacity: 0.75;
+      margin-bottom: 8px;
+    }
+
+    .pick {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      line-height: 1.6;
+    }
+
+    .alta { background: #16a34a; }
+    .media { background: #f59e0b; }
+    .baja { background: #dc2626; }
+    .muy { background: #991b1b; }
+
+    .bet {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      background: #052e16;
+      color: #22c55e;
+    }
+
+    .nobet {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      background: #450a0a;
+      color: #f87171;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>⚽ SOCCER PICKS PRO</h1>
+
+<div class="controls">
+  <select id="leagueSelect">
+    <option value="epl">Premier League</option>
+    <option value="laliga">La Liga</option>
+    <option value="seriea">Serie A</option>
+    <option value="bundesliga">Bundesliga</option>
+    <option value="ligue1">Ligue 1</option>
+    <option value="eredivisie">Eredivisie</option>
+    <option value="portugal">Primeira Liga</option>
+  </select>
+
+  <input type="date" id="dateSelect">
+
+  <button type="button" onclick="loadGames()">Actualizar</button>
+</div>
+
+<div id="games"></div>
+
+<script>
+async function loadGames() {
+  const league = document.getElementById('leagueSelect').value;
+  const date = document.getElementById('dateSelect').value;
+
+  const container = document.getElementById('games');
+  container.innerHTML = '<div class="game">Cargando partidos...</div>';
+
+  try {
+    const url = `/api/soccer-games?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`;
+    console.log('Cargando:', url);
+
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+
+    container.innerHTML = '';
+
+    if (!data.ok || !data.games || data.games.length === 0) {
+      container.innerHTML = `
+        <div class="game">
+          No hay partidos para esta liga en la fecha seleccionada.<br>
+          Liga: ${league}<br>
+          Fecha: ${date}
+        </div>
+      `;
+      return;
+    }
+
+    data.games.forEach(game => {
+      const div = document.createElement('div');
+      div.className = 'game';
+
+      div.innerHTML = `
+        <div class="teams">${game.homeTeam} vs ${game.awayTeam}</div>
+        <div class="league">${game.league} - ${game.date}</div>
+
+        <button type="button" onclick="analyze('${game.matchId}')">Ver Pick</button>
+        <div id="result-${game.matchId}"></div>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (error) {
+    console.error(error);
+    container.innerHTML = '<div class="game">Error cargando partidos.</div>';
+  }
+}
+
+async function analyze(matchId) {
+  const league = document.getElementById('leagueSelect').value;
+  const date = document.getElementById('dateSelect').value;
+
+  try {
+    const url = `/api/soccer-analyze/${matchId}?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.error || 'Error analizando partido');
+      return;
+    }
+
+    const a = data.analysis;
+    const resultDiv = document.getElementById(`result-${matchId}`);
+    const confidenceClass = a.confidence === 'muy baja' ? 'muy' : a.confidence;
+
+    resultDiv.innerHTML = `
+      <div class="pick ${confidenceClass}">
+        🎯 PICK: ${a.pick}<br>
+        ⚡ Confianza: ${a.confidence}
+      </div>
+
+      ${a.bet
+        ? `<div class="bet">💰 ${a.betType}</div>`
+        : `<div class="nobet">🚫 NO BET</div>`
+      }
+
+      <div>
+        📊 1X2:
+        Home ${a.probabilities.homeWin}% |
+        Draw ${a.probabilities.draw}% |
+        Away ${a.probabilities.awayWin}%
+      </div>
+
+      <div>
+        🔥 Over 2.5: ${a.markets.over25}
+        (${a.markets.over25Probability}%)
+      </div>
+
+      <div>
+        ⚽ BTTS: ${a.markets.btts}
+        (${a.markets.bttsProbability}%)
+      </div>
+
+      <div>
+        📉 Handicap: ${a.markets.handicap}
+      </div>
+
+      <div>
+        🏠 Home form score: ${a.form.home} |
+        ✈️ Away form score: ${a.form.away}
+      </div>
+    `;
+
+  } catch (error) {
+    console.error(error);
+    alert('Error analizando partido');
+  }
+}
+
+document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
+
+loadGames();
+</script>
+
+</body>
+</html>

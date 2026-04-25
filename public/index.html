@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data More Picks | MLB</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #172554 0%, #0b1020 45%, #050816 100%);
+      color: #ffffff;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1350px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #2563eb, #22c55e);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 28px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.35);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 36px;
+      color: #7dd3fc;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: #cbd5e1;
+      font-size: 15px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: #111827;
+      border: 1px solid #273449;
+      font-weight: bold;
+    }
+
+    .nav a.active {
+      background: #2563eb;
+      border-color: #60a5fa;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: rgba(15, 23, 42, .92);
+      border: 1px solid #273449;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.28);
+    }
+
+    label {
+      font-weight: bold;
+      color: #e2e8f0;
+    }
+
+    input, button {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+    }
+
+    input {
+      background: #ffffff;
+      color: #111827;
+    }
+
+    button {
+      background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 10px 20px rgba(37,99,235,.28);
+    }
+
+    button:hover {
+      background: linear-gradient(180deg, #60a5fa 0%, #1d4ed8 100%);
+    }
+
+    .ticket-btn {
+      background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+      box-shadow: 0 10px 20px rgba(34,197,94,.28);
+    }
+
+    .status-box {
+      background: rgba(15, 23, 42, .9);
+      border: 1px solid #273449;
+      color: #cbd5e1;
+      border-radius: 14px;
+      padding: 13px 15px;
+      margin-bottom: 18px;
+    }
+
+    .ticket-box {
+      background: linear-gradient(180deg, #052e16 0%, #064e3b 100%);
+      border: 2px solid #22c55e;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.3);
+    }
+
+    .ticket-pick {
+      background: #0b1224;
+      border: 1px solid #22c55e;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 12px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #11182d 0%, #0f172a 100%);
+      border: 1px solid #273449;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.3);
+    }
+
+    .matchup-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ball {
+      font-size: 34px;
+      min-width: 42px;
+    }
+
+    .matchup {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .odds-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #0b1224;
+      border: 1px solid #334155;
+      color: #93c5fd;
+    }
+
+    .result {
+      margin-top: 14px;
+    }
+
+    .pick-box {
+      padding: 15px;
+      border-radius: 16px;
+      line-height: 1.75;
+      font-size: 15px;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .alta {
+      background: rgba(34,197,94,.18);
+      border: 2px solid #4ade80;
+    }
+
+    .media {
+      background: rgba(234,179,8,.18);
+      border: 2px solid #facc15;
+    }
+
+    .baja {
+      background: rgba(239,68,68,.18);
+      border: 2px solid #fb7185;
+    }
+
+    .extra-box {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #0b1224;
+      border: 1px solid #273449;
+      color: #e2e8f0;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .extra-title {
+      color: #7dd3fc;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+    }
+
+    .divider {
+      height: 1px;
+      background: #273449;
+      margin: 11px 0;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    .empty {
+      background: #11182d;
+      border: 1px solid #273449;
+      border-radius: 16px;
+      padding: 18px;
+      color: #cbd5e1;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 14px; }
+      h1 { font-size: 28px; }
+      .grid { grid-template-columns: 1fr; }
+      .matchup { font-size: 20px; }
+      .logo { width: 48px; height: 48px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="brand">
+        <div class="logo">📊</div>
+        <div>
+          <h1>Data More MLB Picks</h1>
+          <p class="subtitle">Moneyline, Run Line, Team Totals y confianza automática.</p>
+        </div>
+      </div>
+
+      <div class="nav">
+        <a href="/" class="active">⚾ MLB</a>
+        <a href="/soccer">⚽ Soccer</a>
+      </div>
+    </div>
+
+    <div class="topbar">
+      <label for="date">Fecha:</label>
+      <input type="date" id="date" />
+      <button id="loadBtn">Cargar juegos</button>
+      <button id="analyzeAllBtn">Analizar todos</button>
+      <button id="ticketBtn" class="ticket-btn">🎟️ Generar Ticket</button>
+    </div>
+
+    <div id="statusBox" class="status-box">Cargando interfaz...</div>
+    <div id="ticketBox"></div>
+    <div id="games" class="grid"></div>
+
+    <p class="footer-note">
+      Si no ves odds, puede ser que la línea aún no esté disponible o que la API de cuotas no tenga ese juego.
+    </p>
+  </div>
+
+  <script>
+    const dateInput = document.getElementById("date");
+    const gamesContainer = document.getElementById("games");
+    const statusBox = document.getElementById("statusBox");
+    const loadBtn = document.getElementById("loadBtn");
+    const analyzeAllBtn = document.getElementById("analyzeAllBtn");
+    const ticketBtn = document.getElementById("ticketBtn");
+    const ticketBox = document.getElementById("ticketBox");
+
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatNum(value, decimals = 2) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return "N/D";
+      return num.toFixed(decimals);
+    }
+
+    function confidenceClass(confidence) {
+      const c = String(confidence || "").toLowerCase();
+      if (c.includes("alta")) return "alta";
+      if (c.includes("media")) return "media";
+      return "baja";
+    }
+
+    function moneylineText(game) {
+      if (!game.odds || !game.odds.bookmakers || !game.odds.bookmakers.length) {
+        return "Odds: no disponibles";
+      }
+
+      const bookmaker = game.odds.bookmakers[0];
+      const h2h = bookmaker.markets?.find(m => m.key === "h2h");
+
+      if (!h2h) return "Moneyline: no disponible";
+
+      const away = h2h.outcomes?.find(o => o.name === game.awayTeam);
+      const home = h2h.outcomes?.find(o => o.name === game.homeTeam);
+
+      return `ML ${game.awayTeam}: ${away?.price ?? "N/D"} | ${game.homeTeam}: ${home?.price ?? "N/D"}`;
+    }
+
+    async function loadGames() {
+      const date = dateInput.value;
+      statusBox.textContent = `Cargando juegos para ${date}...`;
+      ticketBox.innerHTML = "";
+      gamesContainer.innerHTML = "";
+
+      try {
+        const res = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+
+        if (!data.ok) {
+          statusBox.textContent = "La API respondió con error.";
+          gamesContainer.innerHTML = `<div class="empty">Error: ${escapeHtml(data.error || "No se pudo cargar")}</div>`;
+          return;
+        }
+
+        if (!data.games || !data.games.length) {
+          statusBox.textContent = "No se encontraron juegos para esa fecha.";
+          gamesContainer.innerHTML = `<div class="empty">No hay juegos disponibles en ${escapeHtml(date)}.</div>`;
+          return;
+        }
+
+        statusBox.textContent = `Se encontraron ${data.games.length} juegos para ${date}.`;
+
+        data.games.forEach(game => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.dataset.gamepk = game.gamePk;
+
+          const gameDate = game.gameDate
+            ? new Date(game.gameDate).toLocaleString()
+            : "N/D";
+
+          card.innerHTML = `
+            <div class="matchup-row">
+              <div class="ball">⚾</div>
+              <div class="matchup">${escapeHtml(game.awayTeam)} vs ${escapeHtml(game.homeTeam)}</div>
+            </div>
+
+            <div class="meta">
+              <strong>Estado:</strong> ${escapeHtml(game.status || "N/D")}<br>
+              <strong>Hora:</strong> ${escapeHtml(gameDate)}<br>
+              <strong>ID juego:</strong> ${escapeHtml(game.gamePk)}<br>
+              <strong>Pitchers:</strong> ${escapeHtml(game.awayProbablePitcher || "N/D")} vs ${escapeHtml(game.homeProbablePitcher || "N/D")}<br>
+              <span class="odds-badge">${escapeHtml(moneylineText(game))}</span>
+            </div>
+
+            <button onclick="analyzeGame('${escapeHtml(game.gamePk)}')">Analizar juego</button>
+            <div class="result" id="result-${escapeHtml(game.gamePk)}"></div>
+          `;
+
+          gamesContainer.appendChild(card);
+        });
+
+      } catch (error) {
+        statusBox.textContent = "Error cargando juegos.";
+        gamesContainer.innerHTML = `<div class="empty">Error: ${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function analyzeGame(gamePk) {
+      const date = dateInput.value;
+      const result = document.getElementById(`result-${gamePk}`);
+
+      result.innerHTML = `<div class="small">Analizando juego...</div>`;
+
+      try {
+        const res = await fetch(`/api/analyze/${gamePk}?date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+
+        if (!data.ok) {
+          result.innerHTML = `<div class="small">Error: ${escapeHtml(data.error || "No se pudo analizar")}</div>`;
+          return;
+        }
+
+        const a = data.analysis || {};
+        const away = a.away || {};
+        const home = a.home || {};
+        const runLine = a.runLine || {};
+        const teamTotals = a.teamTotals || {};
+        const awayTT = teamTotals.away || {};
+        const homeTT = teamTotals.home || {};
+
+        const pickIsAway = a.pick === away.team;
+        const pickPct = pickIsAway ? away.modelWinPct : home.modelWinPct;
+
+        result.innerHTML = `
+          <div class="pick-box ${confidenceClass(a.confidence)}">
+            🔥 <strong>Moneyline Pick:</strong> ${escapeHtml(a.pick || "N/D")}<br>
+            📊 <strong>Confianza:</strong> ${escapeHtml(a.confidence || "N/D")}<br>
+            ⚾ <strong>${escapeHtml(away.team || "Away")}:</strong> Score ${escapeHtml(formatNum(away.finalScore))} | Prob ${escapeHtml(formatNum(away.modelWinPct))}% | ML ${escapeHtml(away.moneyline ?? "N/D")}<br>
+            ⚾ <strong>${escapeHtml(home.team || "Home")}:</strong> Score ${escapeHtml(formatNum(home.finalScore))} | Prob ${escapeHtml(formatNum(home.modelWinPct))}% | ML ${escapeHtml(home.moneyline ?? "N/D")}<br>
+            📈 <strong>Probabilidad pick:</strong> ${escapeHtml(formatNum(pickPct))}%
+          </div>
+
+          <div class="extra-box">
+            <div class="extra-title">📉 Run Line</div>
+            <strong>Pick:</strong> ${escapeHtml(runLine.pick || "N/D")}<br>
+            <strong>Probabilidad de cubrir:</strong> ${escapeHtml(formatNum(runLine.coverProb))}%<br>
+            <strong>Margen proyectado:</strong> ${escapeHtml(formatNum(runLine.projectedMargin))}<br>
+            <strong>Confianza:</strong> ${escapeHtml(runLine.confidence || "N/D")}
+          </div>
+
+          <div class="extra-box">
+            <div class="extra-title">📊 Team Totals</div>
+
+            <strong>🏟️ ${escapeHtml(away.team || "Away")}:</strong> ${escapeHtml(awayTT.pick || "N/D")}<br>
+            Línea: ${escapeHtml(formatNum(awayTT.line, 1))} |
+            Proyección: ${escapeHtml(formatNum(awayTT.projectedRuns))} |
+            Prob: ${escapeHtml(formatNum(awayTT.probability))}% |
+            Confianza: ${escapeHtml(awayTT.confidence || "N/D")}
+
+            <div class="divider"></div>
+
+            <strong>🏟️ ${escapeHtml(home.team || "Home")}:</strong> ${escapeHtml(homeTT.pick || "N/D")}<br>
+            Línea: ${escapeHtml(formatNum(homeTT.line, 1))} |
+            Proyección: ${escapeHtml(formatNum(homeTT.projectedRuns))} |
+            Prob: ${escapeHtml(formatNum(homeTT.probability))}% |
+            Confianza: ${escapeHtml(homeTT.confidence || "N/D")}
+
+            <div class="divider"></div>
+
+            <strong>➕ Total combinado proyectado:</strong> ${escapeHtml(formatNum(teamTotals.combinedProjectedTotal))}
+          </div>
+
+          <div class="small">
+            ${(a.notes || []).map(n => `• ${escapeHtml(n)}`).join("<br>")}
+          </div>
+        `;
+      } catch (error) {
+        result.innerHTML = `<div class="small">Error analizando juego: ${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function analyzeAll() {
+      const cards = Array.from(document.querySelectorAll(".card"));
+      for (const card of cards) {
+        await analyzeGame(card.dataset.gamepk);
+      }
+    }
+
+    async function loadMLBTicket() {
+      ticketBox.innerHTML = `<div class="status-box">Generando ticket sugerido...</div>`;
+
+      try {
+        const res = await fetch("/api/baseball/ticket");
+        const data = await res.json();
+
+        if (!data.ok || !data.ticket || !data.ticket.picks || !data.ticket.picks.length) {
+          ticketBox.innerHTML = `<div class="status-box">No hay picks suficientes para generar ticket.</div>`;
+          return;
+        }
+
+        ticketBox.innerHTML = `
+          <div class="ticket-box">
+            <h2>🎟️ ${escapeHtml(data.ticket.ticketType)}</h2>
+            <p>Total picks: ${escapeHtml(data.ticket.totalPicks)}</p>
+
+            ${data.ticket.picks.map(p => `
+              <div class="ticket-pick">
+                ⚾ <strong>${escapeHtml(p.matchup)}</strong><br>
+                🎯 Pick: ${escapeHtml(p.pick)}<br>
+                📌 Mercado: ${escapeHtml(p.market)}<br>
+                📊 Probabilidad: ${escapeHtml(p.probability)}%<br>
+                ⚡ Confianza: ${escapeHtml(p.confidence)}
+              </div>
+            `).join("")}
+
+            <p class="small">${escapeHtml(data.ticket.note || "")}</p>
+          </div>
+        `;
+      } catch (error) {
+        ticketBox.innerHTML = `<div class="status-box">Error generando ticket: ${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    loadBtn.addEventListener("click", loadGames);
+    analyzeAllBtn.addEventListener("click", analyzeAll);
+    ticketBtn.addEventListener("click", loadMLBTicket);
+
+    loadGames();
+  </script>
+</body>
+</html>
