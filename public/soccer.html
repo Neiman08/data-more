@@ -56,6 +56,16 @@
       cursor: pointer;
     }
 
+    .btn-all {
+      background: #facc15;
+      color: #111827;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     .game-card {
       background: #1e293b;
       padding: 20px;
@@ -179,7 +189,7 @@
         flex-direction: column;
       }
 
-      select, input, .btn-ticket {
+      select, input, .btn-ticket, .btn-all {
         width: 100%;
       }
     }
@@ -202,6 +212,10 @@
 
     <input type="date" id="dateSelect" onchange="loadGames()">
 
+    <button class="btn-all" id="analyzeAllBtn" onclick="analyzeAll()">
+      ⚡ Analizar todos
+    </button>
+
     <button class="btn-ticket" onclick="generateSoccerTicket()">
       🎟️ Generar Ticket Soccer
     </button>
@@ -222,11 +236,19 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function loadGames() {
   const league = document.getElementById('leagueSelect').value;
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
   const ticketBox = document.getElementById('ticketBox');
+  const analyzeAllBtn = document.getElementById('analyzeAllBtn');
+
+  analyzeAllBtn.innerText = '⚡ Analizar todos';
+  analyzeAllBtn.disabled = false;
 
   ticketBox.style.display = 'none';
   ticketBox.innerHTML = '';
@@ -257,7 +279,7 @@ async function loadGames() {
 
         <div class="info">${escapeHtml(game.league)} | Hora: ${escapeHtml(game.time)}</div>
 
-        <button class="btn-analyze" onclick="analyze(this, '${escapeHtml(game.matchId)}')">
+        <button class="btn-analyze btn-single" onclick="analyze(this, '${escapeHtml(game.matchId)}')">
           ANÁLISIS IA
         </button>
 
@@ -274,6 +296,7 @@ async function loadGames() {
 
 async function analyze(btn, matchId) {
   btn.innerText = 'Calculando...';
+  btn.disabled = true;
 
   const league = document.getElementById('leagueSelect').value;
   const date = document.getElementById('dateSelect').value;
@@ -284,6 +307,7 @@ async function analyze(btn, matchId) {
 
     if (!data.ok) {
       btn.innerText = 'Error, intenta otra vez';
+      btn.disabled = false;
       return;
     }
 
@@ -291,6 +315,8 @@ async function analyze(btn, matchId) {
     const resDiv = document.getElementById(`res-${matchId}`);
 
     btn.innerText = 'RE-ANALIZAR';
+    btn.disabled = false;
+
     resDiv.style.display = 'block';
     resDiv.className = `pick-res ${analysis.confidence}`;
 
@@ -336,7 +362,33 @@ async function analyze(btn, matchId) {
 
   } catch (err) {
     btn.innerText = 'Error, intenta otra vez';
+    btn.disabled = false;
   }
+}
+
+async function analyzeAll() {
+  const buttons = Array.from(document.querySelectorAll('.btn-single'));
+  const analyzeAllBtn = document.getElementById('analyzeAllBtn');
+
+  if (buttons.length === 0) {
+    alert('No hay partidos cargados');
+    return;
+  }
+
+  analyzeAllBtn.disabled = true;
+
+  for (let i = 0; i < buttons.length; i++) {
+    const btn = buttons[i];
+
+    analyzeAllBtn.innerText = `Analizando ${i + 1}/${buttons.length}...`;
+
+    await analyze(btn, btn.getAttribute('onclick').match(/'([^']+)'/)[1]);
+
+    await wait(1500);
+  }
+
+  analyzeAllBtn.innerText = '✅ Análisis completo';
+  analyzeAllBtn.disabled = false;
 }
 
 async function generateSoccerTicket() {
