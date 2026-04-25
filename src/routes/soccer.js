@@ -162,6 +162,7 @@ function getTicketMarket(analysis) {
 
 function buildSoccerTicket(analyses) {
   const picks = analyses
+    .filter(Boolean)
     .map(a => {
       const bestMarket = getTicketMarket(a);
 
@@ -303,8 +304,10 @@ router.get('/soccer-ticket', async (req, res) => {
 
     const allFinishedMatches = await getFinishedMatches(league.id);
 
-    const analyses = matches.map(matchRaw =>
-      analyzeMatch(matchRaw, league.id, allFinishedMatches)
+    const analyses = await Promise.all(
+      matches.map(matchRaw =>
+        analyzeMatch(matchRaw, league.id, allFinishedMatches)
+      )
     );
 
     const ticket = buildSoccerTicket(analyses);
