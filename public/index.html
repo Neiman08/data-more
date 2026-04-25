@@ -515,42 +515,243 @@
         await analyzeGame(card.dataset.gamepk);
       }
     }
+ 
+async function loadMLBTicket() {
+  const date = dateInput.value;
+  ticketBox.innerHTML = `<div class="status-box">Generando ticket sugerido para ${escapeHtml(date)}...</div>`;
 
-    async function loadMLBTicket() {
-      ticketBox.innerHTML = `<div class="status-box">Generando ticket sugerido...</div>`;
+  try {
+    const gamesRes = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
+    const gamesData = await gamesRes.json();
 
+    if (!gamesData.ok || !gamesData.games || !gamesData.games.length) {
+      ticketBox.innerHTML = `<div class="status-box">No hay juegos para generar ticket en ${escapeHtml(date)}.</div>`;
+      return;
+    }
+
+    const bestPicks = [];
+
+    for (const game of gamesData.games) {
+      // 🚫 BLOQUEAR JUEGOS POSTPONED O SIN ODDS
+if (
+  ["postponed", "delayed", "suspended"].some(s =>
+    String(game.status || "").toLowerCase().includes(s)
+  ) ||
+  !game.odds ||
+  !game.odds.bookmakers ||
+  !game.odds.bookmakers.length
+) {
+  continue;
+}
       try {
-        const res = await fetch("/api/baseball/ticket");
+        const res = await fetch(`/api/analyze/${game.gamePk}?date=${encodeURIComponent(date)}`);
         const data = await res.json();
 
-        if (!data.ok || !data.ticket || !data.ticket.picks || !data.ticket.picks.length) {
-          ticketBox.innerHTML = `<div class="status-box">No hay picks suficientes para generar ticket.</div>`;
-          return;
+        if (!data.ok || !data.analysis) continue;
+
+        const a = data.analysis;
+        const away = a.away || {};
+        const home = a.home || {};
+        const runLine = a.runLine || {};
+        const teamTotals = a.teamTotals || {};
+        const awayTT = teamTotals.away || {};
+        const homeTT = teamTotals.home || {};
+
+        const matchup = `${away.team || game.awayTeam} vs ${home.team || game.homeTeam}`;
+        const options = [];
+
+        const pickIsAway = a.pick === away.team;
+        const mlProb = pickIsAway ? Number(away.modelWinPct) : Number(home.modelWinPct);
+
+        // MONEYLINE
+        if (a.pick && mlProb > 0) {
+          options.push({
+            matchup,
+            pick: a.pick,
+            market: "Moneyline",
+            probability: mlProb,
+            confidence: a.confidence || "N/D",
+            score: mlProb + confidenceScore(a.confidence) + 8
+          });
         }
 
-        ticketBox.innerHTML = `
-          <div class="ticket-box">
-            <h2>🎟️ ${escapeHtml(data.ticket.ticketType)}</h2>
-            <p>Total picks: ${escapeHtml(data.ticket.totalPicks)}</p>
+        // RUN LINE - con lógica real
+        if (runLine.pick && Number(runLine.coverProb) > 0) {
+          const margin = Math.abs(Number(runLine.projectedMargin || 0));
+          let rlScore = Number(runLine.coverProb) + confidenceScore(runLine.confidence);
 
-            ${data.ticket.picks.map(p => `
-              <div class="ticket-pick">
-                ⚾ <strong>${escapeHtml(p.matchup)}</strong><br>
-                🎯 Pick: ${escapeHtml(p.pick)}<br>
-                📌 Mercado: ${escapeHtml(p.market)}<br>
-                📊 Probabilidad: ${escapeHtml(p.probability)}%<br>
-                ⚡ Confianza: ${escapeHtml(p.confidence)}
-              </div>
-            `).join("")}
+          // Penalizar si el margen no justifica -1.5
+          if (margin < 8) rlScore -= 25;
+          else if (margin < 15) rlScore -= 15;
+          else if (margin < 25) rlScore -= 8;
 
-            <p class="small">${escapeHtml(data.ticket.note || "")}</p>
-          </div>
-        `;
-      } catch (error) {
-        ticketBox.innerHTML = `<div class="status-box">Error generando ticket: ${escapeHtml(error.message)}</div>`;
+          // Si todos vienen clavados en 72%, no dejar que domine
+          if (Number(runLine.coverProb) === 72) rlScore -= 12;
+
+          options.push({
+            matchup,
+            pick: runLine.pick,
+            market: "Run Line",
+            probability: Number(runLine.coverProb),
+            confidence: runLine.confidence || "N/D",
+            score: rlScore
+          });
+        }
+
+        // TEAM TOTAL AWAY
+        if (awayTT.pick && Number(awayTT.probability) > 0) {
+          options.push({
+            matchup,
+            pick: awayTT.pick,
+            market: "Team Total",
+            probability: Number(awayTT.probability),
+            confidence: awayTT.confidence || "N/D",
+            score: Number(awayTT.probability) + confidenceScore(awayTT.confidence) + 3
+          });
+        }
+
+        // TEAM TOTAL HOME
+        if (homeTT.pick && Number(homeTT.probability) > 0) {
+          options.push({
+            matchup,
+            pick: homeTT.pick,
+            market: "Team Total",
+            probability: Number(homeTT.probability),
+            confidence: homeTT.confidence || "N/D",
+            score: Number(homeTT.probability) + confidenceScore(homeTT.confidence) + 3
+          });
+        }
+
+        if (!options.length) continue;
+
+        options.sort((a, b) => b.score - a.score);
+        bestPicks.push(options[0]);
+
+      } catch (err) {
+        console.log("Error analizando juego para ticket:", game.gamePk, err.message);
       }
     }
 
+    if (!bestPicks.length) {
+      ticketBox.innerHTML = `<div class="status-box">No hay picks suficientes para generar ticket.</div>`;
+      return;
+    }
+
+    const sorted = bestPicks.sort((a, b) => b.score - a.score);
+
+    const seguro = buildBalancedTicket(sorted, 4);
+    const medio = buildBalancedTicket(sorted, 7);
+    const grande = buildBalancedTicket(sorted, Math.min(12, sorted.length));
+
+    ticketBox.innerHTML = `
+      ${renderSuggestedTicket("🔥 Ticket Seguro", seguro)}
+      ${renderSuggestedTicket("⚡ Ticket Medio", medio)}
+      ${renderSuggestedTicket("💣 Ticket Grande", grande)}
+    `;
+
+  } catch (error) {
+    ticketBox.innerHTML = `<div class="status-box">Error generando ticket: ${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function confidenceScore(confidence) {
+  const c = String(confidence || "").toLowerCase();
+  if (c.includes("alta")) return 10;
+  if (c.includes("media")) return 5;
+  return 0;
+}
+
+function buildBalancedTicket(picks, limit) {
+  const valid = picks.filter(p => {
+    if (!p.pick || p.pick === "N/D") return false;
+    if (!p.probability || p.probability <= 0) return false;
+    if (String(p.status || "").toLowerCase().includes("postponed")) return false;
+    return true;
+  });
+
+  const moneyline = valid
+    .filter(p => p.market === "Moneyline")
+    .sort((a, b) => b.score - a.score);
+
+  const runline = valid
+    .filter(p =>
+      p.market === "Run Line" &&
+      p.confidence !== "baja" &&
+      p.probability >= 58
+    )
+    .sort((a, b) => b.score - a.score);
+
+  const totals = valid
+    .filter(p =>
+      p.market === "Team Total" &&
+      p.probability >= 54
+    )
+    .sort((a, b) => b.score - a.score);
+
+  const result = [];
+
+  function addPick(pick) {
+    if (!pick) return;
+    if (result.length >= limit) return;
+    if (result.some(p => p.matchup === pick.matchup)) return;
+    result.push(pick);
+  }
+
+  // 🎟️ Ticket 1: más sólido
+  if (limit <= 4) {
+    moneyline.slice(0, 4).forEach(addPick);
+  }
+
+  // ⚡ Ticket 2: mixto, no empieza con los mismos 4
+  else if (limit <= 7) {
+    addPick(runline[0]);
+    moneyline.slice(2, 6).forEach(addPick);
+    totals.slice(0, 3).forEach(addPick);
+    moneyline.slice(0, 2).forEach(addPick);
+  }
+
+  // 💣 Ticket 3: agresivo con rotación
+  else {
+    runline.slice(0, 2).forEach(addPick);
+    moneyline.slice(4, 10).forEach(addPick);
+    totals.slice(0, 6).forEach(addPick);
+    moneyline.slice(0, 4).forEach(addPick);
+  }
+
+  const fallback = [...moneyline, ...runline, ...totals]
+    .sort((a, b) => b.score - a.score);
+
+  for (const pick of fallback) {
+    if (result.length >= limit) break;
+    addPick(pick);
+  }
+
+  return result.slice(0, limit);
+}
+
+function renderSuggestedTicket(title, picks) {
+  return `
+    <div class="ticket-box">
+      <h2>${escapeHtml(title)}</h2>
+      <p>Total picks: ${escapeHtml(picks.length)}</p>
+
+      ${picks.map(p => `
+        <div class="ticket-pick">
+          ⚾ <strong>${escapeHtml(p.matchup)}</strong><br>
+          🎯 Pick: ${escapeHtml(p.pick)}<br>
+          📌 Mercado: ${escapeHtml(p.market)}<br>
+          📊 Probabilidad: ${escapeHtml(formatNum(p.probability))}%<br>
+          ⚡ Confianza: ${escapeHtml(p.confidence)}
+        </div>
+      `).join("")}
+
+      <p class="small">
+        Ticket balanceado usando Moneyline, Run Line y Team Totals. 
+        El sistema penaliza Run Line cuando el margen proyectado no justifica el -1.5.
+      </p>
+    </div>
+  `;
+}
     loadBtn.addEventListener("click", loadGames);
     analyzeAllBtn.addEventListener("click", analyzeAll);
     ticketBtn.addEventListener("click", loadMLBTicket);

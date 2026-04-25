@@ -1,222 +1,231 @@
 import express from 'express';
+import { buildSoccerAnalysis } from '../utils/soccerScoring.js';
 
 const router = express.Router();
 
-const API_KEY = '3';
+const API_KEY = 'e73294acbe5f4d1caf074f170732073d';
 
 const leaguesMap = {
-  epl: { id: '4328', name: 'English Premier League' },
-  laliga: { id: '4335', name: 'Spanish La Liga' },
-  seriea: { id: '4332', name: 'Italian Serie A' },
-  bundesliga: { id: '4331', name: 'German Bundesliga' },
-  ligue1: { id: '4334', name: 'French Ligue 1' },
-  eredivisie: { id: '4337', name: 'Dutch Eredivisie' },
-  portugal: { id: '4344', name: 'Portuguese Primeira Liga' }
+  epl: { id: 'PL', name: 'Premier League' },
+  laliga: { id: 'PD', name: 'La Liga' },
+  seriea: { id: 'SA', name: 'Serie A' },
+  bundesliga: { id: 'BL1', name: 'Bundesliga' },
+  ligue1: { id: 'FL1', name: 'Ligue 1' }
 };
 
-function getLeagueFromRequest(req) {
+const cache = {};
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getLeague(req) {
   const key = String(req.query.league || 'epl').toLowerCase();
   return {
-    key,
+    key: leaguesMap[key] ? key : 'epl',
     ...(leaguesMap[key] || leaguesMap.epl)
   };
 }
 
-async function fetchJson(url) {
-  const res = await fetch(url);
-  const text = await res.text();
+async function footballDataFetch(url, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    const res = await fetch(url, {
+      headers: { 'X-Auth-Token': API_KEY }
+    });
 
-  console.log('URL:', url);
-  console.log('STATUS:', res.status);
+    const data = await res.json();
 
-  if (text.trim().startsWith('<')) {
-    throw new Error('La API devolvió HTML, no JSON');
-  }
-
-  return JSON.parse(text);
-}
-
-function sameLeague(event, league) {
-  const eventLeagueId = String(event.idLeague || '');
-  const eventLeagueName = String(event.strLeague || '').toLowerCase();
-  const selectedLeagueName = String(league.name || '').toLowerCase();
-
-  return (
-    eventLeagueId === String(league.id) ||
-    eventLeagueName === selectedLeagueName ||
-    eventLeagueName.includes(selectedLeagueName) ||
-    selectedLeagueName.includes(eventLeagueName)
-  );
-}
-
-function today() {
-  return new Date().toISOString().split('T')[0];
-}
-
-function demoGames(league, selectedDate = null) {
-  const date = selectedDate || today();
-
-  const gamesByLeague = {
-    epl: [
-      ['Manchester United', 'Chelsea'],
-      ['Arsenal', 'Liverpool'],
-      ['Tottenham', 'Newcastle']
-    ],
-    laliga: [
-      ['Real Madrid', 'Barcelona'],
-      ['Atletico Madrid', 'Sevilla'],
-      ['Valencia', 'Villarreal']
-    ],
-    seriea: [
-      ['Inter Milan', 'Juventus'],
-      ['AC Milan', 'Napoli'],
-      ['Roma', 'Lazio']
-    ],
-    bundesliga: [
-      ['Bayern Munich', 'Borussia Dortmund'],
-      ['RB Leipzig', 'Bayer Leverkusen'],
-      ['Stuttgart', 'Eintracht Frankfurt']
-    ],
-    ligue1: [
-      ['PSG', 'Marseille'],
-      ['Lyon', 'Monaco'],
-      ['Lille', 'Nice']
-    ],
-    eredivisie: [
-      ['Ajax', 'PSV Eindhoven'],
-      ['Feyenoord', 'AZ Alkmaar'],
-      ['Twente', 'Utrecht']
-    ],
-    portugal: [
-      ['Benfica', 'Porto'],
-      ['Sporting CP', 'Braga'],
-      ['Boavista', 'Guimaraes']
-    ]
-  };
-
-  const list = gamesByLeague[league.key] || gamesByLeague.epl;
-
-  return list.map((teams, index) => ({
-    idEvent: `demo-${league.key}-${index + 1}`,
-    dateEvent: date,
-    strTime: index === 0 ? '15:00:00' : index === 1 ? '17:30:00' : '20:00:00',
-    strHomeTeam: teams[0],
-    strAwayTeam: teams[1],
-    idHomeTeam: `demo-home-${index + 1}`,
-    idAwayTeam: `demo-away-${index + 1}`,
-    strLeague: league.name,
-    idLeague: league.id
-  }));
-}
-
-async function getGamesByDate(league, selectedDate) {
-  try {
-    const url = `https://www.thesportsdb.com/api/v1/json/${API_KEY}/eventsday.php?d=${selectedDate}&s=Soccer`;
-    const data = await fetchJson(url);
-    const events = data.events || [];
-
-    const filtered = events
-      .filter(e => e.dateEvent === selectedDate)
-      .filter(e => sameLeague(e, league));
-
-    return filtered;
-  } catch (error) {
-    console.log('ERROR getGamesByDate:', error.message);
-    return [];
-  }
-}
-
-async function getNextLeagueGames(league) {
-  try {
-    const url = `https://www.thesportsdb.com/api/v1/json/${API_KEY}/eventsnextleague.php?id=${league.id}`;
-    const data = await fetchJson(url);
-    const events = data.events || [];
-
-    const filtered = events.filter(e => sameLeague(e, league));
-
-    if (filtered.length > 0) {
-      return filtered;
+    if (res.status === 429) {
+      const waitSeconds = Number(data.message?.match(/\d+/)?.[0] || 5);
+      console.log(`⏳ Rate limit. Esperando ${waitSeconds} segundos...`);
+      await sleep(waitSeconds * 1000);
+      continue;
     }
 
-    console.log('⚠️ API vacía, usando fallback demo');
-    return demoGames(league);
+    if (!res.ok) {
+      console.error('Football-data error:', data);
+      return null;
+    }
 
-  } catch (error) {
-    console.log('ERROR getNextLeagueGames:', error.message);
-    console.log('⚠️ Usando fallback demo');
-    return demoGames(league);
+    return data;
   }
+
+  return null;
 }
 
-async function getSoccerGames(league, selectedDate) {
+async function getSoccerGames(leagueCode, selectedDate) {
+  const cacheKey = `games-${leagueCode}-${selectedDate || 'all'}`;
+
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  const url = `https://api.football-data.org/v4/competitions/${leagueCode}/matches`;
+  const data = await footballDataFetch(url);
+
+  if (!data || !data.matches) return [];
+
+  let matches = data.matches;
+
   if (selectedDate) {
-    const gamesByDate = await getGamesByDate(league, selectedDate);
-
-    if (gamesByDate.length > 0) {
-      return {
-        games: gamesByDate,
-        source: 'eventsday',
-        usedDate: selectedDate
-      };
-    }
-
-    const nextGames = await getNextLeagueGames(league);
-
-    if (nextGames.length > 0) {
-      return {
-        games: nextGames.map(game => ({
-          ...game,
-          dateEvent: game.dateEvent || selectedDate
-        })),
-        source: 'fallback_next_available',
-        usedDate: nextGames[0]?.dateEvent || selectedDate
-      };
-    }
-
-    return {
-      games: demoGames(league, selectedDate),
-      source: 'fallback_demo',
-      usedDate: selectedDate
-    };
+    matches = matches.filter(m => m.utcDate.startsWith(selectedDate));
   }
 
-  const nextGames = await getNextLeagueGames(league);
+  cache[cacheKey] = matches;
+  return matches;
+}
+
+async function getFinishedMatches(leagueCode) {
+  const cacheKey = `finished-${leagueCode}`;
+
+  if (cache[cacheKey]) return cache[cacheKey];
+
+  const url = `https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=FINISHED`;
+  const data = await footballDataFetch(url);
+
+  if (!data || !data.matches) return [];
+
+  cache[cacheKey] = data.matches;
+  return data.matches;
+}
+
+function getRecentTeamMatchesFromList(allFinishedMatches, teamId) {
+  return allFinishedMatches
+    .filter(m => m.homeTeam.id === teamId || m.awayTeam.id === teamId)
+    .sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate))
+    .slice(0, 5)
+    .map(m => ({
+      strHomeTeam: m.homeTeam.name,
+      strAwayTeam: m.awayTeam.name,
+      intHomeScore: m.score.fullTime.home,
+      intAwayScore: m.score.fullTime.away
+    }));
+}
+
+function formatMatch(m) {
+  return {
+    matchId: m.id,
+    date: m.utcDate.split('T')[0],
+    time: m.utcDate.split('T')[1].substring(0, 5) + ' UTC',
+    homeTeam: m.homeTeam.name,
+    awayTeam: m.awayTeam.name,
+    homeTeamId: m.homeTeam.id,
+    awayTeamId: m.awayTeam.id,
+    league: m.competition.name,
+    status: m.status
+  };
+}
+
+function buildMatchObject(matchRaw) {
+  return {
+    matchId: matchRaw.id,
+    matchup: `${matchRaw.homeTeam.name} vs ${matchRaw.awayTeam.name}`,
+    homeTeam: matchRaw.homeTeam.name,
+    awayTeam: matchRaw.awayTeam.name,
+    homeTeamId: matchRaw.homeTeam.id,
+    awayTeamId: matchRaw.awayTeam.id
+  };
+}
+
+function getBetType(analysis) {
+  if (analysis.confidence === 'alta') return '💰 STRONG BET';
+  if (analysis.confidence === 'media') return '💰 LEAN BET';
+  return '🚫 NO BET';
+}
+
+function getTicketMarket(analysis) {
+  const pickProb = Number(analysis?.probabilities?.pickProbability || 0);
+  const overProb = Number(analysis?.markets?.over25Probability || 0);
+  const bttsProb = Number(analysis?.markets?.bttsProbability || 0);
+
+  const options = [
+    {
+      market: 'Moneyline / 1X2',
+      pick: analysis.pick,
+      probability: pickProb,
+      confidence: analysis.confidence
+    },
+    {
+      market: 'Over/Under 2.5',
+      pick: analysis.markets.over25,
+      probability: overProb,
+      confidence: overProb >= 62 ? 'alta' : overProb >= 55 ? 'media' : 'baja'
+    },
+    {
+      market: 'BTTS',
+      pick: analysis.markets.btts === 'Sí' ? 'BTTS Sí' : 'BTTS No',
+      probability: bttsProb,
+      confidence: bttsProb >= 62 ? 'alta' : bttsProb >= 55 ? 'media' : 'baja'
+    }
+  ];
+
+  return options.sort((a, b) => b.probability - a.probability)[0];
+}
+
+function buildSoccerTicket(analyses) {
+  const picks = analyses
+    .map(a => {
+      const bestMarket = getTicketMarket(a);
+
+      return {
+        matchId: a.matchId,
+        matchup: a.matchup,
+        pick: bestMarket.pick,
+        market: bestMarket.market,
+        probability: bestMarket.probability,
+        confidence: bestMarket.confidence,
+        betType: getBetType({ confidence: bestMarket.confidence })
+      };
+    })
+    .filter(p => {
+      const conf = String(p.confidence || '').toLowerCase();
+      return (
+        (conf === 'alta' && p.probability >= 60) ||
+        (conf === 'media' && p.probability >= 56)
+      );
+    })
+    .sort((a, b) => b.probability - a.probability)
+    .slice(0, 5);
 
   return {
-    games: nextGames.length > 0 ? nextGames : demoGames(league),
-    source: nextGames.length > 0 ? 'eventsnextleague' : 'fallback_demo',
-    usedDate: nextGames[0]?.dateEvent || today()
+    ticketType: picks.length >= 3 ? 'Parlay sugerido' : 'Straight Bets',
+    totalPicks: picks.length,
+    picks,
+    note: 'Ticket sugerido basado en probabilidad, forma reciente y confianza del modelo.'
   };
+}
+
+async function analyzeMatch(matchRaw, leagueCode, allFinishedMatches) {
+  const match = buildMatchObject(matchRaw);
+
+  const homeRecentEvents = getRecentTeamMatchesFromList(
+    allFinishedMatches,
+    match.homeTeamId
+  );
+
+  const awayRecentEvents = getRecentTeamMatchesFromList(
+    allFinishedMatches,
+    match.awayTeamId
+  );
+
+  return buildSoccerAnalysis({
+    match,
+    homeRecentEvents,
+    awayRecentEvents
+  });
 }
 
 router.get('/soccer-games', async (req, res) => {
   try {
-    const league = getLeagueFromRequest(req);
+    const league = getLeague(req);
     const selectedDate = req.query.date || null;
 
-    const result = await getSoccerGames(league, selectedDate);
-
-    const formattedGames = result.games.map(g => ({
-      matchId: g.idEvent,
-      date: g.dateEvent,
-      time: g.strTime,
-      homeTeam: g.strHomeTeam,
-      awayTeam: g.strAwayTeam,
-      homeTeamId: g.idHomeTeam,
-      awayTeamId: g.idAwayTeam,
-      league: g.strLeague || league.name,
-      leagueKey: league.key,
-      leagueId: league.id
-    }));
+    const matches = await getSoccerGames(league.id, selectedDate);
+    const formattedGames = matches.map(formatMatch);
 
     res.json({
       ok: true,
-      selectedLeague: league.name,
-      selectedLeagueKey: league.key,
-      selectedLeagueId: league.id,
-      requestedDate: selectedDate,
-      usedDate: result.usedDate,
-      source: result.source,
+      league: league.name,
+      leagueKey: league.key,
+      selectedDate,
       count: formattedGames.length,
       games: formattedGames
     });
@@ -224,10 +233,9 @@ router.get('/soccer-games', async (req, res) => {
   } catch (error) {
     console.error('ERROR SOCCER GAMES:', error.message);
 
-    res.json({
+    res.status(500).json({
       ok: false,
       error: error.message,
-      count: 0,
       games: []
     });
   }
@@ -235,46 +243,94 @@ router.get('/soccer-games', async (req, res) => {
 
 router.get('/soccer-analyze/:id', async (req, res) => {
   try {
-    const random = Math.random();
+    const league = getLeague(req);
+    const selectedDate = req.query.date || null;
+    const matchId = String(req.params.id);
 
-    let confidence = 'baja';
-    if (random > 0.75) confidence = 'alta';
-    else if (random > 0.55) confidence = 'media';
+    const matches = await getSoccerGames(league.id, selectedDate);
+    const matchRaw = matches.find(m => String(m.id) === matchId);
 
-    const homeProb = Number((Math.random() * 40 + 30).toFixed(2));
-    const drawProb = 20;
-    const awayProb = Number((100 - homeProb - drawProb).toFixed(2));
+    if (!matchRaw) {
+      return res.status(404).json({
+        ok: false,
+        error: 'Partido no encontrado'
+      });
+    }
 
-    const analysis = {
-      pick: homeProb > awayProb ? 'HOME' : 'AWAY',
-      confidence,
-      bet: random > 0.4,
-      betType: random > 0.7 ? 'STRONG BET' : 'LEAN BET',
+    const allFinishedMatches = await getFinishedMatches(league.id);
+    const analysis = await analyzeMatch(matchRaw, league.id, allFinishedMatches);
 
-      probabilities: {
-        homeWin: homeProb,
-        draw: drawProb,
-        awayWin: awayProb
-      },
-
-      markets: {
-        over25: random > 0.5 ? 'Over 2.5' : 'Under 2.5',
-        over25Probability: Number((Math.random() * 20 + 50).toFixed(1)),
-        btts: 'Sí',
-        bttsProbability: Number((Math.random() * 15 + 50).toFixed(1)),
-        handicap: homeProb > awayProb ? 'HOME -0.5' : 'AWAY +0.5'
-      },
-
-      form: {
-        home: Number((Math.random() * 40 + 50).toFixed(1)),
-        away: Number((Math.random() * 40 + 50).toFixed(1))
-      }
-    };
-
-    res.json({ ok: true, analysis });
+    res.json({
+      ok: true,
+      league: league.name,
+      leagueKey: league.key,
+      selectedDate,
+      analysis
+    });
 
   } catch (error) {
-    res.json({ ok: false, error: error.message });
+    console.error('ERROR SOCCER ANALYZE:', error.message);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
+});
+
+router.get('/soccer-ticket', async (req, res) => {
+  try {
+    const league = getLeague(req);
+    const selectedDate = req.query.date || null;
+
+    const matches = await getSoccerGames(league.id, selectedDate);
+
+    if (!matches.length) {
+      return res.json({
+        ok: true,
+        league: league.name,
+        leagueKey: league.key,
+        selectedDate,
+        gamesAnalyzed: 0,
+        ticket: {
+          ticketType: 'Sin ticket',
+          totalPicks: 0,
+          picks: [],
+          note: 'No hay partidos para esta liga y fecha.'
+        }
+      });
+    }
+
+    const allFinishedMatches = await getFinishedMatches(league.id);
+
+    const analyses = matches.map(matchRaw =>
+      analyzeMatch(matchRaw, league.id, allFinishedMatches)
+    );
+
+    const ticket = buildSoccerTicket(analyses);
+
+    res.json({
+      ok: true,
+      league: league.name,
+      leagueKey: league.key,
+      selectedDate,
+      gamesAnalyzed: analyses.length,
+      ticket
+    });
+
+  } catch (error) {
+    console.error('ERROR SOCCER TICKET:', error.message);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      ticket: {
+        ticketType: 'Error',
+        totalPicks: 0,
+        picks: [],
+        note: 'No se pudo generar el ticket.'
+      }
+    });
   }
 });
 

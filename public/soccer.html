@@ -2,231 +2,391 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Soccer Picks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soccer Picks PRO</title>
 
   <style>
     body {
       background: #0f172a;
       color: white;
-      font-family: Arial;
+      font-family: 'Segoe UI', sans-serif;
       padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
     }
 
     h1 {
       text-align: center;
-      font-size: 36px;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
-    .controls {
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    select,
-    input[type="date"],
-    button {
-      padding: 12px 18px;
-      border-radius: 10px;
-      border: none;
-      margin: 6px;
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    select,
-    input[type="date"] {
+    .selector {
       background: #1e293b;
-      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
       border: 1px solid #334155;
+      flex-wrap: wrap;
     }
 
-    button {
-      background: #22c55e;
+    select, input {
+      padding: 12px;
+      border-radius: 8px;
+      background: #0f172a;
       color: white;
+      border: 1px solid #38bdf8;
+      outline: none;
+    }
+
+    .btn-ticket {
+      background: #22c55e;
+      color: #052e16;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    .game {
+    .game-card {
       background: #1e293b;
-      padding: 16px;
-      margin: 14px 0;
+      padding: 20px;
+      margin-bottom: 15px;
       border-radius: 12px;
+      border-left: 5px solid #38bdf8;
     }
 
     .teams {
       font-size: 20px;
       font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
     }
 
-    .league {
+    .vs {
+      color: #38bdf8;
+      font-size: 14px;
+    }
+
+    .info {
       font-size: 13px;
-      opacity: 0.75;
-      margin-bottom: 8px;
+      color: #94a3b8;
+      margin-top: 5px;
     }
 
-    .pick {
-      margin-top: 12px;
-      padding: 14px;
+    .btn-analyze {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      width: 100%;
+    }
+
+    .pick-res {
+      margin-top: 15px;
+      padding: 15px;
       border-radius: 10px;
-      font-weight: bold;
-      line-height: 1.6;
+      background: #0f172a;
+      display: none;
+      border: 1px solid #334155;
     }
 
-    .alta { background: #16a34a; }
-    .media { background: #f59e0b; }
-    .baja { background: #dc2626; }
-    .muy { background: #991b1b; }
-
-    .bet {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-      background: #052e16;
+    .alta {
+      border-color: #22c55e;
       color: #22c55e;
     }
 
-    .nobet {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
+    .media {
+      border-color: #eab308;
+      color: #eab308;
+    }
+
+    .baja {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+      margin-top: 8px;
+      color: #cbd5e1;
+    }
+
+    .bet-label {
+      text-align: center;
       font-weight: bold;
-      background: #450a0a;
-      color: #f87171;
+      margin-top: 10px;
+      padding: 7px;
+      border-radius: 5px;
+      background: #334155;
+    }
+
+    .ticket-box {
+      background: linear-gradient(180deg, #052e16 0%, #020617 100%);
+      border: 2px solid #22c55e;
+      padding: 18px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .ticket-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #86efac;
+      margin-bottom: 10px;
+    }
+
+    .ticket-pick {
+      background: #0f172a;
+      border: 1px solid #22c55e;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+      color: #e5e7eb;
+      line-height: 1.6;
+    }
+
+    .small-note {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 700px) {
+      .teams {
+        font-size: 16px;
+      }
+
+      .selector {
+        flex-direction: column;
+      }
+
+      select, input, .btn-ticket {
+        width: 100%;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<h1>⚽ SOCCER PICKS PRO</h1>
+<div class="container">
+  <h1>⚽ Soccer Picks Pro</h1>
 
-<div class="controls">
-  <select id="leagueSelect">
-    <option value="epl">Premier League</option>
-    <option value="laliga">La Liga</option>
-    <option value="seriea">Serie A</option>
-    <option value="bundesliga">Bundesliga</option>
-    <option value="ligue1">Ligue 1</option>
-    <option value="eredivisie">Eredivisie</option>
-    <option value="portugal">Primeira Liga</option>
-  </select>
+  <div class="selector">
+    <select id="leagueSelect" onchange="loadGames()">
+      <option value="epl">Premier League</option>
+      <option value="laliga">La Liga</option>
+      <option value="seriea">Serie A</option>
+      <option value="bundesliga">Bundesliga</option>
+      <option value="ligue1">Ligue 1</option>
+    </select>
 
-  <input type="date" id="dateSelect">
+    <input type="date" id="dateSelect" onchange="loadGames()">
 
-  <button type="button" onclick="loadGames()">Actualizar</button>
+    <button class="btn-ticket" onclick="generateSoccerTicket()">
+      🎟️ Generar Ticket Soccer
+    </button>
+  </div>
+
+  <div id="ticketBox" class="ticket-box"></div>
+
+  <div id="gamesList"></div>
 </div>
 
-<div id="games"></div>
-
 <script>
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 async function loadGames() {
   const league = document.getElementById('leagueSelect').value;
   const date = document.getElementById('dateSelect').value;
+  const container = document.getElementById('gamesList');
+  const ticketBox = document.getElementById('ticketBox');
 
-  const container = document.getElementById('games');
-  container.innerHTML = '<div class="game">Cargando partidos...</div>';
+  ticketBox.style.display = 'none';
+  ticketBox.innerHTML = '';
+
+  container.innerHTML = '<p style="text-align:center">Cargando partidos...</p>';
 
   try {
-    const url = `/api/soccer-games?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`;
-    console.log('Cargando:', url);
-
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(`/api/soccer-games?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
 
     container.innerHTML = '';
 
     if (!data.ok || !data.games || data.games.length === 0) {
-      container.innerHTML = `
-        <div class="game">
-          No hay partidos para esta liga en la fecha seleccionada.<br>
-          Liga: ${league}<br>
-          Fecha: ${date}
-        </div>
-      `;
+      container.innerHTML = '<div class="game-card" style="text-align:center">No hay partidos para esta fecha.</div>';
       return;
     }
 
     data.games.forEach(game => {
       const div = document.createElement('div');
-      div.className = 'game';
+      div.className = 'game-card';
 
       div.innerHTML = `
-        <div class="teams">${game.homeTeam} vs ${game.awayTeam}</div>
-        <div class="league">${game.league} - ${game.date}</div>
+        <div class="teams">
+          <span>${escapeHtml(game.homeTeam)}</span>
+          <span class="vs">VS</span>
+          <span>${escapeHtml(game.awayTeam)}</span>
+        </div>
 
-        <button type="button" onclick="analyze('${game.matchId}')">Ver Pick</button>
-        <div id="result-${game.matchId}"></div>
+        <div class="info">${escapeHtml(game.league)} | Hora: ${escapeHtml(game.time)}</div>
+
+        <button class="btn-analyze" onclick="analyze(this, '${escapeHtml(game.matchId)}')">
+          ANÁLISIS IA
+        </button>
+
+        <div id="res-${escapeHtml(game.matchId)}" class="pick-res"></div>
       `;
 
       container.appendChild(div);
     });
 
-  } catch (error) {
-    console.error(error);
-    container.innerHTML = '<div class="game">Error cargando partidos.</div>';
+  } catch (err) {
+    container.innerHTML = '<div class="game-card">Error al cargar partidos.</div>';
   }
 }
 
-async function analyze(matchId) {
+async function analyze(btn, matchId) {
+  btn.innerText = 'Calculando...';
+
   const league = document.getElementById('leagueSelect').value;
   const date = document.getElementById('dateSelect').value;
 
   try {
-    const url = `/api/soccer-analyze/${matchId}?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(`/api/soccer-analyze/${encodeURIComponent(matchId)}?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
 
     if (!data.ok) {
-      alert(data.error || 'Error analizando partido');
+      btn.innerText = 'Error, intenta otra vez';
       return;
     }
 
-    const a = data.analysis;
-    const resultDiv = document.getElementById(`result-${matchId}`);
-    const confidenceClass = a.confidence === 'muy baja' ? 'muy' : a.confidence;
+    const { analysis } = data;
+    const resDiv = document.getElementById(`res-${matchId}`);
 
-    resultDiv.innerHTML = `
-      <div class="pick ${confidenceClass}">
-        🎯 PICK: ${a.pick}<br>
-        ⚡ Confianza: ${a.confidence}
+    btn.innerText = 'RE-ANALIZAR';
+    resDiv.style.display = 'block';
+    resDiv.className = `pick-res ${analysis.confidence}`;
+
+    const betLabel =
+      analysis.confidence === 'alta'
+        ? '💰 STRONG BET'
+        : analysis.confidence === 'media'
+          ? '💰 LEAN BET'
+          : '🚫 NO BET';
+
+    resDiv.innerHTML = `
+      <div style="font-weight:bold; font-size:18px; margin-bottom:10px;">
+        🎯 PICK: ${escapeHtml(analysis.pick)}
       </div>
 
-      ${a.bet
-        ? `<div class="bet">💰 ${a.betType}</div>`
-        : `<div class="nobet">🚫 NO BET</div>`
-      }
-
-      <div>
-        📊 1X2:
-        Home ${a.probabilities.homeWin}% |
-        Draw ${a.probabilities.draw}% |
-        Away ${a.probabilities.awayWin}%
+      <div class="stat-row">
+        <span>Confianza:</span>
+        <span>${escapeHtml(analysis.confidence.toUpperCase())}</span>
       </div>
 
-      <div>
-        🔥 Over 2.5: ${a.markets.over25}
-        (${a.markets.over25Probability}%)
+      <div class="stat-row">
+        <span>Probabilidad 1X2:</span>
+        <span>${escapeHtml(analysis.probabilities.homeWin)}% | ${escapeHtml(analysis.probabilities.draw)}% | ${escapeHtml(analysis.probabilities.awayWin)}%</span>
       </div>
 
-      <div>
-        ⚽ BTTS: ${a.markets.btts}
-        (${a.markets.bttsProbability}%)
+      <div class="stat-row">
+        <span>Goles (+2.5):</span>
+        <span>${escapeHtml(analysis.markets.over25)} (${escapeHtml(analysis.markets.over25Probability)}%)</span>
       </div>
 
-      <div>
-        📉 Handicap: ${a.markets.handicap}
+      <div class="stat-row">
+        <span>Ambos marcan:</span>
+        <span>${escapeHtml(analysis.markets.btts)} (${escapeHtml(analysis.markets.bttsProbability)}%)</span>
       </div>
 
-      <div>
-        🏠 Home form score: ${a.form.home} |
-        ✈️ Away form score: ${a.form.away}
+      <div class="stat-row">
+        <span>Handicap:</span>
+        <span>${escapeHtml(analysis.markets.handicap)}</span>
       </div>
+
+      <div class="bet-label">${betLabel}</div>
     `;
 
-  } catch (error) {
-    console.error(error);
-    alert('Error analizando partido');
+  } catch (err) {
+    btn.innerText = 'Error, intenta otra vez';
+  }
+}
+
+async function generateSoccerTicket() {
+  const league = document.getElementById('leagueSelect').value;
+  const date = document.getElementById('dateSelect').value;
+  const ticketBox = document.getElementById('ticketBox');
+
+  ticketBox.style.display = 'block';
+  ticketBox.innerHTML = 'Generando ticket soccer...';
+
+  try {
+    const res = await fetch(`/api/soccer-ticket?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`);
+    const data = await res.json();
+
+    if (!data.ok) {
+      ticketBox.innerHTML = 'Error generando ticket.';
+      return;
+    }
+
+    const ticket = data.ticket;
+
+    if (!ticket.picks || ticket.picks.length === 0) {
+      ticketBox.innerHTML = `
+        <div class="ticket-title">🎟️ ${escapeHtml(ticket.ticketType)}</div>
+        <div>No hay picks suficientemente fuertes para esta fecha.</div>
+        <div class="small-note">${escapeHtml(ticket.note || '')}</div>
+      `;
+      return;
+    }
+
+    ticketBox.innerHTML = `
+      <div class="ticket-title">🎟️ ${escapeHtml(ticket.ticketType)}</div>
+      <div>Total picks: ${escapeHtml(ticket.totalPicks)}</div>
+
+      ${ticket.picks.map(p => `
+        <div class="ticket-pick">
+          ⚽ <strong>${escapeHtml(p.matchup)}</strong><br>
+          🎯 Pick: <strong>${escapeHtml(p.pick)}</strong><br>
+          📌 Mercado: ${escapeHtml(p.market)}<br>
+          📊 Probabilidad: ${escapeHtml(p.probability)}%<br>
+          ⚡ Confianza: ${escapeHtml(p.confidence)}<br>
+          ${escapeHtml(p.betType)}
+        </div>
+      `).join('')}
+
+      <div class="small-note">${escapeHtml(ticket.note || '')}</div>
+    `;
+
+  } catch (err) {
+    ticketBox.innerHTML = 'Error de conexión generando ticket.';
   }
 }
 

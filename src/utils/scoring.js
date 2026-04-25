@@ -79,36 +79,57 @@ function confidenceFromProb(prob) {
   return 'baja';
 }
 
-function buildRunLinePick({ awayTeam, homeTeam, awayFinalScore, homeFinalScore }) {
-  const projectedMargin = homeFinalScore - awayFinalScore;
-  const absMargin = Math.abs(projectedMargin);
+/* RUN LINE CORREGIDO - REGLA PRO FINAL */
+function buildRunLinePick({
+  awayTeam,
+  homeTeam,
+  awayFinalScore,
+  homeFinalScore,
+  awayModelWinPct,
+  homeModelWinPct,
+  pick
+}) {
+  const pickIsAway = pick === awayTeam;
+  const pickProb = pickIsAway ? awayModelWinPct : homeModelWinPct;
 
-  let pick;
-  let coverProb;
+  const projectedMargin = pickIsAway
+    ? awayFinalScore - homeFinalScore
+    : homeFinalScore - awayFinalScore;
 
-  if (projectedMargin > 0) {
-    if (absMargin >= 1.5) {
-      pick = `${homeTeam} -1.5`;
-      coverProb = clamp(54 + absMargin * 5, 50, 72);
-    } else {
-      pick = `${awayTeam} +1.5`;
-      coverProb = clamp(58 + (1.5 - absMargin) * 6, 50, 72);
-    }
+  if (pickProb < 58 || projectedMargin <= 1.5) {
+    return {
+      pick: null,
+      projectedMargin: round(projectedMargin),
+      coverProb: 0,
+      confidence: 'baja'
+    };
+  }
+
+  const rlPick = `${pick} -1.5`;
+
+  const marginBoost = Math.min((projectedMargin - 1.5) * 2, 5);
+  const coverProb = clamp(pickProb - 8 + marginBoost, 52, 68);
+
+  let rlConfidence = 'baja';
+
+  if (coverProb >= 62 && projectedMargin >= 15) {
+    rlConfidence = 'alta';
+  } else if (coverProb >= 58 && projectedMargin >= 10) {
+    rlConfidence = 'media';
   } else {
-    if (absMargin >= 1.5) {
-      pick = `${awayTeam} -1.5`;
-      coverProb = clamp(54 + absMargin * 5, 50, 72);
-    } else {
-      pick = `${homeTeam} +1.5`;
-      coverProb = clamp(58 + (1.5 - absMargin) * 6, 50, 72);
-    }
+    return {
+      pick: null,
+      projectedMargin: round(projectedMargin),
+      coverProb: 0,
+      confidence: 'baja'
+    };
   }
 
   return {
-    pick,
+    pick: rlPick,
     projectedMargin: round(projectedMargin),
     coverProb: round(coverProb),
-    confidence: confidenceFromProb(coverProb)
+    confidence: rlConfidence
   };
 }
 
@@ -175,7 +196,10 @@ export function buildGameAnalysis({
     awayTeam,
     homeTeam,
     awayFinalScore,
-    homeFinalScore
+    homeFinalScore,
+    awayModelWinPct,
+    homeModelWinPct,
+    pick
   });
 
   const awayProjectedRuns = clamp(
@@ -228,7 +252,8 @@ export function buildGameAnalysis({
     notes: [
       'Modelo MLB basado en pitcher, ofensiva, localía y odds cuando están disponibles.',
       'El modelo compara probabilidad propia contra la probabilidad implícita.',
-      'Run Line y Team Totals salen de proyección ofensiva y pitcheo.'
+      'Run Line solo se activa con probabilidad y margen suficientes.',
+      'Team Totals salen de proyección ofensiva y pitcheo.'
     ]
   };
 }

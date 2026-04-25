@@ -11,15 +11,6 @@ function parseGoals(value) {
   return Number.isNaN(n) ? 0 : n;
 }
 
-// 🔥 NUEVO SISTEMA DE CONFIANZA (PRO + EQUILIBRADO)
-function confidence(prob, diff = 0) {
-  if (prob >= 61 && diff >= 10) return 'alta';
-  if (prob >= 55 && diff >= 6) return 'media';
-  if (prob >= 50 && diff >= 4) return 'baja';
-  return 'muy baja';
-}
-
-// 🔥 ANALIZA FORMA RECIENTE
 function analyzeRecentForm(events, teamName) {
   if (!Array.isArray(events) || events.length === 0) {
     return {
@@ -27,10 +18,10 @@ function analyzeRecentForm(events, teamName) {
       wins: 0,
       draws: 0,
       losses: 0,
-      goalsFor: 0,
-      goalsAgainst: 0,
-      avgGF: 1.2,
-      avgGA: 1.2,
+      goalsFor: 1.25,
+      goalsAgainst: 1.25,
+      avgGF: 1.25,
+      avgGA: 1.25,
       formScore: 50
     };
   }
@@ -41,16 +32,14 @@ function analyzeRecentForm(events, teamName) {
   let goalsFor = 0;
   let goalsAgainst = 0;
 
-  const recent = events.slice(0, 5);
-
-  recent.forEach(event => {
-    const homeTeam = event.strHomeTeam;
-    const awayTeam = event.strAwayTeam;
+  events.slice(0, 5).forEach(event => {
+    const home = event.strHomeTeam;
+    const away = event.strAwayTeam;
 
     const homeGoals = parseGoals(event.intHomeScore);
     const awayGoals = parseGoals(event.intAwayScore);
 
-    const isHome = homeTeam === teamName;
+    const isHome = home === teamName;
 
     const gf = isHome ? homeGoals : awayGoals;
     const ga = isHome ? awayGoals : homeGoals;
@@ -63,19 +52,16 @@ function analyzeRecentForm(events, teamName) {
     else losses++;
   });
 
-  const games = recent.length || 1;
+  const games = Math.min(events.length, 5);
   const avgGF = goalsFor / games;
   const avgGA = goalsAgainst / games;
 
   let formScore = 50;
-
-  formScore += wins * 7;
+  formScore += wins * 8;
   formScore += draws * 2;
-  formScore -= losses * 5;
-  formScore += (avgGF - 1.2) * 10;
-  formScore -= (avgGA - 1.2) * 9;
-
-  formScore = clamp(formScore, 0, 100);
+  formScore -= losses * 6;
+  formScore += (avgGF - 1.2) * 12;
+  formScore -= (avgGA - 1.2) * 10;
 
   return {
     games,
@@ -84,13 +70,18 @@ function analyzeRecentForm(events, teamName) {
     losses,
     goalsFor,
     goalsAgainst,
-    avgGF: round(avgGF, 2),
-    avgGA: round(avgGA, 2),
-    formScore: round(formScore, 1)
+    avgGF: round(avgGF),
+    avgGA: round(avgGA),
+    formScore: clamp(formScore)
   };
 }
 
-// 🔥 MODELO PRINCIPAL
+function confidence(prob) {
+  if (prob >= 62) return 'alta';
+  if (prob >= 55) return 'media';
+  return 'baja';
+}
+
 export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents }) {
   const homeTeam = match.homeTeam;
   const awayTeam = match.awayTeam;
@@ -98,57 +89,52 @@ export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents 
   const homeForm = analyzeRecentForm(homeRecentEvents, homeTeam);
   const awayForm = analyzeRecentForm(awayRecentEvents, awayTeam);
 
-  const homeBase = homeForm.formScore + 3;
+  const homeBase = homeForm.formScore + 4; // ventaja local
   const awayBase = awayForm.formScore;
 
   const totalPower = homeBase + awayBase;
 
-  let homeWin = totalPower ? (homeBase / totalPower) * 72 : 38;
-  let awayWin = totalPower ? (awayBase / totalPower) * 72 : 34;
+  let homeWin = totalPower ? (homeBase / totalPower) * 75 : 38;
+  let awayWin = totalPower ? (awayBase / totalPower) * 75 : 34;
 
   const draw = clamp(
-    26 - Math.abs(homeBase - awayBase) * 0.10,
-    20,
-    30
+    28 - Math.abs(homeBase - awayBase) * 0.12,
+    18,
+    32
   );
 
   const remaining = 100 - draw;
   const winTotal = homeWin + awayWin;
 
-  homeWin = winTotal ? (homeWin / winTotal) * remaining : 38;
-  awayWin = winTotal ? (awayWin / winTotal) * remaining : 34;
+  homeWin = (homeWin / winTotal) * remaining;
+  awayWin = (awayWin / winTotal) * remaining;
 
-  // 🔥 DIFERENCIA REAL ENTRE EQUIPOS
-  const diff = Math.abs(homeWin - awayWin);
-
-  // 🔥 GOLES
   const homeProjectedGoals = clamp(
-    1.2 + homeForm.avgGF * 0.5 - awayForm.avgGA * 0.25,
-    0.4,
-    3.5
+    1.15 + (homeForm.avgGF * 0.55) - (awayForm.avgGA * 0.25),
+    0.3,
+    3.8
   );
 
   const awayProjectedGoals = clamp(
-    1.05 + awayForm.avgGF * 0.5 - homeForm.avgGA * 0.25,
-    0.3,
-    3.2
+    1.00 + (awayForm.avgGF * 0.55) - (homeForm.avgGA * 0.25),
+    0.2,
+    3.5
   );
 
-  const totalGoals = homeProjectedGoals + awayProjectedGoals;
+  const projectedTotal = homeProjectedGoals + awayProjectedGoals;
 
   const over25Prob = clamp(
-    48 + (totalGoals - 2.4) * 15,
-    40,
-    72
+    45 + (projectedTotal - 2.4) * 18,
+    35,
+    75
   );
 
   const bttsProb = clamp(
-    42 + Math.min(homeProjectedGoals, awayProjectedGoals) * 16,
-    40,
-    70
+    38 + Math.min(homeProjectedGoals, awayProjectedGoals) * 18,
+    35,
+    75
   );
 
-  // 🔥 PICK
   let pick = 'Draw';
   let pickProb = draw;
 
@@ -162,76 +148,47 @@ export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents 
     pickProb = awayWin;
   }
 
-  // 🔥 NUEVA CONFIANZA
-  const pickConfidence = confidence(pickProb, diff);
-
-  // 🔥 HANDICAP
-  let handicap = 'N/A';
-
-  if (homeWin >= 56) {
-    handicap = `${homeTeam} -0.5`;
-  } else if (awayWin >= 56) {
-    handicap = `${awayTeam} -0.5`;
-  } else if (homeWin > awayWin) {
-    handicap = `${homeTeam} +0.5`;
-  } else {
-    handicap = `${awayTeam} +0.5`;
-  }
-
-  // 🔥 SISTEMA DE APUESTAS BALANCEADO
-  let bet = false;
-  let betType = 'NO BET';
-
-  if (pickProb >= 61 && diff >= 10) {
-    bet = true;
-    betType = 'STRONG BET';
-  } else if (pickProb >= 55 && diff >= 6) {
-    bet = true;
-    betType = 'MEDIUM BET';
-  } else if (pickProb >= 50 && diff >= 4) {
-    bet = true;
-    betType = 'LEAN BET';
-  } else if (over25Prob >= 61) {
-    bet = true;
-    betType = 'OVER 2.5 BET';
-  } else if (bttsProb >= 61) {
-    bet = true;
-    betType = 'BTTS BET';
-  }
+  const handicap =
+    homeWin >= awayWin
+      ? `${homeTeam} -0.5`
+      : `${awayTeam} +0.5`;
 
   return {
     matchId: match.matchId,
     matchup: `${homeTeam} vs ${awayTeam}`,
     pick,
-    confidence: pickConfidence,
-    bet,
-    betType,
+    confidence: confidence(pickProb),
 
     probabilities: {
-      homeWin: round(homeWin, 2),
-      draw: round(draw, 2),
-      awayWin: round(awayWin, 2),
-      pickProbability: round(pickProb, 2),
-      diff: round(diff, 2)
+      homeWin: round(homeWin),
+      draw: round(draw),
+      awayWin: round(awayWin),
+      pickProbability: round(pickProb)
     },
 
     form: {
-      home: homeForm.formScore,
-      away: awayForm.formScore
+      home: homeForm,
+      away: awayForm
     },
 
     goals: {
-      homeProjectedGoals: round(homeProjectedGoals, 2),
-      awayProjectedGoals: round(awayProjectedGoals, 2),
-      total: round(totalGoals, 2)
+      homeProjectedGoals: round(homeProjectedGoals),
+      awayProjectedGoals: round(awayProjectedGoals),
+      projectedTotal: round(projectedTotal)
     },
 
     markets: {
       over25: over25Prob >= 52 ? 'Over 2.5' : 'Under 2.5',
-      over25Probability: round(over25Prob, 1),
+      over25Probability: round(over25Prob),
       btts: bttsProb >= 52 ? 'Sí' : 'No',
-      bttsProbability: round(bttsProb, 1),
+      bttsProbability: round(bttsProb),
       handicap
-    }
+    },
+
+    notes: [
+      'Modelo basado en forma reciente de los últimos partidos.',
+      'Incluye goles a favor, goles en contra, rendimiento reciente y localía.',
+      'El empate se calcula separado porque fútbol tiene mercado 1X2.'
+    ]
   };
 }
