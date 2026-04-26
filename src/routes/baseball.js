@@ -78,7 +78,6 @@ router.get('/games', async (req, res) => {
       gameDate: g.gameDate,
       homeTeam: g.teams?.home?.team?.name || '',
       awayTeam: g.teams?.away?.team?.name || '',
-      // Mapeo directo para que el frontend reciba awayPitcher y homePitcher
       homePitcher: g.teams?.home?.probablePitcher?.fullName || 'TBD',
       awayPitcher: g.teams?.away?.probablePitcher?.fullName || 'TBD'
     })) || [];
@@ -210,16 +209,50 @@ router.get('/ticket', async (req, res) => {
   }
 });
 
-// --- NUEVA RUTA PARA PLAYER PROPS ---
+// --- RUTA ACTUALIZADA PARA PLAYER PROPS ---
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
 
+    // 🔥 Traer lineup real
+    const lineupRes = await fetch(
+      `https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`
+    );
+
+    const lineupData = await lineupRes.json();
+
+    const players = [
+      ...Object.values(lineupData?.teams?.home?.players || {}),
+      ...Object.values(lineupData?.teams?.away?.players || {})
+    ].filter(p => p.battingOrder);
+
+    // 🎯 Modelo básico inicial
+    const props = players.map(p => {
+      const name = p.person?.fullName || "N/A";
+
+      // modelo simple random inicial (luego lo mejoramos)
+      const hitChance = Math.floor(Math.random() * 40) + 40;
+      const hrChance = Math.floor(Math.random() * 20) + 5;
+      const rbiChance = Math.floor(Math.random() * 30) + 20;
+
+      let rating = "Baja";
+      if (hitChance > 65) rating = "Alta";
+      else if (hitChance > 55) rating = "Media";
+
+      return {
+        name,
+        hitChance,
+        hrChance,
+        rbiChance,
+        rating
+      };
+    });
+
     res.json({
       ok: true,
       gamePk,
-      message: 'Player props endpoint funcionando',
-      props: []
+      totalPlayers: props.length,
+      props
     });
 
   } catch (error) {
