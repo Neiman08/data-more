@@ -42,6 +42,91 @@ router.get('/', (req, res) => {
   res.send('BASEBALL ROUTE OK');
 });
 
+router.get('/games', async (req, res) => {
+  try {
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+
+    const response = await fetch(
+      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${encodeURIComponent(date)}&hydrate=probablePitcher`
+    );
+
+    const data = await response.json();
+
+    const games = data.dates?.[0]?.games?.map(g => ({
+      gamePk: g.gamePk,
+      id: g.gamePk,
+      date,
+      status: g.status?.detailedState || 'Scheduled',
+      gameDate: g.gameDate,
+      homeTeam: g.teams?.home?.team?.name || '',
+      awayTeam: g.teams?.away?.team?.name || '',
+      homePitcher: g.teams?.home?.probablePitcher?.fullName || 'TBD',
+      awayPitcher: g.teams?.away?.probablePitcher?.fullName || 'TBD'
+    })) || [];
+
+    res.json({
+      ok: true,
+      date,
+      count: games.length,
+      games
+    });
+
+  } catch (error) {
+    console.error('ERROR BASEBALL GAMES:', error.message);
+    res.json({
+      ok: false,
+      error: error.message,
+      games: []
+    });
+  }
+});
+
+router.get('/lineup/:id', async (req, res) => {
+  try {
+    const gamePk = req.params.id;
+
+    const response = await fetch(
+      `https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`
+    );
+
+    const data = await response.json();
+
+    const homePlayers = Object.values(data?.teams?.home?.players || {});
+    const awayPlayers = Object.values(data?.teams?.away?.players || {});
+
+    const formatLineup = players =>
+      players
+        .filter(p => p.battingOrder)
+        .sort((a, b) => Number(a.battingOrder) - Number(b.battingOrder))
+        .map(p => ({
+          battingOrder: p.battingOrder,
+          name: p.person?.fullName || '',
+          pos: p.position?.abbreviation || '',
+          batSide: p.batSide?.code || ''
+        }));
+
+    res.json({
+      ok: true,
+      gamePk,
+      homeTeam: data?.teams?.home?.team?.name || '',
+      awayTeam: data?.teams?.away?.team?.name || '',
+      homeLineup: formatLineup(homePlayers),
+      awayLineup: formatLineup(awayPlayers),
+      homeConfirmed: formatLineup(homePlayers).length > 0,
+      awayConfirmed: formatLineup(awayPlayers).length > 0
+    });
+
+  } catch (error) {
+    console.error('ERROR BASEBALL LINEUP:', error.message);
+    res.json({
+      ok: false,
+      error: error.message,
+      homeLineup: [],
+      awayLineup: []
+    });
+  }
+});
+
 router.get('/ticket', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
