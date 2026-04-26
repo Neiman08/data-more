@@ -4,25 +4,25 @@
 <style>
   /* Base styles to establish a professional, unified dark theme */
   :root {
-    --primary-blue: #3b82f6; 
-    --accent-green: #22c55e; 
-    --bg-dark-start: #0b1020; 
-    --bg-dark-end: #030612; 
-    --card-bg-dark: #11182d; 
+    --primary-blue: #3b82f6; /* A more vibrant, refined blue for main actions */
+    --accent-green: #22c55e; /* A rich, successful green for tickets and confirmation */
+    --bg-dark-start: #0b1020; /* Darker starting point for better depth */
+    --bg-dark-end: #030612; /* Deep, near-black end point */
+    --card-bg-dark: #11182d; /* Professional card background */
     --text-main: #ffffff;
-    --text-subtle: #94a3b8; 
-    --border-dark: #1e293b; 
+    --text-subtle: #94a3b8; /* Refined subtle text color */
+    --border-dark: #1e293b; /* More subtle border */
     --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-heavy: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   body {
     margin: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; /* Cleaner, more modern font */
     background: radial-gradient(circle at top, #111b33 0%, var(--bg-dark-start) 45%, var(--bg-dark-end) 100%);
     color: var(--text-main);
     padding: 30px;
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased; /* Better text rendering */
     -moz-osx-font-smoothing: grayscale;
   }
 
@@ -31,10 +31,11 @@
     margin: 0 auto;
   }
 
+  /* --- BRAND HEADER --- */
   .brand-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between; /* Space for future elements on the right */
     gap: 20px;
     margin-bottom: 30px;
     padding-bottom: 20px;
@@ -60,9 +61,9 @@
   .brand-header h1 {
     margin: 0;
     font-size: 32px;
-    font-weight: 800;
+    font-weight: 800; /* Bolder font weight for authority */
     color: var(--text-main);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.5px; /* Tighter letter-spacing for premium feel */
   }
 
   .subtitle {
@@ -72,6 +73,7 @@
     font-weight: 500;
   }
 
+  /* --- NAVIGATION --- */
   .nav {
     display: flex;
     gap: 8px;
@@ -88,7 +90,7 @@
     border: 1px solid var(--border-dark);
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.2s ease;
+    transition: all 0.2s ease; /* Smooth state changes */
   }
 
   .nav a:hover:not(.active) {
@@ -102,6 +104,7 @@
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
 
+  /* --- TOPBAR --- */
   .topbar {
     display: flex;
     gap: 12px;
@@ -131,6 +134,11 @@
     font-size: 14px;
   }
 
+  input[type="date"]:focus {
+    outline: 2px solid var(--primary-blue);
+    border-color: var(--primary-blue);
+  }
+
   button {
     padding: 10px 18px;
     border-radius: 8px;
@@ -147,13 +155,26 @@
   .btn-primary {
     background: var(--primary-blue);
     color: #ffffff;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
   }
 
   .ticket-btn {
     background: var(--accent-green);
     color: #ffffff;
+    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.15);
   }
 
+  .ticket-btn:hover {
+    background: #16a34a;
+    box-shadow: 0 6px 14px rgba(34, 197, 94, 0.25);
+  }
+
+  /* --- STATUS & TICKET BOXES --- */
   .status-box {
     background: var(--card-bg-dark);
     border: 1px solid var(--border-dark);
@@ -161,8 +182,31 @@
     border-radius: 8px;
     padding: 14px 18px;
     margin-bottom: 25px;
+    font-size: 14px;
+    font-weight: 500;
   }
 
+  .ticket-box {
+    background: linear-gradient(135deg, #06391d 0%, #032c18 100%);
+    border: 1px solid var(--accent-green);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .ticket-pick {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-dark);
+    padding: 14px;
+    margin-top: 12px;
+    border-radius: 8px;
+    line-height: 1.6;
+    font-size: 14px;
+    color: #e2e8f0;
+  }
+
+  /* --- GAME GRID & CARDS --- */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -175,6 +219,12 @@
     border-radius: 12px;
     padding: 20px;
     box-shadow: var(--shadow-subtle);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-heavy);
   }
 
   .matchup-row {
@@ -186,21 +236,40 @@
     border-bottom: 1px solid var(--border-dark);
   }
 
-  .ball { font-size: 30px; }
-  .matchup { font-size: 20px; font-weight: 700; }
+  .ball {
+    font-size: 30px;
+    min-width: 38px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
 
-  .meta { font-size: 13px; color: var(--text-subtle); line-height: 1.8; margin-bottom: 15px; }
+  .matchup {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-main);
+  }
+
+  .meta {
+    font-size: 13px;
+    color: var(--text-subtle);
+    line-height: 1.8;
+    margin-bottom: 15px;
+    padding-left: 2px;
+  }
 
   .odds-badge {
     display: inline-block;
+    margin-top: 10px;
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 12px;
+    font-weight: 600;
     background: #0d121f;
     border: 1px solid var(--border-dark);
     color: #93c5fd;
   }
 
+  /* Lineup Section within Card */
   .lineup-container {
     background: rgba(0, 0, 0, 0.15);
     border-radius: 8px;
@@ -217,10 +286,18 @@
     color: #e2e8f0;
     margin-bottom: 12px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .lineups { display: flex; justify-content: space-between; gap: 15px; }
-  .team-lineup { width: calc(50% - 7.5px); }
+  .lineups {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+  }
+
+  .team-lineup {
+    width: calc(50% - 7.5px);
+  }
 
   .player {
     display: flex;
@@ -228,12 +305,44 @@
     padding: 5px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     font-size: 13px;
+    color: #cbd5e1;
   }
 
-  .order { font-weight: 600; color: var(--accent-green); margin-right: 8px; }
-  .p-name { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pos { color: var(--text-subtle); background: #1e293b; padding: 1px 4px; border-radius: 4px; font-size: 11px; }
+  .order {
+    font-weight: 600;
+    color: var(--accent-green);
+    margin-right: 8px;
+  }
 
+  .p-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pos {
+    color: var(--text-subtle);
+    font-weight: 600;
+    font-size: 11px;
+    background: #1e293b;
+    padding: 1px 4px;
+    border-radius: 4px;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  .status {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 12px;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  
   .confirmed-badge {
     background: rgba(34, 197, 94, 0.1);
     color: var(--accent-green);
@@ -241,13 +350,27 @@
     border-radius: 99px;
     font-weight: 600;
     font-size: 11px;
+    font-style: normal;
   }
 
-  .result { margin-top: 15px; display: none; }
-  .pick-box { padding: 16px; border-radius: 10px; font-weight: 600; margin-top: 12px; }
-  .alta { background: rgba(34, 197, 94, 0.1); border: 1px solid var(--accent-green); }
-  .media { background: rgba(234, 179, 8, 0.1); border: 1px solid #facc15; }
-  .baja { background: rgba(239, 68, 68, 0.1); border: 1px solid #fb7185; }
+  /* Result section */
+  .result {
+    margin-top: 15px;
+    display: none; /* Hidden until analyzed */
+  }
+
+  .pick-box {
+    padding: 16px;
+    border-radius: 10px;
+    line-height: 1.8;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+
+  .alta { background: rgba(34, 197, 94, 0.1); border: 1px solid var(--accent-green); color: #d1fae5; }
+  .media { background: rgba(234, 179, 8, 0.1); border: 1px solid #facc15; color: #fef3c7; }
+  .baja { background: rgba(239, 68, 68, 0.1); border: 1px solid #fb7185; color: #fee2e2; }
 
   .extra-box {
     margin-top: 12px;
@@ -255,15 +378,70 @@
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.15);
     border: 1px solid var(--border-dark);
+    color: #e2e8f0;
+    line-height: 1.8;
     font-size: 13px;
   }
 
-  .extra-title { color: #7dd3fc; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+  .extra-title {
+    color: #7dd3fc;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 5px;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.03);
+    margin: 12px 0;
+  }
+
+  .small {
+    font-size: 12px;
+    color: var(--text-subtle);
+    line-height: 1.7;
+    margin-top: 10px;
+    font-style: italic;
+  }
+
+  .empty {
+    background: var(--card-bg-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: 10px;
+    padding: 20px;
+    color: var(--text-subtle);
+    text-align: center;
+    grid-column: 1 / -1; /* Stretch across all columns */
+  }
+
+  .footer-note {
+    margin-top: 30px;
+    color: var(--text-subtle);
+    font-size: 12px;
+    text-align: center;
+    border-top: 1px solid var(--border-dark);
+    padding-top: 20px;
+  }
+
+  /* Responsive tweaks */
+  @media (max-width: 768px) {
+    body { padding: 15px; }
+    .brand-header h1 { font-size: 26px; }
+    .topbar { flex-direction: column; align-items: stretch; gap: 10px; }
+    button { width: 100%; }
+  }
 </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data More Picks | MLB</title>
 </head>
 
 <body>
   <div class="container">
+
     <div class="brand-header">
       <div class="brand-logo-container">
         <img src="/logo.png" class="brand-logo">
@@ -272,7 +450,7 @@
           <p class="subtitle">Moneyline, Run Line, Team Totals</p>
         </div>
       </div>
-    </div>
+      </div>
 
     <div class="nav">
         <a href="/" class="active">⚾ MLB</a>
@@ -290,7 +468,12 @@
     </div>
 
     <div id="statusBox" class="status-box">Cargando interfaz...</div>
+    <div id="ticketBox"></div>
     <div id="games" class="grid"></div>
+
+    <p class="footer-note">
+      Si no ves odds, puede ser que la línea aún no esté disponible o que la API de cuotas no tenga ese juego.
+    </p>
   </div>
 
   <script>
@@ -300,14 +483,14 @@ async function getLineup(gamePk) {
   return await res.json();
 }
 
-// 🎯 RENDER LINEUPS (Ajustado con nombres de equipos)
+// 🎯 RENDER (optimized with .slice(0, 9) already applied)
 function renderLineups(data) {
   if (!data.ok || !data.awayLineup || !data.homeLineup) return '';
 
   return `
     <div class="lineup-container">
       <div class="teams-header">
-        <div>${data.awayTeam}</div>
+        <div>Lineup</div>
         <div>${data.homeTeam}</div>
       </div>
 
@@ -333,7 +516,7 @@ function renderLineups(data) {
         </div>
       </div>
 
-      <div class="status" style="margin-top:10px; text-align:center;">
+      <div class="status">
         ${data.homeConfirmed ? '<span class="confirmed-badge">🟢 CONFIRMADO</span>' : '⏳ Pendiente'}
       </div>
     </div>
@@ -344,43 +527,87 @@ function renderLineups(data) {
     const gamesContainer = document.getElementById("games");
     const statusBox = document.getElementById("statusBox");
     const loadBtn = document.getElementById("loadBtn");
+    const analyzeAllBtn = document.getElementById("analyzeAllBtn");
+    const ticketBtn = document.getElementById("ticketBtn");
+    const ticketBox = document.getElementById("ticketBox");
 
-    dateInput.value = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
 
     function escapeHtml(value) {
-      return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatNum(value, decimals = 2) {
+      const num = Number(value);
+      if (Number.isNaN(num)) return "N/D";
+      return num.toFixed(decimals);
+    }
+
+    function confidenceClass(confidence) {
+      const c = String(confidence || "").toLowerCase();
+      if (c.includes("alta")) return "alta";
+      if (c.includes("media")) return "media";
+      return "baja";
     }
 
     function moneylineText(game) {
-      if (!game.odds || !game.odds.bookmakers?.[0]) return "Moneyline: no disponible";
-      const h2h = game.odds.bookmakers[0].markets?.find(m => m.key === "h2h");
+      if (!game.odds || !game.odds.bookmakers || !game.odds.bookmakers.length) {
+        return "Moneyline: no disponible";
+      }
+
+      const bookmaker = game.odds.bookmakers[0];
+      const h2h = bookmaker.markets?.find(m => m.key === "h2h");
+
       if (!h2h) return "Moneyline: no disponible";
+
       const away = h2h.outcomes?.find(o => o.name === game.awayTeam);
       const home = h2h.outcomes?.find(o => o.name === game.homeTeam);
+
       return `ML: ${game.awayTeam} ${away?.price ?? "N/D"} | ${game.homeTeam} ${home?.price ?? "N/D"}`;
     }
 
     async function loadGames() {
       const date = dateInput.value;
       statusBox.textContent = `Cargando juegos para ${date}...`;
+      ticketBox.innerHTML = "";
       gamesContainer.innerHTML = "";
 
       try {
         const res = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
         const data = await res.json();
 
-        if (!data.ok || !data.games.length) {
-          statusBox.textContent = "Sin juegos disponibles.";
+        if (!data.ok) {
+          statusBox.textContent = "Error al conectar con la API.";
+          gamesContainer.innerHTML = `<div class="empty">Error: ${escapeHtml(data.error || "Falla desconocida")}</div>`;
           return;
         }
+
+        if (!data.games || !data.games.length) {
+          statusBox.textContent = "Sin juegos para esta fecha.";
+          gamesContainer.innerHTML = `<div class="empty">No hay juegos disponibles en ${escapeHtml(date)}.</div>`;
+          return;
+        }
+
+        statusBox.textContent = `Se encontraron ${data.games.length} juegos para ${date}.`;
 
         for (const game of data.games) {
           const card = document.createElement("div");
           card.className = "card";
-          
+          card.dataset.gamepk = game.gamePk;
+
+          const gameDate = game.gameDate
+            ? new Date(game.gameDate).toLocaleString([], { hour: '2-digit', minute: '2-digit' }) // Simple format
+            : "N/D";
+
           const lineup = await getLineup(game.gamePk);
 
-          card.innerHTML = `
+          let html = `
             <div class="matchup-row">
               <div class="ball">⚾</div>
               <div class="matchup">${escapeHtml(game.awayTeam)} @ ${escapeHtml(game.homeTeam)}</div>
@@ -388,24 +615,326 @@ function renderLineups(data) {
 
             <div class="meta">
               <strong>Estado:</strong> ${escapeHtml(game.status || "N/D")}<br>
-              <strong>Hora:</strong> ${new Date(game.gameDate).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}<br>
+              <strong>Hora:</strong> ${escapeHtml(gameDate)}<br>
               <strong>ID:</strong> ${escapeHtml(game.gamePk)}<br>
-              <strong>Pitchers:</strong> ${escapeHtml(game.awayPitcher || "TBD")} vs ${escapeHtml(game.homePitcher || "TBD")}<br>
+              <strong>Pitchers:</strong> ${escapeHtml(game.awayProbablePitcher || "TBD")} vs ${escapeHtml(game.homeProbablePitcher || "TBD")}<br>
               <span class="odds-badge">${escapeHtml(moneylineText(game))}</span>
             </div>
-            ${renderLineups(lineup)}
-            <button onclick="analyzeGame('${game.gamePk}')" class="btn-primary" style="margin-top:18px; width:100%; justify-content:center;">Analizar juego</button>
-            <div class="result" id="result-${game.gamePk}"></div>
           `;
+
+          html += renderLineups(lineup);
+
+          html += `
+            <button onclick="analyzeGame('${escapeHtml(game.gamePk)}')" class="btn-primary" style="margin-top:18px; width:100%; justify-content:center;">Analizar juego</button>
+            <div class="result" id="result-${escapeHtml(game.gamePk)}"></div>
+          `;
+
+          card.innerHTML = html;
           gamesContainer.appendChild(card);
         }
-        statusBox.textContent = `Se encontraron ${data.games.length} juegos.`;
-      } catch (e) {
-        statusBox.textContent = "Error de red.";
+
+      } catch (error) {
+        statusBox.textContent = "Error de red al cargar juegos.";
+        gamesContainer.innerHTML = `<div class="empty">Error: ${escapeHtml(error.message)}</div>`;
       }
     }
 
+    async function analyzeGame(gamePk) {
+      const date = dateInput.value;
+      const result = document.getElementById(`result-${gamePk}`);
+
+      result.innerHTML = `<div class="small">Analizando...</div>`;
+      result.style.display = 'block'; // Show result panel
+
+      try {
+        const res = await fetch(`/api/analyze/${gamePk}?date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+
+        if (!data.ok) {
+          result.innerHTML = `<div class="small Alta">Error en análisis.</div>`;
+          return;
+        }
+
+        const a = data.analysis || {};
+        const away = a.away || {};
+        const home = a.home || {};
+        const runLine = a.runLine || {};
+        const teamTotals = a.teamTotals || {};
+        const awayTT = teamTotals.away || {};
+        const homeTT = teamTotals.home || {};
+
+        const pickIsAway = a.pick === away.team;
+        const pickPct = pickIsAway ? away.modelWinPct : home.modelWinPct;
+
+        result.innerHTML = `
+          <div class="pick-box ${confidenceClass(a.confidence)}">
+            🔥 <strong>Pick:</strong> ${escapeHtml(a.pick || "N/D")}<br>
+            📊 <strong>Confianza:</strong> ${escapeHtml(a.confidence || "N/D")} [${escapeHtml(formatNum(pickPct))}%]<br>
+            📈 Margen proyectado: ${escapeHtml(formatNum(away.finalScore - home.finalScore))}
+          </div>
+
+          <div class="extra-box">
+            <div class="extra-title">📉 Run Line</div>
+            <strong>Pick:</strong> ${escapeHtml(runLine.pick || "N/D")}<br>
+            Cobertura: ${escapeHtml(formatNum(runLine.coverProb))}% [Score: ${escapeHtml(runLine.confidence || "N/D")}]
+          </div>
+
+          <div class="extra-box">
+            <div class="extra-title">📊 Team Totals</div>
+
+            <strong>${escapeHtml(game.awayTeam)}:</strong> ${escapeHtml(awayTT.pick || "N/D")} [Prob ${escapeHtml(formatNum(awayTT.probability))}%, Linea: ${escapeHtml(formatNum(awayTT.line, 1))}]<br>
+
+            <div class="divider"></div>
+
+            <strong>${escapeHtml(game.homeTeam)}:</strong> ${escapeHtml(homeTT.pick || "N/D")} [Prob ${escapeHtml(formatNum(homeTT.probability))}%, Linea: ${escapeHtml(formatNum(homeTT.line, 1))}]
+
+            <div class="divider"></div>
+
+            <strong>➕ Combinado:</strong> Proy ${escapeHtml(formatNum(teamTotals.combinedProjectedTotal))}
+          </div>
+
+          <div class="small">
+            ${(a.notes || []).map(n => `• ${escapeHtml(n)}`).join("<br>")}
+          </div>
+        `;
+      } catch (error) {
+        result.innerHTML = `<div class="small Alta">Error analizando juego: ${escapeHtml(error.message)}</div>`;
+      }
+    }
+
+    async function analyzeAll() {
+      const cards = Array.from(document.querySelectorAll(".card"));
+      statusBox.textContent = `Analizando ${cards.length} juegos en segundo plano...`;
+      for (const card of cards) {
+        await analyzeGame(card.dataset.gamepk);
+      }
+      statusBox.textContent = `Análisis de ${cards.length} juegos completado.`;
+    }
+ 
+async function loadMLBTicket() {
+  const date = dateInput.value;
+  ticketBox.innerHTML = `<div class="status-box">Generando ticket sugerido para ${escapeHtml(date)}...</div>`;
+
+  try {
+    const gamesRes = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
+    const gamesData = await gamesRes.json();
+
+    if (!gamesData.ok || !gamesData.games || !gamesData.games.length) {
+      ticketBox.innerHTML = `<div class="status-box">No hay juegos suficientes en ${escapeHtml(date)}.</div>`;
+      return;
+    }
+
+    const bestPicks = [];
+
+    for (const game of gamesData.games) {
+      if (
+        ["postponed", "delayed", "suspended"].some(s =>
+          String(game.status || "").toLowerCase().includes(s)
+        ) ||
+        !game.odds ||
+        !game.odds.bookmakers ||
+        !game.odds.bookmakers.length
+      ) {
+        continue;
+      }
+      try {
+        const res = await fetch(`/api/analyze/${game.gamePk}?date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+
+        if (!data.ok || !data.analysis) continue;
+
+        const a = data.analysis;
+        const away = a.away || {};
+        const home = a.home || {};
+        const runLine = a.runLine || {};
+        const teamTotals = a.teamTotals || {};
+        const awayTT = teamTotals.away || {};
+        const homeTT = teamTotals.home || {};
+
+        const matchup = `${away.team || game.awayTeam} vs ${home.team || game.homeTeam}`;
+        const options = [];
+
+        const pickIsAway = a.pick === away.team;
+        const mlProb = pickIsAway ? Number(away.modelWinPct) : Number(home.modelWinPct);
+
+        if (a.pick && mlProb > 0) {
+          options.push({
+            matchup,
+            pick: a.pick,
+            market: "Moneyline",
+            probability: mlProb,
+            confidence: a.confidence || "N/D",
+            score: mlProb + confidenceScore(a.confidence) + 8
+          });
+        }
+
+        if (runLine.pick && Number(runLine.coverProb) > 0) {
+          const margin = Math.abs(Number(runLine.projectedMargin || 0));
+          let rlScore = Number(runLine.coverProb) + confidenceScore(runLine.confidence);
+
+          if (margin < 8) rlScore -= 25;
+          else if (margin < 15) rlScore -= 15;
+          else if (margin < 25) rlScore -= 8;
+
+          if (Number(runLine.coverProb) === 72) rlScore -= 12;
+
+          options.push({
+            matchup,
+            pick: runLine.pick,
+            market: "Run Line",
+            probability: Number(runLine.coverProb),
+            confidence: runLine.confidence || "N/D",
+            score: rlScore
+          });
+        }
+
+        if (awayTT.pick && Number(awayTT.probability) > 0) {
+          options.push({
+            matchup,
+            pick: awayTT.pick,
+            market: "Team Total",
+            probability: Number(awayTT.probability),
+            confidence: awayTT.confidence || "N/D",
+            score: Number(awayTT.probability) + confidenceScore(awayTT.confidence) + 3
+          });
+        }
+
+        if (homeTT.pick && Number(homeTT.probability) > 0) {
+          options.push({
+            matchup,
+            pick: homeTT.pick,
+            market: "Team Total",
+            probability: Number(homeTT.probability),
+            confidence: homeTT.confidence || "N/D",
+            score: Number(homeTT.probability) + confidenceScore(homeTT.confidence) + 3
+          });
+        }
+
+        if (!options.length) continue;
+
+        options.sort((a, b) => b.score - a.score);
+        bestPicks.push(options[0]);
+
+      } catch (err) {
+        // Silent catch for bulk processing
+      }
+    }
+
+    if (!bestPicks.length) {
+      ticketBox.innerHTML = `<div class="status-box">No hay picks de suficiente calidad.</div>`;
+      return;
+    }
+
+    const sorted = bestPicks.sort((a, b) => b.score - a.score);
+
+    const seguro = buildBalancedTicket(sorted, 4);
+    const medio = buildBalancedTicket(sorted, 7);
+    const grande = buildBalancedTicket(sorted, Math.min(12, sorted.length));
+
+    ticketBox.innerHTML = `
+      ${renderSuggestedTicket("🔥 Ticket Seguro", seguro)}
+      ${renderSuggestedTicket("⚡ Ticket Medio", medio)}
+      ${renderSuggestedTicket("💣 Ticket Grande", grande)}
+    `;
+
+  } catch (error) {
+    ticketBox.innerHTML = `<div class="status-box">Error al generar ticket.</div>`;
+  }
+}
+
+function confidenceScore(confidence) {
+  const c = String(confidence || "").toLowerCase();
+  if (c.includes("alta")) return 10;
+  if (c.includes("media")) return 5;
+  return 0;
+}
+
+function buildBalancedTicket(picks, limit) {
+  const valid = picks.filter(p => {
+    if (!p.pick || p.pick === "N/D") return false;
+    if (!p.probability || p.probability <= 0) return false;
+    return true;
+  });
+
+  const moneyline = valid
+    .filter(p => p.market === "Moneyline")
+    .sort((a, b) => b.score - a.score);
+
+  const runline = valid
+    .filter(p =>
+      p.market === "Run Line" &&
+      p.confidence !== "baja" &&
+      p.probability >= 58
+    )
+    .sort((a, b) => b.score - a.score);
+
+  const totals = valid
+    .filter(p =>
+      p.market === "Team Total" &&
+      p.probability >= 54
+    )
+    .sort((a, b) => b.score - a.score);
+
+  const result = [];
+
+  function addPick(pick) {
+    if (!pick) return;
+    if (result.length >= limit) return;
+    if (result.some(p => p.matchup === pick.matchup)) return;
+    result.push(pick);
+  }
+
+  if (limit <= 4) {
+    moneyline.slice(0, 4).forEach(addPick);
+  }
+  else if (limit <= 7) {
+    addPick(runline[0]);
+    moneyline.slice(2, 6).forEach(addPick);
+    totals.slice(0, 3).forEach(addPick);
+    moneyline.slice(0, 2).forEach(addPick);
+  }
+  else {
+    runline.slice(0, 2).forEach(addPick);
+    moneyline.slice(4, 10).forEach(addPick);
+    totals.slice(0, 6).forEach(addPick);
+    moneyline.slice(0, 4).forEach(addPick);
+  }
+
+  const fallback = [...moneyline, ...runline, ...totals]
+    .sort((a, b) => b.score - a.score);
+
+  for (const pick of fallback) {
+    if (result.length >= limit) break;
+    addPick(pick);
+  }
+
+  return result.slice(0, limit);
+}
+
+function renderSuggestedTicket(title, picks) {
+  return `
+    <div class="ticket-box">
+      <h2>${escapeHtml(title)}</h2>
+      <p style="font-size: 13px; color: var(--accent-green); font-weight: 500;">Picks: ${escapeHtml(picks.length)}</p>
+
+      ${picks.map(p => `
+        <div class="ticket-pick">
+          ⚾ <strong>${escapeHtml(p.matchup)}</strong><br>
+          🎯 ${escapeHtml(p.market)}: <strong>${escapeHtml(p.pick)}</strong><br>
+          📊 [Score: ${escapeHtml(p.confidence)} - ${escapeHtml(formatNum(p.probability))}%]
+        </div>
+      `).join("")}
+
+      <p class="small" style="margin-top: 15px; color: #d1fae5;">
+        Ticket balanceado por algoritmo de calidad de datos. 
+      </p>
+    </div>
+  `;
+}
     loadBtn.addEventListener("click", loadGames);
+    analyzeAllBtn.addEventListener("click", analyzeAll);
+    ticketBtn.addEventListener("click", loadMLBTicket);
+
     loadGames();
   </script>
 </body>
