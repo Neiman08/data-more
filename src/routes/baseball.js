@@ -2,6 +2,8 @@ import express from 'express';
 
 const router = express.Router();
 
+// --- FUNCIONES AUXILIARES ---
+
 function getBestProbability(analysis) {
   const awayProb = Number(analysis?.away?.modelWinPct || 0);
   const homeProb = Number(analysis?.home?.modelWinPct || 0);
@@ -51,10 +53,13 @@ function formatLineup(players) {
     }));
 }
 
+// --- RUTAS ---
+
 router.get('/', (req, res) => {
   res.send('BASEBALL ROUTE OK');
 });
 
+// Obtener juegos del día con pitchers
 router.get('/games', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -73,6 +78,7 @@ router.get('/games', async (req, res) => {
       gameDate: g.gameDate,
       homeTeam: g.teams?.home?.team?.name || '',
       awayTeam: g.teams?.away?.team?.name || '',
+      // Mapeo directo para que el frontend reciba awayPitcher y homePitcher
       homePitcher: g.teams?.home?.probablePitcher?.fullName || 'TBD',
       awayPitcher: g.teams?.away?.probablePitcher?.fullName || 'TBD'
     })) || [];
@@ -94,6 +100,7 @@ router.get('/games', async (req, res) => {
   }
 });
 
+// Lógica compartida para lineups
 async function getLineupByGamePk(gamePk, res) {
   try {
     const response = await fetch(
@@ -139,6 +146,7 @@ router.get('/lineups/:gamePk', async (req, res) => {
   return getLineupByGamePk(req.params.gamePk, res);
 });
 
+// Ruta para generar tickets inteligentes
 router.get('/ticket', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -189,7 +197,6 @@ router.get('/ticket', async (req, res) => {
 
   } catch (error) {
     console.error('ERROR BASEBALL TICKET:', error.message);
-
     res.json({
       ok: false,
       error: error.message,
@@ -199,6 +206,27 @@ router.get('/ticket', async (req, res) => {
         picks: [],
         note: 'No se pudo generar el ticket.'
       }
+    });
+  }
+});
+
+// --- NUEVA RUTA PARA PLAYER PROPS ---
+router.get('/player-props/:gamePk', async (req, res) => {
+  try {
+    const { gamePk } = req.params;
+
+    res.json({
+      ok: true,
+      gamePk,
+      message: 'Player props endpoint funcionando',
+      props: []
+    });
+
+  } catch (error) {
+    res.json({
+      ok: false,
+      error: error.message,
+      props: []
     });
   }
 });
