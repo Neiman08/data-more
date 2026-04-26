@@ -93,6 +93,13 @@
     .ticket-box { margin-bottom: 25px; background: linear-gradient(135deg, #06391d 0%, #032c18 100%); border: 1px solid var(--accent-green); padding: 20px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
     .ticket-pick { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.6; }
     .footer-note { margin-top: 30px; text-align: center; color: var(--text-subtle); font-size: 13px; }
+    
+    /* Estilos para Props */
+    .prop-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px; }
+    .prop-rating { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
+    .rating-alta { color: #22c55e; background: rgba(34,197,94,0.1); }
+    .rating-media { color: #facc15; background: rgba(234,179,8,0.1); }
+    .rating-baja { color: #ef4444; background: rgba(239,68,68,0.1); }
   </style>
 </head>
 
@@ -233,6 +240,31 @@
     async function analyzeGame(gamePk) {
       const result = document.getElementById(`result-${gamePk}`);
       result.innerHTML = `<div class="loading" style="font-size:12px;">Analizando...</div>`;
+
+      // 🔥 PLAYER PROPS
+      const propsRes = await fetch(`/api/baseball/player-props/${gamePk}`);
+      const propsData = await propsRes.json();
+
+      let propsHTML = '';
+      if (propsData.ok && propsData.props.length > 0) {
+        // Seleccionamos los 3 mejores ratings para máxima precisión visual
+        const topProps = propsData.props
+          .sort((a, b) => b.hitChance - a.hitChance)
+          .slice(0, 3);
+
+        propsHTML = topProps.map(p => `
+          <div class="prop-row">
+            <span><strong>${p.name}</strong> (${p.team.substring(0,3).toUpperCase()})</span>
+            <span class="prop-rating rating-${p.rating.toLowerCase()}">${p.rating}</span>
+          </div>
+          <div style="font-size: 10px; color: var(--text-subtle); margin-bottom: 5px;">
+            Prob: Hit ${p.hitChance}% | HR ${p.hrChance}% | RBI ${p.rbiChance}%
+          </div>
+        `).join('');
+      } else {
+        propsHTML = '<div class="small">No hay props disponibles aún.</div>';
+      }
+
       try {
         const res = await fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`);
         const data = await res.json();
@@ -261,6 +293,10 @@
             ${escapeHtml(home.team)}: ${escapeHtml(teamTotals.home?.pick)} (${formatNum(teamTotals.home?.probability)}%)
             <div class="divider"></div>
             <strong>Total Combinado:</strong> ${formatNum(teamTotals.combinedProjectedTotal)}
+          </div>
+          <div class="extra-box">
+            <div class="extra-title">💎 TOP PLAYER PROPS</div>
+            ${propsHTML}
           </div>
           <div style="font-size:11px; color:var(--text-subtle); margin-top:8px;">
             ${(a.notes || []).map(n => `• ${escapeHtml(n)}`).join("<br>")}

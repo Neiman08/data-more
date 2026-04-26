@@ -209,28 +209,33 @@ router.get('/ticket', async (req, res) => {
   }
 });
 
-// --- RUTA ACTUALIZADA PARA PLAYER PROPS ---
+// --- RUTA PARA PLAYER PROPS CON IDENTIFICACIÓN DE EQUIPO ---
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
 
-    // 🔥 Traer lineup real
-    const lineupRes = await fetch(
+    const response = await fetch(
       `https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`
     );
 
-    const lineupData = await lineupRes.json();
+    const data = await response.json();
 
-    const players = [
-      ...Object.values(lineupData?.teams?.home?.players || {}),
-      ...Object.values(lineupData?.teams?.away?.players || {})
-    ].filter(p => p.battingOrder);
+    const homeTeam = data?.teams?.home?.team?.name;
+    const awayTeam = data?.teams?.away?.team?.name;
 
-    // 🎯 Modelo básico inicial
+    const homePlayers = Object.values(data?.teams?.home?.players || {})
+      .filter(p => p.battingOrder)
+      .map(p => ({ ...p, team: homeTeam }));
+
+    const awayPlayers = Object.values(data?.teams?.away?.players || {})
+      .filter(p => p.battingOrder)
+      .map(p => ({ ...p, team: awayTeam }));
+
+    const players = [...homePlayers, ...awayPlayers];
+
     const props = players.map(p => {
       const name = p.person?.fullName || "N/A";
 
-      // modelo simple random inicial (luego lo mejoramos)
       const hitChance = Math.floor(Math.random() * 40) + 40;
       const hrChance = Math.floor(Math.random() * 20) + 5;
       const rbiChance = Math.floor(Math.random() * 30) + 20;
@@ -241,6 +246,7 @@ router.get('/player-props/:gamePk', async (req, res) => {
 
       return {
         name,
+        team: p.team,
         hitChance,
         hrChance,
         rbiChance,
@@ -251,7 +257,6 @@ router.get('/player-props/:gamePk', async (req, res) => {
     res.json({
       ok: true,
       gamePk,
-      totalPlayers: props.length,
       props
     });
 
