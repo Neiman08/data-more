@@ -399,7 +399,7 @@ async function getLineup(gamePk) {
   return await res.json();
 }
 
-// 🎯 RENDER
+// 🎯 RENDER con limitación a los 9 mejores
 function renderLineups(data) {
   if (!data.ok) return '';
 
@@ -414,7 +414,7 @@ function renderLineups(data) {
       <div class="lineups">
 
         <div class="team">
-          ${data.awayLineup.map(p => `
+          ${data.awayLineup.slice(0, 9).map(p => `
             <div class="player">
               <span class="order">${p.battingOrder[0]}</span>
               <span>${p.name}</span>
@@ -424,7 +424,7 @@ function renderLineups(data) {
         </div>
 
         <div class="team">
-          ${data.homeLineup.map(p => `
+          ${data.homeLineup.slice(0, 9).map(p => `
             <div class="player">
               <span class="order">${p.battingOrder[0]}</span>
               <span>${p.name}</span>
