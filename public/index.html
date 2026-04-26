@@ -241,26 +241,42 @@
       const result = document.getElementById(`result-${gamePk}`);
       result.innerHTML = `<div class="loading" style="font-size:12px;">Analizando...</div>`;
 
-      // 🔥 PLAYER PROPS
+      // 🔥 PLAYER PROPS CON ORGANIZACIÓN POR EQUIPO
       const propsRes = await fetch(`/api/baseball/player-props/${gamePk}`);
       const propsData = await propsRes.json();
 
       let propsHTML = '';
       if (propsData.ok && propsData.props.length > 0) {
-        // Seleccionamos los 3 mejores ratings para máxima precisión visual
-        const topProps = propsData.props
-          .sort((a, b) => b.hitChance - a.hitChance)
-          .slice(0, 3);
+        const teams = {};
 
-        propsHTML = topProps.map(p => `
-          <div class="prop-row">
-            <span><strong>${p.name}</strong> (${p.team.substring(0,3).toUpperCase()})</span>
-            <span class="prop-rating rating-${p.rating.toLowerCase()}">${p.rating}</span>
-          </div>
-          <div style="font-size: 10px; color: var(--text-subtle); margin-bottom: 5px;">
-            Prob: Hit ${p.hitChance}% | HR ${p.hrChance}% | RBI ${p.rbiChance}%
-          </div>
-        `).join('');
+        // Agrupar por equipo
+        propsData.props.forEach(p => {
+          if (!teams[p.team]) teams[p.team] = [];
+          teams[p.team].push(p);
+        });
+
+        // Generar HTML segmentado
+        Object.keys(teams).forEach(team => {
+          const top = teams[team]
+            .sort((a, b) => b.hitChance - a.hitChance)
+            .slice(0, 3);
+
+          propsHTML += `
+            <div style="margin-top:10px; font-weight:bold; color:#7dd3fc; border-bottom: 1px solid rgba(125, 211, 252, 0.2); padding-bottom: 2px;">
+              ${team}
+            </div>
+          `;
+
+          propsHTML += top.map(p => `
+            <div class="prop-row">
+              <span><strong>${p.name}</strong></span>
+              <span class="prop-rating rating-${p.rating.toLowerCase()}">${p.rating}</span>
+            </div>
+            <div style="font-size: 10px; color: var(--text-subtle); margin-bottom: 5px;">
+              Prob: Hit ${p.hitChance}% | HR ${p.hrChance}% | RBI ${p.rbiChance}%
+            </div>
+          `).join('');
+        });
       } else {
         propsHTML = '<div class="small">No hay props disponibles aún.</div>';
       }
@@ -363,14 +379,12 @@
           const res = await fetch(`/api/analyze/${game.gamePk}?date=${encodeURIComponent(date)}`);
           const data = await res.json();
           
-          // 2. VALIDACIÓN DE DATOS (Seguridad PRO)
           if (!data.ok || !data.analysis) continue;
           const a = data.analysis;
           if (!a.away || !a.home) continue;
 
           const matchup = `${game.awayTeam} vs ${game.homeTeam}`;
 
-          // MONEYLINE con Score PRO Inteligente
           const mlProb = a.pick === a.away.team ? Number(a.away.modelWinPct) : Number(a.home.modelWinPct);
           if (a.pick && mlProb > 0) {
             bestPicks.push({ 
@@ -379,11 +393,10 @@
               market: "Moneyline", 
               probability: mlProb, 
               confidence: a.confidence, 
-              score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) // Score PRO
+              score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) 
             });
           }
 
-          // RUN LINE
           if (a.runLine.pick && Number(a.runLine.coverProb) > 0) {
             bestPicks.push({ 
               matchup, 
@@ -395,7 +408,6 @@
             });
           }
 
-          // TEAM TOTALS
           if (a.teamTotals.away?.pick) {
             bestPicks.push({ 
               matchup, 
