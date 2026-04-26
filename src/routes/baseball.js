@@ -5,7 +5,6 @@ const router = express.Router();
 function getBestProbability(analysis) {
   const awayProb = Number(analysis?.away?.modelWinPct || 0);
   const homeProb = Number(analysis?.home?.modelWinPct || 0);
-
   return Math.max(awayProb, homeProb);
 }
 
@@ -36,6 +35,20 @@ function buildSuggestedTicket(analyses) {
     picks,
     note: 'Ticket generado con los análisis reales de la fecha seleccionada.'
   };
+}
+
+function formatLineup(players) {
+  return Object.values(players || {})
+    .filter(p => p.battingOrder)
+    .sort((a, b) => Number(a.battingOrder) - Number(b.battingOrder))
+    .map(p => ({
+      battingOrder: p.battingOrder,
+      order: p.battingOrder,
+      name: p.person?.fullName || '',
+      pos: p.position?.abbreviation || '',
+      position: p.position?.abbreviation || '',
+      batSide: p.batSide?.code || ''
+    }));
 }
 
 router.get('/', (req, res) => {
@@ -81,39 +94,28 @@ router.get('/games', async (req, res) => {
   }
 });
 
-router.get('/lineup/:id', async (req, res) => {
+async function getLineupByGamePk(gamePk, res) {
   try {
-    const gamePk = req.params.id;
-
     const response = await fetch(
       `https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`
     );
 
     const data = await response.json();
 
-    const homePlayers = Object.values(data?.teams?.home?.players || {});
-    const awayPlayers = Object.values(data?.teams?.away?.players || {});
-
-    const formatLineup = players =>
-      players
-        .filter(p => p.battingOrder)
-        .sort((a, b) => Number(a.battingOrder) - Number(b.battingOrder))
-        .map(p => ({
-          battingOrder: p.battingOrder,
-          name: p.person?.fullName || '',
-          pos: p.position?.abbreviation || '',
-          batSide: p.batSide?.code || ''
-        }));
+    const homeLineup = formatLineup(data?.teams?.home?.players);
+    const awayLineup = formatLineup(data?.teams?.away?.players);
 
     res.json({
       ok: true,
       gamePk,
       homeTeam: data?.teams?.home?.team?.name || '',
       awayTeam: data?.teams?.away?.team?.name || '',
-      homeLineup: formatLineup(homePlayers),
-      awayLineup: formatLineup(awayPlayers),
-      homeConfirmed: formatLineup(homePlayers).length > 0,
-      awayConfirmed: formatLineup(awayPlayers).length > 0
+      homeLineup,
+      awayLineup,
+      home: homeLineup,
+      away: awayLineup,
+      homeConfirmed: homeLineup.length > 0,
+      awayConfirmed: awayLineup.length > 0
     });
 
   } catch (error) {
@@ -122,9 +124,19 @@ router.get('/lineup/:id', async (req, res) => {
       ok: false,
       error: error.message,
       homeLineup: [],
-      awayLineup: []
+      awayLineup: [],
+      home: [],
+      away: []
     });
   }
+}
+
+router.get('/lineup/:id', async (req, res) => {
+  return getLineupByGamePk(req.params.id, res);
+});
+
+router.get('/lineups/:gamePk', async (req, res) => {
+  return getLineupByGamePk(req.params.gamePk, res);
 });
 
 router.get('/ticket', async (req, res) => {

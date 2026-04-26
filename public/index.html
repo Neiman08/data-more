@@ -1,6 +1,53 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<style>
+.lineup-card {
+  background: #111;
+  color: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.teams-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.lineups {
+  display: flex;
+  justify-content: space-between;
+}
+
+.team {
+  width: 48%;
+}
+
+.player {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #222;
+}
+
+.order {
+  font-weight: bold;
+  color: #00ff99;
+}
+
+.pos {
+  color: #aaa;
+}
+
+.status {
+  margin-top: 10px;
+  text-align: center;
+}
+</style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data More Picks | MLB</title>
@@ -313,7 +360,6 @@
 </head>
 
 <body>
-  <body>
   <div class="container">
 
     <div class="brand-header">
@@ -327,7 +373,6 @@
     <div class="nav">
         <a href="/" class="active">⚾ MLB</a>
         <a href="/soccer">⚽ Soccer</a>
-      </div>
     </div>
 
     <div class="topbar">
@@ -348,6 +393,56 @@
   </div>
 
   <script>
+// 🔥 TRAER LINEUP
+async function getLineup(gamePk) {
+  const res = await fetch(`/api/baseball/lineup/${gamePk}`);
+  return await res.json();
+}
+
+// 🎯 RENDER
+function renderLineups(data) {
+  if (!data.ok) return '';
+
+  return `
+    <div class="lineup-card">
+
+      <div class="teams-header">
+        <div>${data.awayTeam}</div>
+        <div>${data.homeTeam}</div>
+      </div>
+
+      <div class="lineups">
+
+        <div class="team">
+          ${data.awayLineup.map(p => `
+            <div class="player">
+              <span class="order">${p.battingOrder[0]}</span>
+              <span>${p.name}</span>
+              <span class="pos">${p.pos}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="team">
+          ${data.homeLineup.map(p => `
+            <div class="player">
+              <span class="order">${p.battingOrder[0]}</span>
+              <span>${p.name}</span>
+              <span class="pos">${p.pos}</span>
+            </div>
+          `).join('')}
+        </div>
+
+      </div>
+
+      <div class="status">
+        ${data.homeConfirmed ? '🟢 Confirmed' : '⏳ Pending'}
+      </div>
+
+    </div>
+  `;
+}
+
     const dateInput = document.getElementById("date");
     const gamesContainer = document.getElementById("games");
     const statusBox = document.getElementById("statusBox");
@@ -421,7 +516,7 @@
 
         statusBox.textContent = `Se encontraron ${data.games.length} juegos para ${date}.`;
 
-        data.games.forEach(game => {
+        for (const game of data.games) {
           const card = document.createElement("div");
           card.className = "card";
           card.dataset.gamepk = game.gamePk;
@@ -430,7 +525,9 @@
             ? new Date(game.gameDate).toLocaleString()
             : "N/D";
 
-          card.innerHTML = `
+          const lineup = await getLineup(game.gamePk);
+
+          let html = `
             <div class="matchup-row">
               <div class="ball">⚾</div>
               <div class="matchup">${escapeHtml(game.awayTeam)} vs ${escapeHtml(game.homeTeam)}</div>
@@ -443,13 +540,18 @@
               <strong>Pitchers:</strong> ${escapeHtml(game.awayProbablePitcher || "N/D")} vs ${escapeHtml(game.homeProbablePitcher || "N/D")}<br>
               <span class="odds-badge">${escapeHtml(moneylineText(game))}</span>
             </div>
+          `;
 
-            <button onclick="analyzeGame('${escapeHtml(game.gamePk)}')">Analizar juego</button>
+          html += renderLineups(lineup);
+
+          html += `
+            <button onclick="analyzeGame('${escapeHtml(game.gamePk)}')" style="margin-top:15px">Analizar juego</button>
             <div class="result" id="result-${escapeHtml(game.gamePk)}"></div>
           `;
 
+          card.innerHTML = html;
           gamesContainer.appendChild(card);
-        });
+        }
 
       } catch (error) {
         statusBox.textContent = "Error cargando juegos.";
@@ -554,17 +656,16 @@ async function loadMLBTicket() {
     const bestPicks = [];
 
     for (const game of gamesData.games) {
-      // 🚫 BLOQUEAR JUEGOS POSTPONED O SIN ODDS
-if (
-  ["postponed", "delayed", "suspended"].some(s =>
-    String(game.status || "").toLowerCase().includes(s)
-  ) ||
-  !game.odds ||
-  !game.odds.bookmakers ||
-  !game.odds.bookmakers.length
-) {
-  continue;
-}
+      if (
+        ["postponed", "delayed", "suspended"].some(s =>
+          String(game.status || "").toLowerCase().includes(s)
+        ) ||
+        !game.odds ||
+        !game.odds.bookmakers ||
+        !game.odds.bookmakers.length
+      ) {
+        continue;
+      }
       try {
         const res = await fetch(`/api/analyze/${game.gamePk}?date=${encodeURIComponent(date)}`);
         const data = await res.json();
@@ -585,7 +686,6 @@ if (
         const pickIsAway = a.pick === away.team;
         const mlProb = pickIsAway ? Number(away.modelWinPct) : Number(home.modelWinPct);
 
-        // MONEYLINE
         if (a.pick && mlProb > 0) {
           options.push({
             matchup,
@@ -597,17 +697,14 @@ if (
           });
         }
 
-        // RUN LINE - con lógica real
         if (runLine.pick && Number(runLine.coverProb) > 0) {
           const margin = Math.abs(Number(runLine.projectedMargin || 0));
           let rlScore = Number(runLine.coverProb) + confidenceScore(runLine.confidence);
 
-          // Penalizar si el margen no justifica -1.5
           if (margin < 8) rlScore -= 25;
           else if (margin < 15) rlScore -= 15;
           else if (margin < 25) rlScore -= 8;
 
-          // Si todos vienen clavados en 72%, no dejar que domine
           if (Number(runLine.coverProb) === 72) rlScore -= 12;
 
           options.push({
@@ -620,7 +717,6 @@ if (
           });
         }
 
-        // TEAM TOTAL AWAY
         if (awayTT.pick && Number(awayTT.probability) > 0) {
           options.push({
             matchup,
@@ -632,7 +728,6 @@ if (
           });
         }
 
-        // TEAM TOTAL HOME
         if (homeTT.pick && Number(homeTT.probability) > 0) {
           options.push({
             matchup,
@@ -719,20 +814,15 @@ function buildBalancedTicket(picks, limit) {
     result.push(pick);
   }
 
-  // 🎟️ Ticket 1: más sólido
   if (limit <= 4) {
     moneyline.slice(0, 4).forEach(addPick);
   }
-
-  // ⚡ Ticket 2: mixto, no empieza con los mismos 4
   else if (limit <= 7) {
     addPick(runline[0]);
     moneyline.slice(2, 6).forEach(addPick);
     totals.slice(0, 3).forEach(addPick);
     moneyline.slice(0, 2).forEach(addPick);
   }
-
-  // 💣 Ticket 3: agresivo con rotación
   else {
     runline.slice(0, 2).forEach(addPick);
     moneyline.slice(4, 10).forEach(addPick);
@@ -769,7 +859,6 @@ function renderSuggestedTicket(title, picks) {
 
       <p class="small">
         Ticket balanceado usando Moneyline, Run Line y Team Totals. 
-        El sistema penaliza Run Line cuando el margen proyectado no justifica el -1.5.
       </p>
     </div>
   `;
