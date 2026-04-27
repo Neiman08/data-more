@@ -82,6 +82,12 @@
       color: #ffffff;
     }
 
+    .ticker-logo {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+    }
+
     .ticker-score {
       font-weight: 900;
       color: #22c55e;
@@ -98,7 +104,6 @@
       text-transform: uppercase;
     }
 
-    /* FIX: Bucle infinito suave con translateX(-50%) */
     @keyframes scrollTicker {
       from { transform: translateX(0); }
       to { transform: translateX(-50%); }
@@ -243,9 +248,14 @@
 
         const items = data.games.map(g => `
           <div class="ticker-item">
+            <img src="/logos/${escapeHtml(g.awayAbbrev)}.png" class="ticker-logo" onerror="this.style.display='none'">
             <span class="ticker-team">${escapeHtml(g.awayAbbrev || g.awayTeam)}</span>
+
             <span class="ticker-score">${escapeHtml(g.awayScore)} - ${escapeHtml(g.homeScore)}</span>
+
+            <img src="/logos/${escapeHtml(g.homeAbbrev)}.png" class="ticker-logo" onerror="this.style.display='none'">
             <span class="ticker-team">${escapeHtml(g.homeAbbrev || g.homeTeam)}</span>
+
             <span class="ticker-inning">
               ${escapeHtml(g.inningState || g.status || "")} ${escapeHtml(g.inning || "")}
             </span>
