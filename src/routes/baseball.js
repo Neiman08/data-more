@@ -220,8 +220,8 @@ router.get('/player-props/:gamePk', async (req, res) => {
 
     const data = await response.json();
 
-    const homeTeam = data?.teams?.home?.team?.name;
-    const awayTeam = data?.teams?.away?.team?.name;
+    const homeTeam = data?.teams?.home?.team?.name || '';
+    const awayTeam = data?.teams?.away?.team?.name || '';
 
     const homePlayers = Object.values(data?.teams?.home?.players || {})
       .filter(p => p.battingOrder)
@@ -234,15 +234,15 @@ router.get('/player-props/:gamePk', async (req, res) => {
     const players = [...homePlayers, ...awayPlayers];
 
     const props = players.map(p => {
-      const name = p.person?.fullName || "N/A";
+      const name = p.person?.fullName || 'N/A';
 
       const hitChance = Math.floor(Math.random() * 40) + 40;
       const hrChance = Math.floor(Math.random() * 20) + 5;
       const rbiChance = Math.floor(Math.random() * 30) + 20;
 
-      let rating = "Baja";
-      if (hitChance > 65) rating = "Alta";
-      else if (hitChance > 55) rating = "Media";
+      let rating = 'Baja';
+      if (hitChance > 65) rating = 'Alta';
+      else if (hitChance > 55) rating = 'Media';
 
       return {
         name,
@@ -257,14 +257,53 @@ router.get('/player-props/:gamePk', async (req, res) => {
     res.json({
       ok: true,
       gamePk,
+      totalPlayers: props.length,
       props
     });
 
   } catch (error) {
+    console.error('ERROR PLAYER PROPS:', error.message);
     res.json({
       ok: false,
       error: error.message,
       props: []
+    });
+  }
+});
+
+// --- LIVE SCORES PARA TICKER ---
+router.get('/live-scores', async (req, res) => {
+  try {
+    const response = await fetch(
+      'https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore'
+    );
+
+    const data = await response.json();
+
+    const games = data.dates?.[0]?.games?.map(g => ({
+      gamePk: g.gamePk,
+      status: g.status?.detailedState || '',
+      inning: g.linescore?.currentInning || '',
+      inningState: g.linescore?.inningState || '',
+      homeTeam: g.teams?.home?.team?.name || '',
+      awayTeam: g.teams?.away?.team?.name || '',
+      homeScore: g.teams?.home?.score ?? 0,
+      awayScore: g.teams?.away?.score ?? 0
+    })) || [];
+
+    res.json({
+      ok: true,
+      count: games.length,
+      games
+    });
+
+  } catch (error) {
+    console.error('ERROR LIVE SCORES:', error.message);
+
+    res.json({
+      ok: false,
+      error: error.message,
+      games: []
     });
   }
 });
