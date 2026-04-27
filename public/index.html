@@ -1,186 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data More Picks | MLB</title>
-  <style>
-    :root {
-      --primary-blue: #3b82f6;
-      --accent-green: #22c55e;
-      --bg-dark-start: #0b1020;
-      --bg-dark-end: #030612;
-      --card-bg-dark: #11182d;
-      --text-main: #ffffff;
-      --text-subtle: #94a3b8;
-      --border-dark: #1e293b;
-    }
-
-    /* 1. LOADER VISUAL UX PREMIUM */
-    .loading {
-      animation: pulse 1s infinite;
-      display: inline-block;
-      font-weight: bold;
-      color: var(--primary-blue);
-    }
-
-    @keyframes pulse {
-      0% { opacity: .4 }
-      50% { opacity: 1 }
-      100% { opacity: .4 }
-    }
-
-    /* 2. TICKER ESTILO ESPN PRO */
-    .ticker {
-      width: 100%;
-      overflow: hidden;
-      background: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .ticker-track {
-      display: flex;
-      gap: 35px;
-      white-space: nowrap;
-      animation: scrollTicker 40s linear infinite;
-      padding-left: 20px;
-    }
-
-    .ticker-item {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      font-size: 13px;
-      padding: 12px 0;
-    }
-
-    .ticker-score {
-      font-weight: bold;
-      color: #22c55e;
-      background: rgba(34, 197, 94, 0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    .ticker-inning {
-      font-size: 11px;
-      color: #94a3b8;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    @keyframes scrollTicker {
-      from { transform: translateX(100%) }
-      to { transform: translateX(-100%) }
-    }
-
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at top, #111b33 0%, var(--bg-dark-start) 45%, var(--bg-dark-end) 100%);
-      color: var(--text-main);
-      padding: 25px;
-    }
-
-    .container { max-width: 1300px; margin: auto; }
-
-    /* HEADER */
-    .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-    .brand-logo { width: 70px; border-radius: 12px; }
-    h1 { margin: 0; font-size: 30px; color: #7dd3fc; }
-    .subtitle { color: var(--text-subtle); font-size: 14px; }
-
-    .nav { margin-bottom: 20px; }
-    .nav a {
-      padding: 10px 16px; background: var(--card-bg-dark); border-radius: 8px;
-      text-decoration: none; color: white; margin-right: 10px; font-weight: bold; border: 1px solid var(--border-dark);
-    }
-    .nav a.active { background: var(--primary-blue); border-color: #60a5fa; }
-
-    .topbar {
-      display: flex; gap: 12px; flex-wrap: wrap; background: var(--card-bg-dark);
-      padding: 15px; border-radius: 10px; margin-bottom: 20px; align-items: center; border: 1px solid var(--border-dark);
-    }
-
-    input[type="date"] { padding: 10px; border-radius: 8px; border: 1px solid var(--border-dark); background: #ffffff; color: #000; font-weight: bold; }
-
-    button { padding: 10px 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--primary-blue); transition: transform 0.1s; }
-    button:active { transform: scale(0.98); }
-    .ticket-btn { background: var(--accent-green); }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(370px, 1fr)); gap: 18px; }
-
-    .card { background: var(--card-bg-dark); padding: 18px; border-radius: 12px; border: 1px solid var(--border-dark); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-
-    .matchup { font-size: 20px; font-weight: bold; color: #7dd3fc; margin-bottom: 8px; }
-    .meta { font-size: 13px; color: var(--text-subtle); line-height: 1.6; }
-    .odds-badge { display: inline-block; margin-top: 8px; padding: 5px 10px; background: #0d121f; border-radius: 20px; font-size: 12px; color: #93c5fd; border: 1px solid var(--border-dark); }
-
-    .lineup-card { margin-top: 12px; background: #0b1224; padding: 12px; border-radius: 10px; border: 1px solid #1e293b; }
-    .teams-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #e2e8f0; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
-    .lineups { display: flex; justify-content: space-between; }
-    .team { width: 48%; }
-    .player { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .order { color: var(--accent-green); font-weight: bold; margin-right: 5px; }
-    .pos { color: var(--text-subtle); font-size: 10px; background: #1e293b; padding: 0 4px; border-radius: 3px; }
-
-    .result { margin-top: 15px; }
-    .pick-box { margin-top: 12px; padding: 12px; border-radius: 10px; font-weight: bold; line-height: 1.6; }
-    .alta { border: 2px solid #22c55e; background: rgba(34,197,94,0.1); color: #4ade80; }
-    .media { border: 2px solid #facc15; background: rgba(234,179,8,0.1); color: #facc15; }
-    .baja { border: 2px solid #ef4444; background: rgba(239,68,68,0.1); color: #f87171; }
-
-    .extra-box { margin-top: 10px; padding: 10px; background: #0b1224; border-radius: 10px; font-size: 13px; border: 1px solid #1e293b; }
-    .extra-title { color: #7dd3fc; font-weight: bold; text-transform: uppercase; font-size: 11px; margin-bottom: 5px; }
-    .divider { height: 1px; background: #273449; margin: 10px 0; }
-
-    .ticket-box { margin-bottom: 25px; background: linear-gradient(135deg, #06391d 0%, #032c18 100%); border: 1px solid var(--accent-green); padding: 20px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-    .ticket-pick { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.6; }
-    .footer-note { margin-top: 30px; text-align: center; color: var(--text-subtle); font-size: 13px; }
-    
-    /* Estilos para Props */
-    .prop-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px; }
-    .prop-rating { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
-    .rating-alta { color: #22c55e; background: rgba(34,197,94,0.1); }
-    .rating-media { color: #facc15; background: rgba(234,179,8,0.1); }
-    .rating-baja { color: #ef4444; background: rgba(239,68,68,0.1); }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-    <div class="brand-header">
-      <img src="/logo.png" class="brand-logo">
-      <div>
-        <h1>Data More MLB Picks</h1>
-        <p class="subtitle">Moneyline, Run Line, Team Totals</p>
-      </div>
-    </div>
-
-    <div id="liveTicker" class="ticker"></div>
-
-    <div class="nav">
-        <a href="/" class="active">⚾ MLB</a>
-        <a href="/soccer">⚽ Soccer</a>
-    </div>
-
-    <div class="topbar">
-      <label for="date">Fecha:</label>
-      <input type="date" id="date" />
-      <button id="loadBtn">Cargar juegos</button>
-      <button id="analyzeAllBtn">Analizar todos</button>
-      <button id="ticketBtn" class="ticket-btn">🎟️ Generar Ticket</button>
-    </div>
-
-    <div id="statusBox" class="status-box" style="margin-bottom: 15px; color: var(--text-subtle);">Listo...</div>
-    <div id="ticketBox"></div>
-    <div id="games" class="grid"></div>
-    <p class="footer-note">Información procesada con algoritmos de IA y análisis estadístico avanzado.</p>
-  </div>
-
   <script>
     const dateInput = document.getElementById("date");
     const gamesContainer = document.getElementById("games");
@@ -208,32 +25,60 @@
       return "baja";
     }
 
-    // 🔥 LIVE TICKER DATA
+    function renderBases(bases = {}) {
+      const first = bases.first ? "◆" : "◇";
+      const second = bases.second ? "◆" : "◇";
+      const third = bases.third ? "◆" : "◇";
+      return `<div>${second}</div><div>${third} ${first}</div>`;
+    }
+
+    async function loadLiveCards() {
+      try {
+        const res = await fetch('/api/baseball/live-scores');
+        const data = await res.json();
+        if (!data.ok || !data.games.length) return;
+        const html = data.games.slice(0, 8).map(g => `
+          <div class="live-card">
+            <div class="live-header">
+              <span class="live-badge">● ${g.abstractState === "Live" ? "EN VIVO" : g.status}</span>
+              <span class="inning">${g.inningOrdinal || ""}</span>
+            </div>
+            <div class="score-main">
+              <div class="team-box">
+                <img src="/logos/${g.awayAbbrev}.png" onerror="this.style.display='none'">
+                <strong>${g.awayAbbrev || g.awayTeam}</strong>
+              </div>
+              <div class="score-center">
+                <h2>${g.awayScore} - ${g.homeScore}</h2>
+                <div class="bases">${renderBases(g.bases)}</div>
+                <small>${g.outs ?? 0} Outs</small>
+              </div>
+              <div class="team-box">
+                <img src="/logos/${g.homeAbbrev}.png" onerror="this.style.display='none'">
+                <strong>${g.homeAbbrev || g.homeTeam}</strong>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        gamesContainer.innerHTML = html;
+      } catch (e) { console.log("Error cargando live cards"); }
+    }
+
     async function loadLiveTicker() {
       try {
         const res = await fetch('/api/baseball/live-scores');
         const data = await res.json();
-
         if (!data.ok || !data.games.length) return;
-
         const items = data.games.map(g => `
           <div class="ticker-item">
-            <span>${g.awayTeam}</span>
+            <span>${g.awayAbbrev || g.awayTeam}</span>
             <span class="ticker-score">${g.awayScore} - ${g.homeScore}</span>
-            <span>${g.homeTeam}</span>
-            <span class="ticker-inning">
-              ${g.inningState} ${g.inning}
-            </span>
+            <span>${g.homeAbbrev || g.homeTeam}</span>
+            <span class="ticker-inning">${g.inningState} ${g.inning}</span>
           </div>
         `).join('');
-
-        document.getElementById('liveTicker').innerHTML = `
-          <div class="ticker-track">${items}</div>
-        `;
-
-      } catch (e) {
-        console.log('Error live ticker');
-      }
+        document.getElementById('liveTicker').innerHTML = `<div class="ticker-track">${items}</div>`;
+      } catch (e) { console.log('Error live ticker'); }
     }
 
     async function getLineup(gamePk) {
@@ -245,33 +90,13 @@
 
     function renderLineups(data) {
       if (!data.ok || !data.awayLineup || !data.homeLineup) return '';
-      return `
-        <div class="lineup-card">
-          <div class="teams-header">
-            <div>${data.awayTeam}</div>
-            <div>${data.homeTeam}</div>
-          </div>
+      return `<div class="lineup-card">
+          <div class="teams-header"><div>${data.awayTeam}</div><div>${data.homeTeam}</div></div>
           <div class="lineups">
-            <div class="team">
-              ${data.awayLineup.slice(0, 9).map(p => `
-                <div class="player">
-                  <span><span class="order">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
-                  <span class="pos">${p.pos}</span>
-                </div>
-              `).join('')}
-            </div>
-            <div class="team">
-              ${data.homeLineup.slice(0, 9).map(p => `
-                <div class="player">
-                  <span><span class="order">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
-                  <span class="pos">${p.pos}</span>
-                </div>
-              `).join('')}
-            </div>
+            <div class="team">${data.awayLineup.slice(0, 9).map(p => `<div class="player"><span><span class="order">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span><span class="pos">${p.pos}</span></div>`).join('')}</div>
+            <div class="team">${data.homeLineup.slice(0, 9).map(p => `<div class="player"><span><span class="order">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span><span class="pos">${p.pos}</span></div>`).join('')}</div>
           </div>
-          <div style="text-align:center; font-size:11px; margin-top:8px; color: ${data.homeConfirmed ? '#22c55e' : '#94a3b8'}">
-            ${data.homeConfirmed ? '🟢 Confirmed' : '⏳ Pending'}
-          </div>
+          <div style="text-align:center; font-size:11px; margin-top:8px; color: ${data.homeConfirmed ? '#22c55e' : '#94a3b8'}">${data.homeConfirmed ? '🟢 Confirmed' : '⏳ Pending'}</div>
         </div>`;
     }
 
@@ -317,44 +142,18 @@
     async function analyzeGame(gamePk) {
       const result = document.getElementById(`result-${gamePk}`);
       result.innerHTML = `<div class="loading" style="font-size:12px;">Analizando...</div>`;
-
-      // 🔥 PLAYER PROPS CON ORGANIZACIÓN POR EQUIPO
       const propsRes = await fetch(`/api/baseball/player-props/${gamePk}`);
       const propsData = await propsRes.json();
-
       let propsHTML = '';
       if (propsData.ok && propsData.props.length > 0) {
         const teams = {};
-        propsData.props.forEach(p => {
-          if (!teams[p.team]) teams[p.team] = [];
-          teams[p.team].push(p);
-        });
-
+        propsData.props.forEach(p => { if (!teams[p.team]) teams[p.team] = []; teams[p.team].push(p); });
         Object.keys(teams).forEach(team => {
-          const top = teams[team]
-            .sort((a, b) => b.hitChance - a.hitChance)
-            .slice(0, 3);
-
-          propsHTML += `
-            <div style="margin-top:10px; font-weight:bold; color:#7dd3fc; border-bottom: 1px solid rgba(125, 211, 252, 0.2); padding-bottom: 2px;">
-              ${team}
-            </div>
-          `;
-
-          propsHTML += top.map(p => `
-            <div class="prop-row">
-              <span><strong>${p.name}</strong></span>
-              <span class="prop-rating rating-${p.rating.toLowerCase()}">${p.rating}</span>
-            </div>
-            <div style="font-size: 10px; color: var(--text-subtle); margin-bottom: 5px;">
-              Prob: Hit ${p.hitChance}% | HR ${p.hrChance}% | RBI ${p.rbiChance}%
-            </div>
-          `).join('');
+          const top = teams[team].sort((a, b) => b.hitChance - a.hitChance).slice(0, 3);
+          propsHTML += `<div style="margin-top:10px; font-weight:bold; color:#7dd3fc; border-bottom: 1px solid rgba(125, 211, 252, 0.2); padding-bottom: 2px;">${team}</div>`;
+          propsHTML += top.map(p => `<div class="prop-row"><span><strong>${p.name}</strong></span><span class="prop-rating rating-${p.rating.toLowerCase()}">${p.rating}</span></div><div style="font-size: 10px; color: var(--text-subtle); margin-bottom: 5px;">Prob: Hit ${p.hitChance}% | HR ${p.hrChance}% | RBI ${p.rbiChance}%</div>`).join('');
         });
-      } else {
-        propsHTML = '<div class="small">No hay props disponibles aún.</div>';
-      }
-
+      } else { propsHTML = '<div class="small">No hay props disponibles aún.</div>'; }
       try {
         const res = await fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`);
         const data = await res.json();
@@ -365,32 +164,7 @@
         const runLine = a.runLine || {};
         const teamTotals = a.teamTotals || {};
         const pickPct = a.pick === away.team ? away.modelWinPct : home.modelWinPct;
-
-        result.innerHTML = `
-          <div class="pick-box ${confidenceClass(a.confidence)}">
-            🔥 <strong>Moneyline Pick:</strong> ${escapeHtml(a.pick || "N/D")}<br>
-            📊 <strong>Confianza:</strong> ${escapeHtml(a.confidence || "N/D")}<br>
-            📈 <strong>Probabilidad:</strong> ${formatNum(pickPct)}%
-          </div>
-          <div class="extra-box">
-            <div class="extra-title">📉 Run Line</div>
-            <strong>Pick:</strong> ${escapeHtml(runLine.pick || "N/D")}<br>
-            <strong>Prob:</strong> ${formatNum(runLine.coverProb)}% | <strong>Margen:</strong> ${formatNum(runLine.projectedMargin)}
-          </div>
-          <div class="extra-box">
-            <div class="extra-title">📊 Team Totals</div>
-            ${escapeHtml(away.team)}: ${escapeHtml(teamTotals.away?.pick)} (${formatNum(teamTotals.away?.probability)}%)<br>
-            ${escapeHtml(home.team)}: ${escapeHtml(teamTotals.home?.pick)} (${formatNum(teamTotals.home?.probability)}%)
-            <div class="divider"></div>
-            <strong>Total Combinado:</strong> ${formatNum(teamTotals.combinedProjectedTotal)}
-          </div>
-          <div class="extra-box">
-            <div class="extra-title">💎 TOP PLAYER PROPS</div>
-            ${propsHTML}
-          </div>
-          <div style="font-size:11px; color:var(--text-subtle); margin-top:8px;">
-            ${(a.notes || []).map(n => `• ${escapeHtml(n)}`).join("<br>")}
-          </div>`;
+        result.innerHTML = `<div class="pick-box ${confidenceClass(a.confidence)}">🔥 <strong>Moneyline Pick:</strong> ${escapeHtml(a.pick || "N/D")}<br>📊 <strong>Confianza:</strong> ${escapeHtml(a.confidence || "N/D")}<br>📈 <strong>Probabilidad:</strong> ${formatNum(pickPct)}%</div><div class="extra-box"><div class="extra-title">📉 Run Line</div><strong>Pick:</strong> ${escapeHtml(runLine.pick || "N/D")}<br><strong>Prob:</strong> ${formatNum(runLine.coverProb)}% | <strong>Margen:</strong> ${formatNum(runLine.projectedMargin)}</div><div class="extra-box"><div class="extra-title">📊 Team Totals</div>${escapeHtml(away.team)}: ${escapeHtml(teamTotals.away?.pick)} (${formatNum(teamTotals.away?.probability)}%)<br>${escapeHtml(home.team)}: ${escapeHtml(teamTotals.home?.pick)} (${formatNum(teamTotals.home?.probability)}%)<div class="divider"></div><strong>Total Combinado:</strong> ${formatNum(teamTotals.combinedProjectedTotal)}</div><div class="extra-box"><div class="extra-title">💎 TOP PLAYER PROPS</div>${propsHTML}</div><div style="font-size:11px; color:var(--text-subtle); margin-top:8px;">${(a.notes || []).map(n => `• ${escapeHtml(n)}`).join("<br>")}</div>`;
       } catch (e) { result.innerHTML = "Error"; }
     }
 
@@ -406,36 +180,18 @@
       const moneyline = valid.filter(p => p.market === "Moneyline").sort((a, b) => b.score - a.score);
       const runline = valid.filter(p => p.market === "Run Line" && p.confidence !== "baja" && p.probability >= 58).sort((a, b) => b.score - a.score);
       const totals = valid.filter(p => p.market === "Team Total" && p.probability >= 54).sort((a, b) => b.score - a.score);
-
       const result = [];
-      const addPick = (pick) => {
-        if (!pick || result.length >= limit || result.some(p => p.matchup === pick.matchup)) return;
-        result.push(pick);
-      };
-
+      const addPick = (pick) => { if (!pick || result.length >= limit || result.some(p => p.matchup === pick.matchup)) return; result.push(pick); };
       if (limit <= 4) { moneyline.slice(0, 4).forEach(addPick); }
       else if (limit <= 7) { addPick(runline[0]); moneyline.slice(2, 6).forEach(addPick); totals.slice(0, 3).forEach(addPick); moneyline.slice(0, 2).forEach(addPick); }
       else { runline.slice(0, 2).forEach(addPick); moneyline.slice(4, 10).forEach(addPick); totals.slice(0, 6).forEach(addPick); moneyline.slice(0, 4).forEach(addPick); }
-
       const fallback = [...moneyline, ...runline, ...totals].sort((a, b) => b.score - a.score);
       for (const pick of fallback) { addPick(pick); }
       return result.slice(0, limit);
     }
 
     function renderSuggestedTicket(title, picks) {
-      return `
-        <div class="ticket-box">
-          <h2>${escapeHtml(title)}</h2>
-          <p>Total picks: ${escapeHtml(picks.length)}</p>
-          ${picks.map(p => `
-            <div class="ticket-pick">
-              ⚾ <strong>${escapeHtml(p.matchup)}</strong><br>
-              🎯 Pick: ${escapeHtml(p.pick)}<br>
-              📌 Mercado: ${escapeHtml(p.market)}<br>
-              📊 Prob: ${formatNum(p.probability)}% | ⚡ ${escapeHtml(p.confidence)}
-            </div>`).join("")}
-          <p class="small" style="font-size:11px; margin-top:10px; opacity:0.8;">Ticket balanceado por algoritmo de mercado mixto.</p>
-        </div>`;
+      return `<div class="ticket-box"><h2>${escapeHtml(title)}</h2><p>Total picks: ${escapeHtml(picks.length)}</p>${picks.map(p => `<div class="ticket-pick">⚾ <strong>${escapeHtml(p.matchup)}</strong><br>🎯 Pick: ${escapeHtml(p.pick)}<br>📌 Mercado: ${escapeHtml(p.market)}<br>📊 Prob: ${formatNum(p.probability)}% | ⚡ ${escapeHtml(p.confidence)}</div>`).join("")}<p class="small" style="font-size:11px; margin-top:10px; opacity:0.8;">Ticket balanceado por algoritmo de mercado mixto.</p></div>`;
     }
 
     async function loadMLBTicket() {
@@ -445,88 +201,41 @@
         const gamesRes = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
         const gamesData = await gamesRes.json();
         if (!gamesData.ok || !gamesData.games.length) return ticketBox.innerHTML = "No hay juegos.";
-
         const bestPicks = [];
         for (const game of gamesData.games) {
           if (["postponed", "delayed", "suspended"].some(s => String(game.status || "").toLowerCase().includes(s))) continue;
-          
           const res = await fetch(`/api/analyze/${game.gamePk}?date=${encodeURIComponent(date)}`);
           const data = await res.json();
-          
           if (!data.ok || !data.analysis) continue;
           const a = data.analysis;
-          if (!a.away || !a.home) continue;
-
           const matchup = `${game.awayTeam} vs ${game.homeTeam}`;
-
           const mlProb = a.pick === a.away.team ? Number(a.away.modelWinPct) : Number(a.home.modelWinPct);
-          if (a.pick && mlProb > 0) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.pick, 
-              market: "Moneyline", 
-              probability: mlProb, 
-              confidence: a.confidence, 
-              score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) 
-            });
-          }
-
-          if (a.runLine.pick && Number(a.runLine.coverProb) > 0) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.runLine.pick, 
-              market: "Run Line", 
-              probability: Number(a.runLine.coverProb), 
-              confidence: a.runLine.confidence, 
-              score: Number(a.runLine.coverProb) + confidenceScore(a.runLine.confidence) 
-            });
-          }
-
-          if (a.teamTotals.away?.pick) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.teamTotals.away.pick, 
-              market: "Team Total", 
-              probability: Number(a.teamTotals.away.probability), 
-              confidence: a.teamTotals.away.confidence, 
-              score: Number(a.teamTotals.away.probability) + confidenceScore(a.teamTotals.away.confidence) + 3 
-            });
-          }
-          if (a.teamTotals.home?.pick) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.teamTotals.home.pick, 
-              market: "Team Total", 
-              probability: Number(a.teamTotals.home.probability), 
-              confidence: a.teamTotals.home.confidence, 
-              score: Number(a.teamTotals.home.probability) + confidenceScore(a.teamTotals.home.confidence) + 3 
-            });
-          }
+          if (a.pick && mlProb > 0) bestPicks.push({ matchup, pick: a.pick, market: "Moneyline", probability: mlProb, confidence: a.confidence, score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) });
+          if (a.runLine.pick && Number(a.runLine.coverProb) > 0) bestPicks.push({ matchup, pick: a.runLine.pick, market: "Run Line", probability: Number(a.runLine.coverProb), confidence: a.runLine.confidence, score: Number(a.runLine.coverProb) + confidenceScore(a.runLine.confidence) });
+          if (a.teamTotals.away?.pick) bestPicks.push({ matchup, pick: a.teamTotals.away.pick, market: "Team Total", probability: Number(a.teamTotals.away.probability), confidence: a.teamTotals.away.confidence, score: Number(a.teamTotals.away.probability) + confidenceScore(a.teamTotals.away.confidence) + 3 });
+          if (a.teamTotals.home?.pick) bestPicks.push({ matchup, pick: a.teamTotals.home.pick, market: "Team Total", probability: Number(a.teamTotals.home.probability), confidence: a.teamTotals.home.confidence, score: Number(a.teamTotals.home.probability) + confidenceScore(a.teamTotals.home.confidence) + 3 });
         }
-
         if (!bestPicks.length) return ticketBox.innerHTML = "No hay picks suficientes.";
         const sorted = bestPicks.sort((a, b) => b.score - a.score);
-        
-        ticketBox.innerHTML = `
-          ${renderSuggestedTicket("🔥 Ticket Seguro", buildBalancedTicket(sorted, 4))}
-          ${renderSuggestedTicket("⚡ Ticket Medio", buildBalancedTicket(sorted, 7))}
-          ${renderSuggestedTicket("💣 Ticket Grande", buildBalancedTicket(sorted, Math.min(12, sorted.length)))}
-        `;
+        ticketBox.innerHTML = `${renderSuggestedTicket("🔥 Ticket Seguro", buildBalancedTicket(sorted, 4))}${renderSuggestedTicket("⚡ Ticket Medio", buildBalancedTicket(sorted, 7))}${renderSuggestedTicket("💣 Ticket Grande", buildBalancedTicket(sorted, Math.min(12, sorted.length)))}`;
       } catch (error) { ticketBox.innerHTML = "Error al generar ticket."; }
     }
 
     loadBtn.addEventListener("click", loadGames);
+
     analyzeAllBtn.addEventListener("click", async () => {
       const cards = document.querySelectorAll('.card button[onclick^="analyzeGame"]');
       for (const b of cards) await b.click();
     });
+
     ticketBtn.addEventListener("click", loadMLBTicket);
 
-    // AUTO REFRESH TICKER 🔥
-    loadLiveTicker();
-    setInterval(loadLiveTicker, 15000); // cada 15 segundos
-
+    // INICIALIZACIÓN
     loadGames();
+    loadLiveTicker();
+    setInterval(loadLiveTicker, 15000);
+
+    // NO actives esto todavía porque borra las tarjetas de análisis:
+    // loadLiveCards();
+    // setInterval(loadLiveCards, 15000);
   </script>
-</body>
-</html>
