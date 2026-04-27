@@ -334,7 +334,23 @@
           card.className = "card";
           const lineup = await getLineup(game.gamePk);
           card.innerHTML = `
-            <div class="matchup">${escapeHtml(game.awayTeam)} vs ${escapeHtml(game.homeTeam)}</div>
+            <div class="matchup" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <img src="/logos/${escapeHtml(game.awayAbbrev)}.png" 
+                     style="width:28px; height:28px; object-fit:contain;"
+                     onerror="this.style.display='none'">
+                <span>${escapeHtml(game.awayTeam)}</span>
+              </div>
+
+              <span style="font-weight:bold; color:var(--text-subtle);">vs</span>
+
+              <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
+                <span>${escapeHtml(game.homeTeam)}</span>
+                <img src="/logos/${escapeHtml(game.homeAbbrev)}.png" 
+                     style="width:28px; height:28px; object-fit:contain;"
+                     onerror="this.style.display='none'">
+              </div>
+            </div>
             <div class="meta">
               <strong>Status:</strong> ${escapeHtml(game.status)}<br>
               <strong>Pitchers:</strong> ${escapeHtml(game.awayPitcher || "TBD")} vs ${escapeHtml(game.homePitcher || "TBD")}<br>
