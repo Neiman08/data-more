@@ -209,7 +209,7 @@ router.get('/ticket', async (req, res) => {
   }
 });
 
-// --- RUTA PARA PLAYER PROPS CON IDENTIFICACIÓN DE EQUIPO ---
+// --- RUTA PARA PLAYER PROPS ---
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
@@ -271,7 +271,7 @@ router.get('/player-props/:gamePk', async (req, res) => {
   }
 });
 
-// --- LIVE SCORES PARA TICKER ---
+// --- LIVE SCORES PRO PARA TICKER Y CARDS ESPN STYLE ---
 router.get('/live-scores', async (req, res) => {
   try {
     const response = await fetch(
@@ -280,16 +280,39 @@ router.get('/live-scores', async (req, res) => {
 
     const data = await response.json();
 
-    const games = data.dates?.[0]?.games?.map(g => ({
-      gamePk: g.gamePk,
-      status: g.status?.detailedState || '',
-      inning: g.linescore?.currentInning || '',
-      inningState: g.linescore?.inningState || '',
-      homeTeam: g.teams?.home?.team?.name || '',
-      awayTeam: g.teams?.away?.team?.name || '',
-      homeScore: g.teams?.home?.score ?? 0,
-      awayScore: g.teams?.away?.score ?? 0
-    })) || [];
+    const games = data.dates?.[0]?.games?.map(g => {
+      const linescore = g.linescore || {};
+      const offense = linescore.offense || {};
+
+      return {
+        gamePk: g.gamePk,
+        status: g.status?.detailedState || '',
+        abstractState: g.status?.abstractGameState || '',
+
+        inning: linescore.currentInning || '',
+        inningOrdinal: linescore.currentInningOrdinal || '',
+        inningState: linescore.inningState || '',
+        outs: linescore.outs ?? 0,
+
+        balls: linescore.balls ?? 0,
+        strikes: linescore.strikes ?? 0,
+
+        homeTeam: g.teams?.home?.team?.name || '',
+        awayTeam: g.teams?.away?.team?.name || '',
+
+        homeAbbrev: g.teams?.home?.team?.abbreviation || '',
+        awayAbbrev: g.teams?.away?.team?.abbreviation || '',
+
+        homeScore: g.teams?.home?.score ?? 0,
+        awayScore: g.teams?.away?.score ?? 0,
+
+        bases: {
+          first: !!offense.first,
+          second: !!offense.second,
+          third: !!offense.third
+        }
+      };
+    }) || [];
 
     res.json({
       ok: true,
