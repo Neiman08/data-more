@@ -11,25 +11,21 @@ const TEAM_ABBR = {
   "Kansas City Royals": "KC",
   "Minnesota Twins": "MIN",
   "Chicago White Sox": "CWS",
-
   "Houston Astros": "HOU",
   "Texas Rangers": "TEX",
   "Seattle Mariners": "SEA",
   "Oakland Athletics": "OAK",
   "Los Angeles Angels": "LAA",
-
   "Atlanta Braves": "ATL",
   "Philadelphia Phillies": "PHI",
   "New York Mets": "NYM",
   "Miami Marlins": "MIA",
   "Washington Nationals": "WSH",
-
   "Chicago Cubs": "CHC",
   "St. Louis Cardinals": "STL",
   "Milwaukee Brewers": "MIL",
   "Cincinnati Reds": "CIN",
   "Pittsburgh Pirates": "PIT",
-
   "Los Angeles Dodgers": "LAD",
   "San Francisco Giants": "SF",
   "San Diego Padres": "SD",
@@ -96,7 +92,7 @@ router.get('/', (req, res) => {
   res.send('BASEBALL ROUTE OK');
 });
 
-// Obtener juegos del día con pitchers
+// Obtener juegos del día con pitchers y abreviaturas para logos
 router.get('/games', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -115,6 +111,11 @@ router.get('/games', async (req, res) => {
       gameDate: g.gameDate,
       homeTeam: g.teams?.home?.team?.name || '',
       awayTeam: g.teams?.away?.team?.name || '',
+      
+      // 🔥 FIX: Abreviaturas para los logos en el frontend
+      homeAbbrev: TEAM_ABBR[g.teams?.home?.team?.name] || '',
+      awayAbbrev: TEAM_ABBR[g.teams?.away?.team?.name] || '',
+
       homePitcher: g.teams?.home?.probablePitcher?.fullName || 'TBD',
       awayPitcher: g.teams?.away?.probablePitcher?.fullName || 'TBD'
     })) || [];
@@ -325,25 +326,18 @@ router.get('/live-scores', async (req, res) => {
         gamePk: g.gamePk,
         status: g.status?.detailedState || '',
         abstractState: g.status?.abstractGameState || '',
-
         inning: linescore.currentInning || '',
         inningOrdinal: linescore.currentInningOrdinal || '',
         inningState: linescore.inningState || '',
         outs: linescore.outs ?? 0,
-
         balls: linescore.balls ?? 0,
         strikes: linescore.strikes ?? 0,
-
         homeTeam: g.teams?.home?.team?.name || '',
         awayTeam: g.teams?.away?.team?.name || '',
-
-        // Uso del mapa TEAM_ABBR para asegurar consistencia
         homeAbbrev: TEAM_ABBR[g.teams?.home?.team?.name] || '',
         awayAbbrev: TEAM_ABBR[g.teams?.away?.team?.name] || '',
-
         homeScore: g.teams?.home?.score ?? 0,
         awayScore: g.teams?.away?.score ?? 0,
-
         bases: {
           first: !!offense.first,
           second: !!offense.second,
@@ -360,7 +354,6 @@ router.get('/live-scores', async (req, res) => {
 
   } catch (error) {
     console.error('ERROR LIVE SCORES:', error.message);
-
     res.json({
       ok: false,
       error: error.message,
