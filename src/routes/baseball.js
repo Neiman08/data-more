@@ -1,5 +1,42 @@
 import express from 'express';
 
+const TEAM_ABBR = {
+  "Boston Red Sox": "BOS",
+  "Baltimore Orioles": "BAL",
+  "New York Yankees": "NYY",
+  "Toronto Blue Jays": "TOR",
+  "Tampa Bay Rays": "TB",
+  "Cleveland Guardians": "CLE",
+  "Detroit Tigers": "DET",
+  "Kansas City Royals": "KC",
+  "Minnesota Twins": "MIN",
+  "Chicago White Sox": "CWS",
+
+  "Houston Astros": "HOU",
+  "Texas Rangers": "TEX",
+  "Seattle Mariners": "SEA",
+  "Oakland Athletics": "OAK",
+  "Los Angeles Angels": "LAA",
+
+  "Atlanta Braves": "ATL",
+  "Philadelphia Phillies": "PHI",
+  "New York Mets": "NYM",
+  "Miami Marlins": "MIA",
+  "Washington Nationals": "WSH",
+
+  "Chicago Cubs": "CHC",
+  "St. Louis Cardinals": "STL",
+  "Milwaukee Brewers": "MIL",
+  "Cincinnati Reds": "CIN",
+  "Pittsburgh Pirates": "PIT",
+
+  "Los Angeles Dodgers": "LAD",
+  "San Francisco Giants": "SF",
+  "San Diego Padres": "SD",
+  "Arizona Diamondbacks": "ARI",
+  "Colorado Rockies": "COL"
+};
+
 const router = express.Router();
 
 // --- FUNCIONES AUXILIARES ---
@@ -300,8 +337,9 @@ router.get('/live-scores', async (req, res) => {
         homeTeam: g.teams?.home?.team?.name || '',
         awayTeam: g.teams?.away?.team?.name || '',
 
-        homeAbbrev: g.teams?.home?.team?.abbreviation || '',
-        awayAbbrev: g.teams?.away?.team?.abbreviation || '',
+        // Uso del mapa TEAM_ABBR para asegurar consistencia
+        homeAbbrev: TEAM_ABBR[g.teams?.home?.team?.name] || '',
+        awayAbbrev: TEAM_ABBR[g.teams?.away?.team?.name] || '',
 
         homeScore: g.teams?.home?.score ?? 0,
         awayScore: g.teams?.away?.score ?? 0,
