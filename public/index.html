@@ -196,9 +196,10 @@
       font-size: 13px;
     }
 
+    /* AJUSTE: LOGOS MÁS GRANDES */
     .team-pro img {
-      width: 22px;
-      height: 22px;
+      width: 34px;
+      height: 34px;
       object-fit: contain;
     }
 
@@ -243,7 +244,29 @@
     .extra-title { color: #7dd3fc; font-weight: bold; text-transform: uppercase; font-size: 11px; margin-bottom: 5px; }
     .divider { height: 1px; background: #273449; margin: 10px 0; }
 
-    .ticket-box { margin-bottom: 25px; background: linear-gradient(135deg, #06391d 0%, #032c18 100%); border: 1px solid var(--accent-green); padding: 20px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+    /* AJUSTE: TICKETS GRID */
+    .tickets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    @media (max-width: 900px) {
+      .tickets-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ticket-box { 
+      margin-bottom: 0; 
+      background: linear-gradient(135deg, #06391d 0%, #032c18 100%); 
+      border: 1px solid var(--accent-green); 
+      padding: 20px; 
+      border-radius: 15px; 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+    }
+
     .ticket-pick { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.6; }
     .footer-note { margin-top: 30px; text-align: center; color: var(--text-subtle); font-size: 13px; }
     
@@ -315,7 +338,8 @@
 
     async function loadLiveTicker() {
       try {
-        const res = await fetch('/api/baseball/live-scores');
+        // AJUSTE 1: Cache busting para actualización de ticker
+        const res = await fetch(`/api/baseball/live-scores?t=${Date.now()}`);
         const data = await res.json();
 
         if (!data.ok || !data.games.length) return;
@@ -357,8 +381,8 @@
       return `
         <div class="lineup-card">
           <div class="teams-header">
-            <div>${data.awayTeam}</div>
-            <div>${data.homeTeam}</div>
+            <div>LINEUP</div>
+            <div>BATTERS</div>
           </div>
           <div class="lineups">
             <div class="team">
@@ -600,10 +624,13 @@
         if (!bestPicks.length) return ticketBox.innerHTML = "No hay picks suficientes.";
         const sorted = bestPicks.sort((a, b) => b.score - a.score);
         
+        // AJUSTE: Renderizado en Grid
         ticketBox.innerHTML = `
-          ${renderSuggestedTicket("🔥 Ticket Seguro", buildBalancedTicket(sorted, 4))}
-          ${renderSuggestedTicket("⚡ Ticket Medio", buildBalancedTicket(sorted, 7))}
-          ${renderSuggestedTicket("💣 Ticket Grande", buildBalancedTicket(sorted, Math.min(12, sorted.length)))}
+          <div class="tickets-grid">
+            ${renderSuggestedTicket("🔥 Ticket Seguro", buildBalancedTicket(sorted, 4))}
+            ${renderSuggestedTicket("⚡ Ticket Medio", buildBalancedTicket(sorted, 7))}
+            ${renderSuggestedTicket("💣 Ticket Grande", buildBalancedTicket(sorted, Math.min(12, sorted.length)))}
+          </div>
         `;
       } catch (error) { ticketBox.innerHTML = "Error al generar ticket."; }
     }
