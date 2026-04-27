@@ -143,7 +143,24 @@
     button:active { transform: scale(0.98); }
     .ticket-btn { background: var(--accent-green); }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(370px, 1fr)); gap: 18px; }
+    /* ✅ ACTUALIZACIÓN: GRID DE 4 COLUMNAS Y RESPONSIVE */
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 18px; 
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
 
     .card { background: var(--card-bg-dark); padding: 18px; border-radius: 12px; border: 1px solid var(--border-dark); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 
@@ -326,7 +343,6 @@
       gamesContainer.innerHTML = "";
       ticketBox.innerHTML = "";
       try {
-        // ✅ CORREGIDO: /api/baseball/games
         const res = await fetch(`/api/baseball/games?date=${encodeURIComponent(date)}`);
         const data = await res.json();
         if (!data.ok || !data.games.length) return statusBox.textContent = "No hay juegos.";
@@ -493,7 +509,6 @@
       const date = dateInput.value;
       ticketBox.innerHTML = `<div class="status-box"><span class="loading">Procesando picks inteligentes...</span></div>`;
       try {
-        // ✅ CORREGIDO: /api/baseball/games
         const gamesRes = await fetch(`/api/baseball/games?date=${encodeURIComponent(date)}`);
         const gamesData = await gamesRes.json();
         if (!gamesData.ok || !gamesData.games.length) return ticketBox.innerHTML = "No hay juegos.";
