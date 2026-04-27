@@ -139,34 +139,91 @@
 
     input[type="date"] { padding: 10px; border-radius: 8px; border: 1px solid var(--border-dark); background: #ffffff; color: #000; font-weight: bold; }
 
-    button { padding: 10px 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--primary-blue); transition: transform 0.1s; }
+    button { 
+      padding: 8px; 
+      border-radius: 6px; 
+      border: none; 
+      font-weight: bold; 
+      cursor: pointer; 
+      color: white; 
+      background: var(--primary-blue); 
+      transition: transform 0.1s; 
+      font-size: 11px;
+    }
     button:active { transform: scale(0.98); }
     .ticket-btn { background: var(--accent-green); }
 
-    /* ✅ ACTUALIZACIÓN: GRID DE 4 COLUMNAS Y RESPONSIVE */
     .grid { 
       display: grid; 
       grid-template-columns: repeat(4, 1fr); 
       gap: 18px; 
     }
 
-    @media (max-width: 1200px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
     }
 
-    @media (max-width: 700px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
     }
 
-    .card { background: var(--card-bg-dark); padding: 18px; border-radius: 12px; border: 1px solid var(--border-dark); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+    .card {
+      background: linear-gradient(145deg, #0f172a, #0b1224);
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
 
-    .matchup { font-size: 20px; font-weight: bold; color: #7dd3fc; margin-bottom: 8px; }
-    .meta { font-size: 13px; color: var(--text-subtle); line-height: 1.6; }
-    .odds-badge { display: inline-block; margin-top: 8px; padding: 5px 10px; background: #0d121f; border-radius: 20px; font-size: 12px; color: #93c5fd; border: 1px solid var(--border-dark); }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+    }
+
+    .matchup-pro {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .team-pro {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .team-pro img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+    }
+
+    .vs-pro {
+      font-size: 10px;
+      color: var(--text-subtle);
+      font-weight: bold;
+    }
+
+    .meta {
+      font-size: 11px;
+      color: var(--text-subtle);
+      line-height: 1.4;
+    }
+
+    .odds-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 6px;
+      background: #0d121f;
+      border-radius: 6px;
+      font-size: 10px;
+      color: #93c5fd;
+      border: 1px solid var(--border-dark);
+    }
 
     .lineup-card { margin-top: 12px; background: #0b1224; padding: 12px; border-radius: 10px; border: 1px solid #1e293b; }
     .teams-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #e2e8f0; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
@@ -350,22 +407,19 @@
           const card = document.createElement("div");
           card.className = "card";
           const lineup = await getLineup(game.gamePk);
+          
           card.innerHTML = `
-            <div class="matchup" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <img src="/logos/${escapeHtml(game.awayAbbrev)}.png" 
-                     style="width:28px; height:28px; object-fit:contain;"
-                     onerror="this.style.display='none'">
-                <span>${escapeHtml(game.awayTeam)}</span>
+            <div class="matchup-pro">
+              <div class="team-pro">
+                <img src="/logos/${escapeHtml(game.awayAbbrev)}.png">
+                <span>${escapeHtml(game.awayAbbrev)}</span>
               </div>
 
-              <span style="font-weight:bold; color:var(--text-subtle);">vs</span>
+              <div class="vs-pro">VS</div>
 
-              <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end;">
-                <span>${escapeHtml(game.homeTeam)}</span>
-                <img src="/logos/${escapeHtml(game.homeAbbrev)}.png" 
-                     style="width:28px; height:28px; object-fit:contain;"
-                     onerror="this.style.display='none'">
+              <div class="team-pro">
+                <span>${escapeHtml(game.homeAbbrev)}</span>
+                <img src="/logos/${escapeHtml(game.homeAbbrev)}.png">
               </div>
             </div>
             <div class="meta">
@@ -374,7 +428,7 @@
               <div class="odds-badge">${moneylineText(game)}</div>
             </div>
             ${renderLineups(lineup)}
-            <button onclick="analyzeGame('${game.gamePk}')" style="margin-top:15px; width:100%">Analizar</button>
+            <button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}')" style="margin-top:10px; width:100%">Analizar</button>
             <div class="result" id="result-${game.gamePk}"></div>`;
           gamesContainer.appendChild(card);
         }
@@ -382,7 +436,7 @@
       } catch (e) { statusBox.textContent = "Error de conexión."; }
     }
 
-    async function analyzeGame(gamePk) {
+    async function analyzeGame(gamePk, awayAbbrev, homeAbbrev) {
       const result = document.getElementById(`result-${gamePk}`);
       result.innerHTML = `<div class="loading" style="font-size:12px;">Analizando...</div>`;
 
@@ -446,8 +500,8 @@
           </div>
           <div class="extra-box">
             <div class="extra-title">📊 Team Totals</div>
-            ${escapeHtml(away.team)}: ${escapeHtml(teamTotals.away?.pick)} (${formatNum(teamTotals.away?.probability)}%)<br>
-            ${escapeHtml(home.team)}: ${escapeHtml(teamTotals.home?.pick)} (${formatNum(teamTotals.home?.probability)}%)
+            ${escapeHtml(awayAbbrev)}: ${escapeHtml(teamTotals.away?.pick)} (${formatNum(teamTotals.away?.probability)}%)<br>
+            ${escapeHtml(homeAbbrev)}: ${escapeHtml(teamTotals.home?.pick)} (${formatNum(teamTotals.home?.probability)}%)
             <div class="divider"></div>
             <strong>Total Combinado:</strong> ${formatNum(teamTotals.combinedProjectedTotal)}
           </div>
@@ -524,7 +578,7 @@
           const a = data.analysis;
           if (!a.away || !a.home) continue;
 
-          const matchup = `${game.awayTeam} vs ${game.homeTeam}`;
+          const matchup = `${game.awayAbbrev} vs ${game.homeAbbrev}`;
 
           const mlProb = a.pick === a.away.team ? Number(a.away.modelWinPct) : Number(a.home.modelWinPct);
           if (a.pick && mlProb > 0) {
