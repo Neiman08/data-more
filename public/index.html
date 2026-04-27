@@ -34,47 +34,74 @@
     .ticker {
       width: 100%;
       overflow: hidden;
-      background: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
+      background: linear-gradient(90deg, #020617, #06142d, #020617);
+      border: 1px solid rgba(34,197,94,0.35);
+      border-radius: 14px;
       margin-bottom: 20px;
       position: relative;
+      box-shadow: 0 0 25px rgba(34,197,94,0.12);
+    }
+
+    .ticker::before {
+      content: "MLB HOY";
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 88px;
+      background: #020617;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      border-right: 1px solid #1e293b;
     }
 
     .ticker-track {
       display: flex;
-      gap: 35px;
+      gap: 28px;
       white-space: nowrap;
-      animation: scrollTicker 40s linear infinite;
-      padding-left: 20px;
+      animation: scrollTicker 55s linear infinite;
+      padding-left: 110px;
     }
 
     .ticker-item {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       font-size: 13px;
       padding: 12px 0;
+      color: #e5e7eb;
+    }
+
+    .ticker-team {
+      font-weight: 800;
+      color: #ffffff;
     }
 
     .ticker-score {
-      font-weight: bold;
+      font-weight: 900;
       color: #22c55e;
-      background: rgba(34, 197, 94, 0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
+      background: rgba(34,197,94,0.14);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(34,197,94,0.25);
     }
 
     .ticker-inning {
       font-size: 11px;
-      color: #94a3b8;
+      color: #93c5fd;
       font-weight: bold;
       text-transform: uppercase;
     }
 
+    /* FIX: Bucle infinito suave con translateX(-50%) */
     @keyframes scrollTicker {
-      from { transform: translateX(100%) }
-      to { transform: translateX(-100%) }
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
     }
 
     body {
@@ -141,7 +168,6 @@
     .ticket-pick { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.6; }
     .footer-note { margin-top: 30px; text-align: center; color: var(--text-subtle); font-size: 13px; }
     
-    /* Estilos para Props */
     .prop-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px; }
     .prop-rating { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
     .rating-alta { color: #22c55e; background: rgba(34,197,94,0.1); }
@@ -208,7 +234,6 @@
       return "baja";
     }
 
-    // 🔥 LIVE TICKER DATA
     async function loadLiveTicker() {
       try {
         const res = await fetch('/api/baseball/live-scores');
@@ -218,17 +243,17 @@
 
         const items = data.games.map(g => `
           <div class="ticker-item">
-            <span>${g.awayTeam}</span>
-            <span class="ticker-score">${g.awayScore} - ${g.homeScore}</span>
-            <span>${g.homeTeam}</span>
+            <span class="ticker-team">${escapeHtml(g.awayAbbrev || g.awayTeam)}</span>
+            <span class="ticker-score">${escapeHtml(g.awayScore)} - ${escapeHtml(g.homeScore)}</span>
+            <span class="ticker-team">${escapeHtml(g.homeAbbrev || g.homeTeam)}</span>
             <span class="ticker-inning">
-              ${g.inningState} ${g.inning}
+              ${escapeHtml(g.inningState || g.status || "")} ${escapeHtml(g.inning || "")}
             </span>
           </div>
         `).join('');
 
         document.getElementById('liveTicker').innerHTML = `
-          <div class="ticker-track">${items}</div>
+          <div class="ticker-track">${items}${items}</div>
         `;
 
       } catch (e) {
@@ -318,7 +343,6 @@
       const result = document.getElementById(`result-${gamePk}`);
       result.innerHTML = `<div class="loading" style="font-size:12px;">Analizando...</div>`;
 
-      // 🔥 PLAYER PROPS CON ORGANIZACIÓN POR EQUIPO
       const propsRes = await fetch(`/api/baseball/player-props/${gamePk}`);
       const propsData = await propsRes.json();
 
@@ -461,46 +485,18 @@
 
           const mlProb = a.pick === a.away.team ? Number(a.away.modelWinPct) : Number(a.home.modelWinPct);
           if (a.pick && mlProb > 0) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.pick, 
-              market: "Moneyline", 
-              probability: mlProb, 
-              confidence: a.confidence, 
-              score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) 
-            });
+            bestPicks.push({ matchup, pick: a.pick, market: "Moneyline", probability: mlProb, confidence: a.confidence, score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) });
           }
 
           if (a.runLine.pick && Number(a.runLine.coverProb) > 0) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.runLine.pick, 
-              market: "Run Line", 
-              probability: Number(a.runLine.coverProb), 
-              confidence: a.runLine.confidence, 
-              score: Number(a.runLine.coverProb) + confidenceScore(a.runLine.confidence) 
-            });
+            bestPicks.push({ matchup, pick: a.runLine.pick, market: "Run Line", probability: Number(a.runLine.coverProb), confidence: a.runLine.confidence, score: Number(a.runLine.coverProb) + confidenceScore(a.runLine.confidence) });
           }
 
           if (a.teamTotals.away?.pick) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.teamTotals.away.pick, 
-              market: "Team Total", 
-              probability: Number(a.teamTotals.away.probability), 
-              confidence: a.teamTotals.away.confidence, 
-              score: Number(a.teamTotals.away.probability) + confidenceScore(a.teamTotals.away.confidence) + 3 
-            });
+            bestPicks.push({ matchup, pick: a.teamTotals.away.pick, market: "Team Total", probability: Number(a.teamTotals.away.probability), confidence: a.teamTotals.away.confidence, score: Number(a.teamTotals.away.probability) + confidenceScore(a.teamTotals.away.confidence) + 3 });
           }
           if (a.teamTotals.home?.pick) {
-            bestPicks.push({ 
-              matchup, 
-              pick: a.teamTotals.home.pick, 
-              market: "Team Total", 
-              probability: Number(a.teamTotals.home.probability), 
-              confidence: a.teamTotals.home.confidence, 
-              score: Number(a.teamTotals.home.probability) + confidenceScore(a.teamTotals.home.confidence) + 3 
-            });
+            bestPicks.push({ matchup, pick: a.teamTotals.home.pick, market: "Team Total", probability: Number(a.teamTotals.home.probability), confidence: a.teamTotals.home.confidence, score: Number(a.teamTotals.home.probability) + confidenceScore(a.teamTotals.home.confidence) + 3 });
           }
         }
 
@@ -522,10 +518,8 @@
     });
     ticketBtn.addEventListener("click", loadMLBTicket);
 
-    // AUTO REFRESH TICKER 🔥
     loadLiveTicker();
-    setInterval(loadLiveTicker, 15000); // cada 15 segundos
-
+    setInterval(loadLiveTicker, 15000);
     loadGames();
   </script>
 </body>
