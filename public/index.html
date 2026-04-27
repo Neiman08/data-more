@@ -326,7 +326,8 @@
       gamesContainer.innerHTML = "";
       ticketBox.innerHTML = "";
       try {
-        const res = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
+        // ✅ CORREGIDO: /api/baseball/games
+        const res = await fetch(`/api/baseball/games?date=${encodeURIComponent(date)}`);
         const data = await res.json();
         if (!data.ok || !data.games.length) return statusBox.textContent = "No hay juegos.";
         for (const game of data.games) {
@@ -492,7 +493,8 @@
       const date = dateInput.value;
       ticketBox.innerHTML = `<div class="status-box"><span class="loading">Procesando picks inteligentes...</span></div>`;
       try {
-        const gamesRes = await fetch(`/api/games?date=${encodeURIComponent(date)}`);
+        // ✅ CORREGIDO: /api/baseball/games
+        const gamesRes = await fetch(`/api/baseball/games?date=${encodeURIComponent(date)}`);
         const gamesData = await gamesRes.json();
         if (!gamesData.ok || !gamesData.games.length) return ticketBox.innerHTML = "No hay juegos.";
 
