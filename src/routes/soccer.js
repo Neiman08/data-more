@@ -16,9 +16,9 @@ const leaguesMap = {
   conference: { id: 'EC', name: 'Conference League' }
 };
 
-// 1. Mapa de IDs de API-Sports para logos (ACTUALIZADO)
+// 1. Mapa de IDs de API-Sports para logos (NIVEL PRODUCCIÓN 🚀)
 const apiSportsLogoMap = {
-  // Premier League
+  // PREMIER LEAGUE
   "Arsenal FC": 42,
   "Chelsea FC": 49,
   "Liverpool FC": 40,
@@ -33,8 +33,10 @@ const apiSportsLogoMap = {
   "Fulham FC": 36,
   "Wolverhampton Wanderers FC": 39,
   "Sunderland AFC": 746,
+  "AFC Bournemouth": 35,
+  "Crystal Palace FC": 52,
 
-  // La Liga
+  // LA LIGA
   "Real Madrid CF": 541,
   "FC Barcelona": 529,
   "Atlético de Madrid": 530,
@@ -44,8 +46,17 @@ const apiSportsLogoMap = {
   "Sevilla FC": 536,
   "Athletic Club": 531,
   "Real Sociedad de Fútbol": 548,
+  "RC Celta de Vigo": 538,
+  "Elche CF": 537,
+  "Getafe CF": 546,
+  "Rayo Vallecano de Madrid": 728,
+  "Real Betis Balompié": 543,
+  "Real Oviedo": 724,
+  "RCD Espanyol de Barcelona": 540,
+  "Deportivo Alavés": 542,
+  "CA Osasuna": 727,
 
-  // Bundesliga
+  // BUNDESLIGA
   "FC Bayern München": 157,
   "Borussia Dortmund": 165,
   "Bayer 04 Leverkusen": 168,
@@ -58,19 +69,33 @@ const apiSportsLogoMap = {
   "1. FC Union Berlin": 182,
   "1. FC Köln": 192,
   "Hamburger SV": 175,
+  "FC St. Pauli 1910": 191,
+  "1. FSV Mainz 05": 164,
+  "Borussia Mönchengladbach": 163,
+  "SC Freiburg": 160,
+  "VfL Wolfsburg": 161,
 
-  // Ligue 1
+  // LIGUE 1
   "Paris Saint-Germain FC": 85,
   "Olympique de Marseille": 81,
   "AS Monaco FC": 91,
   "Olympique Lyonnais": 80,
   "LOSC Lille": 79,
+  "Lille OSC": 79,
   "FC Nantes": 83,
   "FC Lorient": 97,
   "Racing Club de Lens": 116,
   "FC Metz": 112,
+  "Le Havre AC": 111,
+  "AJ Auxerre": 93,
+  "Angers SCO": 77,
+  "Paris FC": 110,
+  "Stade Brestois 29": 106,
+  "RC Strasbourg Alsace": 95,
+  "Toulouse FC": 96,
+  "Stade Rennais FC 1901": 94,
 
-  // Serie A
+  // SERIE A
   "Juventus FC": 496,
   "Inter Milan": 505,
   "AC Milan": 489,
@@ -81,15 +106,38 @@ const apiSportsLogoMap = {
   "Torino FC": 503,
   "Genoa CFC": 495,
   "Como 1907": 895,
-  "Udinese Calcio": 494
+  "Udinese Calcio": 494,
+  "Bologna FC 1909": 500,
+  "Cagliari Calcio": 490,
+  "US Sassuolo Calcio": 488,
+  "Hellas Verona FC": 504,
+  "Parma Calcio 1913": 523
 };
 
+// 2. FUNCIÓN PRO DE LOGOS (BÚSQUEDA INTELIGENTE 🔥)
 function getApiSportsLogo(teamName) {
-  const id = apiSportsLogoMap[teamName];
-  if (!id) return null;
-  return `https://media.api-sports.io/football/teams/${id}.png`;
+  if (!teamName) return null;
+  const cleanName = teamName.trim();
+
+  // 1. Búsqueda exacta
+  if (apiSportsLogoMap[cleanName]) {
+    return `https://media.api-sports.io/football/teams/${apiSportsLogoMap[cleanName]}.png`;
+  }
+
+  // 2. Búsqueda parcial inteligente
+  const found = Object.keys(apiSportsLogoMap).find(key =>
+    cleanName.toLowerCase().includes(key.toLowerCase()) ||
+    key.toLowerCase().includes(cleanName.toLowerCase())
+  );
+
+  if (found) {
+    return `https://media.api-sports.io/football/teams/${apiSportsLogoMap[found]}.png`;
+  }
+
+  return null;
 }
 
+// 3. Formateador de partidos
 function formatMatch(m) {
   return {
     matchId: m.id,
