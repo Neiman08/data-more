@@ -25,18 +25,7 @@
     .team-pro { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; min-width: 0; }
     .team-pro img { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; }
     
-    /* CAMBIO 9: Estilo CSS para nombres de equipos */
-    .team-name {
-      font-size: 11px;
-      font-weight: 700;
-      margin-top: 4px;
-      line-height: 1.2;
-      max-width: 95px;
-      color: #e2e8f0;
-      word-wrap: break-word;
-      text-align: center;
-    }
-
+    .team-name { font-size: 11px; font-weight: 700; margin-top: 4px; line-height: 1.2; max-width: 95px; color: #e2e8f0; word-wrap: break-word; text-align: center; }
     .vs-pro { font-size: 10px; color: #94a3b8; font-weight: bold; margin-top: 12px; }
     .info { font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 5px; text-align: center; }
     .btn-analyze { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 11px; }
@@ -55,7 +44,7 @@
     .nav { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
     .nav-btn { text-decoration: none; padding: 12px 22px; border-radius: 14px; font-weight: bold; background: #1e293b; color: white; transition: 0.3s; }
     .nav-btn.active { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 0 15px rgba(37, 99, 235, 0.6); }
-    .stat-row { display: flex; justify-content: space-between; margin-top: 5px; color: #cbd5e1; font-size: 12px; }
+    .stat-row { display: flex; justify-content: space-between; margin-top: 5px; color: #cbd5e1; font-size: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2px; }
     .bet-label { text-align: center; font-weight: bold; margin-top: 10px; padding: 5px; border-radius: 5px; background: #334155; font-size: 12px; }
     .model-note { font-size: 11px; color: #38bdf8; font-style: italic; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px; }
   </style>
@@ -120,7 +109,6 @@ function renderTicket(title, picks) {
   `;
 }
 
-// CAMBIO 1 y 3: Carga global y renderizado agrupado por ligas
 async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
@@ -139,7 +127,6 @@ async function loadGames() {
       container.innerHTML = '<div class="game-card" style="text-align:center">No hay partidos para esta fecha.</div>'; return;
     }
 
-    // Lógica de agrupamiento
     const grouped = {};
     data.games.forEach(game => {
       const leagueName = game.leagueName || game.league || 'Soccer';
@@ -152,14 +139,12 @@ async function loadGames() {
     Object.keys(grouped).forEach(league => {
       const section = document.createElement('div');
       section.style.width = '100%';
-
       section.innerHTML = `
         <h2 style="color:#38bdf8; margin:25px 0 12px; border-bottom:1px solid #334155; padding-bottom:8px; font-size: 1.2rem;">
           ${escapeHtml(league)}
         </h2>
         <div class="games-grid"></div>
       `;
-
       container.appendChild(section);
       const leagueContainer = section.querySelector('.games-grid');
 
@@ -190,7 +175,6 @@ async function loadGames() {
   } catch (err) { container.innerHTML = '<div style="text-align:center">Error de conexión al cargar datos.</div>'; }
 }
 
-// CAMBIO 4 y 5: Función analyze adaptada para recibir leagueKey
 async function analyze(btn, matchId, leagueKey) {
   btn.innerText = '...'; btn.disabled = true;
   const date = document.getElementById('dateSelect').value;
@@ -211,16 +195,68 @@ async function analyze(btn, matchId, leagueKey) {
       <div style="font-weight:bold; font-size:13px; color:#38bdf8; margin-bottom:8px;">
         🎯 PICK: ${escapeHtml(analysis.pick)}
       </div>
-      <div class="stat-row"><span>Prob. Pick:</span><span style="color:#22c55e; font-weight:bold;">${escapeHtml(analysis.probability)}%</span></div>
-      <div class="stat-row"><span>Confianza:</span><span>${escapeHtml(String(analysis.confidence || '').toUpperCase())}</span></div>
-      <div class="stat-row"><span>Mercado:</span><span>${escapeHtml(analysis.market || 'Principal')}</span></div>
+
+      <div class="stat-row">
+        <span>Prob. Pick:</span>
+        <span style="color:#22c55e; font-weight:bold;">
+          ${escapeHtml(analysis.probability || analysis.probabilities?.pickProbability || 0)}%
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span>Confianza:</span>
+        <span>${escapeHtml(String(analysis.confidence || '').toUpperCase())}</span>
+      </div>
+
+      <div class="stat-row">
+        <span>Mercado:</span>
+        <span>${escapeHtml(analysis.market || '1X2 / Principal')}</span>
+      </div>
+
+      <div class="stat-row">
+        <span>1X2 (L/E/V):</span>
+        <span>
+          ${escapeHtml(analysis.probabilities?.homeWin || 0)}% |
+          ${escapeHtml(analysis.probabilities?.draw || 0)}% |
+          ${escapeHtml(analysis.probabilities?.awayWin || 0)}%
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span>Goles +2.5:</span>
+        <span>
+          ${escapeHtml(analysis.markets?.over25 || 'N/A')}
+          (${escapeHtml(analysis.markets?.over25Probability || 0)}%)
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span>Ambos marcan:</span>
+        <span>
+          ${escapeHtml(analysis.markets?.btts || 'N/A')}
+          (${escapeHtml(analysis.markets?.bttsProbability || 0)}%)
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span>Handicap:</span>
+        <span>${escapeHtml(analysis.markets?.handicap || 'N/A')}</span>
+      </div>
+
+      <div class="stat-row">
+        <span>Total Proyectado:</span>
+        <span style="color:#facc15;">
+          ${escapeHtml(analysis.projectedTotal || analysis.goals?.projectedTotal || 'N/A')} Goles
+        </span>
+      </div>
+
       <div class="bet-label">${betLabel}</div>
+
       ${analysis.modelNote ? `<div class="model-note">💡 ${escapeHtml(analysis.modelNote)}</div>` : ''}
     `;
   } catch (err) { btn.innerText = 'Error'; btn.disabled = false; }
 }
 
-// CAMBIO 6: analyzeAll() adaptado para manejar múltiples argumentos del onclick
 async function analyzeAll() {
   const buttons = Array.from(document.querySelectorAll('.btn-single'));
   const analyzeAllBtn = document.getElementById('analyzeAllBtn');
@@ -242,7 +278,6 @@ async function analyzeAll() {
   analyzeAllBtn.innerText = '✅ OK'; analyzeAllBtn.disabled = false;
 }
 
-// CAMBIO 7 y 8: Generación de Ticket Seguro/Medio/Grande Global
 async function generateSoccerTicket() {
   const date = document.getElementById('dateSelect').value;
   const ticketBox = document.getElementById('ticketBox');
