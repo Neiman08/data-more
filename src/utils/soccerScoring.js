@@ -20,7 +20,7 @@ export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents 
   );
 
   const remaining = 100 - draw;
-  const winTotal = homeWin + awayWin;
+  const winTotal = homeWin + awayWin || 1;
 
   homeWin = (homeWin / winTotal) * remaining;
   awayWin = (awayWin / winTotal) * remaining;
@@ -45,23 +45,18 @@ export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents 
     75
   );
 
-  // 🔥 NUEVO BTTS MÁS INTELIGENTE
   const minGoals = Math.min(homeProjectedGoals, awayProjectedGoals);
 
   const bttsProb = clamp(
     25 +
-    (minGoals * 18) +                              // ambos deben anotar
-    ((homeForm.avgGA + awayForm.avgGA - 2.2) * 10) // defensas débiles
-    - (Math.abs(homeWin - awayWin) * 0.15),        // partidos desbalanceados bajan BTTS
+    (minGoals * 18) +
+    ((homeForm.avgGA + awayForm.avgGA - 2.2) * 10) -
+    (Math.abs(homeWin - awayWin) * 0.15),
     20,
     75
   );
 
-  // 🔥 UMBRAL MÁS ESTRICTO
-  let bttsPick = 'No';
-  if (bttsProb >= 62 && minGoals >= 0.9) {
-    bttsPick = 'Sí';
-  }
+  const bttsPick = bttsProb >= 62 && minGoals >= 0.9 ? 'Sí' : 'No';
 
   let pick = 'Draw';
   let pickProb = draw;
@@ -86,8 +81,6 @@ export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents 
     matchup: `${homeTeam} vs ${awayTeam}`,
     pick,
     confidence: confidence(pickProb),
-
-    // 🔥 DATOS PARA FRONTEND
     probability: round(pickProb),
     market: '1X2 / Principal',
     projectedTotal: round(projectedTotal),
@@ -121,7 +114,7 @@ export function buildSoccerAnalysis({ match, homeRecentEvents, awayRecentEvents 
 
     notes: [
       'Modelo basado en forma reciente.',
-      'BTTS requiere probabilidad alta + ambos equipos con gol esperado.',
+      'BTTS requiere probabilidad alta y ambos equipos con gol esperado.',
       'Se penalizan partidos desbalanceados.'
     ]
   };
