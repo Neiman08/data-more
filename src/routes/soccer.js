@@ -16,8 +16,9 @@ const leaguesMap = {
   conference: { id: 'EC', name: 'Conference League' }
 };
 
-// 1. Mapa de IDs de API-Sports para logos
+// 1. Mapa de IDs de API-Sports para logos (ACTUALIZADO)
 const apiSportsLogoMap = {
+  // Premier League
   "Arsenal FC": 42,
   "Chelsea FC": 49,
   "Liverpool FC": 40,
@@ -28,7 +29,12 @@ const apiSportsLogoMap = {
   "West Ham United FC": 48,
   "Brighton & Hove Albion FC": 51,
   "Aston Villa FC": 66,
+  "Brentford FC": 55,
+  "Fulham FC": 36,
+  "Wolverhampton Wanderers FC": 39,
+  "Sunderland AFC": 746,
 
+  // La Liga
   "Real Madrid CF": 541,
   "FC Barcelona": 529,
   "Atlético de Madrid": 530,
@@ -39,35 +45,51 @@ const apiSportsLogoMap = {
   "Athletic Club": 531,
   "Real Sociedad de Fútbol": 548,
 
+  // Bundesliga
   "FC Bayern München": 157,
   "Borussia Dortmund": 165,
   "Bayer 04 Leverkusen": 168,
   "RB Leipzig": 173,
   "Eintracht Frankfurt": 169,
+  "VfB Stuttgart": 172,
+  "SV Werder Bremen": 162,
+  "FC Augsburg": 170,
+  "1. FC Heidenheim 1846": 180,
+  "1. FC Union Berlin": 182,
+  "1. FC Köln": 192,
+  "Hamburger SV": 175,
 
+  // Ligue 1
   "Paris Saint-Germain FC": 85,
   "Olympique de Marseille": 81,
   "AS Monaco FC": 91,
   "Olympique Lyonnais": 80,
   "LOSC Lille": 79,
+  "FC Nantes": 83,
+  "FC Lorient": 97,
+  "Racing Club de Lens": 116,
+  "FC Metz": 112,
 
+  // Serie A
   "Juventus FC": 496,
   "Inter Milan": 505,
   "AC Milan": 489,
   "SSC Napoli": 492,
   "AS Roma": 497,
   "Atalanta BC": 499,
-  "SS Lazio": 487
+  "SS Lazio": 487,
+  "Torino FC": 503,
+  "Genoa CFC": 495,
+  "Como 1907": 895,
+  "Udinese Calcio": 494
 };
 
-// 2. Función para obtener el Logo
 function getApiSportsLogo(teamName) {
   const id = apiSportsLogoMap[teamName];
   if (!id) return null;
   return `https://media.api-sports.io/football/teams/${id}.png`;
 }
 
-// 3. Función formatMatch centralizada
 function formatMatch(m) {
   return {
     matchId: m.id,
@@ -342,7 +364,7 @@ router.get('/soccer-games-global', async (req, res) => {
     for (const [leagueKey, leagueData] of Object.entries(leaguesMap)) {
       const matches = await getSoccerGames(leagueData.id, selectedDate);
       const formatted = matches.map(m => ({
-        ...formatMatch(m), // 🟢 Usando formatMatch para incluir logos
+        ...formatMatch(m),
         leagueKey,
         leagueName: leagueData.name
       }));
