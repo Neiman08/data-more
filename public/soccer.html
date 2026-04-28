@@ -66,7 +66,6 @@
       cursor: pointer;
     }
 
-    /* --- GRID Y CARDS ACTUALIZADAS --- */
     .games-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -163,7 +162,6 @@
       border: 1px solid #334155;
     }
 
-    /* --- TICKETS PREMIUM --- */
     .tickets-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -250,7 +248,7 @@
       justify-content: space-between;
       margin-top: 5px;
       color: #cbd5e1;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .bet-label {
@@ -433,15 +431,37 @@ async function analyze(btn, matchId) {
 
     const betLabel = analysis.confidence === 'alta' ? '💰 STRONG' : analysis.confidence === 'media' ? '💰 LEAN' : '🚫 NO';
 
+    // Bloque detallado actualizado
     resDiv.innerHTML = `
-      <div style="font-weight:bold; font-size:13px; color:#38bdf8;">
-        🎯 ${escapeHtml(analysis.pick)}
+      <div style="font-weight:bold; font-size:13px; color:#38bdf8; margin-bottom:8px;">
+        🎯 PICK: ${escapeHtml(analysis.pick)}
       </div>
+
       <div class="stat-row">
-        <span>${analysis.probabilities.homeWin}%</span>
-        <span>${analysis.probabilities.draw}%</span>
-        <span>${analysis.probabilities.awayWin}%</span>
+        <span>Confianza:</span>
+        <span>${escapeHtml(String(analysis.confidence || '').toUpperCase())}</span>
       </div>
+
+      <div class="stat-row">
+        <span>1X2:</span>
+        <span>${escapeHtml(analysis.probabilities.homeWin)}% | ${escapeHtml(analysis.probabilities.draw)}% | ${escapeHtml(analysis.probabilities.awayWin)}%</span>
+      </div>
+
+      <div class="stat-row">
+        <span>Goles +2.5:</span>
+        <span>${escapeHtml(analysis.markets.over25)} (${escapeHtml(analysis.markets.over25Probability)}%)</span>
+      </div>
+
+      <div class="stat-row">
+        <span>Ambos marcan:</span>
+        <span>${escapeHtml(analysis.markets.btts)} (${escapeHtml(analysis.markets.bttsProbability)}%)</span>
+      </div>
+
+      <div class="stat-row">
+        <span>Handicap:</span>
+        <span>${escapeHtml(analysis.markets.handicap)}</span>
+      </div>
+
       <div class="bet-label">${betLabel}</div>
     `;
   } catch (err) {
