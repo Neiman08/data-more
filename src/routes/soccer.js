@@ -10,7 +10,10 @@ const leaguesMap = {
   laliga: { id: 'PD', name: 'La Liga' },
   seriea: { id: 'SA', name: 'Serie A' },
   bundesliga: { id: 'BL1', name: 'Bundesliga' },
-  ligue1: { id: 'FL1', name: 'Ligue 1' }
+  ligue1: { id: 'FL1', name: 'Ligue 1' },
+  champions: { id: 'CL', name: 'Champions League' },
+  europa: { id: 'EL', name: 'Europa League' },
+  conference: { id: 'EC', name: 'Conference League' }
 };
 
 const cache = {};
@@ -395,7 +398,7 @@ router.get('/soccer-ticket-global', async (req, res) => {
         seguro: validPicks.slice(0, 4),
         medio: validPicks.slice(0, 7),
         grande: validPicks.slice(0, 12),
-        note: 'Ticket mixto generado con los mejores picks de Premier League, La Liga, Serie A, Bundesliga y Ligue 1.'
+        note: 'Ticket mixto generado con los mejores picks de las ligas top de Europa y competiciones internacionales.'
       }
     });
 
