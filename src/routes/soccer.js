@@ -214,6 +214,8 @@ async function analyzeMatch(matchRaw, leagueCode, allFinishedMatches) {
   });
 }
 
+// --- Rutas Existentes ---
+
 router.get('/soccer-games', async (req, res) => {
   try {
     const league = getLeague(req);
@@ -233,12 +235,7 @@ router.get('/soccer-games', async (req, res) => {
 
   } catch (error) {
     console.error('ERROR SOCCER GAMES:', error.message);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message,
-      games: []
-    });
+    res.status(500).json({ ok: false, error: error.message, games: [] });
   }
 });
 
@@ -252,30 +249,17 @@ router.get('/soccer-analyze/:id', async (req, res) => {
     const matchRaw = matches.find(m => String(m.id) === matchId);
 
     if (!matchRaw) {
-      return res.status(404).json({
-        ok: false,
-        error: 'Partido no encontrado'
-      });
+      return res.status(404).json({ ok: false, error: 'Partido no encontrado' });
     }
 
     const allFinishedMatches = await getFinishedMatches(league.id);
     const analysis = await analyzeMatch(matchRaw, league.id, allFinishedMatches);
 
-    res.json({
-      ok: true,
-      league: league.name,
-      leagueKey: league.key,
-      selectedDate,
-      analysis
-    });
+    res.json({ ok: true, league: league.name, leagueKey: league.key, selectedDate, analysis });
 
   } catch (error) {
     console.error('ERROR SOCCER ANALYZE:', error.message);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 
@@ -312,18 +296,111 @@ router.get('/soccer-ticket', async (req, res) => {
 
     const ticket = buildSoccerTicket(analyses);
 
-    res.json({
-      ok: true,
-      league: league.name,
-      leagueKey: league.key,
-      selectedDate,
-      gamesAnalyzed: analyses.length,
-      ticket
-    });
+    res.json({ ok: true, league: league.name, leagueKey: league.key, selectedDate, gamesAnalyzed: analyses.length, ticket });
 
   } catch (error) {
     console.error('ERROR SOCCER TICKET:', error.message);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
 
+// --- Nuevas Rutas Globales ---
+
+router.get('/soccer-games-global', async (req, res) => {
+  try {
+    const selectedDate = req.query.date || null;
+    const allGames = [];
+
+    for (const [leagueKey, leagueData] of Object.entries(leaguesMap)) {
+      const matches = await getSoccerGames(leagueData.id, selectedDate);
+
+      const formatted = matches.map(m => ({
+        ...formatMatch(m),
+        leagueKey,
+        leagueName: leagueData.name
+      }));
+
+      allGames.push(...formatted);
+    }
+
+    res.json({
+      ok: true,
+      selectedDate,
+      count: allGames.length,
+      games: allGames
+    });
+
+  } catch (error) {
+    console.error('ERROR SOCCER GLOBAL GAMES:', error.message);
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      games: []
+    });
+  }
+});
+
+router.get('/soccer-ticket-global', async (req, res) => {
+  try {
+    const selectedDate = req.query.date || null;
+    const allAnalyses = [];
+
+    for (const [leagueKey, leagueData] of Object.entries(leaguesMap)) {
+      const matches = await getSoccerGames(leagueData.id, selectedDate);
+      const allFinishedMatches = await getFinishedMatches(leagueData.id);
+
+      for (const matchRaw of matches) {
+        const analysis = await analyzeMatch(
+          matchRaw,
+          leagueData.id,
+          allFinishedMatches
+        );
+
+        const bestMarket = getTicketMarket(analysis);
+
+        allAnalyses.push({
+          matchId: analysis.matchId,
+          league: leagueData.name,
+          leagueKey,
+          matchup: analysis.matchup,
+          pick: bestMarket.pick,
+          market: bestMarket.market,
+          probability: bestMarket.probability,
+          confidence: bestMarket.confidence,
+          betType: getBetType({ confidence: bestMarket.confidence })
+        });
+      }
+    }
+
+    const validPicks = allAnalyses
+      .filter(p => {
+        const conf = String(p.confidence || '').toLowerCase();
+        const prob = Number(p.probability || 0);
+
+        return (
+          (conf === 'alta' && prob >= 60) ||
+          (conf === 'media' && prob >= 57)
+        );
+      })
+      .sort((a, b) => Number(b.probability) - Number(a.probability));
+
+    res.json({
+      ok: true,
+      selectedDate,
+      gamesAnalyzed: allAnalyses.length,
+      ticket: {
+        ticketType: 'Ticket Global Soccer',
+        totalPicks: validPicks.length,
+        picks: validPicks,
+        seguro: validPicks.slice(0, 4),
+        medio: validPicks.slice(0, 7),
+        grande: validPicks.slice(0, 12),
+        note: 'Ticket mixto generado con los mejores picks de Premier League, La Liga, Serie A, Bundesliga y Ligue 1.'
+      }
+    });
+
+  } catch (error) {
+    console.error('ERROR SOCCER GLOBAL TICKET:', error.message);
     res.status(500).json({
       ok: false,
       error: error.message,
@@ -331,7 +408,10 @@ router.get('/soccer-ticket', async (req, res) => {
         ticketType: 'Error',
         totalPicks: 0,
         picks: [],
-        note: 'No se pudo generar el ticket.'
+        seguro: [],
+        medio: [],
+        grande: [],
+        note: 'No se pudo generar el ticket global.'
       }
     });
   }
