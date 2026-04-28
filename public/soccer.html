@@ -6,272 +6,64 @@
   <title>Soccer Picks PRO | Data More</title>
 
   <style>
-    body {
-      background: #0f172a;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      color: #38bdf8;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-
-    .selector {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 12px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      border: 1px solid #334155;
-      flex-wrap: wrap;
-    }
-
-    select, input {
-      padding: 12px;
-      border-radius: 8px;
-      background: #0f172a;
-      color: white;
-      border: 1px solid #38bdf8;
-      outline: none;
-    }
-
-    .btn-ticket {
-      background: #22c55e;
-      color: #052e16;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-all {
-      background: #facc15;
-      color: #111827;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .games-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-    }
-
-    @media (max-width: 900px) {
-      .games-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 600px) {
-      .games-grid { grid-template-columns: 1fr; }
-    }
-
-    .game-card {
-      background: linear-gradient(145deg, #0f172a, #0b1224);
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #1e293b;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.45);
-      transition: all 0.15s ease;
-      border-left: 4px solid #38bdf8;
-    }
-
-    .game-card:hover {
-      transform: translateY(-4px) scale(1.01);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.7);
-    }
-
-    .matchup-pro {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      gap: 8px;
-    }
-
-    .team-pro {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 900;
-      font-size: 13px;
+    body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { text-align: center; color: #38bdf8; text-transform: uppercase; letter-spacing: 2px; }
+    .selector { background: #1e293b; padding: 20px; border-radius: 12px; display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; border: 1px solid #334155; flex-wrap: wrap; }
+    select, input { padding: 12px; border-radius: 8px; background: #0f172a; color: white; border: 1px solid #38bdf8; outline: none; }
+    .btn-ticket { background: #22c55e; color: #052e16; border: none; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .btn-all { background: #facc15; color: #111827; border: none; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .games-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    @media (max-width: 900px) { .games-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .games-grid { grid-template-columns: 1fr; } }
+    .game-card { background: linear-gradient(145deg, #0f172a, #0b1224); padding: 14px; border-radius: 12px; border: 1px solid #1e293b; box-shadow: 0 8px 18px rgba(0,0,0,0.45); transition: all 0.15s ease; border-left: 4px solid #38bdf8; }
+    .game-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 15px 30px rgba(0,0,0,0.7); }
+    
+    /* CAMBIO 2: CSS Actualizado para alineación vertical (Logo arriba, nombre abajo) */
+    .matchup-pro { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; }
+    .team-pro { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      text-align: center; 
+      flex: 1;
       min-width: 0;
     }
-
-    .team-pro img {
-      width: 34px;
-      height: 34px;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-
-    .team-code {
-      max-width: 70px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      letter-spacing: 1px;
-    }
-
-    .vs-pro {
-      font-size: 10px;
-      color: #94a3b8;
-      font-weight: bold;
-    }
-
-    .info {
+    
+    .team-pro img { width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; }
+    
+    /* CAMBIO 3: Estilo para nombre del equipo */
+    .team-name {
       font-size: 11px;
-      color: #94a3b8;
-      line-height: 1.4;
-      margin-top: 5px;
+      font-weight: 700;
+      margin-top: 4px;
+      line-height: 1.2;
+      max-width: 90px;
+      color: #e2e8f0;
+      word-wrap: break-word;
     }
 
-    .btn-analyze {
-      background: #38bdf8;
-      color: #0f172a;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-      width: 100%;
-      font-size: 11px;
-    }
-
-    .pick-res {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #0f172a;
-      display: none;
-      border: 1px solid #334155;
-    }
-
-    .tickets-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      margin-bottom: 25px;
-    }
-
-    @media (max-width: 900px) {
-      .tickets-grid { grid-template-columns: 1fr; }
-    }
-
-    .ticket-box {
-      background: linear-gradient(135deg, #06391d 0%, #032c18 100%);
-      border: 1px solid #22c55e;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-    }
-
-    .ticket-title {
-      font-size: 20px;
-      font-weight: 900;
-      color: #86efac;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .ticket-pick {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(34,197,94,0.3);
-      border-radius: 10px;
-      padding: 10px;
-      margin-top: 8px;
-      font-size: 12px;
-      transition: 0.15s;
-    }
-
-    .ticket-pick:hover {
-      background: rgba(34,197,94,0.08);
-    }
-
-    .brand-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      margin-bottom: 25px;
-    }
-
-    .brand-logo {
-      width: 90px;
-      height: 90px;
-      object-fit: contain;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.08);
-      padding: 8px;
-      box-shadow: 0 0 30px rgba(34,197,94,0.5);
-    }
-
-    .nav {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .nav-btn {
-      text-decoration: none;
-      padding: 12px 22px;
-      border-radius: 14px;
-      font-weight: bold;
-      background: #1e293b;
-      color: white;
-      transition: 0.3s;
-    }
-
-    .nav-btn.active {
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
-      box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 5px;
-      color: #cbd5e1;
-      font-size: 12px;
-    }
-
-    .bet-label {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
-      padding: 5px;
-      border-radius: 5px;
-      background: #334155;
-      font-size: 12px;
-    }
-
-    .small-note {
-      color: #94a3b8;
-      font-size: 13px;
-      margin-top: 12px;
-      text-align: center;
-    }
+    .vs-pro { font-size: 10px; color: #94a3b8; font-weight: bold; margin-top: 12px; }
+    .info { font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 5px; text-align: center; }
+    .btn-analyze { background: #38bdf8; color: #0f172a; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; font-size: 11px; }
+    .pick-res { margin-top: 12px; padding: 12px; border-radius: 10px; background: #0f172a; display: none; border: 1px solid #334155; }
+    .tickets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 25px; }
+    @media (max-width: 900px) { .tickets-grid { grid-template-columns: 1fr; } }
+    .ticket-box { background: linear-gradient(135deg, #06391d 0%, #032c18 100%); border: 1px solid #22c55e; padding: 20px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+    .ticket-title { font-size: 20px; font-weight: 900; color: #86efac; margin-bottom: 10px; text-align: center; }
+    .ticket-pick { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; padding: 10px; margin-top: 8px; font-size: 12px; transition: 0.15s; }
+    .brand-header { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 25px; }
+    .brand-logo { width: 90px; height: 90px; object-fit: contain; border-radius: 18px; background: rgba(255,255,255,0.08); padding: 8px; box-shadow: 0 0 30px rgba(34,197,94,0.5); }
+    .nav { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+    .nav-btn { text-decoration: none; padding: 12px 22px; border-radius: 14px; font-weight: bold; background: #1e293b; color: white; transition: 0.3s; }
+    .nav-btn.active { background: linear-gradient(135deg, #2563eb, #3b82f6); box-shadow: 0 0 15px rgba(37, 99, 235, 0.6); }
+    .stat-row { display: flex; justify-content: space-between; margin-top: 5px; color: #cbd5e1; font-size: 12px; }
+    .bet-label { text-align: center; font-weight: bold; margin-top: 10px; padding: 5px; border-radius: 5px; background: #334155; font-size: 12px; }
+    .model-note { font-size: 11px; color: #38bdf8; font-style: italic; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px; }
   </style>
 </head>
 
 <body>
-
 <div class="container">
   <div class="brand-header">
     <img src="/logo.png" class="brand-logo" onerror="this.src='/logo.png'">
@@ -294,16 +86,9 @@
       <option value="bundesliga">Bundesliga</option>
       <option value="ligue1">Ligue 1</option>
     </select>
-
     <input type="date" id="dateSelect" onchange="loadGames()">
-
-    <button class="btn-all" id="analyzeAllBtn" onclick="analyzeAll()">
-      ⚡ Analizar todos
-    </button>
-
-    <button class="btn-ticket" onclick="generateSoccerTicket()">
-      🎟️ Generar Ticket Soccer
-    </button>
+    <button class="btn-all" id="analyzeAllBtn" onclick="analyzeAll()">⚡ Analizar todos</button>
+    <button class="btn-ticket" onclick="generateSoccerTicket()">🎟️ Generar Ticket Soccer</button>
   </div>
 
   <div id="ticketBox"></div>
@@ -311,37 +96,18 @@
 </div>
 
 <script>
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+function escapeHtml(v) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function shortTeamCode(name) {
-  const clean = String(name || "")
-    .replaceAll(" FC", "")
-    .replaceAll(" CF", "")
-    .replaceAll(" AFC", "")
-    .replaceAll(" SC", "")
-    .replaceAll("United", "Utd")
-    .trim();
-
+  const clean = String(name || "").replaceAll(" FC", "").replaceAll(" CF", "").replaceAll(" AFC", "").replaceAll(" SC", "").replaceAll("United", "Utd").trim();
   const words = clean.split(/\s+/).filter(Boolean);
   if (words.length === 1) return words[0].slice(0, 4).toUpperCase();
   return words.slice(0, 3).map(w => w[0]).join("").toUpperCase();
 }
 
 function soccerLogo(game, side) {
-  if (side === "home") {
-    return game.homeLogo || game.homeTeamLogo || `/logos/${shortTeamCode(game.homeTeam)}.png`;
-  }
+  if (side === "home") return game.homeLogo || game.homeTeamLogo || `/logos/${shortTeamCode(game.homeTeam)}.png`;
   return game.awayLogo || game.awayTeamLogo || `/logos/${shortTeamCode(game.awayTeam)}.png`;
 }
 
@@ -350,9 +116,7 @@ function renderTicket(title, picks) {
   return `
     <div class="ticket-box">
       <div class="ticket-title">${escapeHtml(title)}</div>
-      <div style="text-align:center; font-size:12px; color:#86efac; margin-bottom:10px;">
-        Picks: ${list.length}
-      </div>
+      <div style="text-align:center; font-size:12px; color:#86efac; margin-bottom:10px;">Picks: ${list.length}</div>
       ${list.map(p => `
         <div class="ticket-pick">
           ⚽ <strong>${escapeHtml(p.matchup)}</strong><br>
@@ -371,8 +135,7 @@ async function loadGames() {
   const ticketBox = document.getElementById('ticketBox');
   const analyzeAllBtn = document.getElementById('analyzeAllBtn');
 
-  analyzeAllBtn.innerText = '⚡ Analizar todos';
-  analyzeAllBtn.disabled = false;
+  analyzeAllBtn.innerText = '⚡ Analizar todos'; analyzeAllBtn.disabled = false;
   ticketBox.innerHTML = '';
   container.innerHTML = '<p style="grid-column: 1/-1; text-align:center">Cargando...</p>';
 
@@ -380,25 +143,26 @@ async function loadGames() {
     const res = await fetch(`/api/soccer-games?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
     container.innerHTML = '';
-
     if (!data.ok || !data.games || data.games.length === 0) {
-      container.innerHTML = '<div class="game-card" style="grid-column:1/-1; text-align:center">No hay partidos.</div>';
-      return;
+      container.innerHTML = '<div class="game-card" style="grid-column:1/-1; text-align:center">No hay partidos.</div>'; return;
     }
-
     data.games.forEach(game => {
       const div = document.createElement('div');
       div.className = 'game-card';
+      
+      // CAMBIO 1: HTML Reemplazado para alineación ESPN (Logo arriba + Nombre debajo)
       div.innerHTML = `
         <div class="matchup-pro">
           <div class="team-pro">
             <img src="${escapeHtml(soccerLogo(game, 'home'))}" onerror="this.src='/logo.png'; this.style.opacity='0.3';">
-            <span class="team-code">${escapeHtml(game.homeCode || game.homeAbbrev || shortTeamCode(game.homeTeam))}</span>
+            <span class="team-name">${escapeHtml(game.homeTeam)}</span>
           </div>
+          
           <div class="vs-pro">VS</div>
+          
           <div class="team-pro">
-            <span class="team-code">${escapeHtml(game.awayCode || game.awayAbbrev || shortTeamCode(game.awayTeam))}</span>
             <img src="${escapeHtml(soccerLogo(game, 'away'))}" onerror="this.src='/logo.png'; this.style.opacity='0.3';">
+            <span class="team-name">${escapeHtml(game.awayTeam)}</span>
           </div>
         </div>
         <div class="info">${escapeHtml(game.league)} | ${escapeHtml(game.time)}</div>
@@ -407,14 +171,11 @@ async function loadGames() {
       `;
       container.appendChild(div);
     });
-  } catch (err) {
-    container.innerHTML = '<div style="grid-column:1/-1; text-align:center">Error de carga.</div>';
-  }
+  } catch (err) { container.innerHTML = '<div style="grid-column:1/-1; text-align:center">Error de carga.</div>'; }
 }
 
 async function analyze(btn, matchId) {
-  btn.innerText = '...';
-  btn.disabled = true;
+  btn.innerText = '...'; btn.disabled = true;
   const league = document.getElementById('leagueSelect').value;
   const date = document.getElementById('dateSelect').value;
 
@@ -425,16 +186,30 @@ async function analyze(btn, matchId) {
 
     const { analysis } = data;
     const resDiv = document.getElementById(`res-${matchId}`);
-    btn.innerText = 'RE-ANALIZAR';
-    btn.disabled = false;
+    btn.innerText = 'RE-ANALIZAR'; btn.disabled = false;
     resDiv.style.display = 'block';
 
     const betLabel = analysis.confidence === 'alta' ? '💰 STRONG' : analysis.confidence === 'media' ? '💰 LEAN' : '🚫 NO';
 
-    // Bloque detallado actualizado
     resDiv.innerHTML = `
       <div style="font-weight:bold; font-size:13px; color:#38bdf8; margin-bottom:8px;">
         🎯 PICK: ${escapeHtml(analysis.pick)}
+      </div>
+
+      <div class="stat-row">
+        <span>Prob. Pick:</span>
+        <span style="color:#22c55e; font-weight:bold;">
+          ${escapeHtml(analysis.probability || analysis.probabilities?.pickProbability || Math.max(
+            Number(analysis.probabilities?.homeWin || 0),
+            Number(analysis.probabilities?.draw || 0),
+            Number(analysis.probabilities?.awayWin || 0)
+          ))}%
+        </span>
+      </div>
+
+      <div class="stat-row">
+        <span>Mercado:</span>
+        <span>${escapeHtml(analysis.market || analysis.bestMarket || '1X2 / Principal')}</span>
       </div>
 
       <div class="stat-row">
@@ -444,29 +219,29 @@ async function analyze(btn, matchId) {
 
       <div class="stat-row">
         <span>1X2:</span>
-        <span>${escapeHtml(analysis.probabilities.homeWin)}% | ${escapeHtml(analysis.probabilities.draw)}% | ${escapeHtml(analysis.probabilities.awayWin)}%</span>
+        <span>${escapeHtml(analysis.probabilities?.homeWin || 0)}% | ${escapeHtml(analysis.probabilities?.draw || 0)}% | ${escapeHtml(analysis.probabilities?.awayWin || 0)}%</span>
       </div>
 
       <div class="stat-row">
         <span>Goles +2.5:</span>
-        <span>${escapeHtml(analysis.markets.over25)} (${escapeHtml(analysis.markets.over25Probability)}%)</span>
+        <span>${escapeHtml(analysis.markets?.over25 || 'N/A')} (${escapeHtml(analysis.markets?.over25Probability || 0)}%)</span>
       </div>
 
       <div class="stat-row">
         <span>Ambos marcan:</span>
-        <span>${escapeHtml(analysis.markets.btts)} (${escapeHtml(analysis.markets.bttsProbability)}%)</span>
+        <span>${escapeHtml(analysis.markets?.btts || 'N/A')} (${escapeHtml(analysis.markets?.bttsProbability || 0)}%)</span>
       </div>
 
       <div class="stat-row">
-        <span>Handicap:</span>
-        <span>${escapeHtml(analysis.markets.handicap)}</span>
+        <span>Total Proyectado:</span>
+        <span style="color:#facc15;">${escapeHtml(analysis.projectedTotal || 'N/A')} Goles</span>
       </div>
 
       <div class="bet-label">${betLabel}</div>
+
+      ${analysis.modelNote ? `<div class="model-note">💡 ${escapeHtml(analysis.modelNote)}</div>` : ''}
     `;
-  } catch (err) {
-    btn.innerText = 'Error'; btn.disabled = false;
-  }
+  } catch (err) { btn.innerText = 'Error'; btn.disabled = false; }
 }
 
 async function analyzeAll() {
@@ -480,8 +255,7 @@ async function analyzeAll() {
     await analyze(btn, btn.getAttribute('onclick').match(/'([^']+)'/)[1]);
     await wait(800);
   }
-  analyzeAllBtn.innerText = '✅ OK';
-  analyzeAllBtn.disabled = false;
+  analyzeAllBtn.innerText = '✅ OK'; analyzeAllBtn.disabled = false;
 }
 
 async function generateSoccerTicket() {
@@ -494,12 +268,7 @@ async function generateSoccerTicket() {
     const res = await fetch(`/api/soccer-ticket?league=${encodeURIComponent(league)}&date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
     const picks = data.ticket?.picks || [];
-
-    if (!picks.length) {
-      ticketBox.innerHTML = '<div class="ticket-box">No hay picks suficientemente fuertes hoy.</div>';
-      return;
-    }
-
+    if (!picks.length) { ticketBox.innerHTML = '<div class="ticket-box">No hay picks suficientemente fuertes hoy.</div>'; return; }
     const sorted = [...picks].sort((a, b) => Number(b.probability) - Number(a.probability));
     ticketBox.innerHTML = `
       <div class="tickets-grid">
@@ -508,14 +277,11 @@ async function generateSoccerTicket() {
         ${renderTicket("💣 Grande", sorted.slice(0, 12))}
       </div>
     `;
-  } catch (err) {
-    ticketBox.innerHTML = '<div class="ticket-box">Error de ticket.</div>';
-  }
+  } catch (err) { ticketBox.innerHTML = '<div class="ticket-box">Error de ticket.</div>'; }
 }
 
 document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
 loadGames();
 </script>
-
 </body>
 </html>
