@@ -86,9 +86,12 @@ function shortTeamCode(name) {
   return words.slice(0, 3).map(w => w[0]).join("").toUpperCase();
 }
 
+// 1. & 2. Nueva función soccerLogo simplificada
 function soccerLogo(game, side) {
-  if (side === "home") return game.homeLogo || game.homeTeamLogo || `/logos/${shortTeamCode(game.homeTeam)}.png`;
-  return game.awayLogo || game.awayTeamLogo || `/logos/${shortTeamCode(game.awayTeam)}.png`;
+  if (side === "home") {
+    return game.homeLogo || '/logo.png';
+  }
+  return game.awayLogo || '/logo.png';
 }
 
 function renderTicket(title, picks) {
@@ -151,6 +154,7 @@ async function loadGames() {
       grouped[league].forEach(game => {
         const div = document.createElement('div');
         div.className = 'game-card';
+        // 4. Renderizado de logos con onerror mejorado
         div.innerHTML = `
           <div class="matchup-pro">
             <div class="team-pro">
