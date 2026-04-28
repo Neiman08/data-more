@@ -16,7 +16,77 @@ const leaguesMap = {
   conference: { id: 'EC', name: 'Conference League' }
 };
 
+// 1. Mapa de IDs de API-Sports para logos
+const apiSportsLogoMap = {
+  "Arsenal FC": 42,
+  "Chelsea FC": 49,
+  "Liverpool FC": 40,
+  "Manchester City FC": 50,
+  "Manchester United FC": 33,
+  "Tottenham Hotspur FC": 47,
+  "Newcastle United FC": 34,
+  "West Ham United FC": 48,
+  "Brighton & Hove Albion FC": 51,
+  "Aston Villa FC": 66,
+
+  "Real Madrid CF": 541,
+  "FC Barcelona": 529,
+  "Atlético de Madrid": 530,
+  "Club Atlético de Madrid": 530,
+  "Villarreal CF": 533,
+  "Valencia CF": 532,
+  "Sevilla FC": 536,
+  "Athletic Club": 531,
+  "Real Sociedad de Fútbol": 548,
+
+  "FC Bayern München": 157,
+  "Borussia Dortmund": 165,
+  "Bayer 04 Leverkusen": 168,
+  "RB Leipzig": 173,
+  "Eintracht Frankfurt": 169,
+
+  "Paris Saint-Germain FC": 85,
+  "Olympique de Marseille": 81,
+  "AS Monaco FC": 91,
+  "Olympique Lyonnais": 80,
+  "LOSC Lille": 79,
+
+  "Juventus FC": 496,
+  "Inter Milan": 505,
+  "AC Milan": 489,
+  "SSC Napoli": 492,
+  "AS Roma": 497,
+  "Atalanta BC": 499,
+  "SS Lazio": 487
+};
+
+// 2. Función para obtener el Logo
+function getApiSportsLogo(teamName) {
+  const id = apiSportsLogoMap[teamName];
+  if (!id) return null;
+  return `https://media.api-sports.io/football/teams/${id}.png`;
+}
+
+// 3. Función formatMatch centralizada
+function formatMatch(m) {
+  return {
+    matchId: m.id,
+    date: m.utcDate.split('T')[0],
+    time: m.utcDate.split('T')[1].substring(0, 5) + ' UTC',
+    homeTeam: m.homeTeam.name,
+    awayTeam: m.awayTeam.name,
+    homeTeamId: m.homeTeam.id,
+    awayTeamId: m.awayTeam.id,
+    homeLogo: getApiSportsLogo(m.homeTeam.name),
+    awayLogo: getApiSportsLogo(m.awayTeam.name),
+    league: m.competition.name,
+    status: m.status
+  };
+}
+
 const cache = {};
+
+// --- Helpers ---
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -52,13 +122,11 @@ async function footballDataFetch(url, retries = 3) {
 
     return data;
   }
-
   return null;
 }
 
 async function getSoccerGames(leagueCode, selectedDate) {
   const cacheKey = `games-${leagueCode}-${selectedDate || 'all'}`;
-
   if (cache[cacheKey]) return cache[cacheKey];
 
   const url = `https://api.football-data.org/v4/competitions/${leagueCode}/matches`;
@@ -67,7 +135,6 @@ async function getSoccerGames(leagueCode, selectedDate) {
   if (!data || !data.matches) return [];
 
   let matches = data.matches;
-
   if (selectedDate) {
     matches = matches.filter(m => m.utcDate.startsWith(selectedDate));
   }
@@ -78,7 +145,6 @@ async function getSoccerGames(leagueCode, selectedDate) {
 
 async function getFinishedMatches(leagueCode) {
   const cacheKey = `finished-${leagueCode}`;
-
   if (cache[cacheKey]) return cache[cacheKey];
 
   const url = `https://api.football-data.org/v4/competitions/${leagueCode}/matches?status=FINISHED`;
@@ -101,20 +167,6 @@ function getRecentTeamMatchesFromList(allFinishedMatches, teamId) {
       intHomeScore: m.score.fullTime.home,
       intAwayScore: m.score.fullTime.away
     }));
-}
-
-function formatMatch(m) {
-  return {
-    matchId: m.id,
-    date: m.utcDate.split('T')[0],
-    time: m.utcDate.split('T')[1].substring(0, 5) + ' UTC',
-    homeTeam: m.homeTeam.name,
-    awayTeam: m.awayTeam.name,
-    homeTeamId: m.homeTeam.id,
-    awayTeamId: m.awayTeam.id,
-    league: m.competition.name,
-    status: m.status
-  };
 }
 
 function buildMatchObject(matchRaw) {
@@ -168,7 +220,6 @@ function buildSoccerTicket(analyses) {
     .filter(Boolean)
     .map(a => {
       const bestMarket = getTicketMarket(a);
-
       return {
         matchId: a.matchId,
         matchup: a.matchup,
@@ -199,16 +250,8 @@ function buildSoccerTicket(analyses) {
 
 async function analyzeMatch(matchRaw, leagueCode, allFinishedMatches) {
   const match = buildMatchObject(matchRaw);
-
-  const homeRecentEvents = getRecentTeamMatchesFromList(
-    allFinishedMatches,
-    match.homeTeamId
-  );
-
-  const awayRecentEvents = getRecentTeamMatchesFromList(
-    allFinishedMatches,
-    match.awayTeamId
-  );
+  const homeRecentEvents = getRecentTeamMatchesFromList(allFinishedMatches, match.homeTeamId);
+  const awayRecentEvents = getRecentTeamMatchesFromList(allFinishedMatches, match.awayTeamId);
 
   return buildSoccerAnalysis({
     match,
@@ -217,13 +260,12 @@ async function analyzeMatch(matchRaw, leagueCode, allFinishedMatches) {
   });
 }
 
-// --- Rutas Existentes ---
+// --- Rutas ---
 
 router.get('/soccer-games', async (req, res) => {
   try {
     const league = getLeague(req);
     const selectedDate = req.query.date || null;
-
     const matches = await getSoccerGames(league.id, selectedDate);
     const formattedGames = matches.map(formatMatch);
 
@@ -235,7 +277,6 @@ router.get('/soccer-games', async (req, res) => {
       count: formattedGames.length,
       games: formattedGames
     });
-
   } catch (error) {
     console.error('ERROR SOCCER GAMES:', error.message);
     res.status(500).json({ ok: false, error: error.message, games: [] });
@@ -259,7 +300,6 @@ router.get('/soccer-analyze/:id', async (req, res) => {
     const analysis = await analyzeMatch(matchRaw, league.id, allFinishedMatches);
 
     res.json({ ok: true, league: league.name, leagueKey: league.key, selectedDate, analysis });
-
   } catch (error) {
     console.error('ERROR SOCCER ANALYZE:', error.message);
     res.status(500).json({ ok: false, error: error.message });
@@ -270,7 +310,6 @@ router.get('/soccer-ticket', async (req, res) => {
   try {
     const league = getLeague(req);
     const selectedDate = req.query.date || null;
-
     const matches = await getSoccerGames(league.id, selectedDate);
 
     if (!matches.length) {
@@ -280,34 +319,20 @@ router.get('/soccer-ticket', async (req, res) => {
         leagueKey: league.key,
         selectedDate,
         gamesAnalyzed: 0,
-        ticket: {
-          ticketType: 'Sin ticket',
-          totalPicks: 0,
-          picks: [],
-          note: 'No hay partidos para esta liga y fecha.'
-        }
+        ticket: { ticketType: 'Sin ticket', totalPicks: 0, picks: [], note: 'No hay partidos para esta liga y fecha.' }
       });
     }
 
     const allFinishedMatches = await getFinishedMatches(league.id);
-
-    const analyses = await Promise.all(
-      matches.map(matchRaw =>
-        analyzeMatch(matchRaw, league.id, allFinishedMatches)
-      )
-    );
-
+    const analyses = await Promise.all(matches.map(matchRaw => analyzeMatch(matchRaw, league.id, allFinishedMatches)));
     const ticket = buildSoccerTicket(analyses);
 
     res.json({ ok: true, league: league.name, leagueKey: league.key, selectedDate, gamesAnalyzed: analyses.length, ticket });
-
   } catch (error) {
     console.error('ERROR SOCCER TICKET:', error.message);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
-
-// --- Nuevas Rutas Globales ---
 
 router.get('/soccer-games-global', async (req, res) => {
   try {
@@ -316,30 +341,18 @@ router.get('/soccer-games-global', async (req, res) => {
 
     for (const [leagueKey, leagueData] of Object.entries(leaguesMap)) {
       const matches = await getSoccerGames(leagueData.id, selectedDate);
-
       const formatted = matches.map(m => ({
-        ...formatMatch(m),
+        ...formatMatch(m), // 🟢 Usando formatMatch para incluir logos
         leagueKey,
         leagueName: leagueData.name
       }));
-
       allGames.push(...formatted);
     }
 
-    res.json({
-      ok: true,
-      selectedDate,
-      count: allGames.length,
-      games: allGames
-    });
-
+    res.json({ ok: true, selectedDate, count: allGames.length, games: allGames });
   } catch (error) {
     console.error('ERROR SOCCER GLOBAL GAMES:', error.message);
-    res.status(500).json({
-      ok: false,
-      error: error.message,
-      games: []
-    });
+    res.status(500).json({ ok: false, error: error.message, games: [] });
   }
 });
 
@@ -353,12 +366,7 @@ router.get('/soccer-ticket-global', async (req, res) => {
       const allFinishedMatches = await getFinishedMatches(leagueData.id);
 
       for (const matchRaw of matches) {
-        const analysis = await analyzeMatch(
-          matchRaw,
-          leagueData.id,
-          allFinishedMatches
-        );
-
+        const analysis = await analyzeMatch(matchRaw, leagueData.id, allFinishedMatches);
         const bestMarket = getTicketMarket(analysis);
 
         allAnalyses.push({
@@ -379,11 +387,7 @@ router.get('/soccer-ticket-global', async (req, res) => {
       .filter(p => {
         const conf = String(p.confidence || '').toLowerCase();
         const prob = Number(p.probability || 0);
-
-        return (
-          (conf === 'alta' && prob >= 60) ||
-          (conf === 'media' && prob >= 57)
-        );
+        return (conf === 'alta' && prob >= 60) || (conf === 'media' && prob >= 57);
       })
       .sort((a, b) => Number(b.probability) - Number(a.probability));
 
@@ -398,25 +402,12 @@ router.get('/soccer-ticket-global', async (req, res) => {
         seguro: validPicks.slice(0, 4),
         medio: validPicks.slice(0, 7),
         grande: validPicks.slice(0, 12),
-        note: 'Ticket mixto generado con los mejores picks de las ligas top de Europa y competiciones internacionales.'
+        note: 'Ticket mixto generado con los mejores picks de las ligas top de Europa.'
       }
     });
-
   } catch (error) {
     console.error('ERROR SOCCER GLOBAL TICKET:', error.message);
-    res.status(500).json({
-      ok: false,
-      error: error.message,
-      ticket: {
-        ticketType: 'Error',
-        totalPicks: 0,
-        picks: [],
-        seguro: [],
-        medio: [],
-        grande: [],
-        note: 'No se pudo generar el ticket global.'
-      }
-    });
+    res.status(500).json({ ok: false, error: error.message, ticket: { ticketType: 'Error', picks: [] } });
   }
 });
 
