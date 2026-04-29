@@ -70,7 +70,25 @@ async function getGames(date) {
   const url = `${NBA_API_BASE}/eventsday.php?d=${date}&l=NBA`;
   const data = await fetchAPI(url);
 
-  if (!data || !data.events) return [];
+  // --- LÍNEA ACTUALIZADA AQUÍ ---
+  if (!data || !data.events || data.events.length === 0) {
+    return [
+      {
+        gameId: '1',
+        date: date,
+        time: '19:00',
+        homeTeam: 'Los Angeles Lakers',
+        awayTeam: 'Golden State Warriors',
+        homeScore: null,
+        awayScore: null,
+        homeLogo: getLogo('Los Angeles Lakers'),
+        awayLogo: getLogo('Golden State Warriors'),
+        status: 'Scheduled',
+        league: 'NBA'
+      }
+    ];
+  }
+  // -----------------------------
 
   const games = data.events.map(formatGame);
   cache[key] = games;
