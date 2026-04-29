@@ -4,23 +4,30 @@ import { buildNBAAnalysis } from '../utils/nbaScoring.js';
 const router = express.Router();
 
 const NBA_API_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
-
-const nbaLogoMap = {
-  'Atlanta Hawks': 'ATL','Boston Celtics': 'BOS','Brooklyn Nets': 'BKN','Charlotte Hornets': 'CHA',
-  'Chicago Bulls': 'CHI','Cleveland Cavaliers': 'CLE','Dallas Mavericks': 'DAL','Denver Nuggets': 'DEN',
-  'Detroit Pistons': 'DET','Golden State Warriors': 'GSW','Houston Rockets': 'HOU','Indiana Pacers': 'IND',
-  'Los Angeles Clippers': 'LAC','Los Angeles Lakers': 'LAL','Memphis Grizzlies': 'MEM','Miami Heat': 'MIA',
-  'Milwaukee Bucks': 'MIL','Minnesota Timberwolves': 'MIN','New Orleans Pelicans': 'NOP','New York Knicks': 'NYK',
-  'Oklahoma City Thunder': 'OKC','Orlando Magic': 'ORL','Philadelphia 76ers': 'PHI','Phoenix Suns': 'PHX',
-  'Portland Trail Blazers': 'POR','Sacramento Kings': 'SAC','San Antonio Spurs': 'SAS','Toronto Raptors': 'TOR',
-  'Utah Jazz': 'UTA','Washington Wizards': 'WAS'
-};
-
 const cache = {};
 
-function getLogo(team) {
-  const abbr = nbaLogoMap[team] || 'NBA';
-  return `/nba-logos/${abbr}.png`;
+/**
+ * Obtiene la URL del logo oficial desde la CDN de ESPN
+ */
+function getLogo(teamName) {
+  const map = {
+    'Los Angeles Lakers': 'lal', 'Golden State Warriors': 'gsw', 'Boston Celtics': 'bos',
+    'Miami Heat': 'mia', 'Chicago Bulls': 'chi', 'Milwaukee Bucks': 'mil',
+    'Phoenix Suns': 'phx', 'Denver Nuggets': 'den', 'Dallas Mavericks': 'dal',
+    'New York Knicks': 'nyk', 'Philadelphia 76ers': 'phi', 'Cleveland Cavaliers': 'cle',
+    'Atlanta Hawks': 'atl', 'Brooklyn Nets': 'bkn', 'Toronto Raptors': 'tor',
+    'Utah Jazz': 'uta', 'Sacramento Kings': 'sac', 'San Antonio Spurs': 'sas',
+    'Houston Rockets': 'hou', 'Orlando Magic': 'orl', 'Indiana Pacers': 'ind',
+    'Detroit Pistons': 'det', 'Washington Wizards': 'was', 'Charlotte Hornets': 'cha',
+    'Minnesota Timberwolves': 'min', 'Oklahoma City Thunder': 'okc', 
+    'New Orleans Pelicans': 'nop', 'Portland Trail Blazers': 'por', 
+    'Los Angeles Clippers': 'lac', 'Memphis Grizzlies': 'mem'
+  };
+
+  const code = map[teamName];
+  if (!code) return '/logo.png';
+
+  return `https://a.espncdn.com/i/teamlogos/nba/500/${code}.png`;
 }
 
 function sleep(ms) {
@@ -78,25 +85,31 @@ async function getRecent(team) {
   if (!data || !data.event) return [];
 
   return data.event
-    .filter(e => e.intHomeScore !== null)
+    .filter(e => e.intHomeScore !== null && e.intAwayScore !== null)
     .slice(0, 5)
     .map(e => ({
-      home: e.strHomeTeam,
-      away: e.strAwayTeam,
-      hs: e.intHomeScore,
-      as: e.intAwayScore
+      strHomeTeam: e.strHomeTeam,
+      strAwayTeam: e.strAwayTeam,
+      intHomeScore: e.intHomeScore,
+      intAwayScore: e.intAwayScore
     }));
 }
 
 async function analyzeGame(game) {
-  const homeRecent = await getRecent(game.homeTeam);
-  const awayRecent = await getRecent(game.awayTeam);
+  const homeRecentEvents = await getRecent(game.homeTeam);
+  const awayRecentEvents = await getRecent(game.awayTeam);
 
-  return buildNBAAnalysis({
+  const match = {
+    matchId: game.gameId,
     homeTeam: game.homeTeam,
     awayTeam: game.awayTeam,
-    homeRecent,
-    awayRecent
+    matchup: `${game.awayTeam} vs ${game.homeTeam}`
+  };
+
+  return buildNBAAnalysis({
+    match,
+    homeRecentEvents,
+    awayRecentEvents
   });
 }
 
@@ -106,7 +119,6 @@ router.get('/nba-games', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const games = await getGames(date);
-
     res.json({ ok: true, games });
   } catch (e) {
     res.status(500).json({ ok: false });
@@ -117,13 +129,11 @@ router.get('/nba-analyze/:id', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const games = await getGames(date);
-
     const game = games.find(g => String(g.gameId) === req.params.id);
 
     if (!game) return res.json({ ok: false });
 
     const analysis = await analyzeGame(game);
-
     res.json({ ok: true, analysis });
   } catch {
     res.status(500).json({ ok: false });
@@ -136,7 +146,6 @@ router.get('/nba-ticket', async (req, res) => {
     const games = await getGames(date);
 
     const analyses = [];
-
     for (const g of games) {
       const a = await analyzeGame(g);
       if (a) analyses.push(a);
