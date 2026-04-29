@@ -94,11 +94,7 @@ async function getGames(date) {
   return games;
 }
 
-// NOTA: getRecent sigue usando la estructura anterior. 
-// Si la API de theSportsDB ya no funciona, esta función podría fallar.
 async function getRecent(team) {
-  // Se mantiene la base anterior para esta búsqueda específica si es necesario, 
-  // o se debe actualizar a un endpoint de ESPN de "team schedule"
   const SEARCH_API = 'https://www.thesportsdb.com/api/v1/json/3/searchevents.php';
   const url = `${SEARCH_API}?e=${encodeURIComponent(team)}`;
   const data = await fetchAPI(url);
@@ -172,9 +168,11 @@ router.get('/nba-ticket', async (req, res) => {
       if (a) analyses.push(a);
     }
 
+    // --- CAMBIO APLICADO AQUÍ ---
     const picks = analyses
-      .filter(a => a.probability >= 55)
+      .filter(a => a.probability >= 60)
       .sort((a, b) => b.probability - a.probability);
+    // ----------------------------
 
     res.json({
       ok: true,
