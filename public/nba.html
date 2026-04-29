@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Picks PRO | Data More</title>
+    <style>
+        body { background:#0f172a; color:white; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px; }
+        .container { max-width:1100px; margin:auto; }
+        h1 { text-align:center; color:#f97316; letter-spacing:2px; text-transform: uppercase; }
+        
+        /* Contenedor de Selectores */
+        .selector { background:#1e293b; padding:20px; border-radius:12px; display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; border: 1px solid #334155; }
+        input { padding:10px; border-radius:8px; background:#0f172a; color:white; border:1px solid #f97316; outline: none; }
+        
+        /* Botones */
+        .btn { padding:10px 15px; border-radius:8px; border:none; cursor:pointer; font-weight:bold; transition: 0.3s; text-transform: uppercase; font-size: 12px; }
+        .btn-analyze { background:#f97316; color:black; }
+        .btn-analyze:hover { background:#fb923c; }
+        .btn-ticket { background:#22c55e; color:black; }
+        .btn-ticket:hover { background:#4ade80; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Grid de Juegos */
+        .games-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; }
+        @media(max-width:900px){ .games-grid{grid-template-columns:repeat(2,1fr);} }
+        @media(max-width:600px){ .games-grid{grid-template-columns:1fr;} }
+        
+        /* Cards */
+        .card { background:#111827; padding:15px; border-radius:12px; border-left:4px solid #f97316; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .team { text-align:center; flex: 1; }
+        .team img { width:40px; height: 40px; object-fit: contain; margin-bottom: 5px; }
+        .vs { text-align:center; margin: 10px; color:#94a3b8; font-weight: bold; font-size: 12px; }
+        .btn-single { margin-top:12px; width:100%; background: #334155; color: white; border: 1px solid #475569; }
+        .btn-single:hover { background: #475569; }
+
+        /* Resultados del Análisis */
+        .result { display:none; margin-top:12px; background:#0f172a; padding:12px; border-radius:8px; border: 1px solid #334155; animation: fadeIn 0.5s; }
+        .stat { display:flex; justify-content:space-between; font-size:13px; margin-top:6px; border-bottom: 1px solid #1e293b; padding-bottom: 2px; }
+        .stat:last-child { border: none; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Tickets Estilizados */
+        .ticket-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        @media(max-width:600px){ .ticket-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Data More NBA</h1>
+
+    <div class="selector">
+        <input type="date" id="date" onchange="loadGames()">
+        <button class="btn btn-analyze" onclick="analyzeAll()">Analizar todos</button>
+        <button class="btn btn-ticket" onclick="getTicket()">Generar Tickets</button>
+    </div>
+
+    <div id="ticket" class="ticket-container"></div>
+    <div id="games"></div>
+</div>
+
+<script>
+    const logoPlaceholder = 'https://via.placeholder.com/40?text=NBA';
+
+    async function loadGames() {
+        const dateInput = document.getElementById('date');
+        const container = document.getElementById('games');
+        const date = dateInput.value;
+
+        container.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Cargando partidos...</p>';
+
+        try {
+            const res = await fetch(`/api/nba-games?date=${date}`);
+            const data = await res.json();
+
+            if (!data.games || data.games.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; grid-column: 1/-1;">No hay juegos para esta fecha.</div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="games-grid"></div>';
+            const grid = container.querySelector('.games-grid');
+
+            data.games.forEach(g => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="team">
+                            <img src="${g.homeLogo || logoPlaceholder}" onerror="this.src='${logoPlaceholder}'">
+                            <div style="font-size:12px; font-weight:bold;">${g.homeTeam}</div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="team">
+                            <img src="${g.awayLogo || logoPlaceholder}" onerror="this.src='${logoPlaceholder}'">
+                            <div style="font-size:12px; font-weight:bold;">${g.awayTeam}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center; font-size:11px; margin-top:8px; color:#94a3b8;">${g.time}</div>
+                    <button class="btn btn-single" onclick="analyze(this,'${g.gameId}')">ANALIZAR</button>
+                    <div id="r-${g.gameId}" class="result"></div>
+                `;
+                grid.appendChild(div);
+            });
+        } catch (error) {
+            container.innerHTML = '<p style="text-align:center; color:red;">Error al cargar datos.</p>';
+        }
+    }
+
+    async function analyze(btn, id) {
+        btn.innerText = 'PROCESANDO...';
+        btn.disabled = true;
+        const date = document.getElementById('date').value;
+
+        try {
+            const res = await fetch(`/api/nba-analyze/${id}?date=${date}`);
+            const data = await res.json();
+
+            if (!data.ok) { 
+                btn.innerText = 'ERROR'; 
+                btn.disabled = false;
+                return; 
+            }
+
+            const a = data.analysis;
+            const div = document.getElementById('r-' + id);
+            div.style.display = 'block';
+            btn.innerText = 'RE-ANALIZAR';
+            btn.disabled = false;
+
+            // 💰 MEJORA 1: BLOQUE DE RESULTADO VISUAL PRO
+            div.innerHTML = `
+                <div style="font-weight:bold; font-size:14px; color:#f97316; margin-bottom:8px;">
+                    🔥 PICK: ${a.pick}
+                </div>
+                <div class="stat">
+                    <span>📊 Probabilidad</span>
+                    <span style="color:#22c55e; font-weight:bold;">${a.probability}%</span>
+                </div>
+                <div class="stat">
+                    <span>⚡ Confianza</span>
+                    <span style="text-transform:uppercase; color:#fbbf24;">${a.confidence}</span>
+                </div>
+                <div class="stat">
+                    <span>📈 Total</span>
+                    <span>${a.markets?.overUnder || '-'}</span>
+                </div>
+                <div class="stat">
+                    <span>🏀 Spread</span>
+                    <span>${a.markets?.spread || '-'}</span>
+                </div>
+            `;
+        } catch (e) {
+            btn.innerText = 'ERROR';
+            btn.disabled = false;
+        }
+    }
+
+    async function analyzeAll() {
+        const buttons = document.querySelectorAll('.btn-single');
+        for (let btn of buttons) {
+            const onclickAttr = btn.getAttribute('onclick');
+            if (onclickAttr) {
+                const gameId = onclickAttr.match(/'([^']+)'/)[1];
+                await analyze(btn, gameId);
+                await new Promise(r => setTimeout(r, 600)); // Delay para no saturar la API
+            }
+        }
+    }
+
+    async function getTicket() {
+        const date = document.getElementById('date').value;
+        const ticketDiv = document.getElementById('ticket');
+        ticketDiv.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Generando tickets ganadores...</p>';
+
+        try {
+            const res = await fetch(`/api/nba-ticket?date=${date}`);
+            const data = await res.json();
+            const t = data.ticket;
+
+            // 💰 MEJORA 2: DISEÑO DE TICKET QUE VENDE
+            ticketDiv.innerHTML = `
+                <div style="background:#064e3b; padding:15px; border-radius:10px; border:1px solid #22c55e;">
+                    <h3 style="margin:0 0 12px 0; color:#22c55e; display:flex; align-items:center; gap:8px;">
+                        <span>🔥</span> TICKET SEGURO
+                    </h3>
+                    ${t.seguro.map(p => `
+                        <div style="font-size:14px; margin-bottom:8px; border-bottom: 1px solid #065f46; padding-bottom:5px;">
+                            <span style="color:#94a3b8; font-size:11px;">${p.matchup}</span><br>
+                            🎯 <b>${p.pick}</b> | <span style="color:#4ade80;">${p.probability}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="background:#1e293b; padding:15px; border-radius:10px; border:1px solid #f97316;">
+                    <h3 style="margin:0 0 12px 0; color:#f97316; display:flex; align-items:center; gap:8px;">
+                        <span>⚡</span> TICKET MEDIO
+                    </h3>
+                    ${t.medio.map(p => `
+                        <div style="font-size:14px; margin-bottom:8px; border-bottom: 1px solid #334155; padding-bottom:5px;">
+                            <span style="color:#94a3b8; font-size:11px;">${p.matchup}</span><br>
+                            🎯 <b>${p.pick}</b> | <span style="color:#f97316;">${p.probability}%</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } catch (e) {
+            ticketDiv.innerHTML = '<p style="grid-column: 1/-1; color:red; text-align:center;">Error al generar el ticket.</p>';
+        }
+    }
+
+    // Inicialización al cargar
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        loadGames();
+    };
+</script>
+</body>
+</html>
