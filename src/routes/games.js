@@ -50,7 +50,8 @@ function findOddsForGame(oddsData, awayTeam, homeTeam) {
 async function fetchOdds() {
   if (!process.env.ODDS_API_KEY) {
     console.log('Falta ODDS_API_KEY en .env');
-    return [];
+    // CAMBIO: Ahora devuelve null en lugar de []
+    return null;
   }
 
   const region = process.env.ODDS_REGION || 'us';
@@ -67,7 +68,8 @@ async function fetchOdds() {
 
   if (!res.ok) {
     console.log('Odds API error:', data);
-    return [];
+    // CAMBIO: Ahora devuelve null en lugar de []
+    return null;
   }
 
   console.log('🔥 ODDS ENCONTRADAS:', data.length);
@@ -143,6 +145,7 @@ async function fetchPitcherStats(playerId) {
   };
 }
 
+// Rutas actualizadas
 router.get('/games', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -163,7 +166,10 @@ router.get('/games', async (req, res) => {
       awayProbablePitcher: game.awayProbablePitcher,
       homeProbablePitcher: game.homeProbablePitcher,
 
-      odds: findOddsForGame(oddsData, game.awayTeam, game.homeTeam)
+      // CAMBIO: Validación ternaria para findOddsForGame
+      odds: oddsData
+        ? findOddsForGame(oddsData, game.awayTeam, game.homeTeam)
+        : null
     }));
 
     res.json({
@@ -214,7 +220,10 @@ router.get('/analyze/:gamePk', async (req, res) => {
       fetchPitcherStats(game.homeProbablePitcherId)
     ]);
 
-    const odds = findOddsForGame(oddsData, game.awayTeam, game.homeTeam);
+    // CAMBIO: Validación ternaria para findOddsForGame
+    const odds = oddsData
+      ? findOddsForGame(oddsData, game.awayTeam, game.homeTeam)
+      : null;
 
     const analysis = buildGameAnalysis({
       game: game.rawGame,
