@@ -48,7 +48,7 @@ async function fetchAPI(url, retries = 3) {
   return null;
 }
 
-// --- FUNCIÓN getGames REEMPLAZADA COMPLETAMENTE ---
+// --- FUNCIÓN getGames ---
 async function getGames(date) {
   const key = `nba-espn-${date}`;
   if (cache[key]) return cache[key];
@@ -168,11 +168,11 @@ router.get('/nba-ticket', async (req, res) => {
       if (a) analyses.push(a);
     }
 
-    // --- CAMBIO APLICADO AQUÍ ---
+    // --- INTEGRACIÓN SOLICITADA ---
     const picks = analyses
-      .filter(a => a.probability >= 60)
+      .filter(a => a.probability >= 50)
       .sort((a, b) => b.probability - a.probability);
-    // ----------------------------
+    // ------------------------------
 
     res.json({
       ok: true,

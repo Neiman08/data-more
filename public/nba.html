@@ -130,7 +130,6 @@
             btn.innerText = 'RE-ANALIZAR';
             btn.disabled = false;
 
-            // 💰 MEJORA 1: BLOQUE DE RESULTADO VISUAL PRO
             div.innerHTML = `
                 <div style="font-weight:bold; font-size:14px; color:#f97316; margin-bottom:8px;">
                     🔥 PICK: ${a.pick}
@@ -165,7 +164,7 @@
             if (onclickAttr) {
                 const gameId = onclickAttr.match(/'([^']+)'/)[1];
                 await analyze(btn, gameId);
-                await new Promise(r => setTimeout(r, 600)); // Delay para no saturar la API
+                await new Promise(r => setTimeout(r, 600)); 
             }
         }
     }
@@ -178,32 +177,37 @@
         try {
             const res = await fetch(`/api/nba-ticket?date=${date}`);
             const data = await res.json();
+            
+            if (!data.ok || !data.ticket) {
+                ticketDiv.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#94a3b8;">No hay datos suficientes para generar tickets.</p>';
+                return;
+            }
+
             const t = data.ticket;
 
-            // 💰 MEJORA 2: DISEÑO DE TICKET QUE VENDE
             ticketDiv.innerHTML = `
                 <div style="background:#064e3b; padding:15px; border-radius:10px; border:1px solid #22c55e;">
                     <h3 style="margin:0 0 12px 0; color:#22c55e; display:flex; align-items:center; gap:8px;">
                         <span>🔥</span> TICKET SEGURO
                     </h3>
-                    ${t.seguro.map(p => `
+                    ${t.seguro && t.seguro.length ? t.seguro.map(p => `
                         <div style="font-size:14px; margin-bottom:8px; border-bottom: 1px solid #065f46; padding-bottom:5px;">
                             <span style="color:#94a3b8; font-size:11px;">${p.matchup}</span><br>
                             🎯 <b>${p.pick}</b> | <span style="color:#4ade80;">${p.probability}%</span>
                         </div>
-                    `).join('')}
+                    `).join('') : '<div style="color:#94a3b8; font-size:13px;">No hay picks suficientes para Ticket Seguro.</div>'}
                 </div>
 
                 <div style="background:#1e293b; padding:15px; border-radius:10px; border:1px solid #f97316;">
                     <h3 style="margin:0 0 12px 0; color:#f97316; display:flex; align-items:center; gap:8px;">
                         <span>⚡</span> TICKET MEDIO
                     </h3>
-                    ${t.medio.map(p => `
+                    ${t.medio && t.medio.length ? t.medio.map(p => `
                         <div style="font-size:14px; margin-bottom:8px; border-bottom: 1px solid #334155; padding-bottom:5px;">
                             <span style="color:#94a3b8; font-size:11px;">${p.matchup}</span><br>
                             🎯 <b>${p.pick}</b> | <span style="color:#f97316;">${p.probability}%</span>
                         </div>
-                    `).join('')}
+                    `).join('') : '<div style="color:#94a3b8; font-size:13px;">No hay picks suficientes para Ticket Medio.</div>'}
                 </div>
             `;
         } catch (e) {
@@ -211,7 +215,6 @@
         }
     }
 
-    // Inicialización al cargar
     window.onload = () => {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').value = today;
