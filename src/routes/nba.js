@@ -3,7 +3,8 @@ import { buildNBAAnalysis } from '../utils/nbaScoring.js';
 
 const router = express.Router();
 
-const NBA_API_BASE = 'https://www.thesportsdb.com/api/v1/json/3';
+// --- CONSTANTE ACTUALIZADA ---
+const NBA_API_BASE = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard';
 const cache = {};
 
 /**
@@ -47,57 +48,59 @@ async function fetchAPI(url, retries = 3) {
   return null;
 }
 
-function formatGame(g) {
-  return {
-    gameId: g.idEvent,
-    date: g.dateEvent,
-    time: g.strTime || '',
-    homeTeam: g.strHomeTeam,
-    awayTeam: g.strAwayTeam,
-    homeScore: g.intHomeScore ?? null,
-    awayScore: g.intAwayScore ?? null,
-    homeLogo: getLogo(g.strHomeTeam),
-    awayLogo: getLogo(g.strAwayTeam),
-    status: g.strStatus || 'Scheduled',
-    league: 'NBA'
-  };
-}
-
+// --- FUNCIÓN getGames REEMPLAZADA COMPLETAMENTE ---
 async function getGames(date) {
-  const key = `nba-${date}`;
+  const key = `nba-espn-${date}`;
   if (cache[key]) return cache[key];
 
-  const url = `${NBA_API_BASE}/eventsday.php?d=${date}&l=NBA`;
+  const espnDate = String(date).replaceAll('-', '');
+  const url = `${NBA_API_BASE}?dates=${espnDate}`;
+
   const data = await fetchAPI(url);
 
-  // --- LÍNEA ACTUALIZADA AQUÍ ---
-  if (!data || !data.events || data.events.length === 0) {
-    return [
-      {
-        gameId: '1',
-        date: date,
-        time: '19:00',
-        homeTeam: 'Los Angeles Lakers',
-        awayTeam: 'Golden State Warriors',
-        homeScore: null,
-        awayScore: null,
-        homeLogo: getLogo('Los Angeles Lakers'),
-        awayLogo: getLogo('Golden State Warriors'),
-        status: 'Scheduled',
-        league: 'NBA'
-      }
-    ];
+  if (!data || !Array.isArray(data.events) || data.events.length === 0) {
+    return [];
   }
-  // -----------------------------
 
-  const games = data.events.map(formatGame);
+  const games = data.events.map(event => {
+    const competition = event.competitions?.[0];
+    const competitors = competition?.competitors || [];
+
+    const home = competitors.find(t => t.homeAway === 'home');
+    const away = competitors.find(t => t.homeAway === 'away');
+
+    const homeTeam = home?.team?.displayName || 'Home Team';
+    const awayTeam = away?.team?.displayName || 'Away Team';
+
+    return {
+      gameId: event.id,
+      date,
+      time: new Date(event.date).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      homeTeam,
+      awayTeam,
+      homeScore: home?.score ?? null,
+      awayScore: away?.score ?? null,
+      homeLogo: home?.team?.logo || getLogo(homeTeam),
+      awayLogo: away?.team?.logo || getLogo(awayTeam),
+      status: event.status?.type?.description || 'Scheduled',
+      league: 'NBA'
+    };
+  });
+
   cache[key] = games;
-
   return games;
 }
 
+// NOTA: getRecent sigue usando la estructura anterior. 
+// Si la API de theSportsDB ya no funciona, esta función podría fallar.
 async function getRecent(team) {
-  const url = `${NBA_API_BASE}/searchevents.php?e=${encodeURIComponent(team)}`;
+  // Se mantiene la base anterior para esta búsqueda específica si es necesario, 
+  // o se debe actualizar a un endpoint de ESPN de "team schedule"
+  const SEARCH_API = 'https://www.thesportsdb.com/api/v1/json/3/searchevents.php';
+  const url = `${SEARCH_API}?e=${encodeURIComponent(team)}`;
   const data = await fetchAPI(url);
 
   if (!data || !data.event) return [];
