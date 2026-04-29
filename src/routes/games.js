@@ -50,7 +50,6 @@ function findOddsForGame(oddsData, awayTeam, homeTeam) {
 async function fetchOdds() {
   if (!process.env.ODDS_API_KEY) {
     console.log('Falta ODDS_API_KEY en .env');
-    // CAMBIO: Ahora devuelve null en lugar de []
     return null;
   }
 
@@ -68,7 +67,6 @@ async function fetchOdds() {
 
   if (!res.ok) {
     console.log('Odds API error:', data);
-    // CAMBIO: Ahora devuelve null en lugar de []
     return null;
   }
 
@@ -91,6 +89,10 @@ async function fetchSchedule(date) {
 
     awayTeam: game.teams.away.team.name,
     homeTeam: game.teams.home.team.name,
+
+    // 🔥 AGREGA ESTO (Abreviaturas)
+    awayAbbrev: game.teams.away.team.abbreviation,
+    homeAbbrev: game.teams.home.team.abbreviation,
 
     awayTeamId: game.teams.away.team.id,
     homeTeamId: game.teams.home.team.id,
@@ -162,11 +164,14 @@ router.get('/games', async (req, res) => {
 
       awayTeam: game.awayTeam,
       homeTeam: game.homeTeam,
+      
+      // Incluimos las abreviaturas en la respuesta del endpoint si las necesitas
+      awayAbbrev: game.awayAbbrev,
+      homeAbbrev: game.homeAbbrev,
 
       awayProbablePitcher: game.awayProbablePitcher,
       homeProbablePitcher: game.homeProbablePitcher,
 
-      // CAMBIO: Validación ternaria para findOddsForGame
       odds: oddsData
         ? findOddsForGame(oddsData, game.awayTeam, game.homeTeam)
         : null
@@ -181,7 +186,6 @@ router.get('/games', async (req, res) => {
 
   } catch (error) {
     console.error('ERROR /games:', error);
-
     res.status(500).json({
       ok: false,
       error: error.message
@@ -220,7 +224,6 @@ router.get('/analyze/:gamePk', async (req, res) => {
       fetchPitcherStats(game.homeProbablePitcherId)
     ]);
 
-    // CAMBIO: Validación ternaria para findOddsForGame
     const odds = oddsData
       ? findOddsForGame(oddsData, game.awayTeam, game.homeTeam)
       : null;
@@ -241,7 +244,6 @@ router.get('/analyze/:gamePk', async (req, res) => {
 
   } catch (error) {
     console.error('ERROR /analyze:', error);
-
     res.status(500).json({
       ok: false,
       error: error.message
