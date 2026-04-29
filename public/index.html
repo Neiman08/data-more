@@ -3,647 +3,272 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data More Picks | MLB</title>
+  <title>Data More | MLB Analytics Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
     :root {
+      --bg-body: #030612;
+      --bg-card: #0b1224;
       --primary-blue: #3b82f6;
       --accent-green: #22c55e;
-      --bg-dark-start: #0b1020;
-      --bg-dark-end: #030612;
-      --card-bg-dark: #11182d;
+      --accent-orange: #fb923c;
       --text-main: #ffffff;
       --text-subtle: #94a3b8;
       --border-dark: #1e293b;
+      --gold: #facc15;
     }
 
-    /* 1. LOADER VISUAL UX PREMIUM */
-    .loading {
-      animation: pulse 1s infinite;
-      display: inline-block;
-      font-weight: bold;
-      color: var(--primary-blue);
-    }
-
-    @keyframes pulse {
-      0% { opacity: .4 }
-      50% { opacity: 1 }
-      100% { opacity: .4 }
-    }
-
-    /* 2. TICKER ESTILO ESPN PRO */
-    .ticker {
-      width: 100%;
-      overflow: hidden;
-      background: linear-gradient(90deg, #020617, #06142d, #020617);
-      border: 1px solid rgba(34,197,94,0.35);
-      border-radius: 14px;
-      margin-bottom: 20px;
-      position: relative;
-      box-shadow: 0 0 25px rgba(34,197,94,0.12);
-    }
-
-    .ticker::before {
-      content: "MLB HOY";
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 88px;
-      background: #020617;
-      color: #ffffff;
-      font-weight: 900;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2;
-      border-right: 1px solid #1e293b;
-    }
-
-    .ticker-track {
-      display: flex;
-      gap: 28px;
-      white-space: nowrap;
-      animation: scrollTicker 55s linear infinite;
-      padding-left: 110px;
-    }
-
-    .ticker-item {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-size: 13px;
-      padding: 12px 0;
-      color: #e5e7eb;
-    }
-
-    .ticker-team {
-      font-weight: 800;
-      color: #ffffff;
-    }
-
-    .ticker-logo {
-      width: 18px;
-      height: 18px;
-      object-fit: contain;
-    }
-
-    .ticker-score {
-      font-weight: 900;
-      color: #22c55e;
-      background: rgba(34,197,94,0.14);
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(34,197,94,0.25);
-    }
-
-    .ticker-inning {
-      font-size: 11px;
-      color: #93c5fd;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-
-    @keyframes scrollTicker {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
-    }
-
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at top, #111b33 0%, var(--bg-dark-start) 45%, var(--bg-dark-end) 100%);
-      color: var(--text-main);
-      padding: 25px;
-    }
-
-    .container { max-width: 1300px; margin: auto; }
-
-    /* HEADER */
-    .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-    .brand-logo { width: 70px; border-radius: 12px; }
-    h1 { margin: 0; font-size: 30px; color: #7dd3fc; }
-    .subtitle { color: var(--text-subtle); font-size: 14px; }
-
-    .nav { margin-bottom: 20px; }
-    .nav a {
-      padding: 10px 16px; background: var(--card-bg-dark); border-radius: 8px;
-      text-decoration: none; color: white; margin-right: 10px; font-weight: bold; border: 1px solid var(--border-dark);
-    }
-    .nav a.active { background: var(--primary-blue); border-color: #60a5fa; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); padding: 15px; }
+    .container { max-width: 100%; margin: auto; }
+    
+    .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .brand-logo { width: 50px; border-radius: 10px; }
+    h1 { margin: 0; font-size: 24px; color: #7dd3fc; }
 
     .topbar {
-      display: flex; gap: 12px; flex-wrap: wrap; background: var(--card-bg-dark);
-      padding: 15px; border-radius: 10px; margin-bottom: 20px; align-items: center; border: 1px solid var(--border-dark);
+      display: flex; gap: 10px; flex-wrap: wrap; background: var(--bg-card);
+      padding: 12px; border-radius: 12px; margin-bottom: 20px; align-items: center; border: 1px solid var(--border-dark);
     }
-
-    input[type="date"] { padding: 10px; border-radius: 8px; border: 1px solid var(--border-dark); background: #ffffff; color: #000; font-weight: bold; }
-
-    button { 
-      padding: 8px; 
-      border-radius: 6px; 
-      border: none; 
-      font-weight: bold; 
-      cursor: pointer; 
-      color: white; 
-      background: var(--primary-blue); 
-      transition: transform 0.1s; 
-      font-size: 11px;
-    }
-    button:active { transform: scale(0.98); }
+    input[type="date"] { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+    button { padding: 8px 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--primary-blue); transition: 0.2s; font-size: 13px; }
+    button:hover { opacity: 0.8; transform: translateY(-1px); }
     .ticket-btn { background: var(--accent-green); }
 
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(4, 1fr); 
-      gap: 18px; 
-    }
+    /* GRID DE 4 COLUMNAS */
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
 
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-    }
+    @media (max-width: 1400px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } }
 
-    @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr; }
-    }
+    .card { background: var(--bg-card); border: 1px solid var(--border-dark); border-radius: 16px; padding: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
 
-    .card {
-      background: linear-gradient(145deg, #0f172a, #0b1224);
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #1e293b;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.35);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
+    .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .team-box { text-align: center; flex: 1; }
+    .team-logo { width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; }
+    .team-abbr { display: block; font-size: 18px; font-weight: 900; letter-spacing: 0.5px; }
 
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 25px rgba(0,0,0,0.6);
-    }
+    .game-status-center { flex: 1; text-align: center; }
+    .live-tag { font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 3px; text-transform: uppercase; }
+    .status-live { color: #ef4444; animation: blink 1.5s infinite; }
+    .status-other { color: var(--text-subtle); }
+    .score-now { font-size: 28px; font-weight: 900; margin: 4px 0; color: var(--accent-green); }
 
-    .matchup-pro {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
+    .bases-container { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 5px; }
+    .diamond-box { display: flex; justify-content: center; gap: 4px; }
+    .base { width: 8px; height: 8px; border: 1.2px solid #334155; transform: rotate(45deg); transition: 0.3s; }
+    .base.active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 6px var(--gold); }
+    .outs-text { font-size: 10px; color: var(--text-subtle); font-weight: bold; }
 
-    .team-pro {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 900;
-      font-size: 13px;
-    }
+    .lineup-container { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    .player-line { display: flex; justify-content: space-between; font-size: 9.5px; padding: 1.5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .order-num { color: var(--accent-green); font-weight: bold; }
 
-    /* AJUSTE: LOGOS MÁS GRANDES */
-    .team-pro img {
-      width: 34px;
-      height: 34px;
-      object-fit: contain;
-    }
+    /* ESTILOS DE ANÁLISIS DINÁMICOS */
+    .prediction-box { padding: 12px; border-radius: 12px; margin-bottom: 12px; transition: all 0.3s ease; }
+    .border-baja { border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.1); color: #f87171; }
+    .border-media { border: 2px solid #facc15; background: rgba(234, 179, 8, 0.1); color: #facc15; }
+    .border-alta { border: 2px solid #22c55e; background: rgba(34, 197, 94, 0.1); color: #4ade80; }
 
-    .vs-pro {
-      font-size: 10px;
-      color: var(--text-subtle);
-      font-weight: bold;
-    }
+    .section { border-top: 1px solid rgba(255,255,255,0.06); padding: 10px 0; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .title-icon { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; text-transform: uppercase; }
 
-    .meta {
-      font-size: 11px;
-      color: var(--text-subtle);
-      line-height: 1.4;
-    }
+    .pick-val { font-size: 15px; font-weight: 700; margin-bottom: 3px; display: block; color: white; }
+    .data-mono { font-family: 'Roboto Mono', monospace; font-size: 11px; }
 
-    .odds-badge {
-      display: inline-block;
-      margin-top: 6px;
-      padding: 4px 6px;
-      background: #0d121f;
-      border-radius: 6px;
-      font-size: 10px;
-      color: #93c5fd;
-      border: 1px solid var(--border-dark);
-    }
+    .player-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .player-img { width: 40px; height: 40px; border-radius: 50%; background: #1e293b; border: 1px solid #334155; object-fit: cover; }
+    .p-name { font-size: 13px; font-weight: 700; display: block; }
+    .p-stats { font-size: 10px; color: var(--text-subtle); }
 
-    .lineup-card { margin-top: 12px; background: #0b1224; padding: 12px; border-radius: 10px; border: 1px solid #1e293b; }
-    .teams-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #e2e8f0; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
-    .lineups { display: flex; justify-content: space-between; }
-    .team { width: 48%; }
-    .player { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .order { color: var(--accent-green); font-weight: bold; margin-right: 5px; }
-    .pos { color: var(--text-subtle); font-size: 10px; background: #1e293b; padding: 0 4px; border-radius: 3px; }
-
-    .result { margin-top: 15px; }
-    .pick-box { margin-top: 12px; padding: 12px; border-radius: 10px; font-weight: bold; line-height: 1.6; }
-    .alta { border: 2px solid #22c55e; background: rgba(34,197,94,0.1); color: #4ade80; }
-    .media { border: 2px solid #facc15; background: rgba(234,179,8,0.1); color: #facc15; }
-    .baja { border: 2px solid #ef4444; background: rgba(239,68,68,0.1); color: #f87171; }
-
-    .extra-box { margin-top: 10px; padding: 10px; background: #0b1224; border-radius: 10px; font-size: 13px; border: 1px solid #1e293b; }
-    .extra-title { color: #7dd3fc; font-weight: bold; text-transform: uppercase; font-size: 11px; margin-bottom: 5px; }
-    .divider { height: 1px; background: #273449; margin: 10px 0; }
-
-    /* AJUSTE: TICKETS GRID */
-    .tickets-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      margin-bottom: 25px;
-    }
-
-    @media (max-width: 900px) {
-      .tickets-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .ticket-box { 
-      margin-bottom: 0; 
-      background: linear-gradient(135deg, #06391d 0%, #032c18 100%); 
-      border: 1px solid var(--accent-green); 
-      padding: 20px; 
-      border-radius: 15px; 
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
-    }
-
-    .ticket-pick { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.6; }
-    .footer-note { margin-top: 30px; text-align: center; color: var(--text-subtle); font-size: 13px; }
-    
-    .prop-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px; }
-    .prop-rating { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase; }
-    .rating-alta { color: #22c55e; background: rgba(34,197,94,0.1); }
-    .rating-media { color: #facc15; background: rgba(234,179,8,0.1); }
-    .rating-baja { color: #ef4444; background: rgba(239,68,68,0.1); }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .loading { animation: pulse 1s infinite; color: var(--primary-blue); }
+    @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
   </style>
 </head>
-
 <body>
+
   <div class="container">
     <div class="brand-header">
-      <img src="/logo.png" class="brand-logo">
-      <div>
-        <h1>Data More MLB Picks</h1>
-        <p class="subtitle">Moneyline, Run Line, Team Totals</p>
-      </div>
-    </div>
-
-    <div id="liveTicker" class="ticker"></div>
-
-    <div class="nav">
-        <a href="/" class="active">⚾ MLB</a>
-        <a href="/soccer">⚽ Soccer</a>
+      <img src="/logo.png" class="brand-logo" onerror="this.style.display='none'">
+      <h1>Data More Picks</h1>
     </div>
 
     <div class="topbar">
-      <label for="date">Fecha:</label>
-      <input type="date" id="date" />
-      <button id="loadBtn">Cargar juegos</button>
-      <button id="analyzeAllBtn">Analizar todos</button>
-      <button id="ticketBtn" class="ticket-btn">🎟️ Generar Ticket</button>
+      <input type="date" id="dateInput" />
+      <button onclick="loadGames()">Cargar Juegos</button>
+      <button onclick="analyzeAll()" style="background: #475569;">Analizar Todos</button>
+      <button class="ticket-btn">🎟️ Generar Ticket</button>
+
+      <a href="/" style="text-decoration:none;">
+        <button type="button" style="background:#2563eb;">⚾ MLB</button>
+      </a>
+
+      <a href="/soccer" style="text-decoration:none;">
+        <button type="button" style="background:#16a34a;">⚽ Soccer</button>
+      </a>
+
+      <a href="/nba" style="text-decoration:none;">
+        <button type="button" style="background:#f97316;">🏀 NBA</button>
+      </a>
     </div>
 
-    <div id="statusBox" class="status-box" style="margin-bottom: 15px; color: var(--text-subtle);">Listo...</div>
-    <div id="ticketBox"></div>
-    <div id="games" class="grid"></div>
-    <p class="footer-note">Información procesada con algoritmos de IA y análisis estadístico avanzado.</p>
+    <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--text-subtle);">Listo...</div>
+    <div id="gamesGrid" class="grid"></div>
   </div>
 
   <script>
-    const dateInput = document.getElementById("date");
-    const gamesContainer = document.getElementById("games");
-    const statusBox = document.getElementById("statusBox");
-    const loadBtn = document.getElementById("loadBtn");
-    const analyzeAllBtn = document.getElementById("analyzeAllBtn");
-    const ticketBtn = document.getElementById("ticketBtn");
-    const ticketBox = document.getElementById("ticketBox");
+    const dateInput = document.getElementById("dateInput");
+    const gamesGrid = document.getElementById("gamesGrid");
+    const status = document.getElementById("status");
 
     dateInput.value = new Date().toISOString().split("T")[0];
 
-    function escapeHtml(value) {
-      return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-    }
-
-    function formatNum(value, decimals = 2) {
-      const num = Number(value);
-      return isNaN(num) ? "N/D" : num.toFixed(decimals);
-    }
-
-    function confidenceClass(confidence) {
-      const c = String(confidence || "").toLowerCase();
-      if (c.includes("alta")) return "alta";
-      if (c.includes("media")) return "media";
-      return "baja";
-    }
-
-    async function loadLiveTicker() {
+    async function updateLiveScores() {
       try {
-        // AJUSTE 1: Cache busting para actualización de ticker
         const res = await fetch(`/api/baseball/live-scores?t=${Date.now()}`);
         const data = await res.json();
+        if (data.ok && data.games) {
+          data.games.forEach(g => {
+            const scoreEl = document.querySelector(`#score-${g.gamePk}`);
+            const inningEl = document.querySelector(`#inning-text-${g.gamePk}`);
+            if (scoreEl) scoreEl.textContent = `${g.awayScore} - ${g.homeScore}`;
+            if (inningEl) inningEl.textContent = `${g.inningState || ''} ${g.inning || ''}`;
+            
+            const b1 = document.querySelector(`#base1-${g.gamePk}`);
+            const b2 = document.querySelector(`#base2-${g.gamePk}`);
+            const b3 = document.querySelector(`#base3-${g.gamePk}`);
+            const outEl = document.querySelector(`#outs-${g.gamePk}`);
 
-        if (!data.ok || !data.games.length) return;
-
-        const items = data.games.map(g => `
-          <div class="ticker-item">
-            <img src="/logos/${escapeHtml(g.awayAbbrev)}.png" class="ticker-logo" onerror="this.style.display='none'">
-            <span class="ticker-team">${escapeHtml(g.awayAbbrev || g.awayTeam)}</span>
-
-            <span class="ticker-score">${escapeHtml(g.awayScore)} - ${escapeHtml(g.homeScore)}</span>
-
-            <img src="/logos/${escapeHtml(g.homeAbbrev)}.png" class="ticker-logo" onerror="this.style.display='none'">
-            <span class="ticker-team">${escapeHtml(g.homeAbbrev || g.homeTeam)}</span>
-
-            <span class="ticker-inning">
-              ${escapeHtml(g.inningState || g.status || "")} ${escapeHtml(g.inning || "")}
-            </span>
-          </div>
-        `).join('');
-
-        document.getElementById('liveTicker').innerHTML = `
-          <div class="ticker-track">${items}${items}</div>
-        `;
-
-      } catch (e) {
-        console.log('Error live ticker');
-      }
+            if(b1) g.runnerOn1b ? b1.classList.add('active') : b1.classList.remove('active');
+            if(b2) g.runnerOn2b ? b2.classList.add('active') : b2.classList.remove('active');
+            if(b3) g.runnerOn3b ? b3.classList.add('active') : b3.classList.remove('active');
+            if(outEl) outEl.textContent = `${g.outs || 0} Outs`;
+          });
+        }
+      } catch (e) { console.error("Sync error"); }
     }
-
-    async function getLineup(gamePk) {
-      try {
-        const res = await fetch(`/api/baseball/lineup/${gamePk}`);
-        return await res.json();
-      } catch (e) { return { ok: false }; }
-    }
+    setInterval(updateLiveScores, 20000);
 
     function renderLineups(data) {
-      if (!data.ok || !data.awayLineup || !data.homeLineup) return '';
-      return `
-        <div class="lineup-card">
-          <div class="teams-header">
-            <div>LINEUP</div>
-            <div>BATTERS</div>
-          </div>
-          <div class="lineups">
-            <div class="team">
-              ${data.awayLineup.slice(0, 9).map(p => `
-                <div class="player">
-                  <span><span class="order">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
-                  <span class="pos">${p.pos}</span>
-                </div>
-              `).join('')}
-            </div>
-            <div class="team">
-              ${data.homeLineup.slice(0, 9).map(p => `
-                <div class="player">
-                  <span><span class="order">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
-                  <span class="pos">${p.pos}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          <div style="text-align:center; font-size:11px; margin-top:8px; color: ${data.homeConfirmed ? '#22c55e' : '#94a3b8'}">
-            ${data.homeConfirmed ? '🟢 Confirmed' : '⏳ Pending'}
-          </div>
-        </div>`;
-    }
-
-    function moneylineText(game) {
-      if (!game.odds || !game.odds.bookmakers || !game.odds.bookmakers.length) return "Odds: no disponibles";
-      const bookmaker = game.odds.bookmakers[0];
-      const h2h = bookmaker.markets?.find(m => m.key === "h2h");
-      if (!h2h) return "ML: no disponible";
-      const away = h2h.outcomes?.find(o => o.name === game.awayTeam);
-      const home = h2h.outcomes?.find(o => o.name === game.homeTeam);
-      return `ML ${game.awayTeam}: ${away?.price ?? "N/D"} | ${game.homeTeam}: ${home?.price ?? "N/D"}`;
+      if (!data.ok || !data.awayLineup) return '<div style="font-size:9px; text-align:center; padding:10px; color:gray;">Lineups pendientes...</div>';
+      const renderSide = (l) => l.slice(0, 9).map(p => `
+        <div class="player-line">
+          <span><span class="order-num">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
+          <span class="pos-tag">${p.pos}</span>
+        </div>`).join('');
+      return `<div class="lineup-container"><div class="lineup-grid" style="display:flex; justify-content:space-between;"><div style="width:48%">${renderSide(data.awayLineup)}</div><div style="width:48%">${renderSide(data.homeLineup)}</div></div></div>`;
     }
 
     async function loadGames() {
       const date = dateInput.value;
-      statusBox.innerHTML = `<span class="loading">Cargando juegos para ${date}...</span>`;
-      gamesContainer.innerHTML = "";
-      ticketBox.innerHTML = "";
+      status.innerHTML = `<span class="loading">Actualizando pizarra...</span>`;
+      gamesGrid.innerHTML = "";
       try {
-        const res = await fetch(`/api/baseball/games?date=${encodeURIComponent(date)}`);
+        const res = await fetch(`/api/baseball/games?date=${date}`);
         const data = await res.json();
-        if (!data.ok || !data.games.length) return statusBox.textContent = "No hay juegos.";
+        if (!data.ok || !data.games.length) return status.textContent = "No hay juegos.";
+
         for (const game of data.games) {
           const card = document.createElement("div");
           card.className = "card";
-          const lineup = await getLineup(game.gamePk);
-          
+          const lRes = await fetch(`/api/baseball/lineup/${game.gamePk}`);
+          const lData = await lRes.json();
+
+          const isLive = game.status === 'In Progress' || game.status === 'Live';
+          const liveTagHtml = isLive 
+            ? `<div class="live-tag status-live">● EN VIVO</div>` 
+            : `<div class="live-tag status-other">${game.status}</div>`;
+
           card.innerHTML = `
-            <div class="matchup-pro">
-              <div class="team-pro">
-                <img src="/logos/${escapeHtml(game.awayAbbrev)}.png">
-                <span>${escapeHtml(game.awayAbbrev)}</span>
+            <div class="match-header">
+              <div class="team-box"><img src="/logos/${game.awayAbbrev}.png" class="team-logo"><span class="team-abbr">${game.awayAbbrev}</span></div>
+              <div class="game-status-center">
+                ${liveTagHtml}
+                <div style="font-size:11px; color:var(--text-subtle); margin-top:2px;" id="inning-text-${game.gamePk}">${game.inning || ''}</div>
+                <div class="score-now" id="score-${game.gamePk}">${game.awayScore || 0} - ${game.homeScore || 0}</div>
+                <div class="bases-container">
+                    <div class="diamond-box"><div id="base2-${game.gamePk}" class="base ${game.runnerOn2b ? 'active' : ''}"></div></div>
+                    <div class="diamond-box"><div id="base3-${game.gamePk}" class="base ${game.runnerOn3b ? 'active' : ''}"></div><div id="base1-${game.gamePk}" class="base ${game.runnerOn1b ? 'active' : ''}"></div></div>
+                    <div class="outs-text" id="outs-${game.gamePk}">${game.outs || 0} Outs</div>
+                </div>
               </div>
-
-              <div class="vs-pro">VS</div>
-
-              <div class="team-pro">
-                <span>${escapeHtml(game.homeAbbrev)}</span>
-                <img src="/logos/${escapeHtml(game.homeAbbrev)}.png">
-              </div>
+              <div class="team-box"><img src="/logos/${game.homeAbbrev}.png" class="team-logo"><span class="team-abbr">${game.homeAbbrev}</span></div>
             </div>
-            <div class="meta">
-              <strong>Status:</strong> ${escapeHtml(game.status)}<br>
-              <strong>Pitchers:</strong> ${escapeHtml(game.awayPitcher || "TBD")} vs ${escapeHtml(game.homePitcher || "TBD")}<br>
-              <div class="odds-badge">${moneylineText(game)}</div>
-            </div>
-            ${renderLineups(lineup)}
-            <button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}')" style="margin-top:10px; width:100%">Analizar</button>
-            <div class="result" id="result-${game.gamePk}"></div>`;
-          gamesContainer.appendChild(card);
+            ${renderLineups(lData)}
+            <div id="results-${game.gamePk}"><button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}')" style="width:100%">ANALIZAR</button></div>`;
+          gamesGrid.appendChild(card);
         }
-        statusBox.textContent = `${data.games.length} juegos cargados.`;
-      } catch (e) { statusBox.textContent = "Error de conexión."; }
+        status.textContent = `${data.games.length} juegos listos.`;
+      } catch (e) { status.textContent = "Error."; }
     }
 
     async function analyzeGame(gamePk, awayAbbrev, homeAbbrev) {
-      const result = document.getElementById(`result-${gamePk}`);
-      result.innerHTML = `<div class="loading" style="font-size:12px;">Analizando...</div>`;
-
-      const propsRes = await fetch(`/api/baseball/player-props/${gamePk}`);
-      const propsData = await propsRes.json();
-
-      let propsHTML = '';
-      if (propsData.ok && propsData.props.length > 0) {
-        const teams = {};
-        propsData.props.forEach(p => {
-          if (!teams[p.team]) teams[p.team] = [];
-          teams[p.team].push(p);
-        });
-
-        Object.keys(teams).forEach(team => {
-          const top = teams[team]
-            .sort((a, b) => b.hitChance - a.hitChance)
-            .slice(0, 3);
-
-          propsHTML += `
-            <div style="margin-top:10px; font-weight:bold; color:#7dd3fc; border-bottom: 1px solid rgba(125, 211, 252, 0.2); padding-bottom: 2px;">
-              ${team}
-            </div>
-          `;
-
-          propsHTML += top.map(p => `
-            <div class="prop-row">
-              <span><strong>${p.name}</strong></span>
-              <span class="prop-rating rating-${p.rating.toLowerCase()}">${p.rating}</span>
-            </div>
-            <div style="font-size: 10px; color: var(--text-subtle); margin-bottom: 5px;">
-              Prob: Hit ${p.hitChance}% | HR ${p.hrChance}% | RBI ${p.rbiChance}%
-            </div>
-          `).join('');
-        });
-      } else {
-        propsHTML = '<div class="small">No hay props disponibles aún.</div>';
-      }
-
+      const container = document.getElementById(`results-${gamePk}`);
+      container.innerHTML = `<div class="loading" style="text-align:center; padding:10px; font-size:12px;">Modelando IA...</div>`;
+      
       try {
-        const res = await fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`);
-        const data = await res.json();
-        if (!data.ok) return result.innerHTML = "Error";
-        const a = data.analysis || {};
-        const away = a.away || {};
-        const home = a.home || {};
-        const runLine = a.runLine || {};
-        const teamTotals = a.teamTotals || {};
-        const pickPct = a.pick === away.team ? away.modelWinPct : home.modelWinPct;
+        const [anaRes, propRes] = await Promise.all([
+          fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`),
+          fetch(`/api/baseball/player-props/${gamePk}`)
+        ]);
+        const anaData = await anaRes.json();
+        const propData = await propRes.json();
+        const a = anaData.analysis;
+        const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
 
-        result.innerHTML = `
-          <div class="pick-box ${confidenceClass(a.confidence)}">
-            🔥 <strong>Moneyline Pick:</strong> ${escapeHtml(a.pick || "N/D")}<br>
-            📊 <strong>Confianza:</strong> ${escapeHtml(a.confidence || "N/D")}<br>
-            📈 <strong>Probabilidad:</strong> ${formatNum(pickPct)}%
+        const conf = String(a.confidence || "").toLowerCase();
+        let colorClass = "border-baja";
+        if (conf.includes("alta")) colorClass = "border-alta";
+        else if (conf.includes("media")) colorClass = "border-media";
+
+        let html = `
+          <div class="prediction-box ${colorClass}">
+            <div class="section-header">
+              <div class="title-icon" style="color:inherit">🔥 Moneyline</div>
+              <span class="badge" style="background:rgba(255,255,255,0.2); color:inherit">${a.confidence.toUpperCase()}</span>
+            </div>
+            <span class="pick-val">${a.pick}</span>
+            <div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div>
           </div>
-          <div class="extra-box">
-            <div class="extra-title">📉 Run Line</div>
-            <strong>Pick:</strong> ${escapeHtml(runLine.pick || "N/D")}<br>
-            <strong>Prob:</strong> ${formatNum(runLine.coverProb)}% | <strong>Margen:</strong> ${formatNum(runLine.projectedMargin)}
+
+          <div class="section">
+            <div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div>
+            <span class="pick-val">${a.runLine?.pick || 'N/A'}</span>
+            <div class="data-mono">Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div>
           </div>
-          <div class="extra-box">
-            <div class="extra-title">📊 Team Totals</div>
-            ${escapeHtml(awayAbbrev)}: ${escapeHtml(teamTotals.away?.pick)} (${formatNum(teamTotals.away?.probability)}%)<br>
-            ${escapeHtml(homeAbbrev)}: ${escapeHtml(teamTotals.home?.pick)} (${formatNum(teamTotals.home?.probability)}%)
-            <div class="divider"></div>
-            <strong>Total Combinado:</strong> ${formatNum(teamTotals.combinedProjectedTotal)}
+
+          <div class="section">
+            <div class="section-header"><div class="title-icon" style="color:var(--accent-green)">📈 Team Totals</div></div>
+            <div class="data-mono">${awayAbbrev}: ${a.teamTotals?.away?.pick || 'TBD'}</div>
+            <div class="data-mono">${homeAbbrev}: ${a.teamTotals?.home?.pick || 'TBD'}</div>
           </div>
-          <div class="extra-box">
-            <div class="extra-title">💎 TOP PLAYER PROPS</div>
-            ${propsHTML}
-          </div>
-          <div style="font-size:11px; color:var(--text-subtle); margin-top:8px;">
-            ${(a.notes || []).map(n => `• ${escapeHtml(n)}`).join("<br>")}
-          </div>`;
-      } catch (e) { result.innerHTML = "Error"; }
-    }
 
-    function confidenceScore(confidence) {
-      const c = String(confidence || "").toLowerCase();
-      if (c.includes("alta")) return 10;
-      if (c.includes("media")) return 5;
-      return 0;
-    }
+          <div class="section" style="border:none">
+            <div class="section-header"><div class="title-icon" style="color:#60a5fa">💎 Player Props</div></div>`;
 
-    function buildBalancedTicket(picks, limit) {
-      const valid = picks.filter(p => p.pick && p.pick !== "N/D" && p.probability > 0);
-      const moneyline = valid.filter(p => p.market === "Moneyline").sort((a, b) => b.score - a.score);
-      const runline = valid.filter(p => p.market === "Run Line" && p.confidence !== "baja" && p.probability >= 58).sort((a, b) => b.score - a.score);
-      const totals = valid.filter(p => p.market === "Team Total" && p.probability >= 54).sort((a, b) => b.score - a.score);
-
-      const result = [];
-      const addPick = (pick) => {
-        if (!pick || result.length >= limit || result.some(p => p.matchup === pick.matchup)) return;
-        result.push(pick);
-      };
-
-      if (limit <= 4) { moneyline.slice(0, 4).forEach(addPick); }
-      else if (limit <= 7) { addPick(runline[0]); moneyline.slice(2, 6).forEach(addPick); totals.slice(0, 3).forEach(addPick); moneyline.slice(0, 2).forEach(addPick); }
-      else { runline.slice(0, 2).forEach(addPick); moneyline.slice(4, 10).forEach(addPick); totals.slice(0, 6).forEach(addPick); moneyline.slice(0, 4).forEach(addPick); }
-
-      const fallback = [...moneyline, ...runline, ...totals].sort((a, b) => b.score - a.score);
-      for (const pick of fallback) { addPick(pick); }
-      return result.slice(0, limit);
-    }
-
-    function renderSuggestedTicket(title, picks) {
-      return `
-        <div class="ticket-box">
-          <h2>${escapeHtml(title)}</h2>
-          <p>Total picks: ${escapeHtml(picks.length)}</p>
-          ${picks.map(p => `
-            <div class="ticket-pick">
-              ⚾ <strong>${escapeHtml(p.matchup)}</strong><br>
-              🎯 Pick: ${escapeHtml(p.pick)}<br>
-              📌 Mercado: ${escapeHtml(p.market)}<br>
-              📊 Prob: ${formatNum(p.probability)}% | ⚡ ${escapeHtml(p.confidence)}
-            </div>`).join("")}
-          <p class="small" style="font-size:11px; margin-top:10px; opacity:0.8;">Ticket balanceado por algoritmo de mercado mixto.</p>
-        </div>`;
-    }
-
-    async function loadMLBTicket() {
-      const date = dateInput.value;
-      ticketBox.innerHTML = `<div class="status-box"><span class="loading">Procesando picks inteligentes...</span></div>`;
-      try {
-        const gamesRes = await fetch(`/api/baseball/games?date=${encodeURIComponent(date)}`);
-        const gamesData = await gamesRes.json();
-        if (!gamesData.ok || !gamesData.games.length) return ticketBox.innerHTML = "No hay juegos.";
-
-        const bestPicks = [];
-        for (const game of gamesData.games) {
-          if (["postponed", "delayed", "suspended"].some(s => String(game.status || "").toLowerCase().includes(s))) continue;
-          
-          const res = await fetch(`/api/analyze/${game.gamePk}?date=${encodeURIComponent(date)}`);
-          const data = await res.json();
-          
-          if (!data.ok || !data.analysis) continue;
-          const a = data.analysis;
-          if (!a.away || !a.home) continue;
-
-          const matchup = `${game.awayAbbrev} vs ${game.homeAbbrev}`;
-
-          const mlProb = a.pick === a.away.team ? Number(a.away.modelWinPct) : Number(a.home.modelWinPct);
-          if (a.pick && mlProb > 0) {
-            bestPicks.push({ matchup, pick: a.pick, market: "Moneyline", probability: mlProb, confidence: a.confidence, score: mlProb + confidenceScore(a.confidence) + (mlProb > 65 ? 10 : 0) });
-          }
-
-          if (a.runLine.pick && Number(a.runLine.coverProb) > 0) {
-            bestPicks.push({ matchup, pick: a.runLine.pick, market: "Run Line", probability: Number(a.runLine.coverProb), confidence: a.runLine.confidence, score: Number(a.runLine.coverProb) + confidenceScore(a.runLine.confidence) });
-          }
-
-          if (a.teamTotals.away?.pick) {
-            bestPicks.push({ matchup, pick: a.teamTotals.away.pick, market: "Team Total", probability: Number(a.teamTotals.away.probability), confidence: a.teamTotals.away.confidence, score: Number(a.teamTotals.away.probability) + confidenceScore(a.teamTotals.away.confidence) + 3 });
-          }
-          if (a.teamTotals.home?.pick) {
-            bestPicks.push({ matchup, pick: a.teamTotals.home.pick, market: "Team Total", probability: Number(a.teamTotals.home.probability), confidence: a.teamTotals.home.confidence, score: Number(a.teamTotals.home.probability) + confidenceScore(a.teamTotals.home.confidence) + 3 });
-          }
+        if (propData.ok && propData.props) {
+          propData.props.sort((x, y) => y.hitChance - x.hitChance).slice(0, 3).forEach(p => {
+            const pId = p.personId || p.mlbId || p.playerId || p.id;
+            const imgSrc = pId ? `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${pId}/headshot/67/current` : `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current`;
+            html += `<div class="player-row">
+                <img src="${imgSrc}" class="player-img" onerror="this.src='https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current'">
+                <div class="player-info"><span class="p-name">${p.name}</span><span class="p-stats">Hit ${p.hitChance}% | HR ${p.hrChance}%</span></div>
+                <span class="badge border-alta" style="background:rgba(34,197,94,0.1); color:#4ade80">ALTA</span>
+              </div>`;
+          });
         }
-
-        if (!bestPicks.length) return ticketBox.innerHTML = "No hay picks suficientes.";
-        const sorted = bestPicks.sort((a, b) => b.score - a.score);
-        
-        // AJUSTE: Renderizado en Grid
-        ticketBox.innerHTML = `
-          <div class="tickets-grid">
-            ${renderSuggestedTicket("🔥 Ticket Seguro", buildBalancedTicket(sorted, 4))}
-            ${renderSuggestedTicket("⚡ Ticket Medio", buildBalancedTicket(sorted, 7))}
-            ${renderSuggestedTicket("💣 Ticket Grande", buildBalancedTicket(sorted, Math.min(12, sorted.length)))}
-          </div>
-        `;
-      } catch (error) { ticketBox.innerHTML = "Error al generar ticket."; }
+        html += `</div>`;
+        container.innerHTML = html;
+      } catch (e) { container.innerHTML = "Error."; }
     }
 
-    loadBtn.addEventListener("click", loadGames);
-    analyzeAllBtn.addEventListener("click", async () => {
-      const cards = document.querySelectorAll('.card button[onclick^="analyzeGame"]');
-      for (const b of cards) await b.click();
-    });
-    ticketBtn.addEventListener("click", loadMLBTicket);
+    async function analyzeAll() {
+      const btns = document.querySelectorAll('button[onclick^="analyzeGame"]');
+      for (const b of btns) { b.click(); await new Promise(r => setTimeout(r, 850)); }
+    }
 
-    loadLiveTicker();
-    setInterval(loadLiveTicker, 15000);
     loadGames();
   </script>
 </body>
