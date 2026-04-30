@@ -150,8 +150,9 @@ app.get('/nba', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/nba.html'));
 });
 
+// Ruta actualizada con path.resolve
 app.get('/registro', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/registro.html'));
+  res.sendFile(path.resolve('public/registro.html'));
 });
 
 
