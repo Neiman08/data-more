@@ -47,6 +47,7 @@
     .team-box { text-align: center; flex: 1; }
     .team-logo { width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; }
     .team-abbr { display: block; font-size: 18px; font-weight: 900; letter-spacing: 0.5px; }
+    .pitcher-name { font-size: 10px; color: var(--gold); font-weight: bold; margin-top: 4px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .game-status-center { flex: 1; text-align: center; }
     .live-tag { font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 3px; text-transform: uppercase; }
@@ -183,7 +184,11 @@
 
           card.innerHTML = `
             <div class="match-header">
-              <div class="team-box"><img src="/logos/${game.awayAbbrev}.png" class="team-logo"><span class="team-abbr">${game.awayAbbrev}</span></div>
+              <div class="team-box">
+                <img src="/logos/${game.awayAbbrev}.png" class="team-logo">
+                <span class="team-abbr">${game.awayAbbrev}</span>
+                <span class="pitcher-name">${game.awayPitcher || 'TBD'}</span>
+              </div>
               <div class="game-status-center">
                 ${liveTagHtml}
                 <div style="font-size:11px; color:var(--text-subtle); margin-top:2px;" id="inning-text-${game.gamePk}">${game.inning || ''}</div>
@@ -194,7 +199,11 @@
                     <div class="outs-text" id="outs-${game.gamePk}">${game.outs || 0} Outs</div>
                 </div>
               </div>
-              <div class="team-box"><img src="/logos/${game.homeAbbrev}.png" class="team-logo"><span class="team-abbr">${game.homeAbbrev}</span></div>
+              <div class="team-box">
+                <img src="/logos/${game.homeAbbrev}.png" class="team-logo">
+                <span class="team-abbr">${game.homeAbbrev}</span>
+                <span class="pitcher-name">${game.homePitcher || 'TBD'}</span>
+              </div>
             </div>
             ${renderLineups(lData)}
             <div id="results-${game.gamePk}"><button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}')" style="width:100%">ANALIZAR</button></div>`;

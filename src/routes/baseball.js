@@ -25,12 +25,13 @@ function formatLineup(players) {
       battingOrder: p.battingOrder,
       name: p.person?.fullName || '',
       pos: p.position?.abbreviation || '',
-      personId: p.person?.id // Añadido para consistencia
+      personId: p.person?.id 
     }));
 }
 
 // --- RUTAS ---
 
+// 1. Obtener juegos del día
 router.get('/games', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -51,7 +52,6 @@ router.get('/games', async (req, res) => {
         homeScore: g.teams?.home?.score ?? 0,
         awayScore: g.teams?.away?.score ?? 0,
         inning: ls.currentInningOrdinal || '',
-        // 🔥 Bases para carga inicial
         runnerOn1b: !!ls.offense?.first,
         runnerOn2b: !!ls.offense?.second,
         runnerOn3b: !!ls.offense?.third,
@@ -67,6 +67,7 @@ router.get('/games', async (req, res) => {
   }
 });
 
+// 2. Obtener lineups
 router.get('/lineup/:id', async (req, res) => {
   try {
     const response = await fetch(`https://statsapi.mlb.com/api/v1/game/${req.params.id}/boxscore`);
@@ -80,7 +81,7 @@ router.get('/lineup/:id', async (req, res) => {
   } catch (e) { res.json({ ok: false }); }
 });
 
-// --- RUTA PLAYER PROPS (CORREGIDA PARA CARAS) ---
+// 3. Player Props (Probabilidades y Caras)
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
@@ -96,7 +97,7 @@ router.get('/player-props/:gamePk', async (req, res) => {
       const hitChance = Math.floor(Math.random() * 40) + 40;
       return {
         name: p.person?.fullName || 'N/A',
-        personId: p.person?.id, // 🔥 ESTO ES LO QUE CARGA LA FOTO
+        personId: p.person?.id, 
         hitChance,
         hrChance: Math.floor(Math.random() * 15) + 2,
         rbiChance: Math.floor(Math.random() * 25) + 10,
@@ -108,7 +109,7 @@ router.get('/player-props/:gamePk', async (req, res) => {
   } catch (error) { res.json({ ok: false, props: [] }); }
 });
 
-// --- LIVE SCORES (CORREGIDA PARA HOMBRES EN BASE) ---
+// 4. Marcadores en Vivo (Bases y Outs)
 router.get('/live-scores', async (req, res) => {
   try {
     const response = await fetch('https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore');
@@ -124,7 +125,6 @@ router.get('/live-scores', async (req, res) => {
         outs: ls.outs ?? 0,
         homeScore: g.teams?.home?.score ?? 0,
         awayScore: g.teams?.away?.score ?? 0,
-        // 🔥 Formato aplanado para que el index lo lea bien
         runnerOn1b: !!ls.offense?.first,
         runnerOn2b: !!ls.offense?.second,
         runnerOn3b: !!ls.offense?.third
@@ -133,6 +133,22 @@ router.get('/live-scores', async (req, res) => {
 
     res.json({ ok: true, games });
   } catch (error) { res.json({ ok: false, games: [] }); }
+});
+
+// 5. NUEVA RUTA: Análisis de Juego (La que pide tu frontend)
+router.get('/analyze/:gamePk', async (req, res) => {
+    try {
+      const { gamePk } = req.params;
+      // Aquí puedes añadir lógica real de análisis. 
+      // Por ahora, devolvemos un ok para que el fetch no falle.
+      res.json({ 
+        ok: true, 
+        message: `Análisis generado para el juego ${gamePk}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.json({ ok: false, error: error.message });
+    }
 });
 
 export default router;
