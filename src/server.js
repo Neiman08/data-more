@@ -48,7 +48,15 @@ app.post('/api/auth/register', async (req, res) => {
     const newUser = new User({ nombre, email, password: hashedPassword });
     await newUser.save();
 
-    res.send('<h1>✅ Registro Exitoso</h1><p>Bienvenido a Data More. Ya puedes volver al inicio.</p><a href="/">Volver al inicio</a>');
+    res.send(`
+  <h1>✅ Registro Exitoso</h1>
+  <p>Redirigiendo al inicio...</p>
+  <script>
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 2000);
+  </script>
+`);
   } catch (error) {
     console.error('Error en registro:', error);
     res.status(500).send('Error en el servidor durante el registro');
