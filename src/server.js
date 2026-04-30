@@ -5,22 +5,32 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// Importación del modelo de Usuario
 import User from './models/User.js';
-
-dotenv.config();
+import Pick from './models/Pick.js';
+import GameAnalysis from './models/GameAnalysis.js';
 
 import gamesRoutes from './routes/games.js';
 import baseballRoutes from './routes/baseball.js';
 import soccerRoutes from './routes/soccer.js';
 import nbaRoutes from './routes/nba.js';
-import Pick from './models/Pick.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Conexión a MongoDB
+dotenv.config();
+
+// Configuración de variables de entorno
+if (!process.env.MONGO_URI) {
+  dotenv.config({ path: path.resolve(__dirname, '../.env') });
+}
+
+if (!process.env.MONGO_URI) {
+  console.error('❌ ERROR: MONGO_URI no está definida. Revisa tu archivo .env o Render Environment Variables.');
+  process.exit(1);
+}
+
+// Conexión a MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('🚀 Conectado a MongoDB Atlas (Data More PRO)'))
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
@@ -28,11 +38,10 @@ mongoose.connect(process.env.MONGO_URI)
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '../public')));
 
-// --- RUTAS DE AUTENTICACIÓN ---
+// --- RUTAS DE AUTENTICACIÓN (API) ---
 
-// Registro de Usuario
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
@@ -48,25 +57,45 @@ app.post('/api/auth/register', async (req, res) => {
     const newUser = new User({ nombre, email, password: hashedPassword });
     await newUser.save();
 
-    res.send(`
-  <h1>✅ Registro Exitoso</h1>
-  <p>Redirigiendo al inicio...</p>
-  <script>
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 2000);
-  </script>
-`);
+    res.redirect('/login');
   } catch (error) {
     console.error('Error en registro:', error);
     res.status(500).send('Error en el servidor durante el registro');
   }
 });
 
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-// --- RUTAS DE PICKS Y ANÁLISIS ---
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ ok: false, message: 'Usuario no encontrado' });
+    }
 
-// Guardar picks automáticos
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ ok: false, message: 'Contraseña incorrecta' });
+    }
+
+    res.json({
+      ok: true,
+      user: {
+        id: user._id,
+        nombre: user.nombre,
+        email: user.email,
+        plan: user.plan || 'free',
+        proActivo: user.proActivo || false
+      }
+    });
+  } catch (err) {
+    console.error('Error en login:', err);
+    res.status(500).json({ ok: false, message: 'Error en el servidor' });
+  }
+});
+
+// --- RUTAS DE PICKS Y ANÁLISIS (API) ---
+
 app.post('/api/picks/save', async (req, res) => {
   try {
     const picks = Array.isArray(req.body) ? req.body : [req.body];
@@ -76,7 +105,7 @@ app.post('/api/picks/save', async (req, res) => {
       .map(p => ({
         date: p.date,
         market: p.market,
-        gamePk: p.gamePk,
+        gamePk: String(p.gamePk),
         playerName: p.playerName || '',
         team: p.team || '',
         pick: p.pick,
@@ -84,7 +113,7 @@ app.post('/api/picks/save', async (req, res) => {
       }));
 
     if (!cleanPicks.length) {
-      return res.status(400).json({ ok: false, message: 'No hay picks válidos para guardar' });
+      return res.status(400).json({ ok: false, message: 'No hay picks válidos' });
     }
 
     const saved = await Pick.insertMany(cleanPicks);
@@ -95,7 +124,47 @@ app.post('/api/picks/save', async (req, res) => {
   }
 });
 
-// Banner real basado en MongoDB
+app.post('/api/analysis/lock', async (req, res) => {
+  try {
+    const { date, gamePk, lineupConfirmed, analysis, props } = req.body;
+
+    if (!date || !gamePk || !analysis) {
+      return res.status(400).json({ ok: false, message: 'Faltan datos' });
+    }
+
+    const existing = await GameAnalysis.findOne({ date, gamePk: String(gamePk) });
+    if (existing) {
+      return res.json({ ok: true, locked: true, source: 'mongo', analysis: existing });
+    }
+
+    if (!lineupConfirmed) {
+      return res.json({ ok: true, locked: false, message: 'Lineup no confirmado' });
+    }
+
+    const saved = await GameAnalysis.create({
+      date,
+      gamePk: String(gamePk),
+      lineupConfirmed: true,
+      moneyline: analysis.pick ? {
+        pick: analysis.pick,
+        confidence: analysis.confidence,
+        away: analysis.away,
+        home: analysis.home
+      } : {},
+      runLine: analysis.runLine || {},
+      teamTotals: analysis.teamTotals || {},
+      playerProps: props || []
+    });
+
+    res.json({ ok: true, locked: true, source: 'new', analysis: saved });
+  } catch (err) {
+    console.error('Error congelando análisis:', err);
+    res.status(500).json({ ok: false, message: 'Error congelando análisis' });
+  }
+});
+
+// --- ESTADÍSTICAS (API) ---
+
 app.get('/api/stats/daily-performance', async (req, res) => {
   try {
     const yesterday = new Date();
@@ -110,44 +179,38 @@ app.get('/api/stats/daily-performance', async (req, res) => {
       return graded.length ? Math.round((wins / graded.length) * 100) : 0;
     };
 
-    const ml = picks.filter(p => p.market === 'ML');
-    const rl = picks.filter(p => p.market === 'RL');
-    const hits = picks.filter(p => p.market === 'HIT');
-    const hr = picks.filter(p => p.market === 'HR');
-
-    const hitWinners = hits.filter(p => p.result === 'win').map(p => p.playerName).filter(Boolean);
-    const hrWinners = hr.filter(p => p.result === 'win').map(p => p.playerName).filter(Boolean);
-
     res.json({
       ok: true,
       date,
-      mlSuccess: calc(ml),
-      rlSuccess: calc(rl),
-      propsSuccess: calc([...hits, ...hr]),
-      totalWins: picks.filter(p => p.result === 'win').length,
-      topPlayers: hrWinners.length
-        ? `HR: ${hrWinners.join(', ')} ✅`
-        : hitWinners.length
-          ? `Hits: ${hitWinners.join(', ')} ✅`
-          : 'Pendiente de resultados oficiales'
+      mlSuccess: calc(picks.filter(p => p.market === 'ML')),
+      rlSuccess: calc(picks.filter(p => p.market === 'RL')),
+      propsSuccess: calc(picks.filter(p => ['HIT', 'HR'].includes(p.market))),
+      totalWins: picks.filter(p => p.result === 'win').length
     });
   } catch (err) {
-    console.error('Error en daily-performance:', err);
+    console.error('Error en performance:', err);
     res.status(500).json({ ok: false, message: 'Error calculando estadísticas' });
   }
 });
 
-
-// --- RUTAS DE API ---
+// --- IMPORTACIÓN DE RUTAS MODULARES ---
 app.use('/api', gamesRoutes);
 app.use('/api/baseball', baseballRoutes);
 app.use('/api', soccerRoutes);
 app.use('/api', nbaRoutes);
 
+// --- RUTAS DE FRONTEND (PÁGINAS HTML) ---
 
-// --- RUTAS DE FRONTEND ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/login.html'));
+});
+
+app.get('/registro', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/registro.html'));
 });
 
 app.get('/soccer', (req, res) => {
@@ -158,14 +221,17 @@ app.get('/nba', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/nba.html'));
 });
 
-// Ruta actualizada con path.resolve
-app.get('/registro', (req, res) => {
-  res.sendFile(path.resolve('public/registro.html'));
+app.get('/pro', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pro.html'));
 });
 
+app.get('/pago-manual', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pago-manual.html'));
+});
 
-// Inicio del Servidor
+// --- INICIO DEL SERVIDOR ---
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });

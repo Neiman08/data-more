@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Activar Data More PRO</title>
+
+  <style>
+    body {
+      background: #030612;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      font-size: 26px;
+      font-weight: bold;
+      color: #22c55e;
+      margin-bottom: 30px;
+    }
+
+    .box {
+      background: #0b1224;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #1e293b;
+    }
+
+    .btn {
+      background: #22c55e;
+      color: black;
+      padding: 14px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 900;
+      display: inline-block;
+      margin-top: 20px;
+    }
+
+    .note {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 25px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🔥 Activar Data More PRO</h1>
+  <p>Desbloquea Run Line, Totales y Player Props</p>
+  <div class="price">$29.99 / mes</div>
+
+  <!-- ZELLE -->
+  <div class="box">
+    <h3>Zelle</h3>
+    <p>Envía el pago a:</p>
+    <strong>+1 224 386 7666</strong>
+  </div>
+
+  <!-- CASH APP -->
+  <div class="box">
+    <h3>Cash App</h3>
+    <p>Envía el pago a:</p>
+    <strong>$NeimanInfante4</strong>
+
+    <p style="color:#22c55e;font-size:14px;margin-top:10px;">
+      ⚡ Enviar como "Friends & Family"
+    </p>
+  </div>
+
+  <p>Después de pagar, envía tu comprobante 👇</p>
+
+  <a id="whatsappBtn" class="btn">
+    ENVIAR COMPROBANTE POR WHATSAPP
+  </a>
+
+  <p class="note">
+    Tu cuenta se activa después de verificar el pago.
+  </p>
+
+</div>
+
+<script>
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+  const mensaje = user 
+    ? `Hola, ya pagué Data More PRO. Mi correo es ${user.email}`
+    : 'Hola, ya pagué Data More PRO';
+
+  document.getElementById('whatsappBtn').href =
+    `https://wa.me/12243867666?text=${encodeURIComponent(mensaje)}`;
+</script>
+
+</body>
+</html>

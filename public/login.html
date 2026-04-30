@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Data More</title>
+  
+  <script>
+    if (localStorage.getItem('user')) {
+      window.location.href = '/';
+    }
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #030612;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #0b1224;
+      padding: 35px;
+      border-radius: 18px;
+      width: 360px;
+      text-align: center;
+      border: 1px solid #1e293b;
+    }
+    input {
+      width: 100%;
+      padding: 13px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      background: #111827;
+      color: white;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      background: #22c55e;
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1eb054;
+    }
+    a { color: #3b82f6; text-decoration: none; }
+    #msg { color: #facc15; font-size: 14px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/logo.png" style="width:70px;" onerror="this.style.display='none'">
+    <h1>Iniciar Sesión</h1>
+    <p>Accede a tu cuenta Data More</p>
+
+    <input id="email" type="email" placeholder="Correo electrónico">
+    <input id="password" type="password" placeholder="Contraseña">
+
+    <button onclick="login()">ENTRAR</button>
+
+    <p id="msg"></p>
+
+    <p>¿No tienes cuenta? <a href="/registro">Regístrate</a></p>
+  </div>
+
+  <script>
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const msg = document.getElementById('msg');
+
+      if (!email || !password) {
+        msg.textContent = 'Escribe correo y contraseña.';
+        return;
+      }
+
+      try {
+        msg.textContent = 'Cargando...'; // Feedback visual
+
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!data.ok) {
+          msg.textContent = data.message || 'No se pudo iniciar sesión.';
+          return;
+        }
+
+        // Guardar datos y redirigir
+        localStorage.setItem('user', JSON.stringify(data.user));
+        window.location.href = '/';
+      } catch (err) {
+        msg.textContent = 'Error conectando con el servidor.';
+      }
+    }
+  </script>
+</body>
+</html>

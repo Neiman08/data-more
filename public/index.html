@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script>
+    // BLOQUE DE SEGURIDAD: Validación de sesión antes de cargar el DOM
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user) {
+      window.location.href = '/login';
+    }
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data More | MLB Analytics Pro</title>
@@ -150,6 +157,13 @@
   </style>
 </head>
 <body>
+
+  <div id="userBar" style="display:none;background:#0b1224;border-bottom:1px solid #1e293b;padding:10px 15px;color:white;font-family:Inter,Arial,sans-serif;display:flex;justify-content:space-between;align-items:center;">
+    <div id="userInfo" style="font-size:13px;font-weight:700;"></div>
+    <button id="userBtn" style="background:#ef4444;color:white;border:none;border-radius:8px;padding:8px 12px;font-weight:900;cursor:pointer;">
+      Cerrar sesión
+    </button>
+  </div>
 
   <div class="espn-ticker-container">
     <div class="ticker-wrapper" id="tickerWrapper">
@@ -364,7 +378,11 @@
         ]);
         const anaData = await anaRes.json();
         const propData = await propRes.json();
+
+        // VALIDACIÓN DE USUARIO DESDE LOCALSTORAGE
         const a = anaData.analysis;
+        const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
+        const isPro = loggedUser && loggedUser.proActivo === true;
 
         /* --- LÓGICA DE GUARDADO AUTOMÁTICO --- */
         const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
@@ -394,14 +412,13 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(picksToSave)
           });
-        } else {
-          console.log('No se guardó pick: el juego ya empezó o terminó', gameStatus);
         }
 
         const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
         const conf = String(a.confidence || "").toLowerCase();
         let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
 
+        // RENDERIZADO MONEYLINE (Disponible para todos)
         let html = `
           <div class="prediction-box ${colorClass}">
             <div class="section-header">
@@ -411,6 +428,26 @@
             <span class="pick-val">${a.pick}</span>
             <div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div>
           </div>
+        `;
+
+        // BLOQUEO PARA USUARIOS NO PRO - CORRECCIÓN APLICADA AQUÍ
+        if (!isPro) {
+            html += `
+                <div class="section"> 
+                    <div style="padding:14px;border:1px solid #facc15;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;margin-top:10px;"> 
+                        <div style="font-size:16px;font-weight:900;color:#facc15;">🔒 SOLO MONEYLINE GRATIS</div> 
+                        <p style="font-size:12px;color:#94a3b8;"> Desbloquea Run Line, Totales y Player Props. </p> 
+                        <button onclick="window.location.href='/pago-manual'" style="background:#22c55e;color:#000;width:100%;font-weight:900;padding:10px;border-radius:8px;cursor:pointer;border:none;margin-top:8px;">
+                          HACERME PRO
+                        </button>
+                    </div> 
+                </div>`;
+            container.innerHTML = html;
+            return;
+        }
+
+        // RENDERIZADO CONTENIDO PRO
+        html += `
           <div class="section">
             <div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div>
             <span class="pick-val">${a.runLine?.pick || 'N/A'}</span>
@@ -448,6 +485,47 @@
     loadGames();
     initTicker();
     updateRealStats();
+  </script>
+
+  <script>
+    function renderUserBar() {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const userBar = document.getElementById('userBar');
+      const userInfo = document.getElementById('userInfo');
+      const userBtn = document.getElementById('userBtn');
+      const promoBanner = document.getElementById('promoBanner');
+
+      if (!user) {
+        userBar.style.display = 'flex';
+        userInfo.innerHTML = '👤 No has iniciado sesión';
+        userBtn.textContent = 'Iniciar sesión';
+        userBtn.style.background = 'var(--primary-blue)';
+        userBtn.onclick = () => window.location.href = '/login';
+        return;
+      }
+
+      // Ocultar promo si es PRO
+      if (user.proActivo && promoBanner) {
+        promoBanner.style.display = 'none';
+      }
+
+      userBar.style.display = 'flex';
+      userInfo.innerHTML = `
+        👤 ${user.nombre || user.email}
+        | Plan: ${user.proActivo ? '<span style="color:#22c55e">PRO 🔥</span>' : '<span style="color:#facc15">FREE 🔒</span>'}
+      `;
+
+      userBtn.textContent = 'Cerrar sesión';
+      userBtn.style.background = '#ef4444';
+      userBtn.onclick = logout;
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+
+    renderUserBar();
   </script>
 </body>
 </html>
