@@ -16,10 +16,74 @@
       --text-subtle: #94a3b8;
       --border-dark: #1e293b;
       --gold: #facc15;
+      --traffic-red: #ef4444;
     }
 
-    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); padding: 15px; }
-    .container { max-width: 100%; margin: auto; }
+    /* --- ESTILOS DEL CINTILLO (ANEXADOS) --- */
+    .espn-ticker-container {
+        width: 100%;
+        background: #0b0e14;
+        border-bottom: 1px solid var(--border-dark);
+        height: 40px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        position: sticky;
+        top: 0;
+        z-index: 10000;
+    }
+    .ticker-wrapper {
+        display: flex;
+        white-space: nowrap;
+        animation: ticker-scroll 150s linear infinite;
+    }
+    .ticker-wrapper:hover { animation-play-state: paused; }
+    .ticker-item {
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+        border-right: 1px solid #1e293b;
+        height: 40px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .ticker-item img { width: 20px; height: 20px; object-fit: contain; margin: 0 6px; }
+    .sport-tag { font-size: 9px; padding: 2px 5px; border-radius: 4px; margin-right: 8px; font-weight: 900; }
+    .tag-mlb { background: var(--primary-blue); color: white; }
+    .tag-soccer { background: var(--accent-green); color: #000; }
+    .tag-nba { background: var(--accent-orange); color: white; }
+    .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
+    .ticker-status { margin-left: 10px; color: #7dd3fc; font-size: 10px; font-weight: bold; }
+    @keyframes ticker-scroll {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-100%); }
+    }
+
+    /* --- ESTILOS DEL BANNER DE LOGROS (ANEXADOS) --- */
+    .promo-banner {
+        background: linear-gradient(90deg, #0b1224 0%, #030612 100%);
+        border: 1px solid var(--primary-blue);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        padding: 15px 20px;
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    }
+    .promo-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .promo-stats { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .promo-tag { background: var(--gold); color: #000; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 1px; animation: pulse-gold 2s infinite; }
+    .stat-item { display: flex; align-items: center; gap: 8px; }
+    .stat-label { color: var(--text-subtle); font-size: 13px; font-weight: 600; }
+    .stat-value { color: var(--accent-green); font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 900; }
+    .btn-register { background: var(--accent-green); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; transition: 0.3s; }
+    .btn-register:hover { transform: scale(1.05); filter: brightness(1.1); }
+    @keyframes pulse-gold {
+        0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+    }
+
+    body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); padding: 0; }
+    .container { max-width: 100%; margin: auto; padding: 15px; }
     
     .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
     .brand-logo { width: 50px; border-radius: 10px; }
@@ -34,9 +98,7 @@
     button:hover { opacity: 0.8; transform: translateY(-1px); }
     .ticket-btn { background: var(--accent-green); }
 
-    /* GRID DE 4 COLUMNAS */
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-
     @media (max-width: 1400px) { .grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } }
@@ -65,7 +127,6 @@
     .player-line { display: flex; justify-content: space-between; font-size: 9.5px; padding: 1.5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .order-num { color: var(--accent-green); font-weight: bold; }
 
-    /* ESTILOS DE ANÁLISIS DINÁMICOS */
     .prediction-box { padding: 12px; border-radius: 12px; margin-bottom: 12px; transition: all 0.3s ease; }
     .border-baja { border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.1); color: #f87171; }
     .border-media { border: 2px solid #facc15; background: rgba(234, 179, 8, 0.1); color: #facc15; }
@@ -90,10 +151,37 @@
 </head>
 <body>
 
+  <div class="espn-ticker-container">
+    <div class="ticker-wrapper" id="tickerWrapper">
+        <span class="ticker-item">Sincronizando marcadores en vivo...</span>
+    </div>
+  </div>
+
   <div class="container">
     <div class="brand-header">
       <img src="/logo.png" class="brand-logo" onerror="this.style.display='none'">
       <h1>Data More Picks</h1>
+    </div>
+
+    <div class="promo-banner" id="promoBanner">
+        <div class="promo-content">
+            <div class="promo-stats">
+                <span class="promo-tag">LOGROS DE HOY 🏆</span>
+                <div class="stat-item">
+                    <span class="stat-label">Efectividad ML:</span>
+                    <span class="stat-value" id="statML">78%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Player Props:</span>
+                    <span class="stat-value" id="statProps">64%</span>
+                </div>
+                <div class="stat-item" style="border-left: 1px solid #1e293b; padding-left: 15px;">
+                    <span class="stat-label">Picks Verdes:</span>
+                    <span class="stat-value" id="totalVerdes" style="color:var(--gold);">12</span>
+                </div>
+            </div>
+            <button class="btn-register" onclick="window.location.href='/registro'">¡ÚNETE AL EQUIPO!</button>
+        </div>
     </div>
 
     <div class="topbar">
@@ -125,6 +213,55 @@
     const status = document.getElementById("status");
 
     dateInput.value = new Date().toISOString().split("T")[0];
+
+    /* --- LÓGICA DEL CINTILLO --- */
+    async function initTicker() {
+        const ticker = document.getElementById('tickerWrapper');
+        async function fetchScores() {
+            try {
+                const [mlbRes, soccerRes, nbaRes] = await Promise.all([
+                    fetch('/api/baseball/games').catch(() => null),
+                    fetch('/api/soccer-games-global').catch(() => null),
+                    fetch('/api/nba-games').catch(() => null)
+                ]);
+                let html = '';
+                if (mlbRes) {
+                    const data = await mlbRes.json();
+                    if (data.ok) data.games.forEach(g => {
+                        html += `<div class="ticker-item"><span class="sport-tag tag-mlb">MLB</span><img src="/logos/${g.awayAbbrev}.png" onerror="this.style.display='none'">${g.awayAbbrev} <span class="ticker-score">${g.awayScore}</span> @ <span class="ticker-score">${g.homeScore}</span> ${g.homeAbbrev}<img src="/logos/${g.homeAbbrev}.png" onerror="this.style.display='none'"><span class="ticker-status">${g.status}</span></div>`;
+                    });
+                }
+                if (soccerRes) {
+                    const data = await soccerRes.json();
+                    if (data.ok) data.games.slice(0, 12).forEach(g => {
+                        html += `<div class="ticker-item"><span class="sport-tag tag-soccer">SOC</span><img src="${g.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'"><span class="ticker-score">${g.homeScore ?? 0}</span> - <span class="ticker-score">${g.awayScore ?? 0}</span><img src="${g.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'"><span class="ticker-status">${g.time}</span></div>`;
+                    });
+                }
+                if (nbaRes) {
+                    const data = await nbaRes.json();
+                    if (data.ok) data.games.forEach(g => {
+                        html += `<div class="ticker-item"><span class="sport-tag tag-nba">NBA</span><img src="${g.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'"><span class="ticker-score">${g.awayScore ?? 0}</span> @ <span class="ticker-score">${g.homeScore ?? 0}</span><img src="${g.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'"><span class="ticker-status">${g.status}</span></div>`;
+                    });
+                }
+                if (html) ticker.innerHTML = html + html;
+            } catch (err) { console.error("Ticker error:", err); }
+        }
+        fetchScores();
+        setInterval(fetchScores, 60000);
+    }
+
+    /* --- LÓGICA DEL BANNER --- */
+    async function updateRealStats() {
+        try {
+            const res = await fetch('/api/stats/daily-performance');
+            const data = await res.json();
+            if(data.ok) {
+                document.getElementById('statML').textContent = data.mlSuccess + '%';
+                document.getElementById('statProps').textContent = data.propsSuccess + '%';
+                document.getElementById('totalVerdes').textContent = data.totalWins;
+            }
+        } catch (e) { console.log("Stats default"); }
+    }
 
     async function updateLiveScores() {
       try {
@@ -279,6 +416,8 @@
     }
 
     loadGames();
+    initTicker();
+    updateRealStats();
   </script>
 </body>
 </html>
