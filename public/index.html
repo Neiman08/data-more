@@ -19,7 +19,7 @@
       --traffic-red: #ef4444;
     }
 
-    /* --- ESTILOS DEL CINTILLO (ANEXADOS) --- */
+    /* --- ESTILOS DEL CINTILLO --- */
     .espn-ticker-container {
         width: 100%;
         background: #0b0e14;
@@ -59,7 +59,7 @@
         100% { transform: translateX(-100%); }
     }
 
-    /* --- ESTILOS DEL BANNER DE LOGROS (ANEXADOS) --- */
+    /* --- ESTILOS DEL BANNER DE LOGROS --- */
     .promo-banner {
         background: linear-gradient(90deg, #0b1224 0%, #030612 100%);
         border: 1px solid var(--primary-blue);
@@ -254,25 +254,18 @@
         setInterval(fetchScores, 60000);
     }
 
-    /* --- LÓGICA DE ESTADÍSTICAS ACTUALIZADA --- */
     async function updateRealStats() {
       try {
         const res = await fetch('/api/stats/daily-performance?t=' + Date.now());
         const data = await res.json();
-
         if (data.ok) {
           document.getElementById('statML').textContent = data.mlSuccess + '%';
           document.getElementById('statProps').textContent = data.propsSuccess + '%';
           document.getElementById('totalVerdes').textContent = data.totalWins;
-
           const topHR = document.getElementById('topHRPlayers');
-          if (topHR) {
-            topHR.textContent = data.topPlayers || 'Pendiente';
-          }
+          if (topHR) topHR.textContent = data.topPlayers || 'Pendiente';
         }
-      } catch (e) {
-        console.log("Stats default", e);
-      }
+      } catch (e) { console.log("Stats default", e); }
     }
 
     async function updateLiveScores() {
@@ -285,12 +278,10 @@
             const inningEl = document.querySelector(`#inning-text-${g.gamePk}`);
             if (scoreEl) scoreEl.textContent = `${g.awayScore} - ${g.homeScore}`;
             if (inningEl) inningEl.textContent = `${g.inningState || ''} ${g.inning || ''}`;
-            
             const b1 = document.querySelector(`#base1-${g.gamePk}`);
             const b2 = document.querySelector(`#base2-${g.gamePk}`);
             const b3 = document.querySelector(`#base3-${g.gamePk}`);
             const outEl = document.querySelector(`#outs-${g.gamePk}`);
-
             if(b1) g.runnerOn1b ? b1.classList.add('active') : b1.classList.remove('active');
             if(b2) g.runnerOn2b ? b2.classList.add('active') : b2.classList.remove('active');
             if(b3) g.runnerOn3b ? b3.classList.add('active') : b3.classList.remove('active');
@@ -355,14 +346,14 @@
               </div>
             </div>
             ${renderLineups(lData)}
-            <div id="results-${game.gamePk}"><button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}')" style="width:100%">ANALIZAR</button></div>`;
+            <div id="results-${game.gamePk}"><button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}', '${game.status}')" style="width:100%">ANALIZAR</button></div>`;
           gamesGrid.appendChild(card);
         }
         status.textContent = `${data.games.length} juegos listos.`;
       } catch (e) { status.textContent = "Error."; }
     }
 
-    async function analyzeGame(gamePk, awayAbbrev, homeAbbrev) {
+    async function analyzeGame(gamePk, awayAbbrev, homeAbbrev, gameStatus) {
       const container = document.getElementById(`results-${gamePk}`);
       container.innerHTML = `<div class="loading" style="text-align:center; padding:10px; font-size:12px;">Modelando IA...</div>`;
       
@@ -374,12 +365,42 @@
         const anaData = await anaRes.json();
         const propData = await propRes.json();
         const a = anaData.analysis;
-        const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
 
+        /* --- LÓGICA DE GUARDADO AUTOMÁTICO --- */
+        const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
+        const canSavePick = allowedStatuses.some(s =>
+          String(gameStatus || '').toLowerCase().includes(s.toLowerCase())
+        );
+
+        if (canSavePick) {
+          const today = dateInput.value || new Date().toISOString().split('T')[0];
+          const picksToSave = [];
+          picksToSave.push({ date: today, market: 'ML', gamePk, pick: a.pick, team: a.pick });
+          if (a.runLine?.pick && a.runLine.pick !== 'N/A') {
+            picksToSave.push({ date: today, market: 'RL', gamePk, pick: a.runLine.pick });
+          }
+          if (propData.ok && propData.props) {
+            const sortedProps = [...propData.props].sort((x, y) => y.hitChance - x.hitChance);
+            sortedProps.slice(0, 5).forEach(p => {
+              picksToSave.push({ date: today, market: 'HIT', gamePk, playerName: p.name, team: p.team || '', pick: 'Over 0.5 Hits' });
+            });
+            const hrProps = [...propData.props].sort((x, y) => y.hrChance - x.hrChance).slice(0, 3);
+            hrProps.forEach(p => {
+              picksToSave.push({ date: today, market: 'HR', gamePk, playerName: p.name, team: p.team || '', pick: 'HR' });
+            });
+          }
+          fetch('/api/picks/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(picksToSave)
+          });
+        } else {
+          console.log('No se guardó pick: el juego ya empezó o terminó', gameStatus);
+        }
+
+        const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
         const conf = String(a.confidence || "").toLowerCase();
-        let colorClass = "border-baja";
-        if (conf.includes("alta")) colorClass = "border-alta";
-        else if (conf.includes("media")) colorClass = "border-media";
+        let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
 
         let html = `
           <div class="prediction-box ${colorClass}">
@@ -390,19 +411,16 @@
             <span class="pick-val">${a.pick}</span>
             <div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div>
           </div>
-
           <div class="section">
             <div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div>
             <span class="pick-val">${a.runLine?.pick || 'N/A'}</span>
             <div class="data-mono">Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div>
           </div>
-
           <div class="section">
             <div class="section-header"><div class="title-icon" style="color:var(--accent-green)">📈 Team Totals</div></div>
             <div class="data-mono">${awayAbbrev}: ${a.teamTotals?.away?.pick || 'TBD'}</div>
             <div class="data-mono">${homeAbbrev}: ${a.teamTotals?.home?.pick || 'TBD'}</div>
           </div>
-
           <div class="section" style="border:none">
             <div class="section-header"><div class="title-icon" style="color:#60a5fa">💎 Player Props</div></div>`;
 
