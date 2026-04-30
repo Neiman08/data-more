@@ -5,6 +5,9 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+// Importación del modelo de Usuario
+import User from './models/User.js';
+
 dotenv.config();
 
 import gamesRoutes from './routes/games.js';
@@ -17,24 +20,19 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('🚀 Conectado a MongoDB Atlas (Data More PRO)'))
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
-const userSchema = new mongoose.Schema({
-  nombre: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  fechaRegistro: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
-
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Registro
+// --- RUTAS DE AUTENTICACIÓN ---
+
+// Registro de Usuario
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
@@ -57,7 +55,10 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// Guardar picks
+
+// --- RUTAS DE PICKS Y ANÁLISIS ---
+
+// Guardar picks automáticos
 app.post('/api/picks/save', async (req, res) => {
   try {
     const picks = Array.isArray(req.body) ? req.body : [req.body];
@@ -79,7 +80,6 @@ app.post('/api/picks/save', async (req, res) => {
     }
 
     const saved = await Pick.insertMany(cleanPicks);
-
     res.json({ ok: true, saved: saved.length });
   } catch (err) {
     console.error('Error guardando picks:', err);
@@ -129,13 +129,15 @@ app.get('/api/stats/daily-performance', async (req, res) => {
   }
 });
 
-// Rutas API existentes
+
+// --- RUTAS DE API ---
 app.use('/api', gamesRoutes);
 app.use('/api/baseball', baseballRoutes);
 app.use('/api', soccerRoutes);
 app.use('/api', nbaRoutes);
 
-// Frontend
+
+// --- RUTAS DE FRONTEND ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
@@ -152,6 +154,8 @@ app.get('/registro', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/registro.html'));
 });
 
+
+// Inicio del Servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
