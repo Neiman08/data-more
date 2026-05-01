@@ -26,7 +26,33 @@
       --traffic-red: #ef4444;
     }
 
-    /* --- ESTILOS DEL CINTILLO --- */
+    /* --- NUEVOS ESTILOS SOLICITADOS --- */
+    .team-record {
+      display: block;
+      font-size: 11px;
+      color: #22c55e;
+      font-weight: 900;
+      margin-top: 3px;
+    }
+
+    .team-streak {
+      display: block;
+      font-size: 9px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .count-box {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      font-size: 10px;
+      color: #facc15;
+      font-weight: 900;
+      margin-top: 5px;
+    }
+
+    /* --- ESTILOS EXISTENTES --- */
     .espn-ticker-container {
         width: 100%;
         background: #0b0e14;
@@ -66,7 +92,6 @@
         100% { transform: translateX(-100%); }
     }
 
-    /* --- ESTILOS DEL BANNER DE LOGROS --- */
     .promo-banner {
         background: linear-gradient(90deg, #0b1224 0%, #030612 100%);
         border: 1px solid var(--primary-blue);
@@ -128,7 +153,6 @@
     .diamond-box { display: flex; justify-content: center; gap: 4px; }
     .base { width: 8px; height: 8px; border: 1.2px solid #334155; transform: rotate(45deg); transition: 0.3s; }
     .base.active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 6px var(--gold); }
-    .outs-text { font-size: 10px; color: var(--text-subtle); font-weight: bold; }
 
     .lineup-container { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
     .player-line { display: flex; justify-content: space-between; font-size: 9.5px; padding: 1.5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
@@ -207,18 +231,9 @@
       <button onclick="loadGames()">Cargar Juegos</button>
       <button onclick="analyzeAll()" style="background: #475569;">Analizar Todos</button>
       <button class="ticket-btn">🎟️ Generar Ticket</button>
-
-      <a href="/" style="text-decoration:none;">
-        <button type="button" style="background:#2563eb;">⚾ MLB</button>
-      </a>
-
-      <a href="/soccer" style="text-decoration:none;">
-        <button type="button" style="background:#16a34a;">⚽ Soccer</button>
-      </a>
-
-      <a href="/nba" style="text-decoration:none;">
-        <button type="button" style="background:#f97316;">🏀 NBA</button>
-      </a>
+      <a href="/" style="text-decoration:none;"><button type="button" style="background:#2563eb;">⚾ MLB</button></a>
+      <a href="/soccer" style="text-decoration:none;"><button type="button" style="background:#16a34a;">⚽ Soccer</button></a>
+      <a href="/nba" style="text-decoration:none;"><button type="button" style="background:#f97316;">🏀 NBA</button></a>
     </div>
 
     <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--text-subtle);">Listo...</div>
@@ -232,7 +247,6 @@
 
     dateInput.value = new Date().toISOString().split("T")[0];
 
-    /* --- LÓGICA DEL CINTILLO --- */
     async function initTicker() {
         const ticker = document.getElementById('tickerWrapper');
         async function fetchScores() {
@@ -295,11 +309,19 @@
             const b1 = document.querySelector(`#base1-${g.gamePk}`);
             const b2 = document.querySelector(`#base2-${g.gamePk}`);
             const b3 = document.querySelector(`#base3-${g.gamePk}`);
+            
+            // --- ACTUALIZACIÓN BOLAS / STRIKES / OUTS ---
+            const ballsEl = document.querySelector(`#balls-${g.gamePk}`);
+            const strikesEl = document.querySelector(`#strikes-${g.gamePk}`);
             const outEl = document.querySelector(`#outs-${g.gamePk}`);
+
+            if (ballsEl) ballsEl.textContent = `B: ${g.balls || 0}`;
+            if (strikesEl) strikesEl.textContent = `S: ${g.strikes || 0}`;
+            if (outEl) outEl.textContent = `O: ${g.outs || 0}`;
+
             if(b1) g.runnerOn1b ? b1.classList.add('active') : b1.classList.remove('active');
             if(b2) g.runnerOn2b ? b2.classList.add('active') : b2.classList.remove('active');
             if(b3) g.runnerOn3b ? b3.classList.add('active') : b3.classList.remove('active');
-            if(outEl) outEl.textContent = `${g.outs || 0} Outs`;
           });
         }
       } catch (e) { console.error("Sync error"); }
@@ -341,6 +363,8 @@
               <div class="team-box">
                 <img src="/logos/${game.awayAbbrev}.png" class="team-logo">
                 <span class="team-abbr">${game.awayAbbrev}</span>
+                <span class="team-record">${game.awayWins || 0}-${game.awayLosses || 0}</span>
+                <span class="team-streak">Últimos 5: ${game.awayLast5 || '---'}</span>
                 <span class="pitcher-name">${game.awayPitcher || 'TBD'}</span>
               </div>
               <div class="game-status-center">
@@ -350,12 +374,18 @@
                 <div class="bases-container">
                     <div class="diamond-box"><div id="base2-${game.gamePk}" class="base ${game.runnerOn2b ? 'active' : ''}"></div></div>
                     <div class="diamond-box"><div id="base3-${game.gamePk}" class="base ${game.runnerOn3b ? 'active' : ''}"></div><div id="base1-${game.gamePk}" class="base ${game.runnerOn1b ? 'active' : ''}"></div></div>
-                    <div class="outs-text" id="outs-${game.gamePk}">${game.outs || 0} Outs</div>
+                    <div class="count-box">
+                        <span id="balls-${game.gamePk}">B: ${game.balls || 0}</span>
+                        <span id="strikes-${game.gamePk}">S: ${game.strikes || 0}</span>
+                        <span id="outs-${game.gamePk}">O: ${game.outs || 0}</span>
+                    </div>
                 </div>
               </div>
               <div class="team-box">
                 <img src="/logos/${game.homeAbbrev}.png" class="team-logo">
                 <span class="team-abbr">${game.homeAbbrev}</span>
+                <span class="team-record">${game.homeWins || 0}-${game.homeLosses || 0}</span>
+                <span class="team-streak">Últimos 5: ${game.homeLast5 || '---'}</span>
                 <span class="pitcher-name">${game.homePitcher || 'TBD'}</span>
               </div>
             </div>
@@ -379,12 +409,10 @@
         const anaData = await anaRes.json();
         const propData = await propRes.json();
 
-        // VALIDACIÓN DE USUARIO DESDE LOCALSTORAGE
         const a = anaData.analysis;
         const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
         const isPro = loggedUser && loggedUser.proActivo === true;
 
-        /* --- LÓGICA DE GUARDADO AUTOMÁTICO --- */
         const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
         const canSavePick = allowedStatuses.some(s =>
           String(gameStatus || '').toLowerCase().includes(s.toLowerCase())
@@ -418,7 +446,6 @@
         const conf = String(a.confidence || "").toLowerCase();
         let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
 
-        // RENDERIZADO MONEYLINE (Disponible para todos)
         let html = `
           <div class="prediction-box ${colorClass}">
             <div class="section-header">
@@ -430,7 +457,6 @@
           </div>
         `;
 
-        // BLOQUEO PARA USUARIOS NO PRO - CORRECCIÓN APLICADA AQUÍ
         if (!isPro) {
             html += `
                 <div class="section"> 
@@ -446,7 +472,6 @@
             return;
         }
 
-        // RENDERIZADO CONTENIDO PRO
         html += `
           <div class="section">
             <div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div>
@@ -485,15 +510,12 @@
     loadGames();
     initTicker();
     updateRealStats();
-  </script>
 
-  <script>
     function renderUserBar() {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
       const userBar = document.getElementById('userBar');
       const userInfo = document.getElementById('userInfo');
       const userBtn = document.getElementById('userBtn');
-      const promoBanner = document.getElementById('promoBanner');
 
       if (!user) {
         userBar.style.display = 'flex';
@@ -504,11 +526,6 @@
         return;
       }
 
-      // Mantener visible el banner de logros aunque sea PRO
-      // if (user.proActivo && promoBanner) {
-      //   promoBanner.style.display = 'none';
-      // }
-
       userBar.style.display = 'flex';
       userInfo.innerHTML = `
         👤 ${user.nombre || user.email}
@@ -517,14 +534,11 @@
 
       userBtn.textContent = 'Cerrar sesión';
       userBtn.style.background = '#ef4444';
-      userBtn.onclick = logout;
+      userBtn.onclick = () => {
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      };
     }
-
-    function logout() {
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-
     renderUserBar();
   </script>
 </body>
