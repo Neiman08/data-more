@@ -317,9 +317,9 @@ async function initTicker() {
   async function fetchScores() {
     try {
       const [mlbRes, soccerRes, nbaRes] = await Promise.all([
-        fetch('/api/baseball/games').catch(() => null),
-        fetch('/api/soccer-games-global').catch(() => null),
-        fetch('/api/nba-games').catch(() => null)
+        fetch(`/api/baseball/games?t=${Date.now()}`).catch(() => null),
+        fetch(`/api/soccer-games-global?t=${Date.now()}`).catch(() => null),
+        fetch(`/api/nba-games?t=${Date.now()}`).catch(() => null)
       ]);
 
       let html = '';
@@ -359,10 +359,12 @@ async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
 
-  container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando cartelera NBA...</p>';
+  if (!container.querySelector('.games-grid')) {
+    container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando cartelera NBA...</p>';
+  }
 
   try {
-    const res = await fetch(`/api/nba-games?date=${encodeURIComponent(date)}`);
+    const res = await fetch(`/api/nba-games?date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
 
     if (!data.ok || !data.games.length) {
@@ -370,11 +372,9 @@ async function loadGames() {
       return;
     }
 
-    container.innerHTML = '<div class="games-grid"></div>';
-    const grid = container.querySelector('.games-grid');
-
+    let gridHtml = '<div class="games-grid">';
     data.games.forEach(game => {
-      grid.innerHTML += `
+      gridHtml += `
         <div class="game-card">
           <div class="box-score">
             <span>${game.homeScore ?? 0}</span>
@@ -406,6 +406,9 @@ async function loadGames() {
         </div>
       `;
     });
+    gridHtml += '</div>';
+    container.innerHTML = gridHtml;
+
   } catch (err) {
     container.innerHTML = 'Error al cargar cartelera.';
   }
@@ -416,8 +419,11 @@ async function analyze(btn, gameId) {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`/api/nba-analyze/${gameId}`);
+    // CAMBIO APLICADO AQUÍ: Captura de fecha y envío en los parámetros del fetch
+    const date = document.getElementById('dateSelect').value;
+    const res = await fetch(`/api/nba-analyze/${gameId}?date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
+    
     const { analysis } = data;
 
     const resDiv = document.getElementById(`res-${gameId}`);
@@ -499,6 +505,10 @@ async function analyzeAll() {
 function generateNBATicket() {
   alert('Ticket NBA próximamente.');
 }
+
+setInterval(() => {
+  loadGames();
+}, 30000);
 
 document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
 

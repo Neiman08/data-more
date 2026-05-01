@@ -504,10 +504,10 @@
         return;
       }
 
-      // Ocultar promo si es PRO
-      if (user.proActivo && promoBanner) {
-        promoBanner.style.display = 'none';
-      }
+      // Mantener visible el banner de logros aunque sea PRO
+      // if (user.proActivo && promoBanner) {
+      //   promoBanner.style.display = 'none';
+      // }
 
       userBar.style.display = 'flex';
       userInfo.innerHTML = `
