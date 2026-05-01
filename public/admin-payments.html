@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Pagos | Data More</title>
+</head>
+<body style="background:#030612;color:white;font-family:Arial;padding:30px;">
+  <h1>Solicitudes de Activación PRO</h1>
+  <div id="list">Cargando...</div>
+
+<script>
+async function loadRequests() {
+  const res = await fetch('/api/payment-requests');
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+
+  if (!data.ok || !data.requests.length) {
+    list.innerHTML = '<p>No hay solicitudes.</p>';
+    return;
+  }
+
+  list.innerHTML = data.requests.map(r => `
+    <div style="background:#0b1224;border:1px solid #1e293b;border-radius:12px;padding:15px;margin-bottom:12px;">
+      <p><strong>Nombre:</strong> ${r.nombre || 'N/A'}</p>
+      <p><strong>Email:</strong> ${r.email}</p>
+      <p><strong>Método:</strong> ${r.metodo}</p>
+      <p><strong>Status:</strong> ${r.status}</p>
+      <button onclick="activatePro('${r.email}', '${r._id}')" style="background:#22c55e;color:#000;padding:10px 14px;border:none;border-radius:8px;font-weight:900;">
+        ACTIVAR PRO
+      </button>
+    </div>
+  `).join('');
+}
+
+async function activatePro(email, requestId) {
+  if (!confirm('¿Activar PRO para ' + email + '?')) return;
+
+  const res = await fetch('/api/activate-pro', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, requestId })
+  });
+
+  const data = await res.json();
+
+  if (data.ok) {
+    alert('Usuario activado PRO');
+    loadRequests();
+  } else {
+    alert(data.message || 'Error activando usuario');
+  }
+}
+
+loadRequests();
+</script>
+</body>
+</html>

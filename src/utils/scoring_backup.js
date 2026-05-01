@@ -31,24 +31,6 @@ function extractMoneyline(odds, teamName) {
   return null;
 }
 
-function calcDataQuality(entity, type = 'team') {
-  if (!entity) return 45;
-
-  if (type === 'pitcher') {
-    const innings = safeNumber(entity.inningsPitched, 0);
-    const gamesStarted = safeNumber(entity.gamesStarted, 0);
-
-    let quality = 50;
-    quality += Math.min(innings, 80) * 0.35;
-    quality += Math.min(gamesStarted, 12) * 1.5;
-
-    return clamp(quality, 45, 90);
-  }
-
-  const gamesPlayed = safeNumber(entity.gamesPlayed, 0);
-  return clamp(50 + Math.min(gamesPlayed, 60) * 0.6, 45, 90);
-}
-
 function calcPitcherScore(pitcher) {
   if (!pitcher) return 50;
 
@@ -57,27 +39,15 @@ function calcPitcherScore(pitcher) {
   const innings = safeNumber(pitcher.inningsPitched, 0);
   const strikeOuts = safeNumber(pitcher.strikeOuts, 0);
   const walks = safeNumber(pitcher.baseOnBalls, 0);
-  const starts = safeNumber(pitcher.gamesStarted, 0);
 
   const k9 = innings > 0 ? (strikeOuts / innings) * 9 : 7;
   const bb9 = innings > 0 ? (walks / innings) * 9 : 3;
 
   let score = 50;
-
-  // Pitching core
-  score += (4.20 - era) * 7.5;
-  score += (1.30 - whip) * 22;
-  score += (k9 - 7) * 2.2;
-  score -= (bb9 - 3) * 3.2;
-
-  // Muestra pequeña: evita inflar demasiado pitchers con pocos innings
-  if (innings > 0 && innings < 20) {
-    score = (score * 0.78) + (50 * 0.22);
-  }
-
-  if (starts > 0 && starts < 3) {
-    score = (score * 0.85) + (50 * 0.15);
-  }
+  score += (4.20 - era) * 8;
+  score += (1.30 - whip) * 25;
+  score += (k9 - 7) * 2;
+  score -= (bb9 - 3) * 3;
 
   return clamp(score);
 }
@@ -94,24 +64,22 @@ function calcOffenseScore(team) {
   const runsPerGame = runs / Math.max(gamesPlayed, 1);
 
   let score = 50;
-
-  // OPS y OBP pesan más porque suelen ser más predictivos que AVG solo
-  score += (ops - 0.720) * 95;
-  score += (obp - 0.320) * 120;
-  score += (slg - 0.400) * 70;
-  score += (avg - 0.250) * 90;
-  score += (runsPerGame - 4.3) * 5.5;
+  score += (avg - 0.250) * 120;
+  score += (obp - 0.320) * 100;
+  score += (slg - 0.400) * 80;
+  score += (ops - 0.720) * 60;
+  score += (runsPerGame - 4.3) * 4;
 
   return clamp(score);
 }
 
-function confidenceFromProbAndEdge(prob, scoreEdge) {
-  if (prob >= 64 && scoreEdge >= 8) return 'alta';
-  if (prob >= 58 && scoreEdge >= 4.5) return 'media';
+function confidenceFromProb(prob) {
+  if (prob >= 62) return 'alta';
   if (prob >= 56) return 'media';
   return 'baja';
 }
 
+/* RUN LINE CORREGIDO - REGLA PRO FINAL */
 function buildRunLinePick({
   awayTeam,
   homeTeam,
@@ -128,7 +96,7 @@ function buildRunLinePick({
     ? awayFinalScore - homeFinalScore
     : homeFinalScore - awayFinalScore;
 
-  if (pickProb < 59 || projectedMargin <= 2) {
+  if (pickProb < 58 || projectedMargin <= 1.5) {
     return {
       pick: null,
       projectedMargin: round(projectedMargin),
@@ -138,14 +106,15 @@ function buildRunLinePick({
   }
 
   const rlPick = `${pick} -1.5`;
-  const marginBoost = Math.min((projectedMargin - 2) * 1.7, 5);
-  const coverProb = clamp(pickProb - 8 + marginBoost, 52, 69);
+
+  const marginBoost = Math.min((projectedMargin - 1.5) * 2, 5);
+  const coverProb = clamp(pickProb - 8 + marginBoost, 52, 68);
 
   let rlConfidence = 'baja';
 
-  if (coverProb >= 63 && projectedMargin >= 10) {
+  if (coverProb >= 62 && projectedMargin >= 15) {
     rlConfidence = 'alta';
-  } else if (coverProb >= 58 && projectedMargin >= 6) {
+  } else if (coverProb >= 58 && projectedMargin >= 10) {
     rlConfidence = 'media';
   } else {
     return {
@@ -170,16 +139,12 @@ function buildTeamTotalPick(teamName, projectedRuns) {
   const pick = `${teamName} ${diff >= 0 ? 'over' : 'under'} ${line.toFixed(1)}`;
   const probability = clamp(52 + Math.abs(diff) * 18, 50, 68);
 
-  let confidence = 'baja';
-  if (probability >= 62) confidence = 'alta';
-  else if (probability >= 56) confidence = 'media';
-
   return {
     pick,
     line: round(line, 1),
     projectedRuns: round(projectedRuns),
     probability: round(probability),
-    confidence
+    confidence: confidenceFromProb(probability)
   };
 }
 
@@ -200,26 +165,8 @@ export function buildGameAnalysis({
   const awayOffenseScore = calcOffenseScore(awayHitting);
   const homeOffenseScore = calcOffenseScore(homeHitting);
 
-  const awayPitcherQuality = calcDataQuality(awayPitcher, 'pitcher');
-  const homePitcherQuality = calcDataQuality(homePitcher, 'pitcher');
-  const awayOffenseQuality = calcDataQuality(awayHitting, 'team');
-  const homeOffenseQuality = calcDataQuality(homeHitting, 'team');
-
-  const awayDataQuality = (awayPitcherQuality * 0.60) + (awayOffenseQuality * 0.40);
-  const homeDataQuality = (homePitcherQuality * 0.60) + (homeOffenseQuality * 0.40);
-
-  // NIVEL DIOS BASE:
-  // Pitcher 52%, offense 38%, data quality 5%, localía 2.5 puntos.
-  const awayBaseScore =
-    (awayPitcherScore * 0.52) +
-    (awayOffenseScore * 0.38) +
-    (awayDataQuality * 0.05);
-
-  const homeBaseScore =
-    (homePitcherScore * 0.52) +
-    (homeOffenseScore * 0.38) +
-    (homeDataQuality * 0.05) +
-    2.5;
+  const awayBaseScore = awayPitcherScore * 0.58 + awayOffenseScore * 0.42;
+  const homeBaseScore = homePitcherScore * 0.58 + homeOffenseScore * 0.42 + 2.5;
 
   const awayMoneyline = extractMoneyline(odds, awayTeam);
   const homeMoneyline = extractMoneyline(odds, homeTeam);
@@ -234,18 +181,16 @@ export function buildGameAnalysis({
   const awayEdge = awayImplied !== null ? awayModelWinPct - awayImplied * 100 : null;
   const homeEdge = homeImplied !== null ? homeModelWinPct - homeImplied * 100 : null;
 
-  // Odds solo ayudan, no mandan. Máximo impacto suave.
-  const awayValueBoost = awayEdge !== null ? clamp(50 + awayEdge * 1.5, 38, 65) : 50;
-  const homeValueBoost = homeEdge !== null ? clamp(50 + homeEdge * 1.5, 38, 65) : 50;
+  const awayValueBoost = awayEdge !== null ? clamp(50 + awayEdge * 2, 35, 70) : 50;
+  const homeValueBoost = homeEdge !== null ? clamp(50 + homeEdge * 2, 35, 70) : 50;
 
-  const awayFinalScore = awayBaseScore * 0.94 + awayValueBoost * 0.06;
-  const homeFinalScore = homeBaseScore * 0.94 + homeValueBoost * 0.06;
+  const awayFinalScore = awayBaseScore * 0.90 + awayValueBoost * 0.10;
+  const homeFinalScore = homeBaseScore * 0.90 + homeValueBoost * 0.10;
 
   const pickIsAway = awayFinalScore > homeFinalScore;
   const pick = pickIsAway ? awayTeam : homeTeam;
   const modelPct = pickIsAway ? awayModelWinPct : homeModelWinPct;
-  const scoreEdge = Math.abs(awayFinalScore - homeFinalScore);
-  const confidence = confidenceFromProbAndEdge(modelPct, scoreEdge);
+  const confidence = confidenceFromProb(modelPct);
 
   const runLine = buildRunLinePick({
     awayTeam,
@@ -258,20 +203,15 @@ export function buildGameAnalysis({
   });
 
   const awayProjectedRuns = clamp(
-    4.25 +
-      (awayOffenseScore - 50) * 0.052 -
-      (homePitcherScore - 50) * 0.048,
-    2.1,
-    8.2
+    4.3 + (awayOffenseScore - 50) * 0.05 - (homePitcherScore - 50) * 0.045,
+    2.2,
+    8
   );
 
   const homeProjectedRuns = clamp(
-    4.35 +
-      (homeOffenseScore - 50) * 0.052 -
-      (awayPitcherScore - 50) * 0.048 +
-      0.18,
-    2.1,
-    8.2
+    4.4 + (homeOffenseScore - 50) * 0.05 - (awayPitcherScore - 50) * 0.045 + 0.15,
+    2.2,
+    8
   );
 
   const awayTeamTotal = buildTeamTotalPick(awayTeam, awayProjectedRuns);
@@ -289,7 +229,6 @@ export function buildGameAnalysis({
       modelWinPct: round(awayModelWinPct),
       pitcherScore: round(awayPitcherScore),
       offenseScore: round(awayOffenseScore),
-      dataQuality: round(awayDataQuality),
       moneyline: awayMoneyline,
       impliedProb: awayImplied !== null ? round(awayImplied * 100) : null,
       edge: awayEdge !== null ? round(awayEdge) : null
@@ -300,7 +239,6 @@ export function buildGameAnalysis({
       modelWinPct: round(homeModelWinPct),
       pitcherScore: round(homePitcherScore),
       offenseScore: round(homeOffenseScore),
-      dataQuality: round(homeDataQuality),
       moneyline: homeMoneyline,
       impliedProb: homeImplied !== null ? round(homeImplied * 100) : null,
       edge: homeEdge !== null ? round(homeEdge) : null
@@ -312,8 +250,8 @@ export function buildGameAnalysis({
       combinedProjectedTotal: round(awayProjectedRuns + homeProjectedRuns)
     },
     notes: [
-      'Modelo MLB nivel DIOS basado en pitcher, ofensiva, calidad de datos, localía y odds cuando están disponibles.',
-      'Las odds ayudan a detectar valor, pero no dominan el pick.',
+      'Modelo MLB basado en pitcher, ofensiva, localía y odds cuando están disponibles.',
+      'El modelo compara probabilidad propia contra la probabilidad implícita.',
       'Run Line solo se activa con probabilidad y margen suficientes.',
       'Team Totals salen de proyección ofensiva y pitcheo.'
     ]

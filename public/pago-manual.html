@@ -46,13 +46,30 @@
       text-decoration: none;
       font-weight: 900;
       display: inline-block;
-      margin-top: 20px;
+      margin-top: 15px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-yellow {
+      background: #facc15;
+      color: black;
+      margin-top: 10px;
     }
 
     .note {
       color: #94a3b8;
       font-size: 13px;
       margin-top: 25px;
+    }
+
+    .warning {
+      background: rgba(250, 204, 21, 0.1);
+      border: 1px solid #facc15;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 13px;
     }
   </style>
 </head>
@@ -62,8 +79,18 @@
 <div class="container">
 
   <h1>🔥 Activar Data More PRO</h1>
-  <p>Desbloquea Run Line, Totales y Player Props</p>
+  <p>Desbloquea el modelo completo</p>
+
   <div class="price">$29.99 / mes</div>
+
+  <div class="warning">
+    ⚠️ Estás viendo solo el 20% del sistema  
+    <br><br>
+    🔓 Desbloquea:
+    <br>✅ Run Line con ventaja real
+    <br>✅ Team Totals precisos
+    <br>✅ Player Props de alto valor
+  </div>
 
   <!-- ZELLE -->
   <div class="box">
@@ -83,14 +110,20 @@
     </p>
   </div>
 
-  <p>Después de pagar, envía tu comprobante 👇</p>
+  <p>Después de pagar 👇</p>
 
-  <a id="whatsappBtn" class="btn">
-    ENVIAR COMPROBANTE POR WHATSAPP
+  <!-- BOTÓN PRINCIPAL -->
+  <button class="btn" onclick="enviarSolicitud()">
+    🚀 YA PAGUÉ - ACTIVAR MI CUENTA
+  </button>
+
+  <!-- WHATSAPP DIRECTO -->
+  <a id="whatsappBtn" class="btn btn-yellow">
+    💬 ENVIAR COMPROBANTE POR WHATSAPP
   </a>
 
   <p class="note">
-    Tu cuenta se activa después de verificar el pago.
+    Activación en minutos después de verificar el pago.
   </p>
 
 </div>
@@ -98,12 +131,40 @@
 <script>
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
+  // MENSAJE WHATSAPP
   const mensaje = user 
-    ? `Hola, ya pagué Data More PRO. Mi correo es ${user.email}`
-    : 'Hola, ya pagué Data More PRO';
+    ? `Hola, ya pagué Data More PRO. Quiero activación inmediata. Mi correo es ${user.email}`
+    : 'Hola, ya pagué Data More PRO y quiero activación';
 
   document.getElementById('whatsappBtn').href =
     `https://wa.me/12243867666?text=${encodeURIComponent(mensaje)}`;
+
+  // BOTÓN YA PAGUÉ (CREA SOLICITUD + REDIRIGE)
+  async function enviarSolicitud() {
+    if (!user) {
+      alert('Debes iniciar sesión primero');
+      window.location.href = '/login';
+      return;
+    }
+
+    try {
+      await fetch('/api/payment-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: user.nombre,
+          email: user.email,
+          metodo: 'Zelle / Cash App'
+        })
+      });
+    } catch (err) {
+      console.log('Error creando solicitud');
+    }
+
+    // REDIRIGE A WHATSAPP
+    window.location.href =
+      `https://wa.me/12243867666?text=${encodeURIComponent(mensaje)}`;
+  }
 </script>
 
 </body>
