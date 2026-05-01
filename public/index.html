@@ -42,6 +42,34 @@
       margin-top: 2px;
     }
 
+    .last5-box {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .last5-item {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .last5-item.win {
+      background: #22c55e;
+      color: #000;
+    }
+
+    .last5-item.loss {
+      background: #ef4444;
+      color: #fff;
+    }
+
     .count-box {
       display: flex;
       justify-content: center;
@@ -52,7 +80,7 @@
       margin-top: 5px;
     }
 
-    /* --- ESTILOS EXISTENTES --- */
+    /* --- ESTILOS RESTANTES --- */
     .espn-ticker-container {
         width: 100%;
         background: #0b0e14;
@@ -282,60 +310,17 @@
         setInterval(fetchScores, 60000);
     }
 
-    async function updateRealStats() {
-      try {
-        const res = await fetch('/api/stats/daily-performance?t=' + Date.now());
-        const data = await res.json();
-        if (data.ok) {
-          document.getElementById('statML').textContent = data.mlSuccess + '%';
-          document.getElementById('statProps').textContent = data.propsSuccess + '%';
-          document.getElementById('totalVerdes').textContent = data.totalWins;
-          const topHR = document.getElementById('topHRPlayers');
-          if (topHR) topHR.textContent = data.topPlayers || 'Pendiente';
-        }
-      } catch (e) { console.log("Stats default", e); }
-    }
-
-    async function updateLiveScores() {
-      try {
-        const res = await fetch(`/api/baseball/live-scores?t=${Date.now()}`);
-        const data = await res.json();
-        if (data.ok && data.games) {
-          data.games.forEach(g => {
-            const scoreEl = document.querySelector(`#score-${g.gamePk}`);
-            const inningEl = document.querySelector(`#inning-text-${g.gamePk}`);
-            if (scoreEl) scoreEl.textContent = `${g.awayScore} - ${g.homeScore}`;
-            if (inningEl) inningEl.textContent = `${g.inningState || ''} ${g.inning || ''}`;
-            const b1 = document.querySelector(`#base1-${g.gamePk}`);
-            const b2 = document.querySelector(`#base2-${g.gamePk}`);
-            const b3 = document.querySelector(`#base3-${g.gamePk}`);
-            
-            // --- ACTUALIZACIÓN BOLAS / STRIKES / OUTS ---
-            const ballsEl = document.querySelector(`#balls-${g.gamePk}`);
-            const strikesEl = document.querySelector(`#strikes-${g.gamePk}`);
-            const outEl = document.querySelector(`#outs-${g.gamePk}`);
-
-            if (ballsEl) ballsEl.textContent = `B: ${g.balls || 0}`;
-            if (strikesEl) strikesEl.textContent = `S: ${g.strikes || 0}`;
-            if (outEl) outEl.textContent = `O: ${g.outs || 0}`;
-
-            if(b1) g.runnerOn1b ? b1.classList.add('active') : b1.classList.remove('active');
-            if(b2) g.runnerOn2b ? b2.classList.add('active') : b2.classList.remove('active');
-            if(b3) g.runnerOn3b ? b3.classList.add('active') : b3.classList.remove('active');
-          });
-        }
-      } catch (e) { console.error("Sync error"); }
-    }
-    setInterval(updateLiveScores, 20000);
-
-    function renderLineups(data) {
-      if (!data.ok || !data.awayLineup) return '<div style="font-size:9px; text-align:center; padding:10px; color:gray;">Lineups pendientes...</div>';
-      const renderSide = (l) => l.slice(0, 9).map(p => `
-        <div class="player-line">
-          <span><span class="order-num">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
-          <span class="pos-tag">${p.pos}</span>
-        </div>`).join('');
-      return `<div class="lineup-container"><div class="lineup-grid" style="display:flex; justify-content:space-between;"><div style="width:48%">${renderSide(data.awayLineup)}</div><div style="width:48%">${renderSide(data.homeLineup)}</div></div></div>`;
+    function renderLast5Boxes(str) {
+      if (!str || str === 'Sin data' || str === '---') return '';
+      return `
+        <div class="last5-box">
+          ${str.split(' ').map(r => {
+            const clean = r.trim().toUpperCase();
+            if (clean !== 'W' && clean !== 'L') return '';
+            return `<span class="last5-item ${clean === 'W' ? 'win' : 'loss'}">${clean}</span>`;
+          }).join('')}
+        </div>
+      `;
     }
 
     async function loadGames() {
@@ -364,7 +349,7 @@
                 <img src="/logos/${game.awayAbbrev}.png" class="team-logo">
                 <span class="team-abbr">${game.awayAbbrev}</span>
                 <span class="team-record">${game.awayWins || 0}-${game.awayLosses || 0}</span>
-                <span class="team-streak">Últimos 5: ${game.awayLast5 || '---'}</span>
+                ${renderLast5Boxes(game.awayLast5)}
                 <span class="pitcher-name">${game.awayPitcher || 'TBD'}</span>
               </div>
               <div class="game-status-center">
@@ -385,7 +370,7 @@
                 <img src="/logos/${game.homeAbbrev}.png" class="team-logo">
                 <span class="team-abbr">${game.homeAbbrev}</span>
                 <span class="team-record">${game.homeWins || 0}-${game.homeLosses || 0}</span>
-                <span class="team-streak">Últimos 5: ${game.homeLast5 || '---'}</span>
+                ${renderLast5Boxes(game.homeLast5)}
                 <span class="pitcher-name">${game.homePitcher || 'TBD'}</span>
               </div>
             </div>
@@ -397,10 +382,62 @@
       } catch (e) { status.textContent = "Error."; }
     }
 
+    /* --- RESTO DE FUNCIONES (analyzeGame, analyzeAll, etc) SIGUEN IGUAL --- */
+    async function updateRealStats() {
+      try {
+        const res = await fetch('/api/stats/daily-performance?t=' + Date.now());
+        const data = await res.json();
+        if (data.ok) {
+          document.getElementById('statML').textContent = data.mlSuccess + '%';
+          document.getElementById('statProps').textContent = data.propsSuccess + '%';
+          document.getElementById('totalVerdes').textContent = data.totalWins;
+          const topHR = document.getElementById('topHRPlayers');
+          if (topHR) topHR.textContent = data.topPlayers || 'Pendiente';
+        }
+      } catch (e) { console.log("Stats default", e); }
+    }
+
+    async function updateLiveScores() {
+      try {
+        const res = await fetch(`/api/baseball/live-scores?t=${Date.now()}`);
+        const data = await res.json();
+        if (data.ok && data.games) {
+          data.games.forEach(g => {
+            const scoreEl = document.querySelector(`#score-${g.gamePk}`);
+            const inningEl = document.querySelector(`#inning-text-${g.gamePk}`);
+            if (scoreEl) scoreEl.textContent = `${g.awayScore} - ${g.homeScore}`;
+            if (inningEl) inningEl.textContent = `${g.inningState || ''} ${g.inning || ''}`;
+            const b1 = document.querySelector(`#base1-${g.gamePk}`);
+            const b2 = document.querySelector(`#base2-${g.gamePk}`);
+            const b3 = document.querySelector(`#base3-${g.gamePk}`);
+            const ballsEl = document.querySelector(`#balls-${g.gamePk}`);
+            const strikesEl = document.querySelector(`#strikes-${g.gamePk}`);
+            const outEl = document.querySelector(`#outs-${g.gamePk}`);
+            if (ballsEl) ballsEl.textContent = `B: ${g.balls || 0}`;
+            if (strikesEl) strikesEl.textContent = `S: ${g.strikes || 0}`;
+            if (outEl) outEl.textContent = `O: ${g.outs || 0}`;
+            if(b1) g.runnerOn1b ? b1.classList.add('active') : b1.classList.remove('active');
+            if(b2) g.runnerOn2b ? b2.classList.add('active') : b2.classList.remove('active');
+            if(b3) g.runnerOn3b ? b3.classList.add('active') : b3.classList.remove('active');
+          });
+        }
+      } catch (e) { console.error("Sync error"); }
+    }
+    setInterval(updateLiveScores, 20000);
+
+    function renderLineups(data) {
+      if (!data.ok || !data.awayLineup) return '<div style="font-size:9px; text-align:center; padding:10px; color:gray;">Lineups pendientes...</div>';
+      const renderSide = (l) => l.slice(0, 9).map(p => `
+        <div class="player-line">
+          <span><span class="order-num">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
+          <span class="pos-tag">${p.pos}</span>
+        </div>`).join('');
+      return `<div class="lineup-container"><div class="lineup-grid" style="display:flex; justify-content:space-between;"><div style="width:48%">${renderSide(data.awayLineup)}</div><div style="width:48%">${renderSide(data.homeLineup)}</div></div></div>`;
+    }
+
     async function analyzeGame(gamePk, awayAbbrev, homeAbbrev, gameStatus) {
       const container = document.getElementById(`results-${gamePk}`);
       container.innerHTML = `<div class="loading" style="text-align:center; padding:10px; font-size:12px;">Modelando IA...</div>`;
-      
       try {
         const [anaRes, propRes] = await Promise.all([
           fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`),
@@ -408,16 +445,11 @@
         ]);
         const anaData = await anaRes.json();
         const propData = await propRes.json();
-
         const a = anaData.analysis;
         const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
         const isPro = loggedUser && loggedUser.proActivo === true;
-
         const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
-        const canSavePick = allowedStatuses.some(s =>
-          String(gameStatus || '').toLowerCase().includes(s.toLowerCase())
-        );
-
+        const canSavePick = allowedStatuses.some(s => String(gameStatus || '').toLowerCase().includes(s.toLowerCase()));
         if (canSavePick) {
           const today = dateInput.value || new Date().toISOString().split('T')[0];
           const picksToSave = [];
@@ -435,66 +467,22 @@
               picksToSave.push({ date: today, market: 'HR', gamePk, playerName: p.name, team: p.team || '', pick: 'HR' });
             });
           }
-          fetch('/api/picks/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(picksToSave)
-          });
+          fetch('/api/picks/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(picksToSave)});
         }
-
         const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
         const conf = String(a.confidence || "").toLowerCase();
         let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
-
-        let html = `
-          <div class="prediction-box ${colorClass}">
-            <div class="section-header">
-              <div class="title-icon" style="color:inherit">🔥 Moneyline</div>
-              <span class="badge" style="background:rgba(255,255,255,0.2); color:inherit">${a.confidence.toUpperCase()}</span>
-            </div>
-            <span class="pick-val">${a.pick}</span>
-            <div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div>
-          </div>
-        `;
-
+        let html = `<div class="prediction-box ${colorClass}"><div class="section-header"><div class="title-icon" style="color:inherit">🔥 Moneyline</div><span class="badge" style="background:rgba(255,255,255,0.2); color:inherit">${a.confidence.toUpperCase()}</span></div><span class="pick-val">${a.pick}</span><div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div></div>`;
         if (!isPro) {
-            html += `
-                <div class="section"> 
-                    <div style="padding:14px;border:1px solid #facc15;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;margin-top:10px;"> 
-                        <div style="font-size:16px;font-weight:900;color:#facc15;">🔒 SOLO MONEYLINE GRATIS</div> 
-                        <p style="font-size:12px;color:#94a3b8;"> Desbloquea Run Line, Totales y Player Props. </p> 
-                        <button onclick="window.location.href='/pago-manual'" style="background:#22c55e;color:#000;width:100%;font-weight:900;padding:10px;border-radius:8px;cursor:pointer;border:none;margin-top:8px;">
-                          HACERME PRO
-                        </button>
-                    </div> 
-                </div>`;
-            container.innerHTML = html;
-            return;
+            html += `<div class="section"><div style="padding:14px;border:1px solid #facc15;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;margin-top:10px;"><div style="font-size:16px;font-weight:900;color:#facc15;">🔒 SOLO MONEYLINE GRATIS</div><p style="font-size:12px;color:#94a3b8;">Desbloquea Run Line, Totales y Player Props.</p><button onclick="window.location.href='/pago-manual'" style="background:#22c55e;color:#000;width:100%;font-weight:900;padding:10px;border-radius:8px;cursor:pointer;border:none;margin-top:8px;">HACERME PRO</button></div></div>`;
+            container.innerHTML = html; return;
         }
-
-        html += `
-          <div class="section">
-            <div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div>
-            <span class="pick-val">${a.runLine?.pick || 'N/A'}</span>
-            <div class="data-mono">Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div>
-          </div>
-          <div class="section">
-            <div class="section-header"><div class="title-icon" style="color:var(--accent-green)">📈 Team Totals</div></div>
-            <div class="data-mono">${awayAbbrev}: ${a.teamTotals?.away?.pick || 'TBD'}</div>
-            <div class="data-mono">${homeAbbrev}: ${a.teamTotals?.home?.pick || 'TBD'}</div>
-          </div>
-          <div class="section" style="border:none">
-            <div class="section-header"><div class="title-icon" style="color:#60a5fa">💎 Player Props</div></div>`;
-
+        html += `<div class="section"><div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div><span class="pick-val">${a.runLine?.pick || 'N/A'}</span><div class="data-mono">Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div></div><div class="section"><div class="section-header"><div class="title-icon" style="color:var(--accent-green)">📈 Team Totals</div></div><div class="data-mono">${awayAbbrev}: ${a.teamTotals?.away?.pick || 'TBD'}</div><div class="data-mono">${homeAbbrev}: ${a.teamTotals?.home?.pick || 'TBD'}</div></div><div class="section" style="border:none"><div class="section-header"><div class="title-icon" style="color:#60a5fa">💎 Player Props</div></div>`;
         if (propData.ok && propData.props) {
           propData.props.sort((x, y) => y.hitChance - x.hitChance).slice(0, 3).forEach(p => {
             const pId = p.personId || p.mlbId || p.playerId || p.id;
             const imgSrc = pId ? `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${pId}/headshot/67/current` : `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current`;
-            html += `<div class="player-row">
-                <img src="${imgSrc}" class="player-img" onerror="this.src='https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current'">
-                <div class="player-info"><span class="p-name">${p.name}</span><span class="p-stats">Hit ${p.hitChance}% | HR ${p.hrChance}%</span></div>
-                <span class="badge border-alta" style="background:rgba(34,197,94,0.1); color:#4ade80">ALTA</span>
-              </div>`;
+            html += `<div class="player-row"><img src="${imgSrc}" class="player-img" onerror="this.src='https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current'"><div class="player-info"><span class="p-name">${p.name}</span><span class="p-stats">Hit ${p.hitChance}% | HR ${p.hrChance}%</span></div><span class="badge border-alta" style="background:rgba(34,197,94,0.1); color:#4ade80">ALTA</span></div>`;
           });
         }
         html += `</div>`;
@@ -516,28 +504,15 @@
       const userBar = document.getElementById('userBar');
       const userInfo = document.getElementById('userInfo');
       const userBtn = document.getElementById('userBtn');
-
       if (!user) {
-        userBar.style.display = 'flex';
-        userInfo.innerHTML = '👤 No has iniciado sesión';
-        userBtn.textContent = 'Iniciar sesión';
-        userBtn.style.background = 'var(--primary-blue)';
-        userBtn.onclick = () => window.location.href = '/login';
-        return;
+        userBar.style.display = 'flex'; userInfo.innerHTML = '👤 No has iniciado sesión';
+        userBtn.textContent = 'Iniciar sesión'; userBtn.style.background = 'var(--primary-blue)';
+        userBtn.onclick = () => window.location.href = '/login'; return;
       }
-
       userBar.style.display = 'flex';
-      userInfo.innerHTML = `
-        👤 ${user.nombre || user.email}
-        | Plan: ${user.proActivo ? '<span style="color:#22c55e">PRO 🔥</span>' : '<span style="color:#facc15">FREE 🔒</span>'}
-      `;
-
-      userBtn.textContent = 'Cerrar sesión';
-      userBtn.style.background = '#ef4444';
-      userBtn.onclick = () => {
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      };
+      userInfo.innerHTML = `👤 ${user.nombre || user.email} | Plan: ${user.proActivo ? '<span style="color:#22c55e">PRO 🔥</span>' : '<span style="color:#facc15">FREE 🔒</span>'}`;
+      userBtn.textContent = 'Cerrar sesión'; userBtn.style.background = '#ef4444';
+      userBtn.onclick = () => { localStorage.removeItem('user'); window.location.href = '/login'; };
     }
     renderUserBar();
   </script>
