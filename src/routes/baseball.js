@@ -81,8 +81,7 @@ async function getLast5(teamId, beforeDate) {
     const startDate = start.toISOString().split('T')[0];
     const endDate = end.toISOString().split('T')[0];
 
-    const url =
-      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${teamId}&startDate=${startDate}&endDate=${endDate}`;
+    const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${teamId}&startDate=${startDate}&endDate=${endDate}`;
 
     const response = await fetch(url);
     const data = await response.json();
@@ -113,7 +112,6 @@ async function getLast5(teamId, beforeDate) {
     const last5 = results
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 5)
-      .reverse()
       .map(g => g.result)
       .join(' ');
 
@@ -131,13 +129,11 @@ async function getLast5(teamId, beforeDate) {
   }
 }
 
-// 1. Juegos MLB
 router.get('/games', async (req, res) => {
   try {
     const queryDate = req.query.date || new Date().toISOString().split('T')[0];
 
-    const url =
-      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${encodeURIComponent(queryDate)}&hydrate=probablePitcher,linescore,team`;
+    const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${encodeURIComponent(queryDate)}&hydrate=probablePitcher,linescore,team`;
 
     const response = await fetch(url);
     const data = await response.json();
@@ -223,7 +219,6 @@ router.get('/games', async (req, res) => {
   }
 });
 
-// 2. Lineups
 router.get('/lineup/:id', async (req, res) => {
   try {
     const response = await fetch(
@@ -248,7 +243,6 @@ router.get('/lineup/:id', async (req, res) => {
   }
 });
 
-// 3. Player Props
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
@@ -303,7 +297,6 @@ router.get('/player-props/:gamePk', async (req, res) => {
   }
 });
 
-// 4. Marcadores en vivo
 router.get('/live-scores', async (req, res) => {
   try {
     const response = await fetch(
@@ -350,7 +343,6 @@ router.get('/live-scores', async (req, res) => {
   }
 });
 
-// 5. Análisis básico de juego
 router.get('/analyze/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
