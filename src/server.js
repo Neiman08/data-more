@@ -148,6 +148,51 @@ app.use('/api/baseball', baseballRoutes);
 app.use('/api', soccerRoutes);
 app.use('/api', nbaRoutes);
 
+// --- STATS ENDPOINT ---
+
+app.get('/api/stats/daily-performance', async (req, res) => {
+  try {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const date = yesterday.toISOString().split('T')[0];
+
+    const picks = await Pick.find({ date });
+
+    const calc = (arr) => {
+      const graded = arr.filter(p => p.result === 'win' || p.result === 'loss');
+      const wins = graded.filter(p => p.result === 'win').length;
+      return graded.length ? Math.round((wins / graded.length) * 100) : 0;
+    };
+
+    const hitWinners = picks
+      .filter(p => p.market === 'HIT' && p.result === 'win')
+      .map(p => p.playerName)
+      .filter(Boolean);
+
+    const hrWinners = picks
+      .filter(p => p.market === 'HR' && p.result === 'win')
+      .map(p => p.playerName)
+      .filter(Boolean);
+
+    res.json({
+      ok: true,
+      date,
+      mlSuccess: calc(picks.filter(p => p.market === 'ML')),
+      propsSuccess: calc(picks.filter(p => ['HIT', 'HR'].includes(p.market))),
+      totalWins: picks.filter(p => p.result === 'win').length,
+      topPlayers: hrWinners.length
+        ? `HR: ${hrWinners.join(', ')} ✅`
+        : hitWinners.length
+          ? `Hits: ${hitWinners.join(', ')} ✅`
+          : 'Pendiente'
+    });
+
+  } catch (err) {
+    console.error('Error stats:', err);
+    res.status(500).json({ ok: false });
+  }
+});
+
 // --- FRONTEND ---
 
 app.get('/', (req, res) => res.sendFile(path.resolve('public/index.html')));
@@ -158,7 +203,6 @@ app.get('/nba', (req, res) => res.sendFile(path.resolve('public/nba.html')));
 app.get('/pro', (req, res) => res.sendFile(path.resolve('public/pro.html')));
 app.get('/pago-manual', (req, res) => res.sendFile(path.resolve('public/pago-manual.html')));
 
-// 🔥 AQUÍ ESTÁ EL FIX REAL
 app.get('/admin-payments', (req, res) => {
   res.sendFile(path.resolve('public/admin-payments.html'));
 });
