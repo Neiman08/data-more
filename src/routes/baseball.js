@@ -1,19 +1,42 @@
 import express from 'express';
 
+const router = express.Router();
+
 const TEAM_ABBR = {
-  "Boston Red Sox": "BOS", "Baltimore Orioles": "BAL", "New York Yankees": "NYY",
-  "Toronto Blue Jays": "TOR", "Tampa Bay Rays": "TB", "Cleveland Guardians": "CLE",
-  "Detroit Tigers": "DET", "Kansas City Royals": "KC", "Minnesota Twins": "MIN",
-  "Chicago White Sox": "CWS", "Houston Astros": "HOU", "Texas Rangers": "TEX",
-  "Seattle Mariners": "SEA", "Oakland Athletics": "OAK", "Los Angeles Angels": "LAA",
-  "Atlanta Braves": "ATL", "Philadelphia Phillies": "PHI", "New York Mets": "NYM",
-  "Miami Marlins": "MIA", "Washington Nationals": "WSH", "Chicago Cubs": "CHC",
-  "St. Louis Cardinals": "STL", "Milwaukee Brewers": "MIL", "Cincinnati Reds": "CIN",
-  "Pittsburgh Pirates": "PIT", "Los Angeles Dodgers": "LAD", "San Francisco Giants": "SF",
-  "San Diego Padres": "SD", "Arizona Diamondbacks": "ARI", "Colorado Rockies": "COL"
+  "Boston Red Sox": "BOS",
+  "Baltimore Orioles": "BAL",
+  "New York Yankees": "NYY",
+  "Toronto Blue Jays": "TOR",
+  "Tampa Bay Rays": "TB",
+  "Cleveland Guardians": "CLE",
+  "Detroit Tigers": "DET",
+  "Kansas City Royals": "KC",
+  "Minnesota Twins": "MIN",
+  "Chicago White Sox": "CWS",
+  "Houston Astros": "HOU",
+  "Texas Rangers": "TEX",
+  "Seattle Mariners": "SEA",
+  "Oakland Athletics": "OAK",
+  "Los Angeles Angels": "LAA",
+  "Atlanta Braves": "ATL",
+  "Philadelphia Phillies": "PHI",
+  "New York Mets": "NYM",
+  "Miami Marlins": "MIA",
+  "Washington Nationals": "WSH",
+  "Chicago Cubs": "CHC",
+  "St. Louis Cardinals": "STL",
+  "Milwaukee Brewers": "MIL",
+  "Cincinnati Reds": "CIN",
+  "Pittsburgh Pirates": "PIT",
+  "Los Angeles Dodgers": "LAD",
+  "San Francisco Giants": "SF",
+  "San Diego Padres": "SD",
+  "Arizona Diamondbacks": "ARI",
+  "Colorado Rockies": "COL"
 };
 
-const router = express.Router();
+const last5Cache = {};
+const LAST5_CACHE_TTL = 1000 * 60 * 10;
 
 function formatLineup(players) {
   return Object.values(players || {})
@@ -27,47 +50,84 @@ function formatLineup(players) {
     }));
 }
 
+function formatTime(dateString) {
+  try {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return '';
+  }
+}
+
 async function getLast5(teamId, beforeDate) {
   try {
+    if (!teamId) return 'Sin data';
+
+    const cacheKey = `${teamId}-${beforeDate}`;
+    const cached = last5Cache[cacheKey];
+
+    if (cached && Date.now() - cached.time < LAST5_CACHE_TTL) {
+      return cached.value;
+    }
+
     const end = new Date(beforeDate);
     end.setDate(end.getDate() - 1);
 
     const start = new Date(end);
-    start.setDate(start.getDate() - 15);
+    start.setDate(start.getDate() - 90);
 
     const startDate = start.toISOString().split('T')[0];
     const endDate = end.toISOString().split('T')[0];
 
-    const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${teamId}&startDate=${startDate}&endDate=${endDate}`;
+    const url =
+      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${teamId}&startDate=${startDate}&endDate=${endDate}`;
+
     const response = await fetch(url);
     const data = await response.json();
 
-    const games = [];
+    const results = [];
 
-    (data.dates || []).forEach(d => {
-      (d.games || []).forEach(g => {
-        if (g.status?.abstractGameState !== 'Final') return;
+    for (const day of data.dates || []) {
+      for (const game of day.games || []) {
+        if (game.status?.abstractGameState !== 'Final') continue;
 
-        const isHome = g.teams.home.team.id === teamId;
-        const teamScore = isHome ? g.teams.home.score : g.teams.away.score;
-        const oppScore = isHome ? g.teams.away.score : g.teams.home.score;
+        const isHome = Number(game.teams?.home?.team?.id) === Number(teamId);
 
-        games.push({
-          date: g.gameDate,
+        const teamScore = isHome
+          ? Number(game.teams?.home?.score ?? 0)
+          : Number(game.teams?.away?.score ?? 0);
+
+        const oppScore = isHome
+          ? Number(game.teams?.away?.score ?? 0)
+          : Number(game.teams?.home?.score ?? 0);
+
+        results.push({
+          date: game.gameDate,
           result: teamScore > oppScore ? 'W' : 'L'
         });
-      });
-    });
+      }
+    }
 
-    return games
+    const last5 = results
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 5)
       .reverse()
       .map(g => g.result)
-      .join(' ') || '---';
+      .join(' ');
 
-  } catch {
-    return '---';
+    const value = last5 || 'Sin data';
+
+    last5Cache[cacheKey] = {
+      time: Date.now(),
+      value
+    };
+
+    return value;
+  } catch (err) {
+    console.error('Error getLast5:', err);
+    return 'Sin data';
   }
 }
 
@@ -76,84 +136,100 @@ router.get('/games', async (req, res) => {
   try {
     const queryDate = req.query.date || new Date().toISOString().split('T')[0];
 
-    const response = await fetch(
-      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${encodeURIComponent(queryDate)}&hydrate=probablePitcher,linescore,team`
-    );
+    const url =
+      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${encodeURIComponent(queryDate)}&hydrate=probablePitcher,linescore,team`;
 
+    const response = await fetch(url);
     const data = await response.json();
+
     const rawGames = data.dates?.[0]?.games || [];
 
-    const games = await Promise.all(rawGames.map(async (game) => {
-      const date = game.gameDate ? game.gameDate.split('T')[0] : queryDate;
-      const time = game.gameDate ? new Date(game.gameDate).toLocaleTimeString() : '';
-      const status = game.status?.detailedState || 'Scheduled';
+    const games = await Promise.all(
+      rawGames.map(async (game) => {
+        const awayTeam = game.teams?.away;
+        const homeTeam = game.teams?.home;
 
-      const awayTeamName = game.teams?.away?.team?.name || '';
-      const homeTeamName = game.teams?.home?.team?.name || '';
+        const awayTeamName = awayTeam?.team?.name || '';
+        const homeTeamName = homeTeam?.team?.name || '';
 
-      const awayTeamId = game.teams?.away?.team?.id;
-      const homeTeamId = game.teams?.home?.team?.id;
+        const awayTeamId = awayTeam?.team?.id;
+        const homeTeamId = homeTeam?.team?.id;
 
-      const awayAbbrev = TEAM_ABBR[awayTeamName] || '';
-      const homeAbbrev = TEAM_ABBR[homeTeamName] || '';
+        const [awayLast5, homeLast5] = await Promise.all([
+          getLast5(awayTeamId, queryDate),
+          getLast5(homeTeamId, queryDate)
+        ]);
 
-      const awayPitcher = game.teams?.away?.probablePitcher?.fullName || 'TBD';
-      const homePitcher = game.teams?.home?.probablePitcher?.fullName || 'TBD';
+        return {
+          gamePk: game.gamePk,
 
-      const [awayLast5, homeLast5] = await Promise.all([
-        awayTeamId ? getLast5(awayTeamId, queryDate) : '---',
-        homeTeamId ? getLast5(homeTeamId, queryDate) : '---'
-      ]);
+          date: game.gameDate ? game.gameDate.split('T')[0] : queryDate,
+          time: formatTime(game.gameDate),
 
-      return {
-        gamePk: game.gamePk,
-        date,
-        time,
-        status,
+          status: game.status?.detailedState || 'Scheduled',
+          abstractStatus: game.status?.abstractGameState || '',
+          codedGameState: game.status?.codedGameState || '',
 
-        awayAbbrev,
-        homeAbbrev,
-        awayTeamName,
-        homeTeamName,
+          awayTeamName,
+          homeTeamName,
 
-        awayPitcher,
-        homePitcher,
+          awayTeamId,
+          homeTeamId,
 
-        awayScore: game.teams?.away?.score ?? 0,
-        homeScore: game.teams?.home?.score ?? 0,
+          awayAbbrev: TEAM_ABBR[awayTeamName] || '',
+          homeAbbrev: TEAM_ABBR[homeTeamName] || '',
 
-        balls: game.linescore?.balls ?? 0,
-        strikes: game.linescore?.strikes ?? 0,
-        outs: game.linescore?.outs ?? 0,
+          awayPitcher: awayTeam?.probablePitcher?.fullName || 'TBD',
+          homePitcher: homeTeam?.probablePitcher?.fullName || 'TBD',
 
-        awayWins: game.teams?.away?.leagueRecord?.wins ?? 0,
-        awayLosses: game.teams?.away?.leagueRecord?.losses ?? 0,
-        homeWins: game.teams?.home?.leagueRecord?.wins ?? 0,
-        homeLosses: game.teams?.home?.leagueRecord?.losses ?? 0,
+          awayScore: awayTeam?.score ?? 0,
+          homeScore: homeTeam?.score ?? 0,
 
-        awayLast5,
-        homeLast5,
+          awayWins: awayTeam?.leagueRecord?.wins ?? 0,
+          awayLosses: awayTeam?.leagueRecord?.losses ?? 0,
+          homeWins: homeTeam?.leagueRecord?.wins ?? 0,
+          homeLosses: homeTeam?.leagueRecord?.losses ?? 0,
 
-        inning: game.linescore?.currentInningOrdinal || '',
-        inningState: game.linescore?.inningState || '',
+          awayLast5,
+          homeLast5,
 
-        runnerOn1b: !!game.linescore?.offense?.first,
-        runnerOn2b: !!game.linescore?.offense?.second,
-        runnerOn3b: !!game.linescore?.offense?.third
-      };
-    }));
+          inning: game.linescore?.currentInningOrdinal || '',
+          inningState: game.linescore?.inningState || '',
 
-    res.json({ ok: true, games });
+          balls: game.linescore?.balls ?? 0,
+          strikes: game.linescore?.strikes ?? 0,
+          outs: game.linescore?.outs ?? 0,
+
+          runnerOn1b: !!game.linescore?.offense?.first,
+          runnerOn2b: !!game.linescore?.offense?.second,
+          runnerOn3b: !!game.linescore?.offense?.third
+        };
+      })
+    );
+
+    res.json({
+      ok: true,
+      date: queryDate,
+      count: games.length,
+      games
+    });
   } catch (error) {
     console.error('Error /api/baseball/games:', error);
-    res.json({ ok: false, error: error.message });
+    res.status(500).json({
+      ok: false,
+      message: 'Error cargando juegos MLB',
+      error: error.message
+    });
   }
 });
 
 // 2. Lineups
 router.get('/lineup/:id', async (req, res) => {
   try {
-    const response = await fetch(`https://statsapi.mlb.com/api/v1/game/${req.params.id}/boxscore`);
+    const response = await fetch(
+      `https://statsapi.mlb.com/api/v1/game/${req.params.id}/boxscore`
+    );
+
     const data = await response.json();
 
     res.json({
@@ -162,8 +238,13 @@ router.get('/lineup/:id', async (req, res) => {
       homeLineup: formatLineup(data?.teams?.home?.players),
       homeConfirmed: true
     });
-  } catch {
-    res.json({ ok: false });
+  } catch (error) {
+    console.error('Error lineup:', error);
+    res.json({
+      ok: false,
+      awayLineup: [],
+      homeLineup: []
+    });
   }
 });
 
@@ -171,7 +252,11 @@ router.get('/lineup/:id', async (req, res) => {
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
-    const response = await fetch(`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`);
+
+    const response = await fetch(
+      `https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`
+    );
+
     const data = await response.json();
 
     const players = [
@@ -180,28 +265,51 @@ router.get('/player-props/:gamePk', async (req, res) => {
     ].filter(p => p.battingOrder);
 
     const props = players.map(p => {
-      const hitChance = Math.floor(Math.random() * 40) + 40;
+      const batting = p.stats?.batting || {};
+
+      const hits = Number(batting.hits || 0);
+      const homeRuns = Number(batting.homeRuns || 0);
+      const atBats = Number(batting.atBats || 0);
+
+      let hitChance = Math.floor(Math.random() * 40) + 40;
+      let hrChance = Math.floor(Math.random() * 15) + 2;
+
+      if (atBats > 0) {
+        hitChance = Math.min(85, Math.max(35, 45 + hits * 12));
+        hrChance = Math.min(35, Math.max(2, 4 + homeRuns * 12));
+      }
 
       return {
         name: p.person?.fullName || 'N/A',
         personId: p.person?.id,
+        team: p.parentTeamId,
         hitChance,
-        hrChance: Math.floor(Math.random() * 15) + 2,
+        hrChance,
         rbiChance: Math.floor(Math.random() * 25) + 10,
-        rating: hitChance > 65 ? 'Alta' : (hitChance > 55 ? 'Media' : 'Baja')
+        rating: hitChance > 65 ? 'Alta' : hitChance > 55 ? 'Media' : 'Baja'
       };
     });
 
-    res.json({ ok: true, props });
-  } catch {
-    res.json({ ok: false, props: [] });
+    res.json({
+      ok: true,
+      props
+    });
+  } catch (error) {
+    console.error('Error player-props:', error);
+    res.json({
+      ok: false,
+      props: []
+    });
   }
 });
 
 // 4. Marcadores en vivo
 router.get('/live-scores', async (req, res) => {
   try {
-    const response = await fetch('https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore');
+    const response = await fetch(
+      'https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=linescore'
+    );
+
     const data = await response.json();
 
     const games = data.dates?.[0]?.games?.map(g => {
@@ -209,7 +317,10 @@ router.get('/live-scores', async (req, res) => {
 
       return {
         gamePk: g.gamePk,
+
         status: g.status?.detailedState || '',
+        abstractStatus: g.status?.abstractGameState || '',
+
         inning: ls.currentInningOrdinal || '',
         inningState: ls.inningState || '',
 
@@ -226,13 +337,20 @@ router.get('/live-scores', async (req, res) => {
       };
     }) || [];
 
-    res.json({ ok: true, games });
-  } catch {
-    res.json({ ok: false, games: [] });
+    res.json({
+      ok: true,
+      games
+    });
+  } catch (error) {
+    console.error('Error live-scores:', error);
+    res.json({
+      ok: false,
+      games: []
+    });
   }
 });
 
-// 5. Análisis básico
+// 5. Análisis básico de juego
 router.get('/analyze/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
@@ -243,7 +361,10 @@ router.get('/analyze/:gamePk', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.json({ ok: false, error: error.message });
+    res.json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
