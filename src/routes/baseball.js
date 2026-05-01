@@ -61,9 +61,10 @@ function formatTime(dateString) {
   }
 }
 
+// Últimos 5 reales: más reciente primero
 async function getLast5(teamId, beforeDate) {
   try {
-    if (!teamId) return 'Sin data';
+    if (!teamId) return '---';
 
     const cacheKey = `${teamId}-${beforeDate}`;
     const cached = last5Cache[cacheKey];
@@ -72,7 +73,7 @@ async function getLast5(teamId, beforeDate) {
       return cached.value;
     }
 
-    const end = new Date(beforeDate);
+    const end = new Date(beforeDate || new Date());
     end.setDate(end.getDate() - 1);
 
     const start = new Date(end);
@@ -109,13 +110,11 @@ async function getLast5(teamId, beforeDate) {
       }
     }
 
-    const last5 = results
+    const value = results
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 5)
       .map(g => g.result)
-      .join(' ');
-
-    const value = last5 || 'Sin data';
+      .join(' ') || '---';
 
     last5Cache[cacheKey] = {
       time: Date.now(),
@@ -125,10 +124,11 @@ async function getLast5(teamId, beforeDate) {
     return value;
   } catch (err) {
     console.error('Error getLast5:', err);
-    return 'Sin data';
+    return '---';
   }
 }
 
+// Juegos MLB
 router.get('/games', async (req, res) => {
   try {
     const queryDate = req.query.date || new Date().toISOString().split('T')[0];
@@ -219,6 +219,7 @@ router.get('/games', async (req, res) => {
   }
 });
 
+// Lineups
 router.get('/lineup/:id', async (req, res) => {
   try {
     const response = await fetch(
@@ -243,6 +244,7 @@ router.get('/lineup/:id', async (req, res) => {
   }
 });
 
+// Player Props
 router.get('/player-props/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
@@ -297,6 +299,7 @@ router.get('/player-props/:gamePk', async (req, res) => {
   }
 });
 
+// Marcadores en vivo
 router.get('/live-scores', async (req, res) => {
   try {
     const response = await fetch(
@@ -343,6 +346,7 @@ router.get('/live-scores', async (req, res) => {
   }
 });
 
+// Análisis básico
 router.get('/analyze/:gamePk', async (req, res) => {
   try {
     const { gamePk } = req.params;
