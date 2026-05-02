@@ -38,23 +38,14 @@ async function extractPdfText(buffer) {
 }
 
 /* =========================================================
-   🧠 EXTRACCIÓN DE CABALLOS (VERSIÓN ACTUALIZADA)
+   🧠 EXTRACCIÓN DE CABALLOS (CONTEXTO REAL)
 ========================================================= */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  // Busca: número + nombre en formato normal: 1 Mannerism, 2 Il Principado, etc.
-  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)*)/g;
-
-  const blacklist = [
-    'SANTA ANITA', 'GULFSTREAM PARK', 'FURLONGS', 'THOROUGHBRED',
-    'MAIDEN', 'CLAIMING', 'ALLOWANCE', 'SPECIAL', 'WEIGHT',
-    'DIRT', 'TURF', 'OPEN', 'YEAR', 'OLDS', 'PURSE',
-    'RACE', 'FINISH', 'TRACK', 'POST', 'TIME',
-    'Stud', 'Farm', 'Stable', 'Trainer', 'Jockey',
-    'Saturday', 'Sabado', 'Tapeta', 'Arena'
-  ];
+  // 🔥 Busca líneas típicas de caballos (estructura real del programa)
+  const regex = /(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+)/g;
 
   let match;
 
@@ -62,10 +53,12 @@ function extractHorses(text) {
     const number = match[1];
     const name = match[2].trim();
 
+    // 🔥 FILTRO INTELIGENTE (CRÍTICO)
     if (
-      name.length < 4 ||
       seen.has(name) ||
-      blacklist.some(word => name.toLowerCase().includes(word.toLowerCase()))
+      name.length < 6 || // caballos reales casi siempre > 1 palabra
+      name.split(' ').length < 2 || // mínimo 2 palabras
+      /^[A-Z\s]+$/.test(name) // elimina palabras tipo STATE, STAKE
     ) continue;
 
     seen.add(name);
@@ -78,7 +71,7 @@ function extractHorses(text) {
     });
   }
 
-  return horses.slice(0, 14);
+  return horses.slice(0, 12);
 }
 
 /* =========================================================
@@ -109,13 +102,13 @@ router.get('/import-program', async (req, res) => {
     const data = await extractPdfText(buffer);
     const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    // 2. Identificar caballos con la nueva lógica
+    // 2. Identificar caballos con la lógica de contexto real
     const horses = extractHorses(cleanText);
 
     if (horses.length === 0) {
       return res.json({
         ok: false,
-        message: 'No se detectaron caballos. Verifica el formato del PDF.',
+        message: 'No se detectaron caballos con el filtro de contexto real.',
         url
       });
     }
