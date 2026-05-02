@@ -38,7 +38,7 @@ async function extractPdfText(buffer) {
 }
 
 /* =========================================================
-   ✂️ DIVISIÓN POR CARRERAS (ACTUALIZADA: SOPORTE ORDINALES)
+   ✂️ DIVISIÓN POR CARRERAS
 ========================================================= */
 function splitRaces(text) {
   return text
@@ -47,27 +47,38 @@ function splitRaces(text) {
 }
 
 /* =========================================================
-   🧠 EXTRACCIÓN DE CABALLOS (CONTEXTO REAL)
+   🧠 EXTRACCIÓN DE CABALLOS (VERSIÓN PRO: NÚMERO + NOMBRE + ODDS)
 ========================================================= */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  // 🔥 Busca líneas típicas de caballos (estructura real del programa)
-  const regex = /(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+)/g;
+  // 🔥 Detecta estructura REAL del programa:
+  // número + nombre + luego odds tipo 7/1
+  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+).*?(\d+\/\d+)/g;
+
+  const blacklist = [
+    'FURLONGS','THOROUGHBRED','MAIDEN','CLAIMING','ALLOWANCE',
+    'SPECIAL','WEIGHT','DIRT','TURF','OPEN','YEAR','OLDS',
+    'PURSE','RACE','TRACK','TIME','ARENA','MDSPWT','STAKES'
+  ];
 
   let match;
 
   while ((match = regex.exec(text)) !== null) {
     const number = match[1];
     const name = match[2].trim();
+    const odds = match[3];
 
-    // 🔥 FILTRO INTELIGENTE (CRÍTICO)
+    // ✅ FILTROS
     if (
       seen.has(name) ||
-      name.length < 6 || // caballos reales casi siempre > 1 palabra
-      name.split(' ').length < 2 || // mínimo 2 palabras
-      /^[A-Z\s]+$/.test(name) // elimina palabras tipo STATE, STAKE
+      number > 20 || // caballos reales 1–14
+      number === '00' ||
+      name.length < 6 ||
+      name.split(' ').length < 2 ||
+      /^[A-Z\s]+$/.test(name) ||
+      blacklist.some(w => name.toUpperCase().includes(w))
     ) continue;
 
     seen.add(name);
@@ -75,12 +86,12 @@ function extractHorses(text) {
     horses.push({
       number,
       name,
-      odds: `${Math.floor(Math.random() * 8) + 2}/1`,
-      speed: Math.floor(75 + Math.random() * 20)
+      odds,
+      speed: Math.floor(80 + Math.random() * 15)
     });
   }
 
-  return horses;
+  return horses.slice(0, 14);
 }
 
 /* =========================================================
@@ -128,7 +139,7 @@ router.get('/import-program', async (req, res) => {
     if (races.length === 0) {
       return res.json({
         ok: false,
-        message: 'No se detectaron bloques de carrera válidos.',
+        message: 'No se detectaron bloques de carrera válidos o caballos con cuotas.',
         url
       });
     }
