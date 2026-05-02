@@ -4,7 +4,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica Estructurado cargado correctamente');
+console.log('✅ Router de Hípica Estructurado (Rangos Calibrados) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT 1: DIAGNÓSTICO DE COORDENADAS
@@ -13,11 +13,11 @@ console.log('✅ Router de Hípica Estructurado cargado correctamente');
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
-    if (!date || !track) throw new Error("Faltan parámetros date (YYYY-MM-DD) y track (ej: gp)");
+    if (!date || !track) throw new Error("Faltan parámetros: track y date.");
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('PDF no encontrado en el servidor');
+    if (!response.ok) throw new Error('No se pudo descargar el PDF');
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
@@ -34,17 +34,12 @@ router.get('/debug-coordinates', async (req, res) => {
       w: parseFloat(item.width.toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenar para lectura lógica: Y descendente, luego X ascendente
     tokens.sort((a, b) => {
       if (Math.abs(a.y - b.y) > 5) return b.y - a.y;
       return a.x - b.x;
     });
 
-    res.json({
-      ok: true,
-      info: { track, date, page: pageNum, totalPages: pdf.numPages },
-      tokens: tokens.slice(0, 500) 
-    });
+    res.json({ ok: true, tokens: tokens.slice(0, 500) });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -57,11 +52,11 @@ router.get('/debug-coordinates', async (req, res) => {
 router.get('/import-structured', async (req, res) => {
   try {
     const { date, track } = req.query;
-    if (!date || !track) throw new Error("Parámetros track y date obligatorios");
+    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('No se pudo descargar el PDF del servidor remoto');
+    if (!response.ok) throw new Error('PDF no encontrado en el servidor');
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
@@ -79,7 +74,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // 1. Agrupar por filas (Y) con margen de error de 5px
+      // 1. Agrupar por líneas (Y) con margen de 5px
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 5);
@@ -90,30 +85,29 @@ router.get('/import-structured', async (req, res) => {
         row.items.push(token);
       });
 
-      // Ordenar filas y elementos internos
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
-      // 2. Extraer corredores usando los rangos de coordenadas validados
+      // 2. Extraer corredores usando coordenadas calibradas (Ajuste Final)
       const runners = [];
       rows.forEach((row, rowIndex) => {
         const firstItem = row.items[0];
         
-        // El número del caballo está en el extremo izquierdo (x < 20)
-        if (/^\d{1,2}$/.test(firstItem?.text) && firstItem.x < 20) {
+        // 🔥 NÚMERO DEL CABALLO: Rango x entre 130 y 180
+        if (/^\d{1,2}$/.test(firstItem?.text) && firstItem.x > 130 && firstItem.x < 180) {
           
-          // Nombre del caballo: rango x entre 30 y 150
-          const horseName = row.items.find(it => it.x > 30 && it.x < 150)?.text;
+          // 🔥 NOMBRE: Rango x entre 170 y 260
+          const horseName = row.items.find(it => it.x > 170 && it.x < 260)?.text;
           
           if (horseName) {
-            // Odds: Buscamos en la fila de abajo (rowIndex + 1) en la misma zona izquierda
+            // Odds: Buscamos en la fila de abajo en la misma columna izquierda
             const nextRow = rows[rowIndex + 1];
-            const odds = nextRow?.items.find(it => it.x < 30 && it.text.includes('-'))?.text || "N/A";
+            const odds = nextRow?.items.find(it => it.x < 180 && it.text.includes('-'))?.text || "N/A";
             
-            // Jockey: rango x entre 170 y 250
-            const jockey = row.items.find(it => it.x > 170 && it.x < 250)?.text || "Unknown";
+            // 🔥 JOCKEY: Rango x entre 300 y 420
+            const jockey = row.items.find(it => it.x > 300 && it.x < 420)?.text || "Unknown";
             
-            // Speed Figures: zona derecha de la tabla (x > 530)
+            // Speed Figures: zona de ratings a la derecha (x > 530)
             const speedFigures = row.items
               .filter(it => it.x > 530)
               .map(it => parseInt(it.text))
@@ -140,13 +134,11 @@ router.get('/import-structured', async (req, res) => {
       }
     }
 
-    // 3. Respuesta final con protección para el análisis
     res.json({
       ok: true,
       url,
       totalRaces: allRaces.length,
       races: allRaces,
-      // Solo ejecutamos analyzeRace si hay datos para evitar que el servidor caiga
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
