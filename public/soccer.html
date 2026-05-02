@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 
-  <!-- 🔒 BLOQUEO PRO CORRECTO -->
   <script>
     const user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -445,7 +444,7 @@ async function initTicker() {
     try {
       const [mlbRes, soccerRes, nbaRes] = await Promise.all([
         fetch('/api/baseball/games').catch(() => null),
-        fetch('/api/soccer-games-global').catch(() => null),
+        fetch('/api/soccer/games-global').catch(() => null), // Actualizado
         fetch('/api/nba-games').catch(() => null)
       ]);
 
@@ -515,7 +514,7 @@ async function loadGames() {
   container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando ligas globales...</p>';
 
   try {
-    const res = await fetch(`/api/soccer-games-global?date=${encodeURIComponent(date)}`);
+    const res = await fetch(`/api/soccer/games-global?date=${encodeURIComponent(date)}`); // Actualizado
     const data = await res.json();
 
     if (!data.ok || !data.games.length) {
@@ -591,7 +590,7 @@ async function analyze(btn, matchId, leagueKey) {
   const date = document.getElementById('dateSelect').value;
 
   try {
-    const res = await fetch(`/api/soccer-analyze/${matchId}?league=${leagueKey}&date=${date}`);
+    const res = await fetch(`/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}`); // Actualizado
     const data = await res.json();
     const { analysis } = data;
 
