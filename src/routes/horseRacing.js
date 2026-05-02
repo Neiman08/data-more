@@ -1,10 +1,19 @@
 import express from 'express';
-import pdf from 'pdf-parse';
 import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-// Datos de ejemplo (Demo)
+// Importación dinámica para evitar errores con pdf-parse en Render/ESM
+let pdf;
+
+async function loadPdfParser() {
+  if (!pdf) {
+    const module = await import('pdf-parse');
+    pdf = module.default || module;
+  }
+}
+
+// Datos Demo
 const demoRaces = [
   {
     raceId: 'demo-1',
@@ -18,13 +27,13 @@ const demoRaces = [
       { name: 'Fast Storm', form: '1-2-3', odds: '3/1', jockey: 'J. Hernandez', trainer: 'Baffert', speed: 91 },
       { name: 'Golden Pace', form: '2-1-4', odds: '5/1', jockey: 'R. Vazquez', trainer: 'Miller', speed: 88 },
       { name: 'Late Thunder', form: '4-3-1', odds: '6/1', jockey: 'F. Prat', trainer: 'Mandella', speed: 86 },
-      { name: 'Blue Rocket', form: '5-2-2', odds: '8/1', jockey: 'M. Smith', trainer: 'O’Neill', speed: 82 }
+      { name: 'Blue Rocket', form: '5-2-2', odds: '8/1', jockey: 'M. Smith', trainer: "O'Neill", speed: 82 }
     ]
   }
 ];
 
-// 1. Obtener todas las carreras (Demo)
-router.get('/racecards', async (req, res) => {
+// 1. Obtener carreras demo
+router.get('/racecards', (req, res) => {
   res.json({
     ok: true,
     source: 'free-demo-model',
@@ -32,12 +41,15 @@ router.get('/racecards', async (req, res) => {
   });
 });
 
-// 2. Analizar una carrera específica por ID
-router.get('/analyze/:raceId', async (req, res) => {
+// 2. Analizar carrera demo
+router.get('/analyze/:raceId', (req, res) => {
   const race = demoRaces.find(r => r.raceId === req.params.raceId);
 
   if (!race) {
-    return res.status(404).json({ ok: false, error: 'Carrera no encontrada' });
+    return res.status(404).json({
+      ok: false,
+      error: 'Carrera no encontrada'
+    });
   }
 
   const analysis = analyzeRace(race);
@@ -49,7 +61,7 @@ router.get('/analyze/:raceId', async (req, res) => {
   });
 });
 
-// 3. Generar URL del programa/revista PDF
+// 3. Generar URL del PDF
 router.get('/program-url', (req, res) => {
   const date = req.query.date || new Date().toISOString().split('T')[0];
   const track = String(req.query.track || 'sa').toLowerCase();
@@ -64,51 +76,48 @@ router.get('/program-url', (req, res) => {
   });
 });
 
-// 4. Importar y extraer texto del PDF (Procesamiento Real)
+// 4. Descargar PDF y extraer texto
 router.get('/import-program', async (req, res) => {
   try {
+    await loadPdfParser();
+
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const track = String(req.query.track || 'sa').toLowerCase();
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
-
-    console.log('📥 Descargando y procesando PDF:', url);
 
     const response = await fetch(url);
 
     if (!response.ok) {
       return res.status(404).json({
         ok: false,
-        error: 'PDF no encontrado'
+        error: 'PDF no encontrado',
+        url
       });
     }
 
-    // Obtenemos el contenido del archivo
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Extraemos el texto usando pdf-parse
     const data = await pdf(buffer);
-
-    // Limpiamos el texto para que sea una sola línea continua y más fácil de leer
-    const cleanText = data.text.replace(/\s+/g, ' ').trim();
+    const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
     res.json({
       ok: true,
       url,
       info: {
         paginas: data.numpages,
-        caracteresTotales: cleanText.length
+        caracteres: cleanText.length
       },
-      // Enviamos los primeros 5000 caracteres para ver la estructura de los datos
       textoExtraido: cleanText.substring(0, 5000)
     });
 
   } catch (error) {
-    console.error('❌ Error en el Parser:', error);
+    console.error('❌ Error import-program:', error);
+
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: 'Error procesando PDF: ' + error.message
     });
   }
 });
