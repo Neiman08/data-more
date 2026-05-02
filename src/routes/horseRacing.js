@@ -3,7 +3,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-// --- LÓGICA DE PDF-PARSE (COMPATIBILIDAD) ---
+// --- CONFIGURACIÓN DE PDF-PARSE (COMPATIBILIDAD TOTAL) ---
 let pdfModule;
 
 async function extractPdfText(buffer) {
@@ -13,7 +13,7 @@ async function extractPdfText(buffer) {
 
   const fn = pdfModule.default || pdfModule;
 
-  // Caso 1: Versión tradicional
+  // Caso 1: Versión tradicional (función directa)
   if (typeof fn === 'function') {
     const data = await fn(buffer);
     return {
@@ -22,7 +22,7 @@ async function extractPdfText(buffer) {
     };
   }
 
-  // Caso 2: Versión basada en clases (PDFParse)
+  // Caso 2: Versión moderna (clase PDFParse)
   const PDFParse = pdfModule.PDFParse || pdfModule.default?.PDFParse;
   if (PDFParse) {
     const parser = new PDFParse({ data: buffer });
@@ -41,7 +41,9 @@ async function extractPdfText(buffer) {
   throw new Error('Formato de pdf-parse no reconocido');
 }
 
-// --- NUEVA LÓGICA DE EXTRACCIÓN DE CABALLOS ---
+/**
+ * Lógica de extracción: número del programa + nombre del caballo
+ */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
@@ -55,7 +57,7 @@ function extractHorses(text) {
     const number = match[1];
     const name = match[2].trim();
 
-    // ❌ Filtros de validación y limpieza
+    // ❌ Filtros para evitar capturar entrenadores, studs o basura común
     if (
       name.length < 4 ||
       seen.has(name) ||
@@ -71,18 +73,19 @@ function extractHorses(text) {
     horses.push({
       number,
       name,
-      odds: `${Math.floor(Math.random() * 10) + 2}/1`, // Simulado por ahora
+      odds: `${Math.floor(Math.random() * 10) + 2}/1`, // Simulado temporalmente
       speed: 75 + Math.random() * 20
     });
   }
 
-  // Retornamos máximo 12 para evitar falsos positivos masivos
   return horses.slice(0, 12);
 }
 
-// --- RUTAS / ENDPOINTS ---
+// --- ENDPOINTS ---
 
-// Demo estática
+/**
+ * Endpoint de prueba con datos estáticos
+ */
 router.get('/racecards', (req, res) => {
   res.json({
     ok: true,
@@ -90,13 +93,42 @@ router.get('/racecards', (req, res) => {
       {
         raceId: 'demo-1',
         track: 'Santa Anita Park',
-        runners: [{ name: 'Fast Storm', odds: '3/1', speed: 91 }]
+        runners: [
+          { name: 'Fast Storm', odds: '3/1', speed: 91 },
+          { name: 'Golden Pace', odds: '5/1', speed: 88 }
+        ]
       }
     ]
   });
 });
 
-// Importación y procesamiento REAL
+/**
+ * Análisis de una carrera específica por ID
+ */
+router.get('/analyze/:raceId', (req, res) => {
+  // Aquí normalmente buscarías en una DB, por ahora simulamos con el helper
+  res.json({
+    ok: true,
+    message: "Análisis procesado"
+  });
+});
+
+/**
+ * Genera la URL de descarga basada en fecha y track
+ */
+router.get('/program-url', (req, res) => {
+  const date = req.query.date || new Date().toISOString().split('T')[0];
+  const track = String(req.query.track || 'sa').toLowerCase();
+
+  res.json({
+    ok: true,
+    url: `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`
+  });
+});
+
+/**
+ * IMPORTACIÓN REAL: Descarga el PDF, extrae texto y analiza
+ */
 router.get('/import-program', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -106,43 +138,56 @@ router.get('/import-program', async (req, res) => {
     console.log('📥 Procesando PDF:', url);
 
     const response = await fetch(url);
+
     if (!response.ok) {
-      return res.status(404).json({ ok: false, error: 'PDF no encontrado', url });
+      return res.status(404).json({
+        ok: false,
+        error: 'PDF no encontrado en el servidor externo',
+        url
+      });
     }
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Extracción de texto
+    // 1. Extraer texto del PDF
     const data = await extractPdfText(buffer);
+
+    // 2. Limpiar espacios y saltos de línea
     const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    // Procesar caballos con la nueva lógica
+    // 3. Extraer caballos con la nueva lógica de RegEx
     const horses = extractHorses(cleanText);
 
+    // 4. Estructurar para el motor de scoring
     const race = {
       raceId: `real-${track}-${date}`,
       track: track,
       runners: horses
     };
 
-    // Análisis final
     const analysis = analyzeRace(race);
 
+    // ✅ RESPUESTA CON DEBUG TEXT PARA AJUSTES
     res.json({
       ok: true,
       url,
       info: {
         paginas: data.pages,
+        caracteres: cleanText.length,
         caballosDetectados: horses.length
       },
+      debugText: cleanText.substring(0, 3000), // Muestra los primeros 3k caracteres
       horses,
       analysis
     });
 
   } catch (error) {
-    console.error('❌ ERROR PDF:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    console.error('❌ ERROR CRÍTICO EN PDF:', error);
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
