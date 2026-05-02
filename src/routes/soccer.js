@@ -3,6 +3,7 @@ import { buildSoccerAnalysis } from '../utils/soccerScoring.js';
 
 const router = express.Router();
 const API_URL = 'https://v3.football.api-sports.io';
+const TIMEZONE = 'America/Chicago';
 
 const LEAGUES = {
   epl: { id: 39, name: 'Premier League' },
@@ -26,6 +27,8 @@ const cache = {
   TTL: 60 * 1000
 };
 
+// --- HELPERS ---
+
 function getHeaders() {
   return {
     'x-apisports-key': process.env.FOOTBALL_API_KEY
@@ -34,7 +37,7 @@ function getHeaders() {
 
 function getChicagoDate() {
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Chicago',
+    timeZone: TIMEZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
@@ -45,12 +48,25 @@ function getDate(req) {
   return req.query.date || getChicagoDate();
 }
 
-function getSoccerSeason(date) {
-  const d = new Date(date);
+/**
+ * 2. CORRECCIÓN: Lógica de temporada por liga
+ */
+function getSoccerSeason(date, leagueKey = '') {
+  const d = new Date(`${date}T12:00:00`);
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
 
-  // Europa en mayo 2026 usa season 2025
+  // Ligas con calendario anual (Ene-Dic)
+  if (['mls', 'brasil', 'argentina'].includes(leagueKey)) {
+    return year;
+  }
+
+  // Ligas con Apertura/Clausura o calendario europeo
+  if (leagueKey === 'ligamx') {
+    return month <= 6 ? year - 1 : year;
+  }
+
+  // Por defecto Europa (Inicia en Agosto)
   return month <= 7 ? year - 1 : year;
 }
 
@@ -64,7 +80,7 @@ function formatFixture(g, leagueKey = '') {
       : new Date(g.fixture.date).toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
-          timeZone: 'America/Chicago'
+          timeZone: TIMEZONE
         }),
     status: g.fixture.status.short,
     statusLong: g.fixture.status.long,
@@ -82,38 +98,49 @@ function formatFixture(g, leagueKey = '') {
   };
 }
 
+// --- API FETCH ---
+
 async function apiFootball(path) {
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: getHeaders()
-  });
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      headers: getHeaders()
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok) {
-    console.error('API-Football error:', data);
+    if (!res.ok) {
+      console.error('API-Football error:', data);
+      return null;
+    }
+
+    if (data?.errors && Object.keys(data.errors).length > 0) {
+      console.error('API-Football errors:', data.errors);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Fetch Exception:', error.message);
     return null;
   }
-
-  if (data?.errors && Object.keys(data.errors).length > 0) {
-    console.error('API-Football errors:', data.errors);
-  }
-
-  return data;
 }
 
+/**
+ * 3. CORRECCIÓN: Inclusión de Timezone en la petición
+ */
 async function getFixturesByLeague(leagueKey, date) {
   const league = LEAGUES[leagueKey] || LEAGUES.epl;
-  const season = getSoccerSeason(date);
+  const season = getSoccerSeason(date, leagueKey);
 
-  const cacheKey = `${leagueKey}-${season}-${date}`;
+  const cacheKey = `${leagueKey}-${season}-${date}-${TIMEZONE}`;
   const cached = cache.fixtures[cacheKey];
 
   if (cached && Date.now() - cached.timestamp < cache.TTL) {
     return cached.data;
   }
 
+  // Codificamos la zona horaria para la URL
   const data = await apiFootball(
-    `/fixtures?league=${league.id}&season=${season}&date=${date}`
+    `/fixtures?league=${league.id}&season=${season}&date=${date}&timezone=${encodeURIComponent(TIMEZONE)}`
   );
 
   const games = (data?.response || []).map(g => formatFixture(g, leagueKey));
@@ -128,12 +155,11 @@ async function getFixturesByLeague(leagueKey, date) {
 
 async function getGlobalFixtures(date) {
   const allGames = [];
-
-  for (const [leagueKey] of Object.entries(LEAGUES)) {
-    const games = await getFixturesByLeague(leagueKey, date);
-    allGames.push(...games);
-  }
-
+  // Ejecutamos en paralelo para no saturar el tiempo de respuesta
+  const promises = Object.keys(LEAGUES).map(key => getFixturesByLeague(key, date));
+  const results = await Promise.all(promises);
+  
+  results.forEach(games => allGames.push(...games));
   return allGames;
 }
 
@@ -202,6 +228,8 @@ function buildPlayerPropsFromLineups(lineups) {
     .slice(0, 8);
 }
 
+// --- ROUTES ---
+
 router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
@@ -213,7 +241,7 @@ router.get('/games', async (req, res) => {
       ok: true,
       selectedDate: date,
       leagueKey,
-      season: getSoccerSeason(date),
+      season: getSoccerSeason(date, leagueKey),
       count: games.length,
       games
     });
@@ -234,7 +262,6 @@ router.get('/games-global', async (req, res) => {
     res.json({
       ok: true,
       selectedDate: date,
-      season: getSoccerSeason(date),
       count: games.length,
       games
     });
@@ -343,7 +370,7 @@ router.get('/analyze/:id', async (req, res) => {
       ok: true,
       selectedDate: date,
       leagueKey: matchRaw.leagueKey || leagueKey,
-      season: getSoccerSeason(date),
+      season: getSoccerSeason(date, matchRaw.leagueKey || leagueKey),
       analysis
     });
   } catch (error) {
@@ -362,7 +389,6 @@ router.get('/ticket-global', async (req, res) => {
     res.json({
       ok: true,
       selectedDate: date,
-      season: getSoccerSeason(date),
       gamesAnalyzed: games.length,
       ticket: {
         ticketType: 'Ticket Global Soccer',
@@ -393,12 +419,11 @@ router.get('/ticket-global', async (req, res) => {
 router.get('/debug', async (req, res) => {
   try {
     const date = req.query.date || getDate(req);
-    const season = getSoccerSeason(date);
 
     const tests = [
       `/fixtures?date=${date}`,
       ...Object.entries(LEAGUES).map(([key, league]) =>
-        `/fixtures?league=${league.id}&season=${season}&date=${date}`
+        `/fixtures?league=${league.id}&season=${getSoccerSeason(date, key)}&date=${date}&timezone=${encodeURIComponent(TIMEZONE)}`
       )
     ];
 
@@ -429,7 +454,6 @@ router.get('/debug', async (req, res) => {
     res.json({
       ok: true,
       date,
-      season,
       apiKeyLoaded: !!process.env.FOOTBALL_API_KEY,
       leagues: LEAGUES,
       results
