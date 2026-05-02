@@ -42,6 +42,33 @@ async function extractPdfText(buffer) {
   throw new Error('Formato de pdf-parse no reconocido');
 }
 
+/**
+ * Extrae caballos basándose en patrones de texto (Nombre + Odds)
+ */
+function extractHorses(text) {
+  const horses = [];
+
+  // patrón básico: Nombre + odds tipo 3/1
+  const regex = /([A-Z][a-zA-Z\s']+)\s+\((\d+\/\d+)\)|([A-Z][a-zA-Z\s']+)\s+(\d+\/\d+)/g;
+
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const name = match[1] || match[3];
+    const odds = match[2] || match[4];
+
+    if (name && odds) {
+      horses.push({
+        name: name.trim(),
+        odds: odds.trim(),
+        speed: 80 + Math.random() * 10 // temporal
+      });
+    }
+  }
+
+  return horses.slice(0, 10); // limitamos
+}
+
 // 🧪 DEMO DATA
 const demoRaces = [
   {
@@ -114,19 +141,37 @@ router.get('/import-program', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 🔥 AQUÍ ESTÁ EL FIX REAL
+    // 🔥 Extracción de texto
     const data = await extractPdfText(buffer);
 
     const cleanText = String(data.text || '')
       .replace(/\s+/g, ' ')
       .trim();
 
+    // 🐎 Extracción de caballos
+    const horses = extractHorses(cleanText);
+
+    // 🏁 Preparación para el análisis
+    const race = {
+      raceId: `real-${track}-${date}`,
+      track: track,
+      runners: horses
+    };
+
+    const analysis = analyzeRace(race);
+
+    // ✅ RESPUESTA FINAL ACTUALIZADA
     res.json({
       ok: true,
       url,
-      paginas: data.pages,
-      caracteres: cleanText.length,
-      textoExtraido: cleanText.substring(0, 5000)
+      track,
+      info: {
+        paginas: data.pages,
+        caracteres: cleanText.length,
+        caballosDetectados: horses.length
+      },
+      horses,
+      analysis
     });
 
   } catch (error) {
