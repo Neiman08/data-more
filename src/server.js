@@ -16,6 +16,7 @@ import gamesRoutes from './routes/games.js';
 import baseballRoutes from './routes/baseball.js';
 import soccerRoutes from './routes/soccer.js';
 import nbaRoutes from './routes/nba.js';
+import horseRoutes from './routes/horseRacing.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -36,7 +37,6 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('🚀 Conectado a MongoDB Atlas (Data More PRO)'))
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
 
-// --- MIDDLEWARES ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
@@ -88,13 +88,7 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/payment-request', async (req, res) => {
   try {
     const { nombre, email, metodo } = req.body;
-
-    const request = await PaymentRequest.create({
-      nombre,
-      email,
-      metodo
-    });
-
+    const request = await PaymentRequest.create({ nombre, email, metodo });
     res.json({ ok: true, request });
   } catch {
     res.json({ ok: false });
@@ -148,6 +142,7 @@ app.use('/api', gamesRoutes);
 app.use('/api/baseball', baseballRoutes);
 app.use('/api/soccer', soccerRoutes);
 app.use('/api', nbaRoutes);
+app.use('/api/horse-racing', horseRoutes);
 
 // --- STATS ENDPOINT ---
 app.get('/api/stats/daily-performance', async (req, res) => {
@@ -199,6 +194,7 @@ app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../public/log
 app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, '../public/registro.html')));
 app.get('/soccer', (req, res) => res.sendFile(path.join(__dirname, '../public/soccer.html')));
 app.get('/nba', (req, res) => res.sendFile(path.join(__dirname, '../public/nba.html')));
+app.get('/horse', (req, res) => res.sendFile(path.join(__dirname, '../public/horse.html')));
 app.get('/pro', (req, res) => res.sendFile(path.join(__dirname, '../public/pro.html')));
 app.get('/pago-manual', (req, res) => res.sendFile(path.join(__dirname, '../public/pago-manual.html')));
 app.get('/admin-payments', (req, res) => res.sendFile(path.join(__dirname, '../public/admin-payments.html')));
