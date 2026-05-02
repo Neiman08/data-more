@@ -38,31 +38,34 @@ async function extractPdfText(buffer) {
 }
 
 /* =========================================================
-   🧠 EXTRACCIÓN REFINADA (NÚMERO + NOMBRE)
+   🧠 EXTRACCIÓN DE CABALLOS (VERSIÓN ACTUALIZADA)
 ========================================================= */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  // Regex: Detecta número seguido de nombre en MAYÚSCULAS
-  const regex = /\b(\d{1,2})\s+([A-Z]{3,}(?:\s[A-Z]{3,})*)/g;
+  // Busca: número + nombre en formato normal: 1 Mannerism, 2 Il Principado, etc.
+  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)*)/g;
 
-  // Filtros de ruido para evitar cabeceras y metadatos del programa
   const blacklist = [
-    'FURLONGS', 'THOROUGHBRED', 'MAIDEN', 'CLAIMING', 'ALLOWANCE', 
-    'SPECIAL', 'WEIGHT', 'DIRT', 'TURF', 'OPEN', 'YEAR', 'OLDS', 
-    'PURSE', 'RACE', 'FINISH', 'TRACK', 'POST', 'TIME'
+    'SANTA ANITA', 'GULFSTREAM PARK', 'FURLONGS', 'THOROUGHBRED',
+    'MAIDEN', 'CLAIMING', 'ALLOWANCE', 'SPECIAL', 'WEIGHT',
+    'DIRT', 'TURF', 'OPEN', 'YEAR', 'OLDS', 'PURSE',
+    'RACE', 'FINISH', 'TRACK', 'POST', 'TIME',
+    'Stud', 'Farm', 'Stable', 'Trainer', 'Jockey',
+    'Saturday', 'Sabado', 'Tapeta', 'Arena'
   ];
 
   let match;
+
   while ((match = regex.exec(text)) !== null) {
     const number = match[1];
     const name = match[2].trim();
 
     if (
-      name.length < 4 || 
-      seen.has(name) || 
-      blacklist.some(word => name.includes(word))
+      name.length < 4 ||
+      seen.has(name) ||
+      blacklist.some(word => name.toLowerCase().includes(word.toLowerCase()))
     ) continue;
 
     seen.add(name);
@@ -70,12 +73,12 @@ function extractHorses(text) {
     horses.push({
       number,
       name,
-      odds: `${Math.floor(Math.random() * 8) + 2}/1`, // Simulado por ahora
-      speed: Math.floor(75 + Math.random() * 20)      // Simulado por ahora
+      odds: `${Math.floor(Math.random() * 8) + 2}/1`,
+      speed: Math.floor(75 + Math.random() * 20)
     });
   }
 
-  return horses.slice(0, 14); // Límite estándar de competidores
+  return horses.slice(0, 14);
 }
 
 /* =========================================================
@@ -88,7 +91,7 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Descargando y procesando:', url);
+    console.log('📥 Procesando PDF de carrera:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -106,18 +109,18 @@ router.get('/import-program', async (req, res) => {
     const data = await extractPdfText(buffer);
     const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    // 2. Identificar caballos
+    // 2. Identificar caballos con la nueva lógica
     const horses = extractHorses(cleanText);
 
     if (horses.length === 0) {
       return res.json({
         ok: false,
-        message: 'No se detectaron caballos con el formato actual',
-        debug: cleanText.substring(0, 200)
+        message: 'No se detectaron caballos. Verifica el formato del PDF.',
+        url
       });
     }
 
-    // 3. Crear estructura de carrera
+    // 3. Estructurar carrera
     const race = {
       raceId: `race-${track}-${date}`,
       track,
@@ -125,10 +128,10 @@ router.get('/import-program', async (req, res) => {
       runners: horses
     };
 
-    // 4. Analizar con tu utilidad scoring
+    // 4. Ejecutar análisis de scoring
     const analysis = analyzeRace(race);
 
-    // 5. Respuesta
+    // 5. Respuesta final
     res.json({
       ok: true,
       url,
@@ -141,7 +144,7 @@ router.get('/import-program', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ ERROR CRÍTICO:', error);
+    console.error('❌ ERROR CRÍTICO EN PDF ROUTE:', error);
     res.status(500).json({
       ok: false,
       error: error.message
