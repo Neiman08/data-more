@@ -1,86 +1,48 @@
 import express from 'express';
+import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-const BASE_URL = 'https://api.theracingapi.com/v1';
-
-function getAuthHeaders() {
-  const username = process.env.RACING_API_USERNAME;
-  const password = process.env.RACING_API_PASSWORD;
-
-  const token = Buffer.from(`${username}:${password}`).toString('base64');
-
-  return {
-    Authorization: `Basic ${token}`,
-    'Content-Type': 'application/json'
-  };
-}
-
-// 🏇 Obtener carreras del día
-router.get('/racecards', async (req, res) => {
-  try {
-    const date = req.query.date || new Date().toISOString().split('T')[0];
-
-    const response = await fetch(`${BASE_URL}/racecards?date=${date}`, {
-      headers: getAuthHeaders()
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        ok: false,
-        error: data
-      });
-    }
-
-    res.json({
-      ok: true,
-      date,
-      meetings: data.racecards || []
-    });
-
-  } catch (error) {
-    console.error('Horse Racing Error:', error.message);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
+const demoRaces = [
+  {
+    raceId: 'demo-1',
+    track: 'Santa Anita Park',
+    raceNumber: 1,
+    time: '3:30 PM',
+    surface: 'Dirt',
+    distance: '6F',
+    type: 'Allowance',
+    runners: [
+      { name: 'Fast Storm', form: '1-2-3', odds: '3/1', jockey: 'J. Hernandez', trainer: 'Baffert', speed: 91 },
+      { name: 'Golden Pace', form: '2-1-4', odds: '5/1', jockey: 'R. Vazquez', trainer: 'Miller', speed: 88 },
+      { name: 'Late Thunder', form: '4-3-1', odds: '6/1', jockey: 'F. Prat', trainer: 'Mandella', speed: 86 },
+      { name: 'Blue Rocket', form: '5-2-2', odds: '8/1', jockey: 'M. Smith', trainer: 'O’Neill', speed: 82 }
+    ]
   }
+];
+
+router.get('/racecards', async (req, res) => {
+  res.json({
+    ok: true,
+    source: 'free-demo-model',
+    races: demoRaces
+  });
 });
 
-// 🏇 Obtener una carrera específica
-router.get('/race/:raceId', async (req, res) => {
-  try {
-    const raceId = req.params.raceId;
+router.get('/analyze/:raceId', async (req, res) => {
+  const race = demoRaces.find(r => r.raceId === req.params.raceId);
 
-    const response = await fetch(`${BASE_URL}/racecards/${raceId}`, {
-      headers: getAuthHeaders()
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json({
-        ok: false,
-        error: data
-      });
-    }
-
-    res.json({
-      ok: true,
-      race: data
-    });
-
-  } catch (error) {
-    console.error('Horse Race Detail Error:', error.message);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
+  if (!race) {
+    return res.status(404).json({ ok: false, error: 'Carrera no encontrada' });
   }
+
+  const analysis = analyzeRace(race);
+
+  res.json({
+    ok: true,
+    race,
+    analysis
+  });
 });
 
 export default router;

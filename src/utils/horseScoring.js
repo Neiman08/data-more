@@ -1,27 +1,62 @@
+function oddsToImplied(odds) {
+  if (!odds || !odds.includes('/')) return 20;
+  const [a, b] = odds.split('/').map(Number);
+  return Number(((b / (a + b)) * 100).toFixed(2));
+}
+
+function formScore(form = '') {
+  const results = String(form).split('-').map(Number);
+  let score = 50;
+
+  results.forEach(pos => {
+    if (pos === 1) score += 14;
+    else if (pos === 2) score += 9;
+    else if (pos === 3) score += 5;
+    else if (pos >= 6) score -= 7;
+    else score -= 2;
+  });
+
+  return score;
+}
+
 export function analyzeRace(race) {
-  if (!race?.runners) return [];
+  const runners = race.runners.map(h => {
+    const fs = formScore(h.form);
+    const speed = Number(h.speed || 75);
+    const implied = oddsToImplied(h.odds);
 
-  return race.runners.map(horse => {
-    const form = (horse.form || '').split('').slice(0, 5);
-
-    let score = 50;
-
-    form.forEach(r => {
-      if (r === '1') score += 10;
-      else if (r === '2') score += 6;
-      else if (r === '3') score += 3;
-      else if (r === '0') score -= 5;
-    });
-
-    const odds = Number(horse.odds_decimal) || 5;
-
-    const probability = Math.min(80, (100 / odds) + (score / 5));
+    const rawScore =
+      fs * 0.45 +
+      speed * 0.40 +
+      (100 - implied) * 0.15;
 
     return {
-      name: horse.horse,
-      odds,
-      probability: Number(probability.toFixed(2)),
-      score
+      horse: h.name,
+      jockey: h.jockey,
+      trainer: h.trainer,
+      odds: h.odds,
+      impliedProbability: implied,
+      modelScore: Number(rawScore.toFixed(2))
     };
-  }).sort((a, b) => b.probability - a.probability);
+  });
+
+  const total = runners.reduce((sum, h) => sum + h.modelScore, 0);
+
+  const ranked = runners
+    .map(h => ({
+      ...h,
+      probability: Number(((h.modelScore / total) * 100).toFixed(2)),
+      edge: Number((((h.modelScore / total) * 100) - h.impliedProbability).toFixed(2))
+    }))
+    .sort((a, b) => b.probability - a.probability);
+
+  return {
+    pick: ranked[0],
+    top4: ranked.slice(0, 4),
+    bets: {
+      win: ranked[0].horse,
+      exacta: `${ranked[0].horse} / ${ranked[1].horse}, ${ranked[2].horse}`,
+      trifecta: `${ranked[0].horse} / ${ranked[1].horse}, ${ranked[2].horse} / ${ranked[1].horse}, ${ranked[2].horse}, ${ranked[3].horse}`
+    }
+  };
 }
