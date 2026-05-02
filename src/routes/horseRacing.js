@@ -47,38 +47,38 @@ function splitRaces(text) {
 }
 
 /* =========================================================
-   🧠 EXTRACCIÓN DE CABALLOS (VERSIÓN PRO: NÚMERO + NOMBRE + ODDS)
+   🧠 EXTRACCIÓN DE CABALLOS (LÓGICA POR POSICIONES)
 ========================================================= */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  // 🔥 Detecta estructura REAL del programa:
-  // número + nombre + luego odds tipo 7/1
-  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+).*?(\d+\/\d+)/g;
+  // 🔥 CLAVE: cortar el texto por posiciones de caballo (Lookahead)
+  const lines = text.split(/(?=\b\d{1,2}\s[A-Z])/g);
 
-  const blacklist = [
-    'FURLONGS','THOROUGHBRED','MAIDEN','CLAIMING','ALLOWANCE',
-    'SPECIAL','WEIGHT','DIRT','TURF','OPEN','YEAR','OLDS',
-    'PURSE','RACE','TRACK','TIME','ARENA','MDSPWT','STAKES'
-  ];
+  for (let line of lines) {
 
-  let match;
+    // Buscar: número + nombre (PRIMERAS palabras después del corte)
+    const match = line.match(/^(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+){1,3})/);
 
-  while ((match = regex.exec(text)) !== null) {
+    if (!match) continue;
+
     const number = match[1];
     const name = match[2].trim();
-    const odds = match[3];
 
-    // ✅ FILTROS
+    // Buscar odds dentro del bloque de texto del caballo
+    const oddsMatch = line.match(/(\d+\/\d+)/);
+    const odds = oddsMatch ? oddsMatch[1] : null;
+
+    // 🚫 FILTROS FUERTES
     if (
       seen.has(name) ||
-      number > 20 || // caballos reales 1–14
+      parseInt(number) > 14 ||    // máximo caballos reales por carrera
+      number === '0' ||
       number === '00' ||
-      name.length < 6 ||
+      name.length < 5 ||
       name.split(' ').length < 2 ||
-      /^[A-Z\s]+$/.test(name) ||
-      blacklist.some(w => name.toUpperCase().includes(w))
+      /^[A-Z\s]+$/.test(name)     // descarta cabeceras en mayúsculas
     ) continue;
 
     seen.add(name);
@@ -86,12 +86,12 @@ function extractHorses(text) {
     horses.push({
       number,
       name,
-      odds,
+      odds: odds || 'N/A',
       speed: Math.floor(80 + Math.random() * 15)
     });
   }
 
-  return horses.slice(0, 14);
+  return horses;
 }
 
 /* =========================================================
@@ -104,13 +104,13 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Procesando PDF por bloques de carrera:', url);
+    console.log('📥 Procesando PDF con segmentación por líneas:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
       return res.status(404).json({
         ok: false,
-        error: 'No se pudo obtener el PDF del servidor remoto',
+        error: 'No se pudo obtener el PDF',
         url
       });
     }
@@ -118,11 +118,11 @@ router.get('/import-program', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 1. Extraer texto completo
+    // 1. Extraer texto
     const data = await extractPdfText(buffer);
     const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    // 2. Extraer caballos por cada carrera detectada
+    // 2. Procesar bloques de carrera
     const raceBlocks = splitRaces(cleanText);
 
     const races = raceBlocks.map((block, index) => {
@@ -139,16 +139,16 @@ router.get('/import-program', async (req, res) => {
     if (races.length === 0) {
       return res.json({
         ok: false,
-        message: 'No se detectaron bloques de carrera válidos o caballos con cuotas.',
+        message: 'No se detectaron carreras válidas con la nueva segmentación.',
         url
       });
     }
 
-    // 3. Analizar SOLO la primera carrera (por ahora)
+    // 3. Analizar la primera carrera detectada
     const selectedRace = races[0];
     const analysis = analyzeRace(selectedRace);
 
-    // 4. Respuesta final
+    // 4. Respuesta
     res.json({
       ok: true,
       url,
@@ -158,7 +158,7 @@ router.get('/import-program', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ ERROR CRÍTICO:', error);
+    console.error('❌ ERROR:', error);
     res.status(500).json({
       ok: false,
       error: error.message
