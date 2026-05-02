@@ -1,5 +1,4 @@
 import express from 'express';
-import pdf from 'pdf-parse';
 import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
@@ -64,7 +63,7 @@ router.get('/program-url', (req, res) => {
   });
 });
 
-// 4. Importar y extraer texto del PDF (Usando fetch nativo)
+// 4. NUEVO: Import Program (Editado y Simplificado)
 router.get('/import-program', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -72,42 +71,24 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Descargando PDF con Fetch Nativo:', url);
-
     const response = await fetch(url);
 
     if (!response.ok) {
       return res.status(404).json({
         ok: false,
-        error: `PDF no encontrado en la ruta: ${url}`
+        error: 'PDF no encontrado'
       });
     }
-
-    const buffer = await response.arrayBuffer();
-
-    // Convertir PDF a texto usando pdf-parse
-    const data = await pdf(Buffer.from(buffer));
-
-    // Limpiamos un poco el texto para que no sea un bloque ilegible
-    const cleanText = data.text.replace(/\s+/g, ' ').trim();
 
     res.json({
       ok: true,
       url,
-      metadata: {
-        pages: data.numpages,
-        info: data.info
-      },
-      preview: cleanText.substring(0, 2000) // Enviamos los primeros 2000 caracteres
+      message: 'PDF encontrado correctamente (sin parsear aún)'
     });
 
   } catch (error) {
-    console.error('❌ Import Program Error:', error);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
+    console.error(error);
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 
