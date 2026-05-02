@@ -43,30 +43,44 @@ async function extractPdfText(buffer) {
 }
 
 /**
- * Extrae caballos basándose en patrones de texto (Nombre + Odds)
+ * Función mejorada para extraer caballos con filtrado y control de duplicados
  */
 function extractHorses(text) {
   const horses = [];
+  const seen = new Set();
 
-  // patrón básico: Nombre + odds tipo 3/1
-  const regex = /([A-Z][a-zA-Z\s']+)\s+\((\d+\/\d+)\)|([A-Z][a-zA-Z\s']+)\s+(\d+\/\d+)/g;
+  const blacklist = [
+    'Track', 'Park', 'Race', 'Trainer', 'Jockey',
+    'Stud', 'Farm', 'LLC', 'Corp', 'Stable',
+    'Santa', 'Allowance', 'Claiming'
+  ];
+
+  const regex = /([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+)\s+(\d+\/\d+)/g;
 
   let match;
 
   while ((match = regex.exec(text)) !== null) {
-    const name = match[1] || match[3];
-    const odds = match[2] || match[4];
+    const name = match[1].trim();
+    const odds = match[2].trim();
 
-    if (name && odds) {
-      horses.push({
-        name: name.trim(),
-        odds: odds.trim(),
-        speed: 80 + Math.random() * 10 // temporal
-      });
-    }
+    // ❌ Filtrar basura
+    if (
+      name.length < 5 ||
+      blacklist.some(word => name.includes(word))
+    ) continue;
+
+    // ❌ Evitar duplicados
+    if (seen.has(name)) continue;
+    seen.add(name);
+
+    horses.push({
+      name,
+      odds,
+      speed: 75 + Math.random() * 20
+    });
   }
 
-  return horses.slice(0, 10); // limitamos
+  return horses.slice(0, 12);
 }
 
 // 🧪 DEMO DATA
@@ -148,7 +162,7 @@ router.get('/import-program', async (req, res) => {
       .replace(/\s+/g, ' ')
       .trim();
 
-    // 🐎 Extracción de caballos
+    // 🐎 Extracción de caballos (Nueva Lógica)
     const horses = extractHorses(cleanText);
 
     // 🏁 Preparación para el análisis
@@ -160,7 +174,7 @@ router.get('/import-program', async (req, res) => {
 
     const analysis = analyzeRace(race);
 
-    // ✅ RESPUESTA FINAL ACTUALIZADA
+    // ✅ RESPUESTA FINAL
     res.json({
       ok: true,
       url,
