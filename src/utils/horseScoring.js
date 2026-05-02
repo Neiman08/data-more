@@ -21,6 +21,12 @@ function formScore(form = '') {
   return score;
 }
 
+function confidenceLevel(probability, edge) {
+  if (probability >= 30 && edge >= 8) return 'ALTA';
+  if (probability >= 22 && edge >= 5) return 'MEDIA';
+  return 'BAJA';
+}
+
 export function analyzeRace(race) {
   if (!race?.runners?.length) {
     return { error: 'No runners data' };
@@ -38,6 +44,9 @@ export function analyzeRace(race) {
 
     return {
       horse: h.name,
+      jockey: h.jockey || '',
+      trainer: h.trainer || '',
+      form: h.form || '',
       odds: h.odds,
       implied,
       score: Number(score.toFixed(2))
@@ -47,15 +56,34 @@ export function analyzeRace(race) {
   const total = runners.reduce((sum, h) => sum + h.score, 0);
 
   const ranked = runners
-    .map(h => ({
-      ...h,
-      probability: Number(((h.score / total) * 100).toFixed(2)),
-      edge: Number((((h.score / total) * 100) - h.implied).toFixed(2))
-    }))
+    .map(h => {
+      const probability = Number(((h.score / total) * 100).toFixed(2));
+      const edge = Number((probability - h.implied).toFixed(2));
+
+      return {
+        ...h,
+        probability,
+        edge,
+        confidence: confidenceLevel(probability, edge)
+      };
+    })
     .sort((a, b) => b.probability - a.probability);
+
+  const valueBets = ranked.filter(h => h.edge > 5 && h.probability > 15);
 
   return {
     pick: ranked[0],
-    ranking: ranked
+    top4: ranked.slice(0, 4),
+    valueBets,
+    ranking: ranked,
+    bets: {
+      win: ranked[0]?.horse || null,
+      exacta: ranked[1] && ranked[2]
+        ? `${ranked[0].horse} / ${ranked[1].horse}, ${ranked[2].horse}`
+        : null,
+      trifecta: ranked[1] && ranked[2] && ranked[3]
+        ? `${ranked[0].horse} / ${ranked[1].horse}, ${ranked[2].horse} / ${ranked[1].horse}, ${ranked[2].horse}, ${ranked[3].horse}`
+        : null
+    }
   };
 }
