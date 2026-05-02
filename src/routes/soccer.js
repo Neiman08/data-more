@@ -15,30 +15,37 @@ const LEAGUES = {
   conference: { id: 848, name: 'Conference League' }
 };
 
-// --- CACHÉ EN MEMORIA ---
 const cache = {
-  fixtures: {}, // Almacena por llave: "leagueID_season_date"
-  TTL: 60 * 1000 
+  fixtures: {},
+  TTL: 60 * 1000
 };
 
-// --- UTILIDADES ---
-
 function getHeaders() {
-  return { 'x-apisports-key': process.env.FOOTBALL_API_KEY };
+  return {
+    'x-apisports-key': process.env.FOOTBALL_API_KEY
+  };
+}
+
+function getChicagoDate() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
 }
 
 function getDate(req) {
-  return req.query.date || new Date().toISOString().split('T')[0];
+  return req.query.date || getChicagoDate();
 }
 
-/**
- * Calcula la temporada de fútbol basada en la fecha.
- * Ligas europeas: enero-julio pertenecen a la temporada que empezó el año anterior.
- */
+// ✅ TEMPORADA CORRECTA PARA LIGAS EUROPEAS
 function getSoccerSeason(date) {
   const d = new Date(date);
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
+
+  // Enero a julio pertenecen a la temporada que empezó el año anterior
   return month <= 7 ? year - 1 : year;
 }
 
@@ -46,51 +53,66 @@ function formatFixture(g, leagueKey = '') {
   return {
     matchId: g.fixture.id,
     fixtureId: g.fixture.id,
+
     date: g.fixture.date?.split('T')[0],
+
     time: g.fixture.status.elapsed
       ? `${g.fixture.status.elapsed}'`
       : new Date(g.fixture.date).toLocaleTimeString('en-US', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          timeZone: 'America/Chicago'
         }),
+
     status: g.fixture.status.short,
     statusLong: g.fixture.status.long,
+
     leagueKey,
     leagueName: g.league.name,
     league: g.league.name,
+
     homeTeam: g.teams.home.name,
     awayTeam: g.teams.away.name,
+
     homeTeamId: g.teams.home.id,
     awayTeamId: g.teams.away.id,
+
     homeLogo: g.teams.home.logo,
     awayLogo: g.teams.away.logo,
+
     homeScore: g.goals.home ?? 0,
     awayScore: g.goals.away ?? 0
   };
 }
 
 async function apiFootball(path) {
-  const res = await fetch(`${API_URL}${path}`, { headers: getHeaders() });
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: getHeaders()
+  });
+
   const data = await res.json();
+
   if (!res.ok) {
     console.error('API-Football error:', data);
     return null;
   }
+
+  if (data?.errors && Object.keys(data.errors).length > 0) {
+    console.error('API-Football errors:', data.errors);
+  }
+
   return data;
 }
-
-// --- LÓGICA DE DATOS CON TEMPORADA Y CACHÉ ---
 
 async function getFixturesByLeague(leagueKey, date) {
   const league = LEAGUES[leagueKey] || LEAGUES.epl;
   const season = getSoccerSeason(date);
-  
-  const cacheKey = `${league.id}_${season}_${date}`;
-  const now = Date.now();
 
-  // Verificar caché antes de llamar a la API
-  if (cache.fixtures[cacheKey] && (now - cache.fixtures[cacheKey].timestamp < cache.TTL)) {
-    return cache.fixtures[cacheKey].data;
+  const cacheKey = `${leagueKey}-${season}-${date}`;
+  const cached = cache.fixtures[cacheKey];
+
+  if (cached && Date.now() - cached.timestamp < cache.TTL) {
+    return cached.data;
   }
 
   const data = await apiFootball(
@@ -99,10 +121,9 @@ async function getFixturesByLeague(leagueKey, date) {
 
   const games = (data?.response || []).map(g => formatFixture(g, leagueKey));
 
-  // Guardar en caché
   cache.fixtures[cacheKey] = {
     data: games,
-    timestamp: now
+    timestamp: Date.now()
   };
 
   return games;
@@ -111,7 +132,6 @@ async function getFixturesByLeague(leagueKey, date) {
 async function getGlobalFixtures(date) {
   const allGames = [];
 
-  // Recorremos las ligas y acumulamos los resultados
   for (const [leagueKey] of Object.entries(LEAGUES)) {
     const games = await getFixturesByLeague(leagueKey, date);
     allGames.push(...games);
@@ -120,22 +140,25 @@ async function getGlobalFixtures(date) {
   return allGames;
 }
 
-// --- LINEUPS & PROPS ---
-
 async function getLineups(fixtureId) {
   const data = await apiFootball(`/fixtures/lineups?fixture=${fixtureId}`);
-  if (!data?.response || data.response.length < 2) return null;
+
+  if (!data?.response || data.response.length < 2) {
+    return null;
+  }
 
   return data.response.map(team => ({
     teamName: team.team.name,
     teamLogo: team.team.logo,
     formation: team.formation,
+
     startXI: (team.startXI || []).map(p => ({
       name: p.player.name,
       number: p.player.number,
       pos: p.player.pos,
       grid: p.player.grid
     })),
+
     substitutes: (team.substitutes || []).map(p => ({
       name: p.player.name,
       number: p.player.number,
@@ -146,14 +169,27 @@ async function getLineups(fixtureId) {
 
 function buildPlayerPropsFromLineups(lineups) {
   if (!lineups || lineups.length < 2) return [];
+
   const players = [];
+
   for (const team of lineups) {
     for (const p of team.startXI || []) {
-      let goalChance = 5, shotChance = 35;
-      if (['F', 'FW', 'ST'].includes(p.pos)) { goalChance = 28; shotChance = 72; }
-      else if (['M', 'AM'].includes(p.pos)) { goalChance = 16; shotChance = 55; }
-      else if (['D'].includes(p.pos)) { goalChance = 6; shotChance = 28; }
-      else if (['G'].includes(p.pos)) { goalChance = 1; shotChance = 5; }
+      let goalChance = 5;
+      let shotChance = 35;
+
+      if (['F', 'FW', 'ST'].includes(p.pos)) {
+        goalChance = 28;
+        shotChance = 72;
+      } else if (['M', 'AM'].includes(p.pos)) {
+        goalChance = 16;
+        shotChance = 55;
+      } else if (['D'].includes(p.pos)) {
+        goalChance = 6;
+        shotChance = 28;
+      } else if (['G', 'GK'].includes(p.pos)) {
+        goalChance = 1;
+        shotChance = 5;
+      }
 
       players.push({
         name: p.name,
@@ -165,19 +201,38 @@ function buildPlayerPropsFromLineups(lineups) {
       });
     }
   }
-  return players.sort((a, b) => b.goalChance - a.goalChance).slice(0, 8);
+
+  return players
+    .sort((a, b) => b.goalChance - a.goalChance)
+    .slice(0, 8);
 }
 
-// --- RUTAS (API ENDPOINTS) ---
+// =====================
+// ROUTES
+// =====================
 
 router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
     const leagueKey = String(req.query.league || 'epl').toLowerCase();
+
     const games = await getFixturesByLeague(leagueKey, date);
-    res.json({ ok: true, selectedDate: date, leagueKey, count: games.length, games });
+
+    res.json({
+      ok: true,
+      selectedDate: date,
+      leagueKey,
+      season: getSoccerSeason(date),
+      count: games.length,
+      games
+    });
+
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message, games: [] });
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      games: []
+    });
   }
 });
 
@@ -185,30 +240,75 @@ router.get('/games-global', async (req, res) => {
   try {
     const date = getDate(req);
     const games = await getGlobalFixtures(date);
-    res.json({ ok: true, selectedDate: date, count: games.length, games });
+
+    res.json({
+      ok: true,
+      selectedDate: date,
+      season: getSoccerSeason(date),
+      count: games.length,
+      games
+    });
+
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message, games: [] });
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      games: []
+    });
   }
 });
 
 router.get('/lineups/:fixtureId', async (req, res) => {
   try {
     const lineups = await getLineups(req.params.fixtureId);
-    if (!lineups) return res.json({ ok: false, message: 'No disponibles', lineups: [] });
-    res.json({ ok: true, lineups });
+
+    if (!lineups) {
+      return res.json({
+        ok: false,
+        message: 'Alineaciones no disponibles',
+        lineups: []
+      });
+    }
+
+    res.json({
+      ok: true,
+      lineups
+    });
+
   } catch (error) {
-    res.json({ ok: false, error: error.message, lineups: [] });
+    res.json({
+      ok: false,
+      error: error.message,
+      lineups: []
+    });
   }
 });
 
 router.get('/player-props/:fixtureId', async (req, res) => {
   try {
     const lineups = await getLineups(req.params.fixtureId);
-    if (!lineups) return res.json({ ok: false, message: 'No disponibles', props: [] });
+
+    if (!lineups) {
+      return res.json({
+        ok: false,
+        message: 'Alineaciones no disponibles',
+        props: []
+      });
+    }
+
     const props = buildPlayerPropsFromLineups(lineups);
-    res.json({ ok: true, props });
+
+    res.json({
+      ok: true,
+      props
+    });
+
   } catch (error) {
-    res.json({ ok: false, error: error.message, props: [] });
+    res.json({
+      ok: false,
+      error: error.message,
+      props: []
+    });
   }
 });
 
@@ -216,10 +316,16 @@ router.get('/analyze/:id', async (req, res) => {
   try {
     const date = getDate(req);
     const leagueKey = String(req.query.league || 'epl').toLowerCase();
+
     const games = await getFixturesByLeague(leagueKey, date);
     const matchRaw = games.find(g => String(g.matchId) === String(req.params.id));
 
-    if (!matchRaw) return res.status(404).json({ ok: false, error: 'No encontrado' });
+    if (!matchRaw) {
+      return res.status(404).json({
+        ok: false,
+        error: 'Partido no encontrado'
+      });
+    }
 
     const analysis = buildSoccerAnalysis({
       match: {
@@ -234,9 +340,19 @@ router.get('/analyze/:id', async (req, res) => {
       awayRecentEvents: []
     });
 
-    res.json({ ok: true, selectedDate: date, leagueKey, analysis });
+    res.json({
+      ok: true,
+      selectedDate: date,
+      leagueKey,
+      season: getSoccerSeason(date),
+      analysis
+    });
+
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
@@ -244,18 +360,36 @@ router.get('/ticket-global', async (req, res) => {
   try {
     const date = getDate(req);
     const games = await getGlobalFixtures(date);
+
     res.json({
       ok: true,
       selectedDate: date,
+      season: getSoccerSeason(date),
       gamesAnalyzed: games.length,
       ticket: {
         ticketType: 'Ticket Global Soccer',
+        totalPicks: 0,
         picks: [],
-        note: 'Temporada dinámica aplicada con caché por liga.'
+        seguro: [],
+        medio: [],
+        grande: [],
+        note: 'Conectado a API-Football con temporada europea correcta.'
       }
     });
+
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      ticket: {
+        ticketType: 'Error',
+        totalPicks: 0,
+        picks: [],
+        seguro: [],
+        medio: [],
+        grande: []
+      }
+    });
   }
 });
 
