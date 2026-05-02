@@ -21,15 +21,17 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuración de variables de entorno
 dotenv.config();
 
 if (!process.env.MONGO_URI) {
-  console.error('❌ ERROR: MONGO_URI no está definida en el archivo .env');
+  dotenv.config({ path: path.resolve(__dirname, '../.env') });
+}
+
+if (!process.env.MONGO_URI) {
+  console.error('❌ ERROR: MONGO_URI no está definida.');
   process.exit(1);
 }
 
-// Conexión a Base de Datos
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('🚀 Conectado a MongoDB Atlas (Data More PRO)'))
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
@@ -53,7 +55,7 @@ app.post('/api/auth/register', async (req, res) => {
     await new User({ nombre, email, password: hashedPassword }).save();
 
     res.redirect('/login');
-  } catch (error) {
+  } catch {
     res.status(500).send('Error en registro');
   }
 });
@@ -77,7 +79,7 @@ app.post('/api/auth/login', async (req, res) => {
         proActivo: user.proActivo || false
       }
     });
-  } catch (error) {
+  } catch {
     res.json({ ok: false });
   }
 });
@@ -86,9 +88,15 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/payment-request', async (req, res) => {
   try {
     const { nombre, email, metodo } = req.body;
-    const request = await PaymentRequest.create({ nombre, email, metodo });
+
+    const request = await PaymentRequest.create({
+      nombre,
+      email,
+      metodo
+    });
+
     res.json({ ok: true, request });
-  } catch (error) {
+  } catch {
     res.json({ ok: false });
   }
 });
@@ -97,7 +105,7 @@ app.get('/api/payment-requests', async (req, res) => {
   try {
     const requests = await PaymentRequest.find().sort({ createdAt: -1 });
     res.json({ ok: true, requests });
-  } catch (error) {
+  } catch {
     res.json({ ok: false, requests: [] });
   }
 });
@@ -105,13 +113,18 @@ app.get('/api/payment-requests', async (req, res) => {
 app.post('/api/activate-pro', async (req, res) => {
   try {
     const { email, requestId } = req.body;
-    await User.updateOne({ email }, { proActivo: true, plan: 'pro' });
+
+    await User.updateOne(
+      { email },
+      { proActivo: true, plan: 'pro' }
+    );
 
     if (requestId) {
       await PaymentRequest.findByIdAndUpdate(requestId, { status: 'aprobado' });
     }
+
     res.json({ ok: true });
-  } catch (error) {
+  } catch {
     res.json({ ok: false });
   }
 });
@@ -121,19 +134,20 @@ app.post('/api/picks/save', async (req, res) => {
   try {
     const picks = Array.isArray(req.body) ? req.body : [req.body];
     const clean = picks.filter(p => p.market && p.pick);
+
     await Pick.insertMany(clean);
+
     res.json({ ok: true });
-  } catch (error) {
+  } catch {
     res.json({ ok: false });
   }
 });
 
-// --- API ROUTES (CORREGIDO) ---
-// Usamos /api como base para que las rutas internas coincidan con el frontend
+// --- API ROUTES ---
 app.use('/api', gamesRoutes);
-app.use('/api', baseballRoutes);
-app.use('/api', soccerRoutes);
-app.use('/api', nbaRoutes); 
+app.use('/api/baseball', baseballRoutes);
+app.use('/api/soccer', soccerRoutes);
+app.use('/api/nba', nbaRoutes);
 
 // --- STATS ENDPOINT ---
 app.get('/api/stats/daily-performance', async (req, res) => {
@@ -172,13 +186,14 @@ app.get('/api/stats/daily-performance', async (req, res) => {
           ? `Hits: ${hitWinners.join(', ')} ✅`
           : 'Pendiente'
     });
+
   } catch (err) {
     console.error('Error stats:', err);
     res.status(500).json({ ok: false });
   }
 });
 
-// --- FRONTEND ROUTES ---
+// --- FRONTEND ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
 app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, '../public/registro.html')));
@@ -191,5 +206,5 @@ app.get('/admin-payments', (req, res) => res.sendFile(path.join(__dirname, '../p
 // --- START ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en: http://localhost:${PORT}`);
+  console.log(`🚀 http://localhost:${PORT}`);
 });
