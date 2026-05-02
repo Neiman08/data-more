@@ -3,45 +3,67 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-// Importación dinámica para evitar errores con pdf-parse en Render/ESM
-let pdf;
+// 🔥 Compatibilidad TOTAL con pdf-parse (todas versiones)
+let pdfModule;
 
-async function loadPdfParser() {
-  if (!pdf) {
-    const module = await import('pdf-parse');
-    pdf = module.default || module;
+async function extractPdfText(buffer) {
+  if (!pdfModule) {
+    pdfModule = await import('pdf-parse');
   }
+
+  const fn = pdfModule.default || pdfModule;
+
+  // Caso 1: versión vieja (función directa)
+  if (typeof fn === 'function') {
+    const data = await fn(buffer);
+    return {
+      text: data.text || '',
+      pages: data.numpages || 0
+    };
+  }
+
+  // Caso 2: versión nueva (clase PDFParse)
+  const PDFParse = pdfModule.PDFParse || pdfModule.default?.PDFParse;
+
+  if (PDFParse) {
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
+
+    if (typeof parser.destroy === 'function') {
+      await parser.destroy();
+    }
+
+    return {
+      text: result.text || '',
+      pages: result.total || result.numpages || 0
+    };
+  }
+
+  throw new Error('Formato de pdf-parse no reconocido');
 }
 
-// Datos Demo
+// 🧪 DEMO DATA
 const demoRaces = [
   {
     raceId: 'demo-1',
     track: 'Santa Anita Park',
     raceNumber: 1,
-    time: '3:30 PM',
-    surface: 'Dirt',
-    distance: '6F',
-    type: 'Allowance',
     runners: [
-      { name: 'Fast Storm', form: '1-2-3', odds: '3/1', jockey: 'J. Hernandez', trainer: 'Baffert', speed: 91 },
-      { name: 'Golden Pace', form: '2-1-4', odds: '5/1', jockey: 'R. Vazquez', trainer: 'Miller', speed: 88 },
-      { name: 'Late Thunder', form: '4-3-1', odds: '6/1', jockey: 'F. Prat', trainer: 'Mandella', speed: 86 },
-      { name: 'Blue Rocket', form: '5-2-2', odds: '8/1', jockey: 'M. Smith', trainer: "O'Neill", speed: 82 }
+      { name: 'Fast Storm', odds: '3/1', speed: 91 },
+      { name: 'Golden Pace', odds: '5/1', speed: 88 }
     ]
   }
 ];
 
-// 1. Obtener carreras demo
+// 📊 ENDPOINTS
+
 router.get('/racecards', (req, res) => {
   res.json({
     ok: true,
-    source: 'free-demo-model',
     races: demoRaces
   });
 });
 
-// 2. Analizar carrera demo
 router.get('/analyze/:raceId', (req, res) => {
   const race = demoRaces.find(r => r.raceId === req.params.raceId);
 
@@ -52,39 +74,32 @@ router.get('/analyze/:raceId', (req, res) => {
     });
   }
 
-  const analysis = analyzeRace(race);
-
   res.json({
     ok: true,
-    race,
-    analysis
+    analysis: analyzeRace(race)
   });
 });
 
-// 3. Generar URL del PDF
+// 🔗 GENERAR URL PDF
 router.get('/program-url', (req, res) => {
   const date = req.query.date || new Date().toISOString().split('T')[0];
   const track = String(req.query.track || 'sa').toLowerCase();
 
-  const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
-
   res.json({
     ok: true,
-    date,
-    track,
-    url
+    url: `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`
   });
 });
 
-// 4. Descargar PDF y extraer texto
+// 🚀 IMPORTAR Y LEER PDF REAL
 router.get('/import-program', async (req, res) => {
   try {
-    await loadPdfParser();
-
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const track = String(req.query.track || 'sa').toLowerCase();
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+
+    console.log('📥 Procesando PDF:', url);
 
     const response = await fetch(url);
 
@@ -99,25 +114,27 @@ router.get('/import-program', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const data = await pdf(buffer);
-    const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
+    // 🔥 AQUÍ ESTÁ EL FIX REAL
+    const data = await extractPdfText(buffer);
+
+    const cleanText = String(data.text || '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
     res.json({
       ok: true,
       url,
-      info: {
-        paginas: data.numpages,
-        caracteres: cleanText.length
-      },
+      paginas: data.pages,
+      caracteres: cleanText.length,
       textoExtraido: cleanText.substring(0, 5000)
     });
 
   } catch (error) {
-    console.error('❌ Error import-program:', error);
+    console.error('❌ ERROR PDF:', error);
 
     res.status(500).json({
       ok: false,
-      error: 'Error procesando PDF: ' + error.message
+      error: error.message
     });
   }
 });
