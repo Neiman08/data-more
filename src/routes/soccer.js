@@ -49,24 +49,24 @@ function getDate(req) {
 }
 
 /**
- * 2. CORRECCIÓN: Lógica de temporada por liga
+ * DETERMINACIÓN DE TEMPORADA CORREGIDA
  */
 function getSoccerSeason(date, leagueKey = '') {
   const d = new Date(`${date}T12:00:00`);
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
 
-  // Ligas con calendario anual (Ene-Dic)
+  // MLS, Brasil, Argentina = calendario normal
   if (['mls', 'brasil', 'argentina'].includes(leagueKey)) {
     return year;
   }
 
-  // Ligas con Apertura/Clausura o calendario europeo
+  // 🔥 LIGA MX = SIEMPRE AÑO ACTUAL (Según tu corrección)
   if (leagueKey === 'ligamx') {
-    return month <= 6 ? year - 1 : year;
+    return year;
   }
 
-  // Por defecto Europa (Inicia en Agosto)
+  // Europa (Temporadas transanuales: Ago-May)
   return month <= 7 ? year - 1 : year;
 }
 
@@ -124,9 +124,6 @@ async function apiFootball(path) {
   }
 }
 
-/**
- * 3. CORRECCIÓN: Inclusión de Timezone en la petición
- */
 async function getFixturesByLeague(leagueKey, date) {
   const league = LEAGUES[leagueKey] || LEAGUES.epl;
   const season = getSoccerSeason(date, leagueKey);
@@ -138,7 +135,6 @@ async function getFixturesByLeague(leagueKey, date) {
     return cached.data;
   }
 
-  // Codificamos la zona horaria para la URL
   const data = await apiFootball(
     `/fixtures?league=${league.id}&season=${season}&date=${date}&timezone=${encodeURIComponent(TIMEZONE)}`
   );
@@ -155,7 +151,6 @@ async function getFixturesByLeague(leagueKey, date) {
 
 async function getGlobalFixtures(date) {
   const allGames = [];
-  // Ejecutamos en paralelo para no saturar el tiempo de respuesta
   const promises = Object.keys(LEAGUES).map(key => getFixturesByLeague(key, date));
   const results = await Promise.all(promises);
   
@@ -234,7 +229,6 @@ router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
     const leagueKey = String(req.query.league || 'epl').toLowerCase();
-
     const games = await getFixturesByLeague(leagueKey, date);
 
     res.json({
