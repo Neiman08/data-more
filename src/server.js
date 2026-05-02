@@ -147,7 +147,7 @@ app.post('/api/picks/save', async (req, res) => {
 app.use('/api', gamesRoutes);
 app.use('/api/baseball', baseballRoutes);
 app.use('/api/soccer', soccerRoutes);
-app.use('/api/nba', nbaRoutes);
+app.use('/api', nbaRoutes);
 
 // --- STATS ENDPOINT ---
 app.get('/api/stats/daily-performance', async (req, res) => {
