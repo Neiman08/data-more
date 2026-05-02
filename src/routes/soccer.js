@@ -16,6 +16,8 @@ const LEAGUES = {
   conference: { id: 848, name: 'Conference League' }
 };
 
+// --- UTILIDADES ---
+
 function getHeaders() {
   return {
     'x-apisports-key': process.env.FOOTBALL_API_KEY
@@ -24,6 +26,22 @@ function getHeaders() {
 
 function getDate(req) {
   return req.query.date || new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Calcula la temporada de fútbol basada en la fecha.
+ * Ligas europeas: enero-julio pertenecen a la temporada que empezó el año anterior.
+ */
+function getSoccerSeason(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+
+  if (month >= 1 && month <= 7) {
+    return year - 1;
+  }
+
+  return year;
 }
 
 function formatFixture(g, leagueKey = '') {
@@ -70,9 +88,11 @@ async function apiFootball(path) {
   return data;
 }
 
+// --- LÓGICA DE DATOS ---
+
 async function getFixturesByLeague(leagueKey, date) {
   const league = LEAGUES[leagueKey] || LEAGUES.epl;
-  const season = new Date(date).getFullYear();
+  const season = getSoccerSeason(date); // Lógica de temporada aplicada aquí
 
   const data = await apiFootball(
     `/fixtures?league=${league.id}&season=${season}&date=${date}`
@@ -157,7 +177,8 @@ function buildPlayerPropsFromLineups(lineups) {
     .slice(0, 8);
 }
 
-// ✅ NUEVA RUTA PRINCIPAL
+// --- RUTAS (API ENDPOINTS) ---
+
 router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
@@ -177,7 +198,6 @@ router.get('/games', async (req, res) => {
   }
 });
 
-// ✅ GLOBAL PARA TODAS LAS LIGAS
 router.get('/games-global', async (req, res) => {
   try {
     const date = getDate(req);
@@ -194,7 +214,6 @@ router.get('/games-global', async (req, res) => {
   }
 });
 
-// ✅ LINEUPS REALES
 router.get('/lineups/:fixtureId', async (req, res) => {
   try {
     const lineups = await getLineups(req.params.fixtureId);
@@ -213,7 +232,6 @@ router.get('/lineups/:fixtureId', async (req, res) => {
   }
 });
 
-// ✅ PLAYER PROPS SOLO CON LINEUPS
 router.get('/player-props/:fixtureId', async (req, res) => {
   try {
     const lineups = await getLineups(req.params.fixtureId);
@@ -237,7 +255,6 @@ router.get('/player-props/:fixtureId', async (req, res) => {
   }
 });
 
-// ✅ ANÁLISIS
 router.get('/analyze/:id', async (req, res) => {
   try {
     const date = getDate(req);
@@ -279,7 +296,6 @@ router.get('/analyze/:id', async (req, res) => {
   }
 });
 
-// ✅ TICKET GLOBAL BÁSICO
 router.get('/ticket-global', async (req, res) => {
   try {
     const date = getDate(req);
