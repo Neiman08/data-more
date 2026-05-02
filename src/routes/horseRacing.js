@@ -141,11 +141,14 @@ router.get('/import-program', async (req, res) => {
       };
     }).filter(r => r.runners.length > 3);
 
+    // ❌ Error de detección con Debug ampliado
     if (races.length === 0) {
       return res.json({
         ok: false,
         message: 'No se encontraron caballos en la sección N./ML.',
-        url
+        url,
+        debugStart: cleanText.substring(0, 3000),
+        debugBlock: raceBlocks[0]?.substring(0, 3000)
       });
     }
 
