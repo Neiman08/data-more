@@ -21,6 +21,7 @@ const demoRaces = [
   }
 ];
 
+// Obtener todas las carreras (Demo)
 router.get('/racecards', async (req, res) => {
   res.json({
     ok: true,
@@ -29,6 +30,7 @@ router.get('/racecards', async (req, res) => {
   });
 });
 
+// Analizar una carrera específica
 router.get('/analyze/:raceId', async (req, res) => {
   const race = demoRaces.find(r => r.raceId === req.params.raceId);
 
@@ -42,6 +44,23 @@ router.get('/analyze/:raceId', async (req, res) => {
     ok: true,
     race,
     analysis
+  });
+});
+
+// Generar URL del programa/revista PDF
+router.get('/program-url', (req, res) => {
+  // Si no viene fecha, usa la actual (YYYY-MM-DD)
+  const date = req.query.date || new Date().toISOString().split('T')[0];
+  // El hipódromo por defecto es 'sa' (Santa Anita)
+  const track = String(req.query.track || 'sa').toLowerCase();
+
+  const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+
+  res.json({
+    ok: true,
+    date,
+    track,
+    url
   });
 });
 
