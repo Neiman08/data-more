@@ -1,8 +1,11 @@
 import express from 'express';
+import fetch from 'node-fetch';
+import pdf from 'pdf-parse';
 import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
+// Datos de ejemplo para pruebas locales
 const demoRaces = [
   {
     raceId: 'demo-1',
@@ -21,7 +24,7 @@ const demoRaces = [
   }
 ];
 
-// Obtener todas las carreras (Demo)
+// 1. Obtener todas las carreras (Demo)
 router.get('/racecards', async (req, res) => {
   res.json({
     ok: true,
@@ -30,7 +33,7 @@ router.get('/racecards', async (req, res) => {
   });
 });
 
-// Analizar una carrera específica
+// 2. Analizar una carrera específica por ID
 router.get('/analyze/:raceId', async (req, res) => {
   const race = demoRaces.find(r => r.raceId === req.params.raceId);
 
@@ -47,11 +50,9 @@ router.get('/analyze/:raceId', async (req, res) => {
   });
 });
 
-// Generar URL del programa/revista PDF
+// 3. Generar URL del programa/revista PDF
 router.get('/program-url', (req, res) => {
-  // Si no viene fecha, usa la actual (YYYY-MM-DD)
   const date = req.query.date || new Date().toISOString().split('T')[0];
-  // El hipódromo por defecto es 'sa' (Santa Anita)
   const track = String(req.query.track || 'sa').toLowerCase();
 
   const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
@@ -62,6 +63,53 @@ router.get('/program-url', (req, res) => {
     track,
     url
   });
+});
+
+// 4. Importar y extraer texto del PDF
+router.get('/import-program', async (req, res) => {
+  try {
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const track = String(req.query.track || 'sa').toLowerCase();
+
+    const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+
+    console.log('📥 Descargando PDF:', url);
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return res.status(404).json({
+        ok: false,
+        error: `PDF no encontrado en la ruta: ${url}`
+      });
+    }
+
+    const buffer = await response.arrayBuffer();
+
+    // Convertir PDF a texto usando pdf-parse
+    const data = await pdf(Buffer.from(buffer));
+
+    // Limpiamos un poco el texto para que no sea un bloque ilegible
+    const cleanText = data.text.replace(/\s+/g, ' ').trim();
+
+    res.json({
+      ok: true,
+      url,
+      metadata: {
+        pages: data.numpages,
+        info: data.info
+      },
+      preview: cleanText.substring(0, 2000) // Enviamos los primeros 2000 caracteres
+    });
+
+  } catch (error) {
+    console.error('❌ Import Program Error:', error);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
 });
 
 export default router;
