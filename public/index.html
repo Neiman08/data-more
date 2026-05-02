@@ -273,7 +273,17 @@
     const gamesGrid = document.getElementById("gamesGrid");
     const status = document.getElementById("status");
 
-    dateInput.value = new Date().toISOString().split("T")[0];
+    function getChicagoDate() {
+      const now = new Date();
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Chicago',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(now);
+    }
+
+    dateInput.value = getChicagoDate();
 
     async function initTicker() {
         const ticker = document.getElementById('tickerWrapper');
@@ -382,7 +392,82 @@
       } catch (e) { status.textContent = "Error."; }
     }
 
-    /* --- RESTO DE FUNCIONES (analyzeGame, analyzeAll, etc) SIGUEN IGUAL --- */
+    async function analyzeGame(gamePk, awayAbbrev, homeAbbrev, gameStatus) {
+      const container = document.getElementById(`results-${gamePk}`);
+      container.innerHTML = `<div class="loading" style="text-align:center; padding:10px; font-size:12px;">Modelando IA...</div>`;
+      try {
+        const [anaRes, propRes] = await Promise.all([
+          fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`),
+          fetch(`/api/baseball/player-props/${gamePk}`)
+        ]);
+        const anaData = await anaRes.json();
+        const propData = await propRes.json();
+        const a = anaData.analysis;
+        const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
+        const isPro = loggedUser && loggedUser.proActivo === true;
+        const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
+        const canSavePick = allowedStatuses.some(s => String(gameStatus || '').toLowerCase().includes(s.toLowerCase()));
+
+        if (canSavePick) {
+          const today = dateInput.value || new Date().toISOString().split('T')[0];
+          const picksToSave = [];
+          picksToSave.push({ date: today, market: 'ML', gamePk, pick: a.pick, team: a.pick });
+          if (a.runLine?.pick && a.runLine.pick !== 'N/A') {
+            picksToSave.push({ date: today, market: 'RL', gamePk, pick: a.runLine.pick });
+          }
+          fetch('/api/picks/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(picksToSave)});
+        }
+
+        const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
+        const conf = String(a.confidence || "").toLowerCase();
+        let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
+        
+        let html = `<div class="prediction-box ${colorClass}"><div class="section-header"><div class="title-icon" style="color:inherit">🔥 Moneyline</div><span class="badge" style="background:rgba(255,255,255,0.2); color:inherit">${a.confidence.toUpperCase()}</span></div><span class="pick-val">${a.pick}</span><div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div></div>`;
+
+        if (!isPro) {
+            html += `<div class="section"><div style="padding:14px;border:1px solid #facc15;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;margin-top:10px;"><div style="font-size:16px;font-weight:900;color:#facc15;">🔒 SOLO MONEYLINE GRATIS</div><p style="font-size:12px;color:#94a3b8;">Desbloquea Run Line, Totales y Player Props.</p><button onclick="window.location.href='/pago-manual'" style="background:#22c55e;color:#000;width:100%;font-weight:900;padding:10px;border-radius:8px;cursor:pointer;border:none;margin-top:8px;">HACERME PRO</button></div></div>`;
+            container.innerHTML = html; return;
+        }
+
+        html += `<div class="section"><div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div><span class="pick-val">${a.runLine?.pick || 'N/A'}</span><div class="data-mono">Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div></div><div class="section"><div class="section-header"><div class="title-icon" style="color:var(--accent-green)">📈 Team Totals</div></div><div class="data-mono">${awayAbbrev}: ${a.teamTotals?.away?.pick || 'TBD'}</div><div class="data-mono">${homeAbbrev}: ${a.teamTotals?.home?.pick || 'TBD'}</div></div><div class="section" style="border:none"><div class="section-header"><div class="title-icon" style="color:#60a5fa">💎 Player Props</div></div>`;
+
+        if (propData.ok) {
+          html += `<div style="font-size:11px;color:#22c55e;font-weight:900;margin-top:8px;">TOP HIT</div>`;
+          (propData.topHits || []).forEach(p => {
+            const imgSrc = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId}/headshot/67/current`;
+            html += `
+              <div class="player-row">
+                <img src="${imgSrc}" class="player-img" onerror="this.src='https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current'">
+                <div class="player-info">
+                  <span class="p-name">${p.name}</span>
+                  <span class="p-stats">Hit ${p.hitChance}% | AVG ${p.avg} | OPS ${p.ops}</span>
+                </div>
+              </div>`;
+          });
+
+          html += `<div style="font-size:11px;color:#facc15;font-weight:900;margin-top:10px;">TOP HR</div>`;
+          (propData.topHR || []).forEach(p => {
+            const imgSrc = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId}/headshot/67/current`;
+            html += `
+              <div class="player-row">
+                <img src="${imgSrc}" class="player-img" onerror="this.src='https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current'">
+                <div class="player-info">
+                  <span class="p-name">${p.name}</span>
+                  <span class="p-stats">HR ${p.hrChance}% | HR ${p.homeRuns} | SLG ${p.slg}</span>
+                </div>
+              </div>`;
+          });
+        }
+        html += `</div>`;
+        container.innerHTML = html;
+      } catch (e) { container.innerHTML = "Error."; }
+    }
+
+    async function analyzeAll() {
+      const btns = document.querySelectorAll('button[onclick^="analyzeGame"]');
+      for (const b of btns) { b.click(); await new Promise(r => setTimeout(r, 850)); }
+    }
+
     async function updateRealStats() {
       try {
         const res = await fetch('/api/stats/daily-performance?t=' + Date.now());
@@ -435,70 +520,6 @@
       return `<div class="lineup-container"><div class="lineup-grid" style="display:flex; justify-content:space-between;"><div style="width:48%">${renderSide(data.awayLineup)}</div><div style="width:48%">${renderSide(data.homeLineup)}</div></div></div>`;
     }
 
-    async function analyzeGame(gamePk, awayAbbrev, homeAbbrev, gameStatus) {
-      const container = document.getElementById(`results-${gamePk}`);
-      container.innerHTML = `<div class="loading" style="text-align:center; padding:10px; font-size:12px;">Modelando IA...</div>`;
-      try {
-        const [anaRes, propRes] = await Promise.all([
-          fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`),
-          fetch(`/api/baseball/player-props/${gamePk}`)
-        ]);
-        const anaData = await anaRes.json();
-        const propData = await propRes.json();
-        const a = anaData.analysis;
-        const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
-        const isPro = loggedUser && loggedUser.proActivo === true;
-        const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
-        const canSavePick = allowedStatuses.some(s => String(gameStatus || '').toLowerCase().includes(s.toLowerCase()));
-        if (canSavePick) {
-          const today = dateInput.value || new Date().toISOString().split('T')[0];
-          const picksToSave = [];
-          picksToSave.push({ date: today, market: 'ML', gamePk, pick: a.pick, team: a.pick });
-          if (a.runLine?.pick && a.runLine.pick !== 'N/A') {
-            picksToSave.push({ date: today, market: 'RL', gamePk, pick: a.runLine.pick });
-          }
-          if (propData.ok && propData.props) {
-            const sortedProps = [...propData.props].sort((x, y) => y.hitChance - x.hitChance);
-            sortedProps.slice(0, 5).forEach(p => {
-              picksToSave.push({ date: today, market: 'HIT', gamePk, playerName: p.name, team: p.team || '', pick: 'Over 0.5 Hits' });
-            });
-            const hrProps = [...propData.props].sort((x, y) => y.hrChance - x.hrChance).slice(0, 3);
-            hrProps.forEach(p => {
-              picksToSave.push({ date: today, market: 'HR', gamePk, playerName: p.name, team: p.team || '', pick: 'HR' });
-            });
-          }
-          fetch('/api/picks/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(picksToSave)});
-        }
-        const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
-        const conf = String(a.confidence || "").toLowerCase();
-        let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
-        let html = `<div class="prediction-box ${colorClass}"><div class="section-header"><div class="title-icon" style="color:inherit">🔥 Moneyline</div><span class="badge" style="background:rgba(255,255,255,0.2); color:inherit">${a.confidence.toUpperCase()}</span></div><span class="pick-val">${a.pick}</span><div class="data-mono" style="color:inherit; font-weight:bold">Probabilidad: ${Number(winPct).toFixed(2)}%</div></div>`;
-        if (!isPro) {
-            html += `<div class="section"><div style="padding:14px;border:1px solid #facc15;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;margin-top:10px;"><div style="font-size:16px;font-weight:900;color:#facc15;">🔒 SOLO MONEYLINE GRATIS</div><p style="font-size:12px;color:#94a3b8;">Desbloquea Run Line, Totales y Player Props.</p><button onclick="window.location.href='/pago-manual'" style="background:#22c55e;color:#000;width:100%;font-weight:900;padding:10px;border-radius:8px;cursor:pointer;border:none;margin-top:8px;">HACERME PRO</button></div></div>`;
-            container.innerHTML = html; return;
-        }
-        html += `<div class="section"><div class="section-header"><div class="title-icon" style="color:var(--primary-blue)">📊 Run Line</div></div><span class="pick-val">${a.runLine?.pick || 'N/A'}</span><div class="data-mono">Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div></div><div class="section"><div class="section-header"><div class="title-icon" style="color:var(--accent-green)">📈 Team Totals</div></div><div class="data-mono">${awayAbbrev}: ${a.teamTotals?.away?.pick || 'TBD'}</div><div class="data-mono">${homeAbbrev}: ${a.teamTotals?.home?.pick || 'TBD'}</div></div><div class="section" style="border:none"><div class="section-header"><div class="title-icon" style="color:#60a5fa">💎 Player Props</div></div>`;
-        if (propData.ok && propData.props) {
-          propData.props.sort((x, y) => y.hitChance - x.hitChance).slice(0, 3).forEach(p => {
-            const pId = p.personId || p.mlbId || p.playerId || p.id;
-            const imgSrc = pId ? `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${pId}/headshot/67/current` : `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current`;
-            html += `<div class="player-row"><img src="${imgSrc}" class="player-img" onerror="this.src='https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/0/headshot/67/current'"><div class="player-info"><span class="p-name">${p.name}</span><span class="p-stats">Hit ${p.hitChance}% | HR ${p.hrChance}%</span></div><span class="badge border-alta" style="background:rgba(34,197,94,0.1); color:#4ade80">ALTA</span></div>`;
-          });
-        }
-        html += `</div>`;
-        container.innerHTML = html;
-      } catch (e) { container.innerHTML = "Error."; }
-    }
-
-    async function analyzeAll() {
-      const btns = document.querySelectorAll('button[onclick^="analyzeGame"]');
-      for (const b of btns) { b.click(); await new Promise(r => setTimeout(r, 850)); }
-    }
-
-    loadGames();
-    initTicker();
-    updateRealStats();
-
     function renderUserBar() {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
       const userBar = document.getElementById('userBar');
@@ -514,6 +535,10 @@
       userBtn.textContent = 'Cerrar sesión'; userBtn.style.background = '#ef4444';
       userBtn.onclick = () => { localStorage.removeItem('user'); window.location.href = '/login'; };
     }
+
+    loadGames();
+    initTicker();
+    updateRealStats();
     renderUserBar();
   </script>
 </body>
