@@ -47,38 +47,35 @@ function splitRaces(text) {
 }
 
 /* =========================================================
-   🧠 EXTRACCIÓN DE CABALLOS (LÓGICA POR POSICIONES)
+   🧠 EXTRACCIÓN DE CABALLOS (POR SECCIÓN ANCLADA)
 ========================================================= */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  // 🔥 CLAVE: cortar el texto por posiciones de caballo (Lookahead)
-  const lines = text.split(/(?=\b\d{1,2}\s[A-Z])/g);
+  // 🔥 Paso 1: cortar SOLO la parte donde están los caballos
+  const start = text.indexOf('PP'); // donde empieza tabla
+  const end = text.indexOf('Rat');  // donde termina tabla
 
-  for (let line of lines) {
+  if (start === -1 || end === -1) return [];
 
-    // Buscar: número + nombre (PRIMERAS palabras después del corte)
-    const match = line.match(/^(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+){1,3})/);
+  const section = text.substring(start, end);
 
-    if (!match) continue;
+  // 🔥 Paso 2: buscar estructura real
+  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+)/g;
 
+  let match;
+
+  while ((match = regex.exec(section)) !== null) {
     const number = match[1];
     const name = match[2].trim();
 
-    // Buscar odds dentro del bloque de texto del caballo
-    const oddsMatch = line.match(/(\d+\/\d+)/);
-    const odds = oddsMatch ? oddsMatch[1] : null;
-
-    // 🚫 FILTROS FUERTES
+    // Filtros reales
     if (
       seen.has(name) ||
-      parseInt(number) > 14 ||    // máximo caballos reales por carrera
-      number === '0' ||
-      number === '00' ||
+      parseInt(number) > 14 ||
       name.length < 5 ||
-      name.split(' ').length < 2 ||
-      /^[A-Z\s]+$/.test(name)     // descarta cabeceras en mayúsculas
+      /^[A-Z\s]+$/.test(name)
     ) continue;
 
     seen.add(name);
@@ -86,7 +83,7 @@ function extractHorses(text) {
     horses.push({
       number,
       name,
-      odds: odds || 'N/A',
+      odds: null, // placeholder para integración posterior
       speed: Math.floor(80 + Math.random() * 15)
     });
   }
@@ -104,13 +101,13 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Procesando PDF con segmentación por líneas:', url);
+    console.log('📥 Procesando PDF con anclaje PP/Rat:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
       return res.status(404).json({
         ok: false,
-        error: 'No se pudo obtener el PDF',
+        error: 'PDF no encontrado',
         url
       });
     }
@@ -139,12 +136,12 @@ router.get('/import-program', async (req, res) => {
     if (races.length === 0) {
       return res.json({
         ok: false,
-        message: 'No se detectaron carreras válidas con la nueva segmentación.',
+        message: 'No se encontraron caballos entre las marcas PP y Rat.',
         url
       });
     }
 
-    // 3. Analizar la primera carrera detectada
+    // 3. Analizar la primera carrera
     const selectedRace = races[0];
     const analysis = analyzeRace(selectedRace);
 
