@@ -23,7 +23,6 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-// Configuración de variables de entorno (Fallback)
 if (!process.env.MONGO_URI) {
   dotenv.config({ path: path.resolve(__dirname, '../.env') });
 }
@@ -33,7 +32,6 @@ if (!process.env.MONGO_URI) {
   process.exit(1);
 }
 
-// Conexión a MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('🚀 Conectado a MongoDB Atlas (Data More PRO)'))
   .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
@@ -44,7 +42,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // --- AUTH ---
-
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { nombre, email, password } = req.body;
@@ -55,7 +52,6 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     await new User({ nombre, email, password: hashedPassword }).save();
 
     res.redirect('/login');
@@ -89,7 +85,6 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // --- PAGOS ---
-
 app.post('/api/payment-request', async (req, res) => {
   try {
     const { nombre, email, metodo } = req.body;
@@ -107,31 +102,37 @@ app.post('/api/payment-request', async (req, res) => {
 });
 
 app.get('/api/payment-requests', async (req, res) => {
-  const requests = await PaymentRequest.find().sort({ createdAt: -1 });
-  res.json({ ok: true, requests });
+  try {
+    const requests = await PaymentRequest.find().sort({ createdAt: -1 });
+    res.json({ ok: true, requests });
+  } catch {
+    res.json({ ok: false, requests: [] });
+  }
 });
 
 app.post('/api/activate-pro', async (req, res) => {
-  const { email, requestId } = req.body;
+  try {
+    const { email, requestId } = req.body;
 
-  await User.updateOne(
-    { email },
-    { proActivo: true, plan: 'pro' }
-  );
+    await User.updateOne(
+      { email },
+      { proActivo: true, plan: 'pro' }
+    );
 
-  if (requestId) {
-    await PaymentRequest.findByIdAndUpdate(requestId, { status: 'aprobado' });
+    if (requestId) {
+      await PaymentRequest.findByIdAndUpdate(requestId, { status: 'aprobado' });
+    }
+
+    res.json({ ok: true });
+  } catch {
+    res.json({ ok: false });
   }
-
-  res.json({ ok: true });
 });
 
 // --- PICKS ---
-
 app.post('/api/picks/save', async (req, res) => {
   try {
     const picks = Array.isArray(req.body) ? req.body : [req.body];
-
     const clean = picks.filter(p => p.market && p.pick);
 
     await Pick.insertMany(clean);
@@ -145,11 +146,10 @@ app.post('/api/picks/save', async (req, res) => {
 // --- API ROUTES ---
 app.use('/api', gamesRoutes);
 app.use('/api/baseball', baseballRoutes);
-app.use('/api', soccerRoutes);
-app.use('/api', nbaRoutes);
+app.use('/api/soccer', soccerRoutes);
+app.use('/api/nba', nbaRoutes);
 
 // --- STATS ENDPOINT ---
-
 app.get('/api/stats/daily-performance', async (req, res) => {
   try {
     const yesterday = new Date();
@@ -194,18 +194,14 @@ app.get('/api/stats/daily-performance', async (req, res) => {
 });
 
 // --- FRONTEND ---
-
-app.get('/', (req, res) => res.sendFile(path.resolve('public/index.html')));
-app.get('/login', (req, res) => res.sendFile(path.resolve('public/login.html')));
-app.get('/registro', (req, res) => res.sendFile(path.resolve('public/registro.html')));
-app.get('/soccer', (req, res) => res.sendFile(path.resolve('public/soccer.html')));
-app.get('/nba', (req, res) => res.sendFile(path.resolve('public/nba.html')));
-app.get('/pro', (req, res) => res.sendFile(path.resolve('public/pro.html')));
-app.get('/pago-manual', (req, res) => res.sendFile(path.resolve('public/pago-manual.html')));
-
-app.get('/admin-payments', (req, res) => {
-  res.sendFile(path.resolve('public/admin-payments.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
+app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, '../public/registro.html')));
+app.get('/soccer', (req, res) => res.sendFile(path.join(__dirname, '../public/soccer.html')));
+app.get('/nba', (req, res) => res.sendFile(path.join(__dirname, '../public/nba.html')));
+app.get('/pro', (req, res) => res.sendFile(path.join(__dirname, '../public/pro.html')));
+app.get('/pago-manual', (req, res) => res.sendFile(path.join(__dirname, '../public/pago-manual.html')));
+app.get('/admin-payments', (req, res) => res.sendFile(path.join(__dirname, '../public/admin-payments.html')));
 
 // --- START ---
 const PORT = process.env.PORT || 3000;
