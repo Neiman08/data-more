@@ -1,5 +1,4 @@
 import express from 'express';
-import fetch from 'node-fetch';
 import pdf from 'pdf-parse';
 import { analyzeRace } from '../utils/horseScoring.js';
 
@@ -65,7 +64,7 @@ router.get('/program-url', (req, res) => {
   });
 });
 
-// 4. Importar y extraer texto del PDF
+// 4. Importar y extraer texto del PDF (Usando fetch nativo)
 router.get('/import-program', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -73,7 +72,7 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Descargando PDF:', url);
+    console.log('📥 Descargando PDF con Fetch Nativo:', url);
 
     const response = await fetch(url);
 
