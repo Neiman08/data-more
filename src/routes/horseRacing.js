@@ -47,56 +47,45 @@ function splitRaces(text) {
 }
 
 /* =========================================================
-   🧠 EXTRACCIÓN DE CABALLOS (SECCIÓN DINÁMICA)
+   🧠 EXTRACCIÓN DE CABALLOS (VERSIÓN FINAL)
 ========================================================= */
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  // 🔥 Paso 1: Localizar sección de la tabla dinámicamente
-  let section = text;
+  // 🔥 Detecta nombres tipo: "Weekend Princess", "Feisty Red Head"
+  const regex = /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)+)\b/g;
 
-  const start = text.indexOf('N./ML');
-  if (start !== -1) {
-    section = text.substring(start);
-  }
-
-  const stopWords = ['Jin/Kgs/Ent', 'Ganador', 'Rat', 'TG', 'TE'];
-  for (const word of stopWords) {
-    const idx = section.indexOf(word);
-    if (idx !== -1 && idx > 50) {
-      section = section.substring(0, idx);
-      break;
-    }
-  }
-
-  // 🔥 Paso 2: Buscar estructura real (Número + Nombre)
-  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+)/g;
+  const blacklist = [
+    'Santa', 'Park', 'Furlongs', 'Thoroughbred',
+    'Fillies', 'Mares', 'Year', 'Olds', 'Weight',
+    'Stud', 'Farm', 'Stable', 'Track', 'Race',
+    'Arena', 'Special', 'Claiming', 'Allowance',
+    'Distance', 'Purse', 'Entries', 'Rat'
+  ];
 
   let match;
-  while ((match = regex.exec(section)) !== null) {
-    const number = match[1];
-    const name = match[2].trim();
 
-    // Filtros de calidad
+  while ((match = regex.exec(text)) !== null) {
+    const name = match[1].trim();
+
     if (
       seen.has(name) ||
-      parseInt(number) > 14 ||
-      name.length < 5 ||
-      /^[A-Z\s]+$/.test(name)
+      name.split(' ').length < 2 ||
+      name.length < 6 ||
+      blacklist.some(w => name.includes(w))
     ) continue;
 
     seen.add(name);
 
     horses.push({
-      number,
       name,
-      odds: null, 
+      odds: null,
       speed: Math.floor(80 + Math.random() * 15)
     });
   }
 
-  return horses;
+  return horses.slice(0, 14);
 }
 
 /* =========================================================
@@ -109,13 +98,13 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Procesando PDF con anclaje N./ML:', url);
+    console.log('📥 Procesando PDF final:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
       return res.status(404).json({
         ok: false,
-        error: 'PDF no encontrado en el servidor origen',
+        error: 'PDF no encontrado en el origen',
         url
       });
     }
@@ -123,11 +112,11 @@ router.get('/import-program', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 1. Extraer texto
+    // 1. Extraer y limpiar texto
     const data = await extractPdfText(buffer);
     const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    // 2. Procesar bloques de carrera
+    // 2. Segmentar por carreras
     const raceBlocks = splitRaces(cleanText);
 
     const races = raceBlocks.map((block, index) => {
@@ -141,7 +130,7 @@ router.get('/import-program', async (req, res) => {
       };
     }).filter(r => r.runners.length > 3);
 
-    // ❌ Error de detección con Debug ampliado
+    // 3. Manejo de errores con Debug
     if (races.length === 0) {
       return res.json({
         ok: false,
@@ -152,11 +141,11 @@ router.get('/import-program', async (req, res) => {
       });
     }
 
-    // 3. Analizar la primera carrera detectada
+    // 4. Analizar la primera carrera detectada
     const selectedRace = races[0];
     const analysis = analyzeRace(selectedRace);
 
-    // 4. Respuesta consolidada
+    // 5. Respuesta final
     res.json({
       ok: true,
       url,
@@ -166,7 +155,7 @@ router.get('/import-program', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ ERROR:', error);
+    console.error('❌ ERROR CRÍTICO:', error);
     res.status(500).json({
       ok: false,
       error: error.message
