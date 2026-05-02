@@ -10,9 +10,15 @@ const LEAGUES = {
   seriea: { id: 135, name: 'Serie A' },
   bundesliga: { id: 78, name: 'Bundesliga' },
   ligue1: { id: 61, name: 'Ligue 1' },
+
   champions: { id: 2, name: 'Champions League' },
   europa: { id: 3, name: 'Europa League' },
-  conference: { id: 848, name: 'Conference League' }
+  conference: { id: 848, name: 'Conference League' },
+
+  brasil: { id: 71, name: 'Brasileirão Serie A' },
+  argentina: { id: 128, name: 'Liga Argentina' },
+  mls: { id: 253, name: 'MLS' },
+  ligamx: { id: 262, name: 'Liga MX' }
 };
 
 const cache = {
@@ -44,6 +50,7 @@ function getSoccerSeason(date) {
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
 
+  // Europa en mayo 2026 usa season 2025
   return month <= 7 ? year - 1 : year;
 }
 
@@ -195,14 +202,11 @@ function buildPlayerPropsFromLineups(lineups) {
     .slice(0, 8);
 }
 
-// =====================
-// ROUTES
-// =====================
-
 router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
     const leagueKey = String(req.query.league || 'epl').toLowerCase();
+
     const games = await getFixturesByLeague(leagueKey, date);
 
     res.json({
@@ -213,7 +217,6 @@ router.get('/games', async (req, res) => {
       count: games.length,
       games
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
@@ -235,7 +238,6 @@ router.get('/games-global', async (req, res) => {
       count: games.length,
       games
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
@@ -261,7 +263,6 @@ router.get('/lineups/:fixtureId', async (req, res) => {
       ok: true,
       lineups
     });
-
   } catch (error) {
     res.json({
       ok: false,
@@ -289,7 +290,6 @@ router.get('/player-props/:fixtureId', async (req, res) => {
       ok: true,
       props
     });
-
   } catch (error) {
     res.json({
       ok: false,
@@ -304,8 +304,20 @@ router.get('/analyze/:id', async (req, res) => {
     const date = getDate(req);
     const leagueKey = String(req.query.league || 'epl').toLowerCase();
 
-    const games = await getFixturesByLeague(leagueKey, date);
-    const matchRaw = games.find(g => String(g.matchId) === String(req.params.id));
+    let games = [];
+
+    if (leagueKey && LEAGUES[leagueKey]) {
+      games = await getFixturesByLeague(leagueKey, date);
+    } else {
+      games = await getGlobalFixtures(date);
+    }
+
+    let matchRaw = games.find(g => String(g.matchId) === String(req.params.id));
+
+    if (!matchRaw) {
+      const globalGames = await getGlobalFixtures(date);
+      matchRaw = globalGames.find(g => String(g.matchId) === String(req.params.id));
+    }
 
     if (!matchRaw) {
       return res.status(404).json({
@@ -330,11 +342,10 @@ router.get('/analyze/:id', async (req, res) => {
     res.json({
       ok: true,
       selectedDate: date,
-      leagueKey,
+      leagueKey: matchRaw.leagueKey || leagueKey,
       season: getSoccerSeason(date),
       analysis
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
@@ -360,10 +371,9 @@ router.get('/ticket-global', async (req, res) => {
         seguro: [],
         medio: [],
         grande: [],
-        note: 'Conectado a API-Football con temporada europea correcta.'
+        note: 'Conectado a API-Football con ligas principales y temporada correcta.'
       }
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
@@ -380,10 +390,6 @@ router.get('/ticket-global', async (req, res) => {
   }
 });
 
-// =====================
-// DEBUG TEMPORAL
-// =====================
-
 router.get('/debug', async (req, res) => {
   try {
     const date = req.query.date || getDate(req);
@@ -391,16 +397,9 @@ router.get('/debug', async (req, res) => {
 
     const tests = [
       `/fixtures?date=${date}`,
-      `/fixtures?league=39&season=${season}&date=${date}`,
-      `/fixtures?league=39&season=${season}&from=${date}&to=${date}`,
-      `/fixtures?league=39&season=${season}&next=10`,
-      `/fixtures?league=140&season=${season}&date=${date}`,
-      `/fixtures?league=135&season=${season}&date=${date}`,
-      `/fixtures?league=78&season=${season}&date=${date}`,
-      `/fixtures?league=61&season=${season}&date=${date}`,
-      `/fixtures?league=2&season=${season}&date=${date}`,
-      `/fixtures?league=3&season=${season}&date=${date}`,
-      `/fixtures?league=848&season=${season}&date=${date}`
+      ...Object.entries(LEAGUES).map(([key, league]) =>
+        `/fixtures?league=${league.id}&season=${season}&date=${date}`
+      )
     ];
 
     const results = [];
@@ -432,9 +431,9 @@ router.get('/debug', async (req, res) => {
       date,
       season,
       apiKeyLoaded: !!process.env.FOOTBALL_API_KEY,
+      leagues: LEAGUES,
       results
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
