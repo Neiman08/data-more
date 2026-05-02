@@ -11,7 +11,6 @@ function safeNumber(v, fallback = 0) {
   return Number.isNaN(n) ? fallback : n;
 }
 
-// Ajuste por liga (ritmo ofensivo real)
 function getLeagueGoalFactor(leagueKey = '') {
   const key = String(leagueKey || '').toLowerCase();
 
@@ -33,19 +32,18 @@ function getLeagueGoalFactor(leagueKey = '') {
   return map[key] ?? 0;
 }
 
-// 🔥 FORM REAL (sin inventar ventaja local)
 function analyzeRecentForm(events = [], teamName = '', teamId = null) {
   if (!Array.isArray(events) || events.length === 0) {
     return {
       games: 0,
-      wins: 1,
-      draws: 3,
-      losses: 1,
-      points: 6,
-      goalsFor: 5,
-      goalsAgainst: 5,
-      avgGF: 1.0,
-      avgGA: 1.0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      points: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      avgGF: 1.15,
+      avgGA: 1.15,
       formScore: 50,
       formText: 'N/D'
     };
@@ -60,17 +58,25 @@ function analyzeRecentForm(events = [], teamName = '', teamId = null) {
   const form = [];
 
   events.slice(0, 5).forEach(event => {
+    const homeName = String(event.strHomeTeam || '').toLowerCase();
+    const awayName = String(event.strAwayTeam || '').toLowerCase();
+    const targetName = String(teamName || '').toLowerCase();
+
     const isHome =
-      event.homeTeamId === teamId ||
-      String(event.strHomeTeam || '').toLowerCase() === String(teamName || '').toLowerCase();
+      Number(event.homeTeamId) === Number(teamId) ||
+      homeName === targetName;
 
-    const gf = isHome
-      ? safeNumber(event.intHomeScore)
-      : safeNumber(event.intAwayScore);
+    const isAway =
+      Number(event.awayTeamId) === Number(teamId) ||
+      awayName === targetName;
 
-    const ga = isHome
-      ? safeNumber(event.intAwayScore)
-      : safeNumber(event.intHomeScore);
+    if (!isHome && !isAway) return;
+
+    const homeGoals = safeNumber(event.intHomeScore);
+    const awayGoals = safeNumber(event.intAwayScore);
+
+    const gf = isHome ? homeGoals : awayGoals;
+    const ga = isHome ? awayGoals : homeGoals;
 
     goalsFor += gf;
     goalsAgainst += ga;
@@ -89,20 +95,38 @@ function analyzeRecentForm(events = [], teamName = '', teamId = null) {
     }
   });
 
-  const games = Math.min(events.length, 5) || 1;
+  const games = wins + draws + losses;
+
+  if (!games) {
+    return {
+      games: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      points: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      avgGF: 1.15,
+      avgGA: 1.15,
+      formScore: 50,
+      formText: 'N/D'
+    };
+  }
+
   const avgGF = goalsFor / games;
   const avgGA = goalsAgainst / games;
 
   const formScore = clamp(
     50 +
-      points * 2.2 +
-      wins * 2.5 -
-      losses * 2.2 +
-      (goalsFor - goalsAgainst) * 2.8 +
+      points * 2.4 +
+      wins * 2.8 +
+      draws * 0.8 -
+      losses * 2.5 +
+      (goalsFor - goalsAgainst) * 3.0 +
       (avgGF - 1.2) * 7 -
       (avgGA - 1.2) * 6,
     25,
-    82
+    85
   );
 
   return {
@@ -120,10 +144,9 @@ function analyzeRecentForm(events = [], teamName = '', teamId = null) {
   };
 }
 
-// ⚽ Expected Goals realista
-function expectedGoals(attack, defense, leagueFactor, homeBoost = 0) {
+function expectedGoals(attack, opponentDefense, leagueFactor, homeBoost = 0) {
   return clamp(
-    attack * 0.62 + defense * 0.38 + leagueFactor + homeBoost,
+    attack * 0.62 + opponentDefense * 0.38 + leagueFactor + homeBoost,
     0.45,
     3.4
   );
@@ -135,7 +158,6 @@ function getConfidence(prob) {
   return 'BAJA';
 }
 
-// 🚀 MODELO FINAL NIVEL DIOS
 export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEvents = [] }) {
   const homeTeam = match.homeTeam;
   const awayTeam = match.awayTeam;
@@ -150,12 +172,11 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
 
   const totalXG = homeXG + awayXG;
 
-  // 🔥 POWER REAL (sin inflar local)
   const homePower =
     homeForm.formScore +
     homeXG * 12 +
     homeForm.points * 0.9 +
-    2.5; // leve localía
+    2.5;
 
   const awayPower =
     awayForm.formScore +
@@ -164,20 +185,19 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
 
   const totalPower = homePower + awayPower || 1;
 
-  let homeWin = (homePower / totalPower) * 100;
-  let awayWin = (awayPower / totalPower) * 100;
+  let rawHome = (homePower / totalPower) * 100;
+  let rawAway = (awayPower / totalPower) * 100;
 
-  const diff = Math.abs(homeWin - awayWin);
+  const diff = Math.abs(rawHome - rawAway);
 
-  // 🔥 Empate dinámico real
   let draw = clamp(
     31 - diff * 0.33 - Math.max(0, totalXG - 2.4) * 3.8,
     16,
     31
   );
 
-  homeWin = homeWin * ((100 - draw) / 100);
-  awayWin = awayWin * ((100 - draw) / 100);
+  let homeWin = rawHome * ((100 - draw) / 100);
+  let awayWin = rawAway * ((100 - draw) / 100);
 
   const norm = homeWin + awayWin + draw || 1;
 
@@ -185,7 +205,6 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
   awayWin = round((awayWin / norm) * 100);
   draw = round((draw / norm) * 100);
 
-  // 🎯 PICK REAL
   let pick = homeTeam;
   let pickProb = homeWin;
 
@@ -199,7 +218,6 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
     pickProb = draw;
   }
 
-  // 🔥 MERCADOS
   const over25Prob = clamp(round(35 + totalXG * 12.5), 35, 76);
 
   const bttsProb = clamp(
@@ -227,7 +245,7 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
     projectedTotal: round(totalXG),
 
     modelNote:
-      'Modelo PRO: forma real, xG, defensa, empate dinámico, ritmo por liga y localía controlada.',
+      'Modelo PRO: forma real, goles esperados, defensa, empate dinámico, ritmo por liga y localía controlada.',
 
     probabilities: {
       homeWin,
@@ -245,12 +263,28 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
     form: {
       home: {
         record: `${homeForm.wins}-${homeForm.draws}-${homeForm.losses}`,
-        form: homeForm.formText
+        form: homeForm.formText,
+        goalsFor: homeForm.goalsFor,
+        goalsAgainst: homeForm.goalsAgainst,
+        avgGF: homeForm.avgGF,
+        avgGA: homeForm.avgGA,
+        formScore: homeForm.formScore
       },
       away: {
         record: `${awayForm.wins}-${awayForm.draws}-${awayForm.losses}`,
-        form: awayForm.formText
+        form: awayForm.formText,
+        goalsFor: awayForm.goalsFor,
+        goalsAgainst: awayForm.goalsAgainst,
+        avgGF: awayForm.avgGF,
+        avgGA: awayForm.avgGA,
+        formScore: awayForm.formScore
       }
+    },
+
+    goals: {
+      homeProjectedGoals: round(homeXG),
+      awayProjectedGoals: round(awayXG),
+      projectedTotal: round(totalXG)
     },
 
     markets: {
@@ -265,9 +299,10 @@ export function buildSoccerAnalysis({ match, homeRecentEvents = [], awayRecentEv
 
     notes: [
       'Se eliminó el sesgo al equipo local.',
-      'El empate ahora es realista.',
-      'El modelo usa goles esperados (xG).',
-      'Cada liga tiene su propio ritmo ofensivo.'
+      'El empate ahora se calcula dinámicamente.',
+      'El modelo usa goles esperados estimados.',
+      'Cada liga tiene su propio ritmo ofensivo.',
+      'Si no hay últimos 5 reales, usa valores neutrales para evitar picks falsos.'
     ],
 
     playerProps: []
