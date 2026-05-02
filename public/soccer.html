@@ -298,6 +298,28 @@
 
     .bet-no { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
     .bet-strong { background: var(--accent-soccer); color: #052e16; }
+
+    /* Estilos de Alineaciones */
+    .lineup-container {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .player-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .order-num {
+      color: var(--accent-soccer);
+      font-weight: 900;
+    }
   </style>
 </head>
 
@@ -400,13 +422,43 @@ async function initTicker() {
   setInterval(fetchScores, 60000);
 }
 
+async function renderSoccerLineups(fixtureId) {
+  try {
+    const res = await fetch(`/api/soccer/lineups/${fixtureId}?t=${Date.now()}`);
+    const data = await res.json();
+
+    if (!data.ok || !data.lineups || data.lineups.length < 2) {
+      return `<div style="font-size:10px;text-align:center;color:#94a3b8;padding:10px;">Alineaciones no disponibles aún.</div>`;
+    }
+
+    const renderSide = (team) => (team.startXI || []).slice(0, 11).map((p, i) => `
+      <div class="player-line">
+        <span><span class="order-num">${i + 1}</span> ${escapeHtml(p.name)}</span>
+        <span>${escapeHtml(p.pos || '')}</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="lineup-container">
+        <div style="display:flex;justify-content:space-between;gap:10px;">
+          <div style="width:50%;">${renderSide(data.lineups[0])}</div>
+          <div style="width:50%;">${renderSide(data.lineups[1])}</div>
+        </div>
+      </div>
+    `;
+  } catch {
+    return `<div style="font-size:10px;text-align:center;color:#94a3b8;padding:10px;">Alineaciones no disponibles.</div>`;
+  }
+}
+
 async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
-  container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando ligas globales...</p>';
+
+  container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando Soccer...</p>';
 
   try {
-    const res = await fetch(`/api/soccer/games-global?date=${encodeURIComponent(date)}`);
+    const res = await fetch(`/api/soccer/games-global?date=${encodeURIComponent(date)}&t=${Date.now()}`);
     const data = await res.json();
 
     if (!data.ok || !data.games.length) {
@@ -422,35 +474,70 @@ async function loadGames() {
     });
 
     container.innerHTML = '';
-    Object.keys(grouped).forEach(league => {
+
+    for (const league of Object.keys(grouped)) {
       const safeLeagueId = league.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '');
-      container.innerHTML += `<h2 class="league-title">${escapeHtml(league)}</h2><div class="games-grid" id="grid-${safeLeagueId}"></div>`;
+
+      container.innerHTML += `
+        <h2 class="league-title">${escapeHtml(league)}</h2>
+        <div class="games-grid" id="grid-${safeLeagueId}"></div>
+      `;
+
       const grid = container.querySelector(`#grid-${safeLeagueId}`);
 
-      grouped[league].forEach(game => {
+      for (const game of grouped[league]) {
+        const lineupHtml = await renderSoccerLineups(game.fixtureId || game.matchId);
+        const isLive = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE'].includes(String(game.status || '').toUpperCase());
+
         grid.innerHTML += `
           <div class="game-card">
-            <div class="box-score">
-              <span>${game.homeScore ?? 0}</span> <span style="opacity:0.2; color:white;">-</span> <span>${game.awayScore ?? 0}</span>
-            </div>
             <div class="matchup-pro">
               <div class="team-pro">
-                <img src="${game.homeLogo || '/logo.png'}">
+                <img src="${game.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'">
                 <span class="team-name">${escapeHtml(game.homeTeam)}</span>
+                <span style="font-size:11px;color:#22c55e;font-weight:900;">${game.homeRecord || ''}</span>
+                <span style="font-size:10px;color:#94a3b8;">${game.homeForm || ''}</span>
               </div>
-              <div class="vs-pro" style="color:#4b5563; font-weight:bold; font-size:10px;">VS</div>
+
+              <div style="text-align:center;width:22%;">
+                <div style="font-size:10px;font-weight:900;color:${isLive ? '#ef4444' : '#94a3b8'};">
+                  ${isLive ? '● EN VIVO' : escapeHtml(game.statusLong || game.status || 'PRE-GAME')}
+                </div>
+
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+                  ${escapeHtml(game.time || '')}
+                </div>
+
+                <div class="box-score" style="margin-top:6px;">
+                  <span>${game.homeScore ?? 0}</span>
+                  <span style="opacity:0.3;color:white;">-</span>
+                  <span>${game.awayScore ?? 0}</span>
+                </div>
+              </div>
+
               <div class="team-pro">
-                <img src="${game.awayLogo || '/logo.png'}">
+                <img src="${game.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'">
                 <span class="team-name">${escapeHtml(game.awayTeam)}</span>
+                <span style="font-size:11px;color:#22c55e;font-weight:900;">${game.awayRecord || ''}</span>
+                <span style="font-size:10px;color:#94a3b8;">${game.awayForm || ''}</span>
               </div>
             </div>
-            <div class="info">${escapeHtml(game.time)}</div>
-            <button class="btn-analyze btn-single" onclick="analyze(this, '${game.matchId}', '${game.leagueKey}')">ANALIZAR IA</button>
+
+            ${lineupHtml}
+
+            <button class="btn-analyze btn-single" onclick="analyze(this, '${game.matchId}', '${game.leagueKey}')">
+              ANALIZAR IA
+            </button>
+
             <div id="res-${game.matchId}" class="pick-res"></div>
-          </div>`;
-      });
-    });
-  } catch (err) { container.innerHTML = '<div style="text-align:center; color:red;">Error al conectar con el servidor.</div>'; }
+          </div>
+        `;
+      }
+    }
+
+  } catch (err) {
+    container.innerHTML = '<div style="text-align:center; color:red;">Error al conectar con el servidor.</div>';
+  }
 }
 
 async function analyze(btn, matchId, leagueKey) {
@@ -510,7 +597,6 @@ async function analyzeAll() {
 
 async function generateSoccerTicket() { alert("Generando ticket basado en picks con confianza ALTA..."); }
 
-// Lógica de fecha Chicago para evitar desfase UTC
 function getChicagoDate() {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Chicago',
