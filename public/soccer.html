@@ -77,33 +77,12 @@
       font-weight: 900;
     }
 
-    .tag-mlb {
-      background: var(--mlb-blue);
-      color: white;
-    }
+    .tag-mlb { background: var(--mlb-blue); color: white; }
+    .tag-soccer { background: var(--accent-soccer); color: #000; }
+    .tag-nba { background: var(--accent-nba); color: white; }
 
-    .tag-soccer {
-      background: var(--accent-soccer);
-      color: #000;
-    }
-
-    .tag-nba {
-      background: var(--accent-nba);
-      color: white;
-    }
-
-    .ticker-score {
-      color: #fff;
-      margin: 0 2px;
-      font-weight: 800;
-    }
-
-    .ticker-status {
-      margin-left: 10px;
-      color: var(--accent-blue);
-      font-size: 10px;
-      font-weight: bold;
-    }
+    .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
+    .ticker-status { margin-left: 10px; color: var(--accent-blue); font-size: 10px; font-weight: bold; }
 
     @keyframes ticker-scroll {
       0% { transform: translateX(0%); }
@@ -118,31 +97,11 @@
       margin: 0;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 0 20px;
-    }
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
 
-    .brand-header {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .brand-logo {
-      width: 50px;
-      height: 50px;
-      object-fit: contain;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 800;
-      color: #fff;
-    }
+    .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .brand-logo { width: 50px; height: 50px; object-fit: contain; }
+    h1 { margin: 0; font-size: 24px; font-weight: 800; color: #fff; }
 
     .selector { 
       background: rgba(255, 255, 255, 0.05); 
@@ -166,8 +125,7 @@
       font-weight: bold;
     }
 
-    .btn-action,
-    .nav-btn {
+    .btn-action, .nav-btn {
       padding: 10px 16px;
       border-radius: 10px;
       font-weight: bold;
@@ -182,31 +140,12 @@
       transition: 0.2s;
     }
 
-    .btn-load {
-      background: #2563eb;
-    }
-
-    .btn-all {
-      background: #facc15;
-      color: #000;
-    }
-
-    .btn-ticket {
-      background: var(--accent-soccer);
-      color: #052e16;
-    }
-
-    .mlb-btn {
-      background: var(--mlb-blue);
-    }
-
-    .soccer-btn {
-      background: var(--accent-soccer);
-    }
-
-    .nba-btn {
-      background: var(--accent-nba);
-    }
+    .btn-load { background: #2563eb; }
+    .btn-all { background: #facc15; color: #000; }
+    .btn-ticket { background: var(--accent-soccer); color: #052e16; }
+    .mlb-btn { background: var(--mlb-blue); }
+    .soccer-btn { background: var(--accent-soccer); }
+    .nba-btn { background: var(--accent-nba); }
 
     .nav-btn.active {
       outline: 2px solid #fff;
@@ -265,26 +204,9 @@
       width: 42%;
     }
 
-    .team-pro img {
-      width: 40px;
-      height: 40px;
-      object-fit: contain;
-      margin-bottom: 6px;
-    }
-
-    .team-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: #fff;
-      text-align: center;
-    }
-    
-    .info {
-      font-size: 11px;
-      color: #94a3b8;
-      text-align: center;
-      margin-bottom: 12px;
-    }
+    .team-pro img { width: 40px; height: 40px; object-fit: contain; margin-bottom: 6px; }
+    .team-name { font-size: 12px; font-weight: 700; color: #fff; text-align: center; }
+    .info { font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 12px; }
 
     .btn-analyze {
       background: #2563eb;
@@ -327,9 +249,7 @@
       padding-bottom: 3px;
     }
 
-    .stat-row b {
-      color: #fff;
-    }
+    .stat-row b { color: #fff; }
 
     .traffic-badge {
       padding: 2px 8px;
@@ -363,15 +283,8 @@
       border-bottom: 1px solid rgba(255,255,255,0.03);
     }
 
-    .prop-item:last-child {
-      border: none;
-    }
-
-    .prop-item i {
-      color: #8b949e;
-      font-style: normal;
-      font-size: 10px;
-    }
+    .prop-item:last-child { border: none; }
+    .prop-item i { color: #8b949e; font-style: normal; font-size: 10px; }
 
     .bet-btn {
       text-align: center;
@@ -383,16 +296,8 @@
       text-transform: uppercase;
     }
 
-    .bet-no {
-      background: #1e293b;
-      color: #94a3b8;
-      border: 1px solid #334155;
-    }
-
-    .bet-strong {
-      background: var(--accent-soccer);
-      color: #052e16;
-    }
+    .bet-no { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    .bet-strong { background: var(--accent-soccer); color: #052e16; }
   </style>
 </head>
 
@@ -433,9 +338,7 @@ function escapeHtml(v) {
     .replaceAll("'", "&#039;");
 }
 
-function wait(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function initTicker() {
   const ticker = document.getElementById('tickerWrapper');
@@ -444,7 +347,7 @@ async function initTicker() {
     try {
       const [mlbRes, soccerRes, nbaRes] = await Promise.all([
         fetch('/api/baseball/games').catch(() => null),
-        fetch('/api/soccer/games-global').catch(() => null), 
+        fetch('/api/soccer/games-global').catch(() => null),
         fetch('/api/nba-games').catch(() => null)
       ]);
 
@@ -456,11 +359,7 @@ async function initTicker() {
           html += `<div class="ticker-item">
             <span class="sport-tag tag-mlb">MLB</span>
             <img src="/logos/${g.awayAbbrev}.png" onerror="this.style.display='none'">
-            ${g.awayAbbrev}
-            <span class="ticker-score">${g.awayScore}</span>
-            @
-            <span class="ticker-score">${g.homeScore}</span>
-            ${g.homeAbbrev}
+            ${g.awayAbbrev} <span class="ticker-score">${g.awayScore}</span> @ <span class="ticker-score">${g.homeScore}</span> ${g.homeAbbrev}
             <img src="/logos/${g.homeAbbrev}.png" onerror="this.style.display='none'">
             <span class="ticker-status">${g.status}</span>
           </div>`;
@@ -473,9 +372,7 @@ async function initTicker() {
           html += `<div class="ticker-item">
             <span class="sport-tag tag-soccer">SOC</span>
             <img src="${g.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-            <span class="ticker-score">${g.homeScore ?? 0}</span>
-            -
-            <span class="ticker-score">${g.awayScore ?? 0}</span>
+            <span class="ticker-score">${g.homeScore ?? 0}</span> - <span class="ticker-score">${g.awayScore ?? 0}</span>
             <img src="${g.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'">
             <span class="ticker-status">${g.time}</span>
           </div>`;
@@ -488,9 +385,7 @@ async function initTicker() {
           html += `<div class="ticker-item">
             <span class="sport-tag tag-nba">NBA</span>
             <img src="${g.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-            <span class="ticker-score">${g.awayScore ?? 0}</span>
-            @
-            <span class="ticker-score">${g.homeScore ?? 0}</span>
+            <span class="ticker-score">${g.awayScore ?? 0}</span> @ <span class="ticker-score">${g.homeScore ?? 0}</span>
             <img src="${g.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'">
             <span class="ticker-status">${g.status}</span>
           </div>`;
@@ -498,9 +393,7 @@ async function initTicker() {
       }
 
       if (html) ticker.innerHTML = html + html;
-    } catch (err) {
-      console.error("Ticker error:", err);
-    }
+    } catch (err) { console.error("Ticker error:", err); }
   }
 
   fetchScores();
@@ -510,11 +403,10 @@ async function initTicker() {
 async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
-
   container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando ligas globales...</p>';
 
   try {
-    const res = await fetch(`/api/soccer/games-global?date=${encodeURIComponent(date)}`); 
+    const res = await fetch(`/api/soccer/games-global?date=${encodeURIComponent(date)}`);
     const data = await res.json();
 
     if (!data.ok || !data.games.length) {
@@ -523,7 +415,6 @@ async function loadGames() {
     }
 
     const grouped = {};
-
     data.games.forEach(g => {
       const league = g.leagueName || 'Otras Ligas';
       if (!grouped[league]) grouped[league] = [];
@@ -531,77 +422,56 @@ async function loadGames() {
     });
 
     container.innerHTML = '';
-
     Object.keys(grouped).forEach(league => {
       const safeLeagueId = league.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '');
-
-      container.innerHTML += `
-        <h2 class="league-title">${escapeHtml(league)}</h2>
-        <div class="games-grid" id="grid-${safeLeagueId}"></div>
-      `;
-
+      container.innerHTML += `<h2 class="league-title">${escapeHtml(league)}</h2><div class="games-grid" id="grid-${safeLeagueId}"></div>`;
       const grid = container.querySelector(`#grid-${safeLeagueId}`);
 
       grouped[league].forEach(game => {
         grid.innerHTML += `
           <div class="game-card">
             <div class="box-score">
-              <span>${game.homeScore ?? 0}</span>
-              <span style="opacity:0.2; color:white;">-</span>
-              <span>${game.awayScore ?? 0}</span>
+              <span>${game.homeScore ?? 0}</span> <span style="opacity:0.2; color:white;">-</span> <span>${game.awayScore ?? 0}</span>
             </div>
-
             <div class="matchup-pro">
               <div class="team-pro">
                 <img src="${game.homeLogo || '/logo.png'}">
                 <span class="team-name">${escapeHtml(game.homeTeam)}</span>
               </div>
-
-              <div class="vs-pro" style="color:#4b5563; font-weight:bold; font-size:10px;">
-                VS
-              </div>
-
+              <div class="vs-pro" style="color:#4b5563; font-weight:bold; font-size:10px;">VS</div>
               <div class="team-pro">
                 <img src="${game.awayLogo || '/logo.png'}">
                 <span class="team-name">${escapeHtml(game.awayTeam)}</span>
               </div>
             </div>
-
             <div class="info">${escapeHtml(game.time)}</div>
-
-            <button class="btn-analyze btn-single" onclick="analyze(this, '${game.matchId}', '${game.leagueKey}')">
-              ANALIZAR IA
-            </button>
-
+            <button class="btn-analyze btn-single" onclick="analyze(this, '${game.matchId}', '${game.leagueKey}')">ANALIZAR IA</button>
             <div id="res-${game.matchId}" class="pick-res"></div>
-          </div>
-        `;
+          </div>`;
       });
     });
-  } catch (err) {
-    container.innerHTML = '<div style="text-align:center; color:red;">Error al conectar con el servidor.</div>';
-  }
+  } catch (err) { container.innerHTML = '<div style="text-align:center; color:red;">Error al conectar con el servidor.</div>'; }
 }
 
 async function analyze(btn, matchId, leagueKey) {
   btn.innerText = '...';
   btn.disabled = true;
-
   const date = document.getElementById('dateSelect').value;
 
   try {
-    const res = await fetch(`/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}`); 
+    const res = await fetch(`/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}`);
     const data = await res.json();
     const { analysis } = data;
 
-    const resDiv = document.getElementById(`res-${matchId}`);
+    const propsRes = await fetch(`/api/soccer/player-props/${matchId}`);
+    const propsData = await propsRes.json();
 
+    const resDiv = document.getElementById(`res-${matchId}`);
     btn.innerText = 'RE-ANALIZAR';
     btn.disabled = false;
     resDiv.style.display = 'block';
 
     const prob = analysis.probability || 0;
-
     let color = "var(--traffic-red)";
     if (prob >= 70) color = "var(--traffic-green)";
     else if (prob >= 50) color = "var(--traffic-yellow)";
@@ -610,86 +480,47 @@ async function analyze(btn, matchId, leagueKey) {
 
     resDiv.innerHTML = `
       <div class="res-header">🎯 PICK: ${escapeHtml(analysis.pick)}</div>
-
-      <div class="stat-row">
-        <span>Prob. Pick:</span>
-        <span class="traffic-badge" style="color:${color}; background:${color}11;">${prob}%</span>
-      </div>
-
-      <div class="stat-row">
-        <span>Confianza:</span>
-        <b>${analysis.confidence}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Mercado:</span>
-        <b>${analysis.market || '1X2 / Principal'}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>1X2 (L/E/V):</span>
-        <b>${analysis.probabilities?.homeWin}% | ${analysis.probabilities?.draw}% | ${analysis.probabilities?.awayWin}%</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Goles +2.5:</span>
-        <b>${analysis.markets?.over25}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Ambos marcan:</span>
-        <b>${analysis.markets?.btts}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Handicap:</span>
-        <b>${analysis.markets?.handicap}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Total Proyectado:</span>
-        <b>${analysis.projectedTotal} Goles</b>
-      </div>
-
+      <div class="stat-row"><span>Prob. Pick:</span><span class="traffic-badge" style="color:${color}; background:${color}11;">${prob}%</span></div>
+      <div class="stat-row"><span>Confianza:</span><b>${analysis.confidence}</b></div>
+      <div class="stat-row"><span>Mercado:</span><b>${analysis.market || '1X2 / Principal'}</b></div>
+      <div class="stat-row"><span>1X2 (L/E/V):</span><b>${analysis.probabilities?.homeWin}% | ${analysis.probabilities?.draw}% | ${analysis.probabilities?.awayWin}%</b></div>
+      <div class="stat-row"><span>Goles +2.5:</span><b>${analysis.markets?.over25}</b></div>
+      <div class="stat-row"><span>Ambos marcan:</span><b>${analysis.markets?.btts}</b></div>
+      <div class="stat-row"><span>Handicap:</span><b>${analysis.markets?.handicap}</b></div>
+      <div class="stat-row"><span>Total Proyectado:</span><b>${analysis.projectedTotal} Goles</b></div>
       <div class="props-section">
         <span class="props-title">Player Props (Predicciones IA)</span>
-
-        ${(analysis.playerProps || []).map(p => {
-          let pColor = p.chance >= 70 ? "var(--traffic-green)" : (p.chance >= 50 ? "var(--traffic-yellow)" : "var(--traffic-red)");
-
-          return `
-            <div class="prop-item">
-              <span><b>${escapeHtml(p.name)}</b> <i>(${escapeHtml(p.market)})</i></span>
-              <b style="color:${pColor}">${p.chance}%</b>
-            </div>
-          `;
+        ${(propsData.props || []).map(p => {
+          let chance = p.goalChance || p.shotChance || 0;
+          let pColor = chance >= 70 ? "var(--traffic-green)" : (chance >= 50 ? "var(--traffic-yellow)" : "var(--traffic-red)");
+          return `<div class="prop-item">
+                    <span><b>${escapeHtml(p.name)}</b> <i>(${escapeHtml(p.market)})</i></span>
+                    <b style="color:${pColor}">${chance}%</b>
+                  </div>`;
         }).join('') || '<div class="prop-item" style="opacity:0.4; font-size:10px;">Alineaciones no disponibles aún.</div>'}
       </div>
-
-      <div class="bet-btn ${isStrong ? 'bet-strong' : 'bet-no'}">
-        ${isStrong ? '💰 APUESTA FUERTE: SI' : '🚫 NO RECOMENDADA'}
-      </div>
-    `;
-  } catch (err) {
-    btn.innerText = 'Error';
-    btn.disabled = false;
-  }
+      <div class="bet-btn ${isStrong ? 'bet-strong' : 'bet-no'}">${isStrong ? '💰 APUESTA FUERTE: SI' : '🚫 NO RECOMENDADA'}</div>`;
+  } catch (err) { btn.innerText = 'Error'; btn.disabled = false; }
 }
 
 async function analyzeAll() {
   const buttons = Array.from(document.querySelectorAll('.btn-single'));
-
-  for (let btn of buttons) {
-    btn.click();
-    await wait(850);
-  }
+  for (let btn of buttons) { btn.click(); await wait(850); }
 }
 
-async function generateSoccerTicket() {
-  alert("Generando ticket basado en picks con confianza ALTA...");
+async function generateSoccerTicket() { alert("Generando ticket basado en picks con confianza ALTA..."); }
+
+// Lógica de fecha Chicago para evitar desfase UTC
+function getChicagoDate() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
 }
 
-document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
+document.getElementById('dateSelect').value = getChicagoDate();
 
 loadGames();
 initTicker();
