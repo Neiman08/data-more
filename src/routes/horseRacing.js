@@ -1,9 +1,10 @@
 import express from 'express';
+import pdf from 'pdf-parse';
 import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-// Datos de ejemplo para pruebas locales
+// Datos Demo (se mantienen igual)
 const demoRaces = [
   {
     raceId: 'demo-1',
@@ -22,72 +23,55 @@ const demoRaces = [
   }
 ];
 
-// 1. Obtener todas las carreras (Demo)
-router.get('/racecards', async (req, res) => {
-  res.json({
-    ok: true,
-    source: 'free-demo-model',
-    races: demoRaces
-  });
-});
+router.get('/racecards', (req, res) => res.json({ ok: true, races: demoRaces }));
 
-// 2. Analizar una carrera específica por ID
-router.get('/analyze/:raceId', async (req, res) => {
+router.get('/analyze/:raceId', (req, res) => {
   const race = demoRaces.find(r => r.raceId === req.params.raceId);
-
-  if (!race) {
-    return res.status(404).json({ ok: false, error: 'Carrera no encontrada' });
-  }
-
-  const analysis = analyzeRace(race);
-
-  res.json({
-    ok: true,
-    race,
-    analysis
-  });
+  if (!race) return res.status(404).json({ ok: false, error: 'No encontrado' });
+  res.json({ ok: true, analysis: analyzeRace(race) });
 });
 
-// 3. Generar URL del programa/revista PDF
 router.get('/program-url', (req, res) => {
   const date = req.query.date || new Date().toISOString().split('T')[0];
   const track = String(req.query.track || 'sa').toLowerCase();
-
-  const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
-
-  res.json({
-    ok: true,
-    date,
-    track,
-    url
-  });
+  res.json({ ok: true, url: `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf` });
 });
 
-// 4. NUEVO: Import Program (Editado y Simplificado)
+// --- EL ENDPOINT ACTUALIZADO CON PARSER ---
 router.get('/import-program', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const track = String(req.query.track || 'sa').toLowerCase();
-
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    const response = await fetch(url);
+    console.log('🚀 Iniciando extracción de texto de:', url);
 
-    if (!response.ok) {
-      return res.status(404).json({
-        ok: false,
-        error: 'PDF no encontrado'
-      });
-    }
+    const response = await fetch(url);
+    if (!response.ok) return res.status(404).json({ ok: false, error: 'PDF no encontrado' });
+
+    // Convertimos a Buffer para pdf-parse
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Extraer texto
+    const data = await pdf(buffer);
+
+    // Limpieza: Quitamos espacios dobles y saltos de línea innecesarios
+    const cleanText = data.text.replace(/\s+/g, ' ').trim();
 
     res.json({
       ok: true,
       url,
-      message: 'PDF encontrado correctamente (sin parsear aún)'
+      info: {
+        paginas: data.numpages,
+        caracteres: cleanText.length
+      },
+      // Mostramos una muestra más grande para analizar los patrones de los caballos
+      rawText: cleanText.substring(0, 5000) 
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error en el Parser:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
