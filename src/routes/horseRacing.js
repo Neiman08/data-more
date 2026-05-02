@@ -38,6 +38,15 @@ async function extractPdfText(buffer) {
 }
 
 /* =========================================================
+   ✂️ DIVISIÓN POR CARRERAS (ACTUALIZADA: SOPORTE ORDINALES)
+========================================================= */
+function splitRaces(text) {
+  return text
+    .split(/\b(?:\d{1,2}(?:ST|ND|RD|TH)|RACE\s+\d+|CARRERA\s+\d+)\b/gi)
+    .filter(r => r.length > 200);
+}
+
+/* =========================================================
    🧠 EXTRACCIÓN DE CABALLOS (CONTEXTO REAL)
 ========================================================= */
 function extractHorses(text) {
@@ -71,7 +80,7 @@ function extractHorses(text) {
     });
   }
 
-  return horses.slice(0, 12);
+  return horses;
 }
 
 /* =========================================================
@@ -84,7 +93,7 @@ router.get('/import-program', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
-    console.log('📥 Procesando PDF de carrera:', url);
+    console.log('📥 Procesando PDF por bloques de carrera:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -98,46 +107,47 @@ router.get('/import-program', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 1. Extraer texto del PDF
+    // 1. Extraer texto completo
     const data = await extractPdfText(buffer);
     const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    // 2. Identificar caballos con la lógica de contexto real
-    const horses = extractHorses(cleanText);
+    // 2. Extraer caballos por cada carrera detectada
+    const raceBlocks = splitRaces(cleanText);
 
-    if (horses.length === 0) {
+    const races = raceBlocks.map((block, index) => {
+      const runners = extractHorses(block);
+
+      return {
+        raceId: `race-${index + 1}`,
+        track,
+        date,
+        runners
+      };
+    }).filter(r => r.runners.length > 3);
+
+    if (races.length === 0) {
       return res.json({
         ok: false,
-        message: 'No se detectaron caballos con el filtro de contexto real.',
+        message: 'No se detectaron bloques de carrera válidos.',
         url
       });
     }
 
-    // 3. Estructurar carrera
-    const race = {
-      raceId: `race-${track}-${date}`,
-      track,
-      date,
-      runners: horses
-    };
+    // 3. Analizar SOLO la primera carrera (por ahora)
+    const selectedRace = races[0];
+    const analysis = analyzeRace(selectedRace);
 
-    // 4. Ejecutar análisis de scoring
-    const analysis = analyzeRace(race);
-
-    // 5. Respuesta final
+    // 4. Respuesta final
     res.json({
       ok: true,
       url,
-      info: {
-        paginas: data.pages,
-        totalCaballos: horses.length
-      },
-      horses,
+      totalRaces: races.length,
+      races,
       analysis
     });
 
   } catch (error) {
-    console.error('❌ ERROR CRÍTICO EN PDF ROUTE:', error);
+    console.error('❌ ERROR CRÍTICO:', error);
     res.status(500).json({
       ok: false,
       error: error.message
