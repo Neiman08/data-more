@@ -3,7 +3,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-// 🔥 Compatibilidad TOTAL con pdf-parse (todas versiones)
+// --- LÓGICA DE PDF-PARSE (COMPATIBILIDAD) ---
 let pdfModule;
 
 async function extractPdfText(buffer) {
@@ -13,7 +13,7 @@ async function extractPdfText(buffer) {
 
   const fn = pdfModule.default || pdfModule;
 
-  // Caso 1: versión vieja (función directa)
+  // Caso 1: Versión tradicional
   if (typeof fn === 'function') {
     const data = await fn(buffer);
     return {
@@ -22,9 +22,8 @@ async function extractPdfText(buffer) {
     };
   }
 
-  // Caso 2: versión nueva (clase PDFParse)
+  // Caso 2: Versión basada en clases (PDFParse)
   const PDFParse = pdfModule.PDFParse || pdfModule.default?.PDFParse;
-
   if (PDFParse) {
     const parser = new PDFParse({ data: buffer });
     const result = await parser.getText();
@@ -42,146 +41,99 @@ async function extractPdfText(buffer) {
   throw new Error('Formato de pdf-parse no reconocido');
 }
 
-/**
- * Función mejorada para extraer caballos con filtrado y control de duplicados
- */
+// --- NUEVA LÓGICA DE EXTRACCIÓN DE CABALLOS ---
 function extractHorses(text) {
   const horses = [];
   const seen = new Set();
 
-  const blacklist = [
-    'Track', 'Park', 'Race', 'Trainer', 'Jockey',
-    'Stud', 'Farm', 'LLC', 'Corp', 'Stable',
-    'Santa', 'Allowance', 'Claiming'
-  ];
-
-  const regex = /([A-Z][a-zA-Z']+(?:\s[A-Z][a-zA-Z']+)+)\s+(\d+\/\d+)/g;
+  // 🔥 Detecta: número (1-2 dígitos) + nombre del caballo (Palabras en Mayúsculas)
+  const regex = /\b(\d{1,2})\s+([A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)*)/g;
 
   let match;
 
   while ((match = regex.exec(text)) !== null) {
-    const name = match[1].trim();
-    const odds = match[2].trim();
+    const number = match[1];
+    const name = match[2].trim();
 
-    // ❌ Filtrar basura
+    // ❌ Filtros de validación y limpieza
     if (
-      name.length < 5 ||
-      blacklist.some(word => name.includes(word))
+      name.length < 4 ||
+      seen.has(name) ||
+      name.includes('Stud') ||
+      name.includes('Farm') ||
+      name.includes('Stable') ||
+      name.includes('Trainer') ||
+      name.includes('Jockey')
     ) continue;
 
-    // ❌ Evitar duplicados
-    if (seen.has(name)) continue;
     seen.add(name);
 
     horses.push({
+      number,
       name,
-      odds,
+      odds: `${Math.floor(Math.random() * 10) + 2}/1`, // Simulado por ahora
       speed: 75 + Math.random() * 20
     });
   }
 
+  // Retornamos máximo 12 para evitar falsos positivos masivos
   return horses.slice(0, 12);
 }
 
-// 🧪 DEMO DATA
-const demoRaces = [
-  {
-    raceId: 'demo-1',
-    track: 'Santa Anita Park',
-    raceNumber: 1,
-    runners: [
-      { name: 'Fast Storm', odds: '3/1', speed: 91 },
-      { name: 'Golden Pace', odds: '5/1', speed: 88 }
-    ]
-  }
-];
+// --- RUTAS / ENDPOINTS ---
 
-// 📊 ENDPOINTS
-
+// Demo estática
 router.get('/racecards', (req, res) => {
   res.json({
     ok: true,
-    races: demoRaces
+    races: [
+      {
+        raceId: 'demo-1',
+        track: 'Santa Anita Park',
+        runners: [{ name: 'Fast Storm', odds: '3/1', speed: 91 }]
+      }
+    ]
   });
 });
 
-router.get('/analyze/:raceId', (req, res) => {
-  const race = demoRaces.find(r => r.raceId === req.params.raceId);
-
-  if (!race) {
-    return res.status(404).json({
-      ok: false,
-      error: 'Carrera no encontrada'
-    });
-  }
-
-  res.json({
-    ok: true,
-    analysis: analyzeRace(race)
-  });
-});
-
-// 🔗 GENERAR URL PDF
-router.get('/program-url', (req, res) => {
-  const date = req.query.date || new Date().toISOString().split('T')[0];
-  const track = String(req.query.track || 'sa').toLowerCase();
-
-  res.json({
-    ok: true,
-    url: `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`
-  });
-});
-
-// 🚀 IMPORTAR Y LEER PDF REAL
+// Importación y procesamiento REAL
 router.get('/import-program', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     const track = String(req.query.track || 'sa').toLowerCase();
-
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
 
     console.log('📥 Procesando PDF:', url);
 
     const response = await fetch(url);
-
     if (!response.ok) {
-      return res.status(404).json({
-        ok: false,
-        error: 'PDF no encontrado',
-        url
-      });
+      return res.status(404).json({ ok: false, error: 'PDF no encontrado', url });
     }
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 🔥 Extracción de texto
+    // Extracción de texto
     const data = await extractPdfText(buffer);
+    const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
 
-    const cleanText = String(data.text || '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // 🐎 Extracción de caballos (Nueva Lógica)
+    // Procesar caballos con la nueva lógica
     const horses = extractHorses(cleanText);
 
-    // 🏁 Preparación para el análisis
     const race = {
       raceId: `real-${track}-${date}`,
       track: track,
       runners: horses
     };
 
+    // Análisis final
     const analysis = analyzeRace(race);
 
-    // ✅ RESPUESTA FINAL
     res.json({
       ok: true,
       url,
-      track,
       info: {
         paginas: data.pages,
-        caracteres: cleanText.length,
         caballosDetectados: horses.length
       },
       horses,
@@ -190,11 +142,7 @@ router.get('/import-program', async (req, res) => {
 
   } catch (error) {
     console.error('❌ ERROR PDF:', error);
-
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 
