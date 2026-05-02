@@ -4,7 +4,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Diagnóstico + Import) cargado');
+console.log('✅ Router de Hípica Estructurado cargado correctamente');
 
 /* =========================================================
    🛠️ ENDPOINT 1: DIAGNÓSTICO DE COORDENADAS
@@ -13,160 +13,147 @@ console.log('✅ Router de Hípica (Diagnóstico + Import) cargado');
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
-    
-    if (!date || !track) {
-      return res.status(400).json({ 
-        ok: false, 
-        error: "Faltan parámetros: date (YYYY-MM-DD) y track (ej: gp) son obligatorios." 
-      });
-    }
+    if (!date || !track) throw new Error("Faltan parámetros date (YYYY-MM-DD) y track (ej: gp)");
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
-    console.log(`🔍 Iniciando escaneo de coordenadas en: ${url}`);
-    
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`PDF no encontrado en: ${url}`);
+    if (!response.ok) throw new Error('PDF no encontrado en el servidor');
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
-    
-    const loadingTask = pdfjs.getDocument({ data });
-    const pdf = await loadingTask.promise;
+    const pdf = await pdfjs.getDocument({ data }).promise;
     
     const pageNum = parseInt(page);
-    if (pageNum > pdf.numPages) throw new Error(`La página ${pageNum} no existe. Total: ${pdf.numPages}`);
-
     const pdfPage = await pdf.getPage(pageNum);
     const textContent = await pdfPage.getTextContent();
 
-    const debugTokens = textContent.items.map(item => ({
+    const tokens = textContent.items.map(item => ({
       text: item.str,
       x: parseFloat(item.transform[4].toFixed(2)),
       y: parseFloat(item.transform[5].toFixed(2)),
       w: parseFloat(item.width.toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenamos por Y (arriba a abajo) para que el JSON siga el flujo de lectura
-    debugTokens.sort((a, b) => {
+    // Ordenar para lectura lógica: Y descendente, luego X ascendente
+    tokens.sort((a, b) => {
       if (Math.abs(a.y - b.y) > 5) return b.y - a.y;
       return a.x - b.x;
     });
 
     res.json({
       ok: true,
-      info: {
-        track,
-        date,
-        page: pageNum,
-        totalPages: pdf.numPages,
-        totalTokens: debugTokens.length
-      },
-      tokens: debugTokens.slice(0, 500) // Primeros 500 tokens para calibración
+      info: { track, date, page: pageNum, totalPages: pdf.numPages },
+      tokens: tokens.slice(0, 500) 
     });
-
   } catch (error) {
-    console.error('❌ Error en Debug:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
 
 /* =========================================================
-   🚀 ENDPOINT 2: IMPORT-PROGRAM (BASADO EN TEXTO PLANO)
-   Uso: /api/horse-racing/import-program?track=gp&date=2026-05-02
+   🚀 ENDPOINT 2: IMPORTACIÓN ESTRUCTURADA (PRO)
+   Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
-router.get('/import-program', async (req, res) => {
+router.get('/import-structured', async (req, res) => {
   try {
-    const date = req.query.date || new Date().toISOString().split('T')[0];
-    const track = String(req.query.track || 'sa').toLowerCase();
+    const { date, track } = req.query;
+    if (!date || !track) throw new Error("Parámetros track y date obligatorios");
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
-    
-    if (!response.ok) {
-      return res.status(404).json({ ok: false, error: 'PDF no encontrado', url });
-    }
+    if (!response.ok) throw new Error('No se pudo descargar el PDF del servidor remoto');
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const data = new Uint8Array(arrayBuffer);
+    const pdf = await pdfjs.getDocument({ data }).promise;
 
-    // 1. Extraer texto con pdf-parse (Lógica original)
-    const data = await extractPdfText(buffer);
-    const cleanText = String(data.text || '').replace(/\s+/g, ' ').trim();
+    const allRaces = [];
 
-    // 2. Segmentar por carreras
-    const raceBlocks = splitRaces(cleanText);
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      
+      const tokens = textContent.items.map(item => ({
+        text: item.str.trim(),
+        x: item.transform[4],
+        y: item.transform[5]
+      })).filter(t => t.text !== "");
 
-    const races = raceBlocks.map((block, index) => {
-      const runners = extractHorses(block);
-      return {
-        raceId: `race-${index + 1}`,
-        track,
-        date,
-        runners
-      };
-    }).filter(r => r.runners.length > 3);
-
-    if (races.length === 0) {
-      return res.json({
-        ok: false,
-        message: 'No se encontraron caballos válidos.',
-        url,
-        debugStart: cleanText.substring(0, 3000),
-        debugBlock: raceBlocks[0]?.substring(0, 3000)
+      // 1. Agrupar por filas (Y) con margen de error de 5px
+      const rows = [];
+      tokens.forEach(token => {
+        let row = rows.find(r => Math.abs(r.y - token.y) < 5);
+        if (!row) {
+          row = { y: token.y, items: [] };
+          rows.push(row);
+        }
+        row.items.push(token);
       });
+
+      // Ordenar filas y elementos internos
+      rows.sort((a, b) => b.y - a.y);
+      rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
+
+      // 2. Extraer corredores usando los rangos de coordenadas validados
+      const runners = [];
+      rows.forEach((row, rowIndex) => {
+        const firstItem = row.items[0];
+        
+        // El número del caballo está en el extremo izquierdo (x < 20)
+        if (/^\d{1,2}$/.test(firstItem?.text) && firstItem.x < 20) {
+          
+          // Nombre del caballo: rango x entre 30 y 150
+          const horseName = row.items.find(it => it.x > 30 && it.x < 150)?.text;
+          
+          if (horseName) {
+            // Odds: Buscamos en la fila de abajo (rowIndex + 1) en la misma zona izquierda
+            const nextRow = rows[rowIndex + 1];
+            const odds = nextRow?.items.find(it => it.x < 30 && it.text.includes('-'))?.text || "N/A";
+            
+            // Jockey: rango x entre 170 y 250
+            const jockey = row.items.find(it => it.x > 170 && it.x < 250)?.text || "Unknown";
+            
+            // Speed Figures: zona derecha de la tabla (x > 530)
+            const speedFigures = row.items
+              .filter(it => it.x > 530)
+              .map(it => parseInt(it.text))
+              .filter(n => !isNaN(n));
+
+            runners.push({
+              number: firstItem.text,
+              name: horseName,
+              odds: odds,
+              jockey: jockey,
+              speedFigures: speedFigures
+            });
+          }
+        }
+      });
+
+      if (runners.length > 0) {
+        allRaces.push({
+          raceNumber: i,
+          track: track.toUpperCase(),
+          date: date,
+          runners: runners
+        });
+      }
     }
 
-    const selectedRace = races[0];
-    const analysis = analyzeRace(selectedRace);
-
+    // 3. Respuesta final con protección para el análisis
     res.json({
       ok: true,
       url,
-      totalRaces: races.length,
-      races,
-      analysis
+      totalRaces: allRaces.length,
+      races: allRaces,
+      // Solo ejecutamos analyzeRace si hay datos para evitar que el servidor caiga
+      analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
   } catch (error) {
+    console.error('❌ Error en Proceso Estructurado:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
-
-/* =========================================================
-   🧠 FUNCIONES DE APOYO (TEXT-BASED)
-========================================================= */
-
-async function extractPdfText(buffer) {
-  let pdfModule = await import('pdf-parse');
-  const fn = pdfModule.default || pdfModule;
-  const data = await fn(buffer);
-  return { text: data.text || '', pages: data.numpages || 0 };
-}
-
-function splitRaces(text) {
-  return text
-    .split(/\b(?:\d{1,2}(?:ST|ND|RD|TH)|RACE\s+\d+|CARRERA\s+\d+)\b/gi)
-    .filter(r => r.length > 200);
-}
-
-function extractHorses(text) {
-  const horses = [];
-  const seen = new Set();
-  const regex = /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)+)\b/g;
-  const blacklist = ['Santa', 'Park', 'Furlongs', 'Thoroughbred', 'Weight', 'Track', 'Race', 'Arena', 'Purse', 'Rat'];
-
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    const name = match[1].trim();
-    if (seen.has(name) || name.split(' ').length < 2 || name.length < 6 || blacklist.some(w => name.includes(w))) continue;
-    seen.add(name);
-    horses.push({
-      name,
-      odds: null,
-      speed: Math.floor(80 + Math.random() * 15)
-    });
-  }
-  return horses.slice(0, 14);
-}
 
 export default router;
