@@ -1,5 +1,4 @@
 import express from 'express';
-import fetch from 'node-fetch';
 
 const router = express.Router();
 
@@ -28,6 +27,13 @@ router.get('/racecards', async (req, res) => {
 
     const data = await response.json();
 
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        error: data
+      });
+    }
+
     res.json({
       ok: true,
       date,
@@ -35,8 +41,12 @@ router.get('/racecards', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-    res.json({ ok: false });
+    console.error('Horse Racing Error:', error.message);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
@@ -51,13 +61,25 @@ router.get('/race/:raceId', async (req, res) => {
 
     const data = await response.json();
 
+    if (!response.ok) {
+      return res.status(response.status).json({
+        ok: false,
+        error: data
+      });
+    }
+
     res.json({
       ok: true,
       race: data
     });
 
   } catch (error) {
-    res.json({ ok: false });
+    console.error('Horse Race Detail Error:', error.message);
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
