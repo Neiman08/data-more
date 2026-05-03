@@ -10,11 +10,9 @@
     .logo { width:55px; height:55px; }
     h1 { margin:0; font-size:28px; font-weight:900; }
     
-    .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; position: sticky; top: 0; background: #0d1117; padding: 10px 0; z-index: 100; }
+    .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; }
     button, a { border:none; border-radius:10px; padding:10px 16px; font-weight:800; cursor:pointer; text-decoration:none; color:white; transition: 0.2s; }
     .btn-load { background:#8b5cf6; }
-    .btn-nav { background:#334155; font-size:12px; }
-    .btn-nav:hover { background:#475569; transform: scale(1.05); }
 
     /* Grid Adaptativo */
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -22,7 +20,7 @@
     @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
-    /* Tarjetas con Feedback Visual */
+    /* Tarjetas */
     .card {
       background:#161b22;
       border:1px solid #30363d;
@@ -31,11 +29,9 @@
       padding:14px;
       transition: 0.2s;
       cursor: pointer;
-      scroll-margin-top: 80px; /* Para que el scroll no quede tapado por los botones */
     }
     .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
     
-    /* Colores por Confianza */
     .card.alta { border-left: 4px solid #22c55e; }
     .card.media { border-left: 4px solid #facc15; }
     .card.baja { border-left: 4px solid #ef4444; }
@@ -55,7 +51,6 @@
     .rank-row, .bet { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:12px; }
     .bet { background:#0f172a; padding:8px; border-radius:8px; margin-top:6px; border-bottom:none; }
     
-    /* PDF Full Width */
     .pdf-full {
       grid-column: 1 / -1;
       margin-top: 28px;
@@ -75,38 +70,25 @@
     <h1>DATA MORE HORSE</h1>
   </div>
 
-  <div id="quick-nav" class="controls">
+  <div class="controls">
     <button class="btn-load" onclick="loadRaces()">🏇 Cargar Carreras</button>
   </div>
 
   <div id="races" class="grid"></div>
 
 <script>
-// Función de scroll suave
-function scrollToRace(n) {
-  const el = document.getElementById('race-' + n);
-  if (el) el.scrollIntoView({ behavior: 'smooth' });
-}
-
 async function loadRaces() {
   const container = document.getElementById('races');
-  const nav = document.getElementById('quick-nav');
-  container.innerHTML = '<div class="card">Cargando datos reales e importando análisis...</div>';
+  container.innerHTML = '<div class="card">Cargando datos...</div>';
 
   try {
     const res = await fetch('/api/horse-racing/import-structured?track=gp&date=2026-05-02');
     const data = await res.json();
 
     if (!data.ok || !data.races.length) {
-      container.innerHTML = `<div class="card">No se encontraron carreras para esta fecha.</div>`;
+      container.innerHTML = `<div class="card">No hay datos disponibles.</div>`;
       return;
     }
-
-    // Resetear navegación rápida
-    nav.innerHTML = `<button class="btn-load" onclick="loadRaces()">🏇 Recargar</button>`;
-    data.races.forEach(r => {
-      nav.innerHTML += `<button class="btn-nav" onclick="scrollToRace(${r.raceNumber})">R${r.raceNumber}</button>`;
-    });
 
     container.innerHTML = '';
 
@@ -115,15 +97,14 @@ async function loadRaces() {
       const confClass = a ? a.confidence.toLowerCase() : '';
 
       container.innerHTML += `
-        <div id="race-${race.raceNumber}" class="card ${confClass}">
+        <div class="card ${confClass}">
           <div class="race-title">🏇 Carrera ${race.raceNumber}</div>
           <div class="meta">${race.track.toUpperCase()} • ${race.date}</div>
-          ${a ? renderAnalysis(a) : '<p class="small">Sin análisis disponible</p>'}
+          ${a ? renderAnalysis(a) : '<p class="small">Sin análisis</p>'}
         </div>
       `;
     });
 
-    // Renderizar PDF al final de la cuadrícula
     container.innerHTML += `
       <div class="pdf-full">
         <div class="section-title">Retrospecto oficial completo</div>
@@ -132,7 +113,7 @@ async function loadRaces() {
     `;
 
   } catch (err) {
-    container.innerHTML = `<div class="card">Error de conexión: ${err.message}</div>`;
+    container.innerHTML = `<div class="card">Error: ${err.message}</div>`;
   }
 }
 
@@ -146,7 +127,7 @@ function renderAnalysis(a) {
       <span style="font-size:11px; color:#94a3b8">Confianza ${a.confidence}</span>
     </div>
 
-    <div class="section-title">Probabilidades Top 3</div>
+    <div class="section-title">Top 3</div>
     ${(a.top3 || []).map((h, i) => `
       <div class="rank-row">
         <span>${i + 1}. ${h.name}</span>
@@ -154,14 +135,13 @@ function renderAnalysis(a) {
       </div>
     `).join('')}
 
-    <div class="section-title">Sugerencia de Apuesta</div>
+    <div class="section-title">Apuestas</div>
     <div class="bet">Win: <b>${a.bets?.win || '-'}</b></div>
-    <div class="bet">Exacta: <b>${a.bets?.exacta || '-'}</b></div>
-    <div class="bet">Trifecta: <b>${a.bets?.trifecta || '-'}</b></div>
+    <div class="bet">Ex: <b>${a.bets?.exacta || '-'}</b></div>
+    <div class="bet">Tri: <b>${a.bets?.trifecta || '-'}</b></div>
   `;
 }
 
-// Ejecución inicial
 loadRaces();
 </script>
 </body>
