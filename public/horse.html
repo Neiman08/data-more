@@ -48,7 +48,6 @@ async function loadRaces() {
   container.innerHTML = 'Cargando carreras reales...';
 
   try {
-    // Nota: El track y la fecha son dinámicos según tu implementación de backend
     const res = await fetch('/api/horse-racing/import-structured?track=gp&date=2026-05-02');
     const data = await res.json();
 
@@ -73,7 +72,7 @@ async function loadRaces() {
           <iframe
             src="/api/horse-racing/pdf?track=${race.track.toLowerCase()}&date=${race.date}#page=${race.raceNumber}&toolbar=0&navpanes=0&scrollbar=0"
             scrolling="no"
-            style="width:100%; height:820px; border:1px solid #334155; border-radius:12px; background:white; overflow:hidden;">
+            style="width:100%; height:650px; border:1px solid #334155; border-radius:12px; background:white; overflow:hidden;">
           </iframe>
         </div>
       `;
@@ -109,7 +108,6 @@ function renderAnalysis(a) {
   `;
 }
 
-// Carga inicial automática
 loadRaces();
 </script>
 
