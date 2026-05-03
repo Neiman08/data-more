@@ -174,7 +174,7 @@ function getConfidence(top, second, fieldSize) {
 }
 
 /**
- * FUNCIÓN PRINCIPAL DE ANÁLISIS DE CARRERA
+ * FUNCIÓN PRINCIPAL DE ANÁLISIS DE CARRERA (NIVEL DIOS CONFIG)
  */
 export function analyzeRace(race) {
   if (!race || !Array.isArray(race.runners) || race.runners.length === 0) {
@@ -190,15 +190,17 @@ export function analyzeRace(race) {
     const contextScore = getContextScore(horse, race);
     const paceScore = getPaceScore(horse, race);
 
-    // NUEVA PONDERACIÓN SOLICITADA
+    // PONDERACIÓN DE ÉLITE (70% enfocado en Velocidad y Forma)
     const rawScore =
-      speedScore * 0.40 +
-      formScore * 0.20 +
+      speedScore * 0.45 +
+      formScore * 0.25 +
       classScore * 0.15 +
-      paceScore * 0.10 +
-      humanScore * 0.07 +
-      contextScore * 0.05 +
-      consistencyScore * 0.03;
+      paceScore * 0.08 +
+      humanScore * 0.04 +
+      contextScore * 0.02 +
+      consistencyScore * 0.01;
+
+    // PENALIZACIÓN ELIMINADA: Si el score es alto con odds locas, lo queremos ver.
 
     return {
       ...horse,
@@ -223,8 +225,8 @@ export function analyzeRace(race) {
   const withValue = withRawProb.map(h => {
     const value = getValueScore(h, h.rawModelProbability);
 
-    // Ajuste final mezclando rawScore con el valor detectado (88% vs 12%)
-    const finalScore = h.rawScore * 0.88 + value.valueScore * 0.12;
+    // Ajuste final (95% pura estadística / 5% ruido de valor)
+    const finalScore = h.rawScore * 0.95 + value.valueScore * 0.05;
 
     return {
       ...h,
@@ -249,10 +251,6 @@ export function analyzeRace(race) {
   const second = ranked[1];
   const third = ranked[2];
 
-  const valueBets = ranked
-    .filter(h => h.edge !== null && h.edge >= 3)
-    .slice(0, 3);
-
   return {
     pick: top?.name || 'N/A',
     confidence: getConfidence(top, second, ranked.length),
@@ -262,7 +260,7 @@ export function analyzeRace(race) {
         : 'RIESGO',
 
     top3: ranked.slice(0, 3),
-    valueBets,
+    valueBets: ranked.filter(h => h.edge !== null && h.edge >= 3).slice(0, 3),
     bets: {
       win: top?.name || 'N/A',
       exacta: top && second ? `${top.name} / ${second.name}` : 'N/A',
