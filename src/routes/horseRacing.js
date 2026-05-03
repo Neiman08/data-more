@@ -66,7 +66,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // 1. Agrupar por líneas (Y)
+      // Agrupar por filas
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 4);
@@ -80,7 +80,6 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
-      // 2. Extraer corredores
       const runners = [];
 
       rows.forEach((row, rowIndex) => {
@@ -104,7 +103,6 @@ router.get('/import-structured', async (req, res) => {
           .map(it => it.text);
 
         const horseName = nameTokens.join(' ').trim();
-
         if (!numberToken || !horseName || horseName.length < 3) return;
 
         const upperRows = rows.slice(Math.max(0, rowIndex - 6), rowIndex);
@@ -153,20 +151,22 @@ router.get('/import-structured', async (req, res) => {
           raceNumber: i,
           track: track.toUpperCase(),
           date: date,
-          runners: runners
+          runners
         });
       }
     }
 
-    // --- AQUÍ ESTÁ EL CAMBIO DE ESTRUCTURA ---
-    const analysis = allRaces.length ? analyzeRace(allRaces[0]) : null;
+    // 🔥 AQUÍ ESTÁ LA MAGIA (ANÁLISIS PARA TODAS LAS CARRERAS)
+    const racesWithAnalysis = allRaces.map(race => ({
+      ...race,
+      analysis: analyzeRace(race)
+    }));
 
     res.json({
       ok: true,
       url,
-      totalRaces: allRaces.length,
-      analysis,
-      races: allRaces
+      totalRaces: racesWithAnalysis.length,
+      races: racesWithAnalysis
     });
 
   } catch (error) {
