@@ -4,7 +4,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Versión Final GP - Multitoken Jockey) cargado');
+console.log('✅ Router de Hípica (Versión Estructurada Final - Jockey Clean) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT DE DIAGNÓSTICO
@@ -31,7 +31,9 @@ router.get('/debug-coordinates', async (req, res) => {
       y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
+    // Ordenamiento por flujo de lectura lógico (Y descendente, X ascendente)
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
+
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -39,7 +41,7 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 IMPORTACIÓN ESTRUCTURADA (SOLUCIÓN DEFINITIVA JOCKEY)
+   🚀 IMPORTACIÓN ESTRUCTURADA (RANGOS PRECISOS GP)
    Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
@@ -84,14 +86,13 @@ router.get('/import-structured', async (req, res) => {
       const runners = [];
       rows.forEach((row, rowIndex) => {
         
-        // 🔥 ANCLAJE: Número del caballo (Central en x: 140-165 según debug)
+        // 🔥 ANCLAJE: Número del caballo (Central en x: 140-165)
         const numberToken = row.items.find(it => 
           /^\d{1,2}$/.test(it.text) && it.x > 140 && it.x < 165
         );
         
         if (numberToken) {
           // 🔥 NOMBRE: Ubicado a la IZQUIERDA del número (x: ~34)
-          // Filtro estricto para evitar basura numérica
           const horseName = row.items.find(it => 
             it.x > 30 && it.x < 150 && 
             /^[A-Za-zÁÉÍÓÚÑáéíóúñ' .-]+$/.test(it.text) &&
@@ -99,22 +100,23 @@ router.get('/import-structured', async (req, res) => {
           )?.text?.trim();
           
           if (horseName) {
-            // ODDS: Buscamos el formato N-N debajo del nombre/número (x < 60)
+            // ODDS: Formato N-N debajo del nombre/número (x < 60)
             const nextRow = rows[rowIndex + 1];
             const oddsMatch = nextRow?.items.find(it => /^\d+[-/]\d+$/.test(it.text) && it.x < 60);
             const odds = oddsMatch ? oddsMatch.text.replace('-', '/') : "N/A";
             
-            // 🔥 JOCKEY (SOLUCIÓN MULTITOKEN): Une todos los tokens en el rango x: 160-260
-            const jockey = row.items
-              .filter(it => 
-                it.x > 160 && it.x < 260 && 
-                /^[A-Za-zÁÉÍÓÚÑáéíóúñ.]+$/.test(it.text)
-              )
+            // 🔥 JOCKEY: Limpieza avanzada (Split por coma + remoción de números)
+            const jockeyRaw = row.items
+              .filter(it => it.x > 300 && it.x < 430)
               .map(it => it.text)
               .join(' ')
-              .trim() || "Unknown";
+              .trim();
+
+            const jockey = jockeyRaw
+              ? jockeyRaw.split(',')[0].replace(/[0-9]/g, '').trim()
+              : "Unknown";
             
-            // SPEED FIGURES / RATINGS: Zona derecha extrema (x > 500)
+            // RATINGS / SPEED FIGURES: Zona derecha extrema (x > 500)
             const speedFigures = row.items
               .filter(it => it.x > 500)
               .map(it => parseInt(it.text))
@@ -146,12 +148,11 @@ router.get('/import-structured', async (req, res) => {
       url,
       totalRaces: allRaces.length,
       races: allRaces,
-      // Solo analizamos la primera carrera detectada
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
   } catch (error) {
-    console.error('❌ Error Crítico en Parser:', error);
+    console.error('❌ Error Crítico en el Parser:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
