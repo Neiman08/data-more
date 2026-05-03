@@ -1,621 +1,155 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
   <script>
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-
-    if (!user || !user.proActivo) {
-      window.location.href = '/pago-manual';
-    }
+    if (!user || !user.proActivo) { window.location.href = '/pago-manual'; }
   </script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Soccer Picks PRO | Data More</title>
-
   <style>
     :root {
-      --bg-dark: #0d1117;
-      --card-bg: #161b22;
-      --border-color: #30363d;
-      --text-main: #c9d1d9;
-      --accent-blue: #38bdf8;
-      --accent-soccer: #22c55e;
-      --accent-nba: #f97316;
-      --mlb-blue: #1d4ed8;
-      --traffic-green: #22c55e;
-      --traffic-yellow: #facc15;
-      --traffic-red: #ef4444;
-      --accent-purple: #a855f7;
+      --bg-dark: #0d1117; --card-bg: #161b22; --border-color: #30363d;
+      --text-main: #c9d1d9; --accent-blue: #38bdf8; --accent-soccer: #22c55e;
+      --traffic-green: #22c55e; --traffic-yellow: #facc15; --traffic-red: #ef4444;
     }
-
-    .espn-ticker-container {
-      width: 100%;
-      background: #0b0e14;
-      border-bottom: 1px solid var(--border-color);
-      height: 40px;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      position: sticky;
-      top: 0;
-      z-index: 10000;
-    }
-
-    .ticker-wrapper {
-      display: flex;
-      white-space: nowrap;
-      animation: ticker-scroll 150s linear infinite;
-    }
-
-    .ticker-wrapper:hover {
-      animation-play-state: paused;
-    }
-
-    .ticker-item {
-      display: flex;
-      align-items: center;
-      padding: 0 30px;
-      border-right: 1px solid #1e293b;
-      height: 40px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .ticker-item img {
-      width: 20px;
-      height: 20px;
-      object-fit: contain;
-      margin: 0 6px;
-    }
-
-    .sport-tag {
-      font-size: 9px;
-      padding: 2px 5px;
-      border-radius: 4px;
-      margin-right: 8px;
-      font-weight: 900;
-    }
-
-    .tag-mlb { background: var(--mlb-blue); color: white; }
-    .tag-soccer { background: var(--accent-soccer); color: #000; }
-    .tag-nba { background: var(--accent-nba); color: white; }
-
-    .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
-    .ticker-status { margin-left: 10px; color: var(--accent-blue); font-size: 10px; font-weight: bold; }
-
-    @keyframes ticker-scroll {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-100%); }
-    }
-
-    body { 
-      background: var(--bg-dark); 
-      color: var(--text-main); 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
-      padding: 0;
-      margin: 0;
-    }
-
+    body { background: var(--bg-dark); color: var(--text-main); font-family: sans-serif; margin: 0; }
     .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+    
+    /* TICKER */
+    .espn-ticker-container { width: 100%; background: #0b0e14; border-bottom: 1px solid var(--border-color); height: 40px; display: flex; align-items: center; overflow: hidden; position: sticky; top: 0; z-index: 10000; }
+    .ticker-wrapper { display: flex; white-space: nowrap; animation: ticker-scroll 150s linear infinite; }
+    .ticker-item { display: flex; align-items: center; padding: 0 30px; border-right: 1px solid #1e293b; font-size: 12px; font-weight: 600; }
+    .ticker-item img { width: 20px; height: 20px; margin: 0 6px; }
+    @keyframes ticker-scroll { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
 
+    /* HEADER & NAV */
     .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-    .brand-logo { width: 50px; height: 50px; object-fit: contain; }
-    h1 { margin: 0; font-size: 24px; font-weight: 800; color: #fff; }
+    .selector { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .nav-sports { display: flex; gap: 10px; flex-wrap: wrap; }
+    .nav-btn { width: 140px; height: 45px; border-radius: 12px; border: none; color: white; font-weight: 900; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+    .nav-mlb { background: #2563eb; }
+    .nav-soccer { background: #22c55e; color: #052e16; outline: 3px solid #fff; }
+    .nav-nba { background: #f97316; }
+    .nav-horse { background: #a855f7; }
 
-    .selector { 
-      background: rgba(255, 255, 255, 0.05); 
-      padding: 10px 15px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 25px;
-      overflow-x: auto;
-      white-space: nowrap;
-    }
-    
-    input[type="date"] { 
-      padding: 10px;
-      border-radius: 8px;
-      background: #fff;
-      color: #000;
-      border: none;
-      font-weight: bold;
-    }
-
-    .btn-action, .nav-btn {
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      color: #fff;
-      transition: 0.2s;
-    }
-
-    .btn-load { background: #2563eb; }
-    .btn-all { background: #facc15; color: #000; }
-    .btn-ticket { background: var(--accent-soccer); color: #052e16; }
-
-    .league-title {
-      color: var(--accent-soccer);
-      margin: 25px 0 12px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 8px;
-      font-size: 1.1rem;
-      text-transform: uppercase;
-    }
-
-    .games-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 18px;
-    }
-    
-    .game-card { 
-      background: var(--card-bg);
-      padding: 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--accent-soccer);
-      position: relative;
-    }
-
-    .box-score {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 15px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 8px;
-      padding: 5px;
-      margin-bottom: 12px;
-      font-weight: 800;
-      font-size: 18px;
-      color: var(--accent-soccer);
-    }
-    
-    .matchup-pro {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .team-pro {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 42%;
-    }
-
-    .team-pro img { width: 40px; height: 40px; object-fit: contain; margin-bottom: 6px; }
-    .team-name { font-size: 12px; font-weight: 700; color: #fff; text-align: center; }
-    .info { font-size: 11px; color: #94a3b8; text-align: center; margin-bottom: 12px; }
-
-    .btn-analyze {
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-
-    .pick-res {
-      margin-top: 12px;
-      padding: 15px;
-      border-radius: 10px;
-      background: rgba(15, 23, 42, 0.95);
-      display: none;
-      border: 1px solid var(--border-color);
-    }
-
-    .res-header {
-      font-weight: bold;
-      color: var(--accent-blue);
-      font-size: 14px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 8px;
-    }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      color: #cbd5e1;
-      font-size: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 3px;
-    }
-
-    .stat-row b { color: #fff; }
-
-    .traffic-badge {
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 800;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .props-section {
-      margin-top: 15px;
-      background: rgba(0,0,0,0.3);
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(56, 189, 248, 0.1);
-    }
-
-    .props-title {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--accent-blue);
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      display: block;
-    }
-
-    .prop-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      padding: 4px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-    }
-
-    .prop-item:last-child { border: none; }
-    .prop-item i { color: #8b949e; font-style: normal; font-size: 10px; }
-
-    .bet-btn {
-      text-align: center;
-      font-weight: 900;
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 13px;
-      text-transform: uppercase;
-    }
-
-    .bet-no { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-    .bet-strong { background: var(--accent-soccer); color: #052e16; }
-
-    .lineup-container {
-      background: rgba(0,0,0,0.25);
-      border-radius: 10px;
-      padding: 8px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .player-line {
-      display: flex;
-      justify-content: space-between;
-      font-size: 9.5px;
-      padding: 2px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .order-num {
-      color: var(--accent-soccer);
-      font-weight: 900;
-    }
+    /* CARDS */
+    .league-title { color: var(--accent-soccer); margin: 25px 0 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; text-transform: uppercase; font-size: 16px; }
+    .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+    .game-card { background: var(--card-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); border-left: 4px solid var(--accent-soccer); }
+    .matchup-pro { display: flex; justify-content: space-between; align-items: center; }
+    .team-pro { display: flex; flex-direction: column; align-items: center; width: 40%; text-align: center; }
+    .team-pro img { width: 40px; height: 40px; margin-bottom: 5px; }
+    .box-score { background: #000; padding: 5px 10px; border-radius: 5px; color: var(--accent-soccer); font-weight: 800; }
+    .btn-analyze { background: #2563eb; color: #fff; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; }
+    .pick-res { margin-top: 10px; padding: 10px; background: #000; border-radius: 8px; display: none; font-size: 12px; }
+    .stat-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #222; }
   </style>
 </head>
-
 <body>
 
 <div class="espn-ticker-container">
-  <div class="ticker-wrapper" id="tickerWrapper">
-    <span class="ticker-item">Sincronizando marcadores en vivo...</span>
-  </div>
+  <div class="ticker-wrapper" id="tickerWrapper">Cargando marcadores...</div>
 </div>
 
 <div class="container">
   <div class="brand-header">
-    <img src="/logo.png" class="brand-logo" onerror="this.src='/logo.png'">
+    <img src="/logo.png" style="width:50px">
     <h1>Data More Soccer</h1>
   </div>
 
   <div class="selector">
-    <input type="date" id="dateSelect" onchange="loadGames()">
-    <button class="btn-action btn-load" onclick="loadGames()">Cargar Juegos</button>
-    <button class="btn-action btn-all" id="analyzeAllBtn" onclick="analyzeAll()">⚡ Analizar Todos</button>
-    <button class="btn-action btn-ticket" onclick="generateSoccerTicket()">🎟️ Generar Ticket</button>
-
-    <a href="/" style="text-decoration:none;">
-      <button type="button" style="background:#2563eb;">⚾ MLB</button>
-    </a>
-
-    <a href="/soccer" style="text-decoration:none;">
-      <button type="button" style="background:#16a34a; outline: 2px solid #fff;">⚽ Soccer</button>
-    </a>
-
-    <a href="/nba" style="text-decoration:none;">
-      <button type="button" style="background:#f97316;">🏀 NBA</button>
-    </a>
-
-    <a href="/horse.html" style="text-decoration:none;">
-      <button type="button" style="background:#a855f7;">🏇 Hipismo</button>
-    </a>
+    <div class="action-row">
+      <input type="date" id="dateSelect" onchange="loadGames()">
+      <button class="nav-btn" style="background:#2563eb; width:auto; padding:0 20px" onclick="loadGames()">Cargar</button>
+      <button class="nav-btn" style="background:#facc15; color:#000; width:auto; padding:0 20px" onclick="analyzeAll()">⚡ Analizar Todos</button>
+    </div>
+    <div class="nav-sports">
+      <a href="/" class="nav-btn nav-mlb">⚾ MLB</a>
+      <a href="/soccer" class="nav-btn nav-soccer">⚽ Soccer</a>
+      <a href="/nba" class="nav-btn nav-nba">🏀 NBA</a>
+      <a href="/horse.html" class="nav-btn nav-horse">🏇 Hipismo</a>
+    </div>
   </div>
 
   <div id="gamesList"></div>
 </div>
 
 <script>
-function escapeHtml(v) {
-  return String(v ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
 
 async function initTicker() {
   const ticker = document.getElementById('tickerWrapper');
-
-  async function fetchScores() {
-    try {
-      const [mlbRes, soccerRes, nbaRes] = await Promise.all([
-        fetch('/api/baseball/games').catch(() => null),
-        fetch('/api/soccer/games-global').catch(() => null),
-        fetch('/api/nba-games').catch(() => null)
-      ]);
-
-      let html = '';
-
-      if (mlbRes) {
-        const data = await mlbRes.json();
-        if (data.ok) data.games.forEach(g => {
-          html += `<div class="ticker-item">
-            <span class="sport-tag tag-mlb">MLB</span>
-            <img src="/logos/${g.awayAbbrev}.png" onerror="this.style.display='none'">
-            ${g.awayAbbrev} <span class="ticker-score">${g.awayScore}</span> @ <span class="ticker-score">${g.homeScore}</span> ${g.homeAbbrev}
-            <img src="/logos/${g.homeAbbrev}.png" onerror="this.style.display='none'">
-            <span class="ticker-status">${g.status}</span>
-          </div>`;
-        });
-      }
-
-      if (soccerRes) {
-        const data = await soccerRes.json();
-        if (data.ok) data.games.slice(0, 12).forEach(g => {
-          html += `<div class="ticker-item">
-            <span class="sport-tag tag-soccer">SOC</span>
-            <img src="${g.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-            <span class="ticker-score">${g.homeScore ?? 0}</span> - <span class="ticker-score">${g.awayScore ?? 0}</span>
-            <img src="${g.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-            <span class="ticker-status">${g.time}</span>
-          </div>`;
-        });
-      }
-
-      if (nbaRes) {
-        const data = await nbaRes.json();
-        if (data.ok) data.games.forEach(g => {
-          html += `<div class="ticker-item">
-            <span class="sport-tag tag-nba">NBA</span>
-            <img src="${g.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-            <span class="ticker-score">${g.awayScore ?? 0}</span> @ <span class="ticker-score">${g.homeScore ?? 0}</span>
-            <img src="${g.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-            <span class="ticker-status">${g.status}</span>
-          </div>`;
-        });
-      }
-
-      if (html) ticker.innerHTML = html + html;
-    } catch (err) { console.error("Ticker error:", err); }
-  }
-
-  fetchScores();
-  setInterval(fetchScores, 60000);
-}
-
-async function renderSoccerLineups(fixtureId) {
   try {
-    const res = await fetch(`/api/soccer/lineups/${fixtureId}?t=${Date.now()}`);
+    const res = await fetch('/api/soccer/games-global');
     const data = await res.json();
-
-    if (!data.ok || !data.lineups || data.lineups.length < 2) {
-      return `<div style="font-size:10px;text-align:center;color:#94a3b8;padding:10px;">Alineaciones no disponibles aún.</div>`;
+    if(data.ok) {
+      const content = data.games.map(g => `<div class="ticker-item"><img src="${g.homeLogo}">${g.homeScore}-${g.awayScore}<img src="${g.awayLogo}"> <span>${g.time}</span></div>`).join('');
+      ticker.innerHTML = content + content;
     }
-
-    const renderSide = (team) => (team.startXI || []).slice(0, 11).map((p, i) => `
-      <div class="player-line">
-        <span><span class="order-num">${i + 1}</span> ${escapeHtml(p.name)}</span>
-        <span>${escapeHtml(p.pos || '')}</span>
-      </div>
-    `).join('');
-
-    return `
-      <div class="lineup-container">
-        <div style="display:flex;justify-content:space-between;gap:10px;">
-          <div style="width:50%;">${renderSide(data.lineups[0])}</div>
-          <div style="width:50%;">${renderSide(data.lineups[1])}</div>
-        </div>
-      </div>
-    `;
-  } catch {
-    return `<div style="font-size:10px;text-align:center;color:#94a3b8;padding:10px;">Alineaciones no disponibles.</div>`;
-  }
+  } catch(e) {}
 }
 
 async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
-
-  container.innerHTML = '<p style="text-align:center; padding:40px;">Cargando Soccer...</p>';
-
+  container.innerHTML = '<p style="text-align:center">Cargando...</p>';
+  
   try {
-    const res = await fetch(`/api/soccer/games-global?date=${encodeURIComponent(date)}&t=${Date.now()}`);
+    const res = await fetch(`/api/soccer/games-global?date=${date}`);
     const data = await res.json();
-
-    if (!data.ok || !data.games.length) {
-      container.innerHTML = '<div style="text-align:center; padding:20px;">No hay partidos programados.</div>';
-      return;
-    }
+    if(!data.ok) return;
 
     const grouped = {};
-    data.games.forEach(g => {
-      const league = g.leagueName || 'Otras Ligas';
-      if (!grouped[league]) grouped[league] = [];
-      grouped[league].push(g);
-    });
+    data.games.forEach(g => { (grouped[g.leagueName] = grouped[g.leagueName] || []).push(g); });
 
     container.innerHTML = '';
-
-    for (const league of Object.keys(grouped)) {
-      const safeLeagueId = league.replace(/\s/g, '').replace(/[^a-zA-Z0-9]/g, '');
-
-      container.innerHTML += `
-        <h2 class="league-title">${escapeHtml(league)}</h2>
-        <div class="games-grid" id="grid-${safeLeagueId}"></div>
-      `;
-
-      const grid = container.querySelector(`#grid-${safeLeagueId}`);
-
-      for (const game of grouped[league]) {
-        const lineupHtml = await renderSoccerLineups(game.fixtureId || game.matchId);
-        const isLive = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE'].includes(String(game.status || '').toUpperCase());
-
-        grid.innerHTML += `
+    for (const [league, games] of Object.entries(grouped)) {
+      let html = `<h2 class="league-title">${escapeHtml(league)}</h2><div class="games-grid">`;
+      games.forEach(g => {
+        html += `
           <div class="game-card">
             <div class="matchup-pro">
-              <div class="team-pro">
-                <img src="${game.homeLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-                <span class="team-name">${escapeHtml(game.homeTeam)}</span>
-                <span style="font-size:11px;color:#22c55e;font-weight:900;">${game.homeRecord || ''}</span>
-                <span style="font-size:10px;color:#94a3b8;">${game.homeForm || ''}</span>
-              </div>
-
-              <div style="text-align:center;width:22%;">
-                <div style="font-size:10px;font-weight:900;color:${isLive ? '#ef4444' : '#94a3b8'};">
-                  ${isLive ? '● EN VIVO' : escapeHtml(game.statusLong || game.status || 'PRE-GAME')}
-                </div>
-
-                <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
-                  ${escapeHtml(game.time || '')}
-                </div>
-
-                <div class="box-score" style="margin-top:6px;">
-                  <span>${game.homeScore ?? 0}</span>
-                  <span style="opacity:0.3;color:white;">-</span>
-                  <span>${game.awayScore ?? 0}</span>
-                </div>
-              </div>
-
-              <div class="team-pro">
-                <img src="${game.awayLogo || '/logo.png'}" onerror="this.src='/logo.png'">
-                <span class="team-name">${escapeHtml(game.awayTeam)}</span>
-                <span style="font-size:11px;color:#22c55e;font-weight:900;">${game.awayRecord || ''}</span>
-                <span style="font-size:10px;color:#94a3b8;">${game.awayForm || ''}</span>
-              </div>
+              <div class="team-pro"><img src="${g.homeLogo}"><span>${escapeHtml(g.homeTeam)}</span></div>
+              <div class="box-score">${g.homeScore ?? 0} - ${g.awayScore ?? 0}</div>
+              <div class="team-pro"><img src="${g.awayLogo}"><span>${escapeHtml(g.awayTeam)}</span></div>
             </div>
-
-            ${lineupHtml}
-
-            <button class="btn-analyze btn-single" onclick="analyze(this, '${game.matchId}', '${game.leagueKey}')">
-              ANALIZAR IA
-            </button>
-
-            <div id="res-${game.matchId}" class="pick-res"></div>
-          </div>
-        `;
-      }
+            <button class="btn-analyze" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">ANALIZAR IA</button>
+            <div id="res-${g.matchId}" class="pick-res"></div>
+          </div>`;
+      });
+      html += `</div>`;
+      container.innerHTML += html;
     }
-
-  } catch (err) {
-    container.innerHTML = '<div style="text-align:center; color:red;">Error al conectar con el servidor.</div>';
-  }
+  } catch(e) { container.innerHTML = 'Error.'; }
 }
 
 async function analyze(btn, matchId, leagueKey) {
-  btn.innerText = '...';
-  btn.disabled = true;
-  const date = document.getElementById('dateSelect').value;
-
+  btn.innerText = '...'; btn.disabled = true;
   try {
-    const res = await fetch(`/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}`);
+    const res = await fetch(`/api/soccer/analyze/${matchId}?league=${leagueKey}`);
     const data = await res.json();
-    const { analysis } = data;
-
-    const propsRes = await fetch(`/api/soccer/player-props/${matchId}`);
-    const propsData = await propsRes.json();
-
     const resDiv = document.getElementById(`res-${matchId}`);
-    btn.innerText = 'RE-ANALIZAR';
-    btn.disabled = false;
     resDiv.style.display = 'block';
-
-    const prob = analysis.probability || 0;
-    let color = "var(--traffic-red)";
-    if (prob >= 70) color = "var(--traffic-green)";
-    else if (prob >= 50) color = "var(--traffic-yellow)";
-
-    const isStrong = analysis.confidence === 'ALTA';
-
     resDiv.innerHTML = `
-      <div class="res-header">🎯 PICK: ${escapeHtml(analysis.pick)}</div>
-      <div class="stat-row"><span>Prob. Pick:</span><span class="traffic-badge" style="color:${color}; background:${color}11;">${prob}%</span></div>
-      <div class="stat-row"><span>Confianza:</span><b>${analysis.confidence}</b></div>
-      <div class="stat-row"><span>Mercado:</span><b>${analysis.market || '1X2 / Principal'}</b></div>
-      <div class="stat-row"><span>1X2 (L/E/V):</span><b>${analysis.probabilities?.homeWin}% | ${analysis.probabilities?.draw}% | ${analysis.probabilities?.awayWin}%</b></div>
-      <div class="stat-row"><span>Goles +2.5:</span><b>${analysis.markets?.over25}</b></div>
-      <div class="stat-row"><span>Ambos marcan:</span><b>${analysis.markets?.btts}</b></div>
-      <div class="stat-row"><span>Handicap:</span><b>${analysis.markets?.handicap}</b></div>
-      <div class="stat-row"><span>Total Proyectado:</span><b>${analysis.projectedTotal} Goles</b></div>
-      <div class="props-section">
-        <span class="props-title">Player Props (Predicciones IA)</span>
-        ${(propsData.props || []).map(p => {
-          let chance = p.goalChance || p.shotChance || 0;
-          let pColor = chance >= 70 ? "var(--traffic-green)" : (chance >= 50 ? "var(--traffic-yellow)" : "var(--traffic-red)");
-          return `<div class="prop-item">
-                    <span><b>${escapeHtml(p.name)}</b> <i>(${escapeHtml(p.market)})</i></span>
-                    <b style="color:${pColor}">${chance}%</b>
-                  </div>`;
-        }).join('') || '<div class="prop-item" style="opacity:0.4; font-size:10px;">Alineaciones no disponibles aún.</div>'}
-      </div>
-      <div class="bet-btn ${isStrong ? 'bet-strong' : 'bet-no'}">${isStrong ? '💰 APUESTA FUERTE: SI' : '🚫 NO RECOMENDADA'}</div>`;
-  } catch (err) { btn.innerText = 'Error'; btn.disabled = false; }
+      <div class="stat-row"><span>PICK:</span><b>${data.analysis.pick}</b></div>
+      <div class="stat-row"><span>Probabilidad:</span><b>${data.analysis.probability}%</b></div>
+      <div class="stat-row"><span>Confianza:</span><b>${data.analysis.confidence}</b></div>
+    `;
+    btn.innerText = 'RE-ANALIZAR'; btn.disabled = false;
+  } catch(e) { btn.innerText = 'Error'; }
 }
 
 async function analyzeAll() {
-  const buttons = Array.from(document.querySelectorAll('.btn-single'));
-  for (let btn of buttons) { btn.click(); await wait(850); }
+  const btns = document.querySelectorAll('.btn-analyze');
+  for(let b of btns) { b.click(); await new Promise(r => setTimeout(r, 1000)); }
 }
 
-async function generateSoccerTicket() { alert("Generando ticket basado en picks con confianza ALTA..."); }
-
-function getChicagoDate() {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Chicago',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(new Date());
-}
-
-document.getElementById('dateSelect').value = getChicagoDate();
-
-loadGames();
+document.getElementById('dateSelect').value = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Chicago'}).format(new Date());
 initTicker();
+loadGames();
 </script>
-
 </body>
 </html>
