@@ -4,7 +4,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Versión Estructurada Final - Solución Jockey Multilínea) cargado');
+console.log('✅ Router de Hípica (Versión Estructurada Final - Null Safe & Multilínea) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT DE DIAGNÓSTICO
@@ -13,7 +13,7 @@ console.log('✅ Router de Hípica (Versión Estructurada Final - Solución Jock
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
-    if (!date || !track) throw new Error("Faltan parámetros: track y date.");
+    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
@@ -31,7 +31,7 @@ router.get('/debug-coordinates', async (req, res) => {
       y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenamiento por flujo de lectura lógico
+    // Ordenamiento por flujo de lectura lógico (Y descendente, X ascendente)
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
@@ -86,7 +86,7 @@ router.get('/import-structured', async (req, res) => {
       const runners = [];
       rows.forEach((row, rowIndex) => {
         
-        // 🔥 ANCLAJE: Número del caballo (Central en x: 140-165)
+        // 🔥 ANCLAJE: Número del caballo (Central en x: 140-165 según debug GP)
         const numberToken = row.items.find(it => 
           /^\d{1,2}$/.test(it.text) && it.x > 140 && it.x < 165
         );
@@ -106,7 +106,7 @@ router.get('/import-structured', async (req, res) => {
             const oddsMatch = nextRow?.items.find(it => /^\d+[-/]\d+$/.test(it.text) && it.x < 60);
             const odds = oddsMatch ? oddsMatch.text.replace('-', '/') : "N/A";
             
-            // 🔥 JOCKEY (SOLUCIÓN 100% SEGURA): Multitoken y Multilínea
+            // 🔥 JOCKEY (SOLUCIÓN 100% SEGURA): Multitoken y Multilínea (Rango x: 160-240)
             const jockeyItems = [row, nextRow]
               .filter(Boolean)
               .flatMap(r => r.items);
@@ -118,9 +118,9 @@ router.get('/import-structured', async (req, res) => {
               )
               .map(it => it.text)
               .join(' ')
-              .trim() || "Unknown";
+              .trim() || null; // 👈 Null-safe para no bloquear el sistema
             
-            // SPEED FIGURES / RATINGS: Zona derecha extrema (x > 500)
+            // RATINGS / SPEED FIGURES: Zona derecha extrema (x > 500)
             const speedFigures = row.items
               .filter(it => it.x > 500)
               .map(it => parseInt(it.text))
@@ -130,7 +130,7 @@ router.get('/import-structured', async (req, res) => {
               number: numberToken.text,
               name: horseName,
               odds: odds,
-              jockey: jockey,
+              jockey: jockey, // 👈 Se envía jockey o null
               speedFigures: speedFigures
             });
           }
@@ -152,6 +152,7 @@ router.get('/import-structured', async (req, res) => {
       url,
       totalRaces: allRaces.length,
       races: allRaces,
+      // Analizamos la primera carrera para el scoring rápido
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
