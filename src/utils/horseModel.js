@@ -35,8 +35,14 @@ function impliedProbabilityFromOdds(odds) {
 }
 
 /**
- * CÁLCULO DE SCORES INDIVIDUALES
+ * GENERADORES DE PUNTUACIONES (SCORES)
  */
+function getMarketScore(horse) {
+  const implied = impliedProbabilityFromOdds(horse.odds);
+  if (!implied) return 45;
+  return clamp(implied * 3.5, 35, 95);
+}
+
 function getSpeedScore(horse) {
   const figs = horse.speedFigures || [];
   if (!figs.length) return 35;
@@ -139,15 +145,9 @@ function getPaceScore(horse, race) {
   return clamp(score);
 }
 
-/**
- * ANÁLISIS DE VALOR Y CONFIANZA
- */
 function getValueScore(horse, rawModelProb) {
   const implied = impliedProbabilityFromOdds(horse.odds);
-
-  if (!implied) {
-    return { valueScore: 45, impliedProbability: null, edge: null, valueTag: 'SIN ODDS' };
-  }
+  if (!implied) return { valueScore: 45, impliedProbability: null, edge: null, valueTag: 'SIN ODDS' };
 
   const edge = rawModelProb - implied;
   let valueScore = clamp(50 + edge * 2);
@@ -174,38 +174,64 @@ function getConfidence(top, second, fieldSize) {
 }
 
 /**
- * FUNCIÓN PRINCIPAL DE ANÁLISIS DE CARRERA (NIVEL DIOS CONFIG)
+ * FUNCIÓN PRINCIPAL DE ANÁLISIS
  */
 export function analyzeRace(race) {
-  if (!race || !Array.isArray(race.runners) || race.runners.length === 0) {
-    return null;
-  }
+  if (!race || !Array.isArray(race.runners) || race.runners.length === 0) return null;
 
   const base = race.runners.map(horse => {
     const speedScore = getSpeedScore(horse);
-    const consistencyScore = getConsistencyScore(horse);
     const formScore = getFormScore(horse);
+    const marketScore = getMarketScore(horse);
     const classScore = getClassScore(horse, race);
+    const paceScore = getPaceScore(horse, race);
     const humanScore = getHumanScore(horse);
     const contextScore = getContextScore(horse, race);
-    const paceScore = getPaceScore(horse, race);
+    const consistencyScore = getConsistencyScore(horse);
 
-    // PONDERACIÓN DE ÉLITE (70% enfocado en Velocidad y Forma)
-    const rawScore =
-      speedScore * 0.45 +
-      formScore * 0.25 +
-      classScore * 0.15 +
-      paceScore * 0.08 +
-      humanScore * 0.04 +
-      contextScore * 0.02 +
-      consistencyScore * 0.01;
+    let rawScore = 0;
 
-    // PENALIZACIÓN ELIMINADA: Si el score es alto con odds locas, lo queremos ver.
+    // BIFURCACIÓN DE LÓGICA SEGÚN DISPONIBILIDAD DE DATA
+    if (!horse.speedFigures || horse.speedFigures.length < 3) {
+      // Poca data: El mercado y el factor humano pesan más
+      rawScore =
+        marketScore * 0.30 +
+        humanScore * 0.18 +
+        classScore * 0.14 +
+        speedScore * 0.16 +
+        formScore * 0.12 +
+        paceScore * 0.07 +
+        contextScore * 0.03;
+    } else {
+      // Data completa: El mérito real (Speed/Form) domina el 56% del score
+      rawScore =
+        speedScore * 0.36 +
+        formScore * 0.20 +
+        marketScore * 0.18 +
+        classScore * 0.10 +
+        paceScore * 0.07 +
+        humanScore * 0.05 +
+        contextScore * 0.03 +
+        consistencyScore * 0.01;
+    }
+
+    const odds = parseOdds(horse.odds);
+
+    // PROTECCIÓN DEL FAVORITO (6%)
+    if (odds && odds <= 2.5) {
+      rawScore *= 1.06;
+    }
+
+    // PROTECCIÓN DEL LONGSHOT CON SEÑALES REALES (8%)
+    if (odds && odds >= 8 && speedScore >= 70 && formScore >= 60) {
+      rawScore *= 1.08;
+    }
 
     return {
       ...horse,
       speedScore: Number(speedScore.toFixed(2)),
       formScore: Number(formScore.toFixed(2)),
+      marketScore: Number(marketScore.toFixed(2)),
       classScore: Number(classScore.toFixed(2)),
       paceScore: Number(paceScore.toFixed(2)),
       humanScore: Number(humanScore.toFixed(2)),
@@ -224,8 +250,7 @@ export function analyzeRace(race) {
 
   const withValue = withRawProb.map(h => {
     const value = getValueScore(h, h.rawModelProbability);
-
-    // Ajuste final (95% pura estadística / 5% ruido de valor)
+    // 5% de peso al valor para dar el toque final de "atractivo" a la apuesta
     const finalScore = h.rawScore * 0.95 + value.valueScore * 0.05;
 
     return {
@@ -258,7 +283,6 @@ export function analyzeRace(race) {
       top?.probability >= 18 && (top?.probability - (second?.probability || 0)) >= 3
         ? 'JUGABLE'
         : 'RIESGO',
-
     top3: ranked.slice(0, 3),
     valueBets: ranked.filter(h => h.edge !== null && h.edge >= 3).slice(0, 3),
     bets: {
