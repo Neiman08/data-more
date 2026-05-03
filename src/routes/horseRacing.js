@@ -4,11 +4,10 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica Estructurado (Rangos Calibrados) cargado');
+console.log('✅ Router de Hípica (Extracción Multitoken) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT 1: DIAGNÓSTICO DE COORDENADAS
-   Uso: /api/horse-racing/debug-coordinates?track=gp&date=2026-05-02&page=1
 ========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
@@ -34,10 +33,7 @@ router.get('/debug-coordinates', async (req, res) => {
       w: parseFloat(item.width.toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    tokens.sort((a, b) => {
-      if (Math.abs(a.y - b.y) > 5) return b.y - a.y;
-      return a.x - b.x;
-    });
+    tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
   } catch (error) {
@@ -47,7 +43,6 @@ router.get('/debug-coordinates', async (req, res) => {
 
 /* =========================================================
    🚀 ENDPOINT 2: IMPORTACIÓN ESTRUCTURADA (PRO)
-   Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
@@ -74,7 +69,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // 1. Agrupar por líneas (Y) con margen de 5px
+      // 1. Agrupar por líneas (Y)
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 5);
@@ -88,30 +83,37 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
-      // 2. Extraer corredores usando coordenadas calibradas (Ajuste Final)
+      // 2. Extraer corredores usando coordenadas y limpieza avanzada
       const runners = [];
       rows.forEach((row, rowIndex) => {
         const firstItem = row.items[0];
         
-        // 🔥 NÚMERO DEL CABALLO: Rango x entre 130 y 180
+        // NÚMERO DEL CABALLO: Rango x entre 130 y 180
         if (/^\d{1,2}$/.test(firstItem?.text) && firstItem.x > 130 && firstItem.x < 180) {
           
-          // 🔥 NOMBRE: Rango x entre 170 y 260
-          const horseName = row.items.find(it => it.x > 170 && it.x < 260)?.text;
+          // 🔥 NOMBRE (MULTI-TOKEN): Rango x entre 170 y 260
+          const nameTokens = row.items
+            .filter(it => it.x > 170 && it.x < 260)
+            .map(it => it.text);
+          const horseName = nameTokens.join(' ').trim();
           
           if (horseName) {
-            // Odds: Buscamos en la fila de abajo en la misma columna izquierda
             const nextRow = rows[rowIndex + 1];
             const odds = nextRow?.items.find(it => it.x < 180 && it.text.includes('-'))?.text || "N/A";
             
-            // 🔥 JOCKEY: Rango x entre 300 y 420
-            const jockey = row.items.find(it => it.x > 300 && it.x < 420)?.text || "Unknown";
+            // 🔥 JOCKEY (LIMPIEZA DE BASURA): Rango x entre 300 y 420
+            const jockey = row.items
+              .filter(it => it.x > 300 && it.x < 420)
+              .map(it => it.text)
+              .join(' ')
+              .replace(/[0-9.,]/g, '')
+              .trim() || "Unknown";
             
-            // Speed Figures: zona de ratings a la derecha (x > 530)
+            // 🔥 SPEED FIGURES (FILTRO DE RANGO LÓGICO): zona derecha (x > 530)
             const speedFigures = row.items
               .filter(it => it.x > 530)
               .map(it => parseInt(it.text))
-              .filter(n => !isNaN(n));
+              .filter(n => !isNaN(n) && n > 20 && n < 120);
 
             runners.push({
               number: firstItem.text,
@@ -143,7 +145,7 @@ router.get('/import-structured', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en Proceso Estructurado:', error);
+    console.error('❌ Error Structured Parser:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
