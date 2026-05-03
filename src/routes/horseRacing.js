@@ -4,42 +4,27 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Versión Estructurada Final) cargado');
-
 /* =========================================================
-   🛠️ ENDPOINT 1: DIAGNÓSTICO DE COORDENADAS
-   Uso: /api/horse-racing/debug-coordinates?track=gp&date=2026-05-02&page=1
+   🛠️ ENDPOINT DE DIAGNÓSTICO
 ========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
-    if (!date || !track) throw new Error("Faltan parámetros: track y date.");
-
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('No se pudo descargar el PDF');
-
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
     const pdf = await pdfjs.getDocument({ data }).promise;
-    
-    const pageNum = parseInt(page);
-    const pdfPage = await pdf.getPage(pageNum);
+    const pdfPage = await pdf.getPage(parseInt(page));
     const textContent = await pdfPage.getTextContent();
 
     const tokens = textContent.items.map(item => ({
       text: item.str,
       x: parseFloat(item.transform[4].toFixed(2)),
-      y: parseFloat(item.transform[5].toFixed(2)),
-      w: parseFloat(item.width.toFixed(2))
+      y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenamiento por flujo de lectura lógico
-    tokens.sort((a, b) => {
-      if (Math.abs(a.y - b.y) > 5) return b.y - a.y;
-      return a.x - b.x;
-    });
-
+    tokens.sort((a, b) => b.y - a.y || a.x - b.x);
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -47,17 +32,15 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 ENDPOINT 2: IMPORTACIÓN ESTRUCTURADA (PRO)
-   Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
+   🚀 IMPORTACIÓN ESTRUCTURADA (OPTIMIZADA)
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
     const { date, track } = req.query;
-    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
-
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+    
     const response = await fetch(url);
-    if (!response.ok) throw new Error('PDF no encontrado en el servidor');
+    if (!response.ok) throw new Error('PDF no encontrado');
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
@@ -75,7 +58,6 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // 1. Agrupar por líneas (Y)
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 5);
@@ -89,45 +71,40 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
-      // 2. Extraer corredores usando coordenadas y limpieza avanzada
       const runners = [];
       rows.forEach((row, rowIndex) => {
-        const firstItem = row.items[0];
+        // FLEXIBILIDAD: Buscamos cualquier token que sea un número en la zona izquierda
+        const numberToken = row.items.find(it => /^\d{1,2}$/.test(it.text) && it.x > 100 && it.x < 190);
         
-        // NÚMERO DEL CABALLO: Rango x entre 130 y 180 (según diagnóstico GP)
-        if (/^\d{1,2}$/.test(firstItem?.text) && firstItem.x > 130 && firstItem.x < 180) {
-          
-          // NOMBRE (MULTI-TOKEN): Rango x entre 170 y 260
+        if (numberToken) {
+          // NOMBRE: Un poco más de margen a la izquierda (160 en adelante)
           const nameTokens = row.items
-            .filter(it => it.x > 170 && it.x < 260)
+            .filter(it => it.x > 160 && it.x < 280)
             .map(it => it.text);
           const horseName = nameTokens.join(' ').trim();
           
-          if (horseName) {
-            // Odds: Buscamos en la fila de abajo en la misma zona izquierda
+          if (horseName && horseName.length > 3) {
             const nextRow = rows[rowIndex + 1];
-            const odds = nextRow?.items.find(it => it.x < 180 && it.text.includes('-'))?.text || "N/A";
+            const odds = nextRow?.items.find(it => it.x < 190 && it.text.includes('-'))?.text || "N/A";
             
-            // JOCKEY (MULTI-TOKEN + LIMPIEZA): Rango x entre 300 y 420
             const jockey = row.items
-              .filter(it => it.x > 300 && it.x < 420)
+              .filter(it => it.x > 290 && it.x < 430)
               .map(it => it.text)
               .join(' ')
               .replace(/[0-9.,]/g, '')
               .trim() || "Unknown";
             
-            // SPEED FIGURES (FILTRO DE RANGO): zona derecha (x > 530)
             const speedFigures = row.items
-              .filter(it => it.x > 530)
+              .filter(it => it.x > 520)
               .map(it => parseInt(it.text))
               .filter(n => !isNaN(n) && n > 20 && n < 120);
 
             runners.push({
-              number: firstItem.text,
+              number: numberToken.text,
               name: horseName,
-              odds: odds,
-              jockey: jockey,
-              speedFigures: speedFigures
+              odds,
+              jockey,
+              speedFigures
             });
           }
         }
@@ -148,12 +125,11 @@ router.get('/import-structured', async (req, res) => {
       url,
       totalRaces: allRaces.length,
       races: allRaces,
-      // Solo ejecutamos el análisis si hay carreras detectadas
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
   } catch (error) {
-    console.error('❌ Error Structured Parser:', error);
+    console.error('❌ Error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
