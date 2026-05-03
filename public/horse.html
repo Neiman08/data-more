@@ -10,9 +10,15 @@
     .logo { width:55px; height:55px; }
     h1 { margin:0; font-size:28px; font-weight:900; }
     
-    .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; }
-    button, a { border:none; border-radius:10px; padding:10px 16px; font-weight:800; cursor:pointer; text-decoration:none; color:white; transition: 0.2s; }
+    .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; align-items: center; }
+    button, a, input, select { border:none; border-radius:10px; padding:12px 18px; font-weight:800; cursor:pointer; text-decoration:none; color:white; transition: 0.2s; }
+    
+    input[type="date"], select { background: #161b22; border: 1px solid #30363d; color: white; }
+    
     .btn-load { background:#8b5cf6; }
+    .btn-mlb { background:#2563eb; }
+    .btn-soccer { background:#22c55e; color:#052e16; }
+    .btn-nba { background:#f97316; }
 
     /* Grid Adaptativo */
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -28,7 +34,6 @@
       border-radius:14px;
       padding:14px;
       transition: 0.2s;
-      cursor: pointer;
     }
     .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
     
@@ -71,22 +76,46 @@
   </div>
 
   <div class="controls">
-    <button class="btn-load" onclick="loadRaces()">🏇 Cargar Carreras</button>
+    <input type="date" id="dateInput">
+    <select id="trackSelect" style="padding:12px;border-radius:10px;font-weight:900;">
+      <option value="gp">Gulfstream Park</option>
+      <option value="sa">Santa Anita Park</option>
+      <option value="tam">Tampa Bay Downs</option>
+      <option value="cd">Churchill Downs</option>
+      <option value="kee">Keeneland</option>
+      <option value="bel">Belmont / Aqueduct</option>
+    </select>
+  
+    <button class="btn-load" onclick="loadRaces()">🏇 Cargar Retrospecto</button>
+    <a class="btn-mlb" href="/">⚾ MLB</a>
+    <a class="btn-soccer" href="/soccer">⚽ Soccer</a>
+    <a class="btn-nba" href="/nba">🏀 NBA</a>
   </div>
 
   <div id="races" class="grid"></div>
 
 <script>
+// Establecer fecha de hoy por defecto (Zona Horaria America/Chicago)
+document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Chicago',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+}).format(new Date());
+
 async function loadRaces() {
   const container = document.getElementById('races');
   container.innerHTML = '<div class="card">Cargando datos...</div>';
 
+  const track = document.getElementById('trackSelect').value;
+  const date = document.getElementById('dateInput').value;
+
   try {
-    const res = await fetch('/api/horse-racing/import-structured?track=gp&date=2026-05-02');
+    const res = await fetch(`/api/horse-racing/import-structured?track=${track}&date=${date}`);
     const data = await res.json();
 
     if (!data.ok || !data.races.length) {
-      container.innerHTML = `<div class="card">No hay datos disponibles.</div>`;
+      container.innerHTML = `<div class="card">No hay datos disponibles para la selección actual.</div>`;
       return;
     }
 
@@ -105,10 +134,11 @@ async function loadRaces() {
       `;
     });
 
+    // Agregar el PDF dinámico al final
     container.innerHTML += `
       <div class="pdf-full">
         <div class="section-title">Retrospecto oficial completo</div>
-        <iframe src="/api/horse-racing/pdf?track=${data.races[0].track.toLowerCase()}&date=${data.races[0].date}"></iframe>
+        <iframe src="/api/horse-racing/pdf?track=${track}&date=${date}"></iframe>
       </div>
     `;
 
@@ -142,6 +172,7 @@ function renderAnalysis(a) {
   `;
 }
 
+// Carga inicial
 loadRaces();
 </script>
 </body>
