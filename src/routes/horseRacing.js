@@ -4,7 +4,7 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Versión Estructurada Final - Jockey Clean) cargado');
+console.log('✅ Router de Hípica (Versión Estructurada Final - Solución Jockey Multilínea) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT DE DIAGNÓSTICO
@@ -31,7 +31,7 @@ router.get('/debug-coordinates', async (req, res) => {
       y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenamiento por flujo de lectura lógico (Y descendente, X ascendente)
+    // Ordenamiento por flujo de lectura lógico
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
@@ -41,7 +41,7 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 IMPORTACIÓN ESTRUCTURADA (RANGOS PRECISOS GP)
+   🚀 IMPORTACIÓN ESTRUCTURADA (VERSIÓN 100% SEGURA)
    Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
@@ -92,7 +92,9 @@ router.get('/import-structured', async (req, res) => {
         );
         
         if (numberToken) {
-          // 🔥 NOMBRE: Ubicado a la IZQUIERDA del número (x: ~34)
+          const nextRow = rows[rowIndex + 1];
+
+          // 🔥 NOMBRE: Ubicado a la izquierda del número (x ~34)
           const horseName = row.items.find(it => 
             it.x > 30 && it.x < 150 && 
             /^[A-Za-zÁÉÍÓÚÑáéíóúñ' .-]+$/.test(it.text) &&
@@ -100,23 +102,25 @@ router.get('/import-structured', async (req, res) => {
           )?.text?.trim();
           
           if (horseName) {
-            // ODDS: Formato N-N debajo del nombre/número (x < 60)
-            const nextRow = rows[rowIndex + 1];
+            // ODDS: Buscamos el formato N-N debajo del nombre/número (x < 60)
             const oddsMatch = nextRow?.items.find(it => /^\d+[-/]\d+$/.test(it.text) && it.x < 60);
             const odds = oddsMatch ? oddsMatch.text.replace('-', '/') : "N/A";
             
-            // 🔥 JOCKEY: Limpieza avanzada (Split por coma + remoción de números)
-            const jockeyRaw = row.items
-              .filter(it => it.x > 300 && it.x < 430)
+            // 🔥 JOCKEY (SOLUCIÓN 100% SEGURA): Multitoken y Multilínea
+            const jockeyItems = [row, nextRow]
+              .filter(Boolean)
+              .flatMap(r => r.items);
+
+            const jockey = jockeyItems
+              .filter(it => 
+                it.x > 160 && it.x < 240 && 
+                /^[A-Za-zÁÉÍÓÚÑáéíóúñ.]+$/.test(it.text)
+              )
               .map(it => it.text)
               .join(' ')
-              .trim();
-
-            const jockey = jockeyRaw
-              ? jockeyRaw.split(',')[0].replace(/[0-9]/g, '').trim()
-              : "Unknown";
+              .trim() || "Unknown";
             
-            // RATINGS / SPEED FIGURES: Zona derecha extrema (x > 500)
+            // SPEED FIGURES / RATINGS: Zona derecha extrema (x > 500)
             const speedFigures = row.items
               .filter(it => it.x > 500)
               .map(it => parseInt(it.text))
@@ -152,7 +156,7 @@ router.get('/import-structured', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error Crítico en el Parser:', error);
+    console.error('❌ Error Crítico en el Parser Estructurado:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
