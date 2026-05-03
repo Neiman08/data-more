@@ -5,28 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Data More Horse Racing</title>
   <style>
-    body { margin:0; background:#0d1117; color:white; font-family:Arial,sans-serif; padding:20px; }
+    /* 1. Correcciones de Scroll y Base */
+    html, body {
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      margin:0; 
+      background:#0d1117; 
+      color:white; 
+      font-family:Arial,sans-serif; 
+      padding:20px;
+    }
+
     .header { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
     .logo { width:55px; height:55px; }
     h1 { margin:0; font-size:28px; font-weight:900; }
     
+    /* 2. Controles Dinámicos */
     .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; align-items: center; }
     button, a, input, select { border:none; border-radius:10px; padding:12px 18px; font-weight:800; cursor:pointer; text-decoration:none; color:white; transition: 0.2s; }
     
-    input[type="date"], select { background: #161b22; border: 1px solid #30363d; color: white; }
+    input[type="date"], select { background: #161b22; border: 1px solid #30363d; color: white; outline: none; }
+    input[type="date"]:focus, select:focus { border-color: #8b5cf6; }
     
     .btn-load { background:#8b5cf6; }
     .btn-mlb { background:#2563eb; }
     .btn-soccer { background:#22c55e; color:#052e16; }
     .btn-nba { background:#f97316; }
 
-    /* Grid Adaptativo */
+    /* 3. Grid Adaptativo */
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     @media (max-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
-    /* Tarjetas */
+    /* 4. Tarjetas con Sistema de Confianza */
     .card {
       background:#161b22;
       border:1px solid #30363d;
@@ -56,6 +69,7 @@
     .rank-row, .bet { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:12px; }
     .bet { background:#0f172a; padding:8px; border-radius:8px; margin-top:6px; border-bottom:none; }
     
+    /* 5. PDF Wrapper Optimizado */
     .pdf-full {
       grid-column: 1 / -1;
       margin-top: 28px;
@@ -65,7 +79,21 @@
       padding:18px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
-    .pdf-full iframe { width:100%; height:850px; border:1px solid #334155; border-radius:12px; background:white; }
+
+    .pdf-wrapper {
+      width: 100%;
+      height: 80vh;
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 12px;
+      background: white;
+    }
+
+    .pdf-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
   </style>
 </head>
 
@@ -77,7 +105,7 @@
 
   <div class="controls">
     <input type="date" id="dateInput">
-    <select id="trackSelect" style="padding:12px;border-radius:10px;font-weight:900;">
+    <select id="trackSelect">
       <option value="gp">Gulfstream Park</option>
       <option value="sa">Santa Anita Park</option>
       <option value="tam">Tampa Bay Downs</option>
@@ -95,7 +123,7 @@
   <div id="races" class="grid"></div>
 
 <script>
-// Establecer fecha de hoy por defecto (Zona Horaria America/Chicago)
+// Inicialización de fecha (Hoy en Zona Central)
 document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Chicago',
   year: 'numeric',
@@ -105,7 +133,7 @@ document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
 
 async function loadRaces() {
   const container = document.getElementById('races');
-  container.innerHTML = '<div class="card">Cargando datos...</div>';
+  container.innerHTML = '<div class="card">Cargando datos y retrospecto...</div>';
 
   const track = document.getElementById('trackSelect').value;
   const date = document.getElementById('dateInput').value;
@@ -115,7 +143,7 @@ async function loadRaces() {
     const data = await res.json();
 
     if (!data.ok || !data.races.length) {
-      container.innerHTML = `<div class="card">No hay datos disponibles para la selección actual.</div>`;
+      container.innerHTML = `<div class="card">No hay datos disponibles para la fecha seleccionada.</div>`;
       return;
     }
 
@@ -129,21 +157,23 @@ async function loadRaces() {
         <div class="card ${confClass}">
           <div class="race-title">🏇 Carrera ${race.raceNumber}</div>
           <div class="meta">${race.track.toUpperCase()} • ${race.date}</div>
-          ${a ? renderAnalysis(a) : '<p class="small">Sin análisis</p>'}
+          ${a ? renderAnalysis(a) : '<p style="font-size:12px; color:#64748b;">Análisis pendiente...</p>'}
         </div>
       `;
     });
 
-    // Agregar el PDF dinámico al final
+    // Inyección de PDF con Wrapper para Scroll Táctil
     container.innerHTML += `
       <div class="pdf-full">
         <div class="section-title">Retrospecto oficial completo</div>
-        <iframe src="/api/horse-racing/pdf?track=${track}&date=${date}"></iframe>
+        <div class="pdf-wrapper">
+          <iframe src="/api/horse-racing/pdf?track=${track}&date=${date}"></iframe>
+        </div>
       </div>
     `;
 
   } catch (err) {
-    container.innerHTML = `<div class="card">Error: ${err.message}</div>`;
+    container.innerHTML = `<div class="card">Error en la carga: ${err.message}</div>`;
   }
 }
 
@@ -157,7 +187,7 @@ function renderAnalysis(a) {
       <span style="font-size:11px; color:#94a3b8">Confianza ${a.confidence}</span>
     </div>
 
-    <div class="section-title">Top 3</div>
+    <div class="section-title">Probabilidades Top 3</div>
     ${(a.top3 || []).map((h, i) => `
       <div class="rank-row">
         <span>${i + 1}. ${h.name}</span>
@@ -165,14 +195,14 @@ function renderAnalysis(a) {
       </div>
     `).join('')}
 
-    <div class="section-title">Apuestas</div>
+    <div class="section-title">Sugerencias de Apuesta</div>
     <div class="bet">Win: <b>${a.bets?.win || '-'}</b></div>
-    <div class="bet">Ex: <b>${a.bets?.exacta || '-'}</b></div>
-    <div class="bet">Tri: <b>${a.bets?.trifecta || '-'}</b></div>
+    <div class="bet">Exacta: <b>${a.bets?.exacta || '-'}</b></div>
+    <div class="bet">Trifecta: <b>${a.bets?.trifecta || '-'}</b></div>
   `;
 }
 
-// Carga inicial
+// Carga automática al abrir
 loadRaces();
 </script>
 </body>
