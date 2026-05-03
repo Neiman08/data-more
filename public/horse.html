@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Data More Horse Racing</title>
   <style>
-    /* 1. Correcciones de Scroll y Base */
+    /* 1. Configuración de Scroll y Base */
     html, body {
       overflow-x: hidden;
       overflow-y: auto;
@@ -21,7 +21,7 @@
     .logo { width:55px; height:55px; }
     h1 { margin:0; font-size:28px; font-weight:900; }
     
-    /* 2. Controles Dinámicos */
+    /* 2. Controles */
     .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; align-items: center; }
     button, a, input, select { border:none; border-radius:10px; padding:12px 18px; font-weight:800; cursor:pointer; text-decoration:none; color:white; transition: 0.2s; }
     
@@ -39,7 +39,7 @@
     @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
-    /* 4. Tarjetas con Sistema de Confianza */
+    /* 4. Tarjetas */
     .card {
       background:#161b22;
       border:1px solid #30363d;
@@ -69,7 +69,7 @@
     .rank-row, .bet { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:12px; }
     .bet { background:#0f172a; padding:8px; border-radius:8px; margin-top:6px; border-bottom:none; }
     
-    /* 5. PDF Wrapper Optimizado */
+    /* 5. Estilos de PDF */
     .pdf-full {
       grid-column: 1 / -1;
       margin-top: 28px;
@@ -82,8 +82,8 @@
 
     .pdf-wrapper {
       width: 100%;
-      height: 80vh;
-      overflow-y: scroll;
+      height: 850px;
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       border-radius: 12px;
       background: white;
@@ -123,7 +123,7 @@
   <div id="races" class="grid"></div>
 
 <script>
-// Inicialización de fecha (Hoy en Zona Central)
+// Fecha de hoy por defecto (Zona Chicago)
 document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Chicago',
   year: 'numeric',
@@ -143,7 +143,7 @@ async function loadRaces() {
     const data = await res.json();
 
     if (!data.ok || !data.races.length) {
-      container.innerHTML = `<div class="card">No hay datos disponibles para la fecha seleccionada.</div>`;
+      container.innerHTML = `<div class="card">No hay datos disponibles para la selección actual.</div>`;
       return;
     }
 
@@ -162,10 +162,18 @@ async function loadRaces() {
       `;
     });
 
-    // Inyección de PDF con Wrapper para Scroll Táctil
+    // Inyección de PDF con botón de apertura externa
     container.innerHTML += `
       <div class="pdf-full">
         <div class="section-title">Retrospecto oficial completo</div>
+
+        <a
+          href="/api/horse-racing/pdf?track=${track}&date=${date}"
+          target="_blank"
+          style="display:block;text-align:center;background:#a855f7;color:white;padding:14px;border-radius:12px;font-weight:900;margin-bottom:12px;">
+          📄 Abrir PDF completo
+        </a>
+
         <div class="pdf-wrapper">
           <iframe src="/api/horse-racing/pdf?track=${track}&date=${date}"></iframe>
         </div>
@@ -187,7 +195,7 @@ function renderAnalysis(a) {
       <span style="font-size:11px; color:#94a3b8">Confianza ${a.confidence}</span>
     </div>
 
-    <div class="section-title">Probabilidades Top 3</div>
+    <div class="section-title">Top 3</div>
     ${(a.top3 || []).map((h, i) => `
       <div class="rank-row">
         <span>${i + 1}. ${h.name}</span>
@@ -195,14 +203,13 @@ function renderAnalysis(a) {
       </div>
     `).join('')}
 
-    <div class="section-title">Sugerencias de Apuesta</div>
+    <div class="section-title">Apuestas</div>
     <div class="bet">Win: <b>${a.bets?.win || '-'}</b></div>
-    <div class="bet">Exacta: <b>${a.bets?.exacta || '-'}</b></div>
-    <div class="bet">Trifecta: <b>${a.bets?.trifecta || '-'}</b></div>
+    <div class="bet">Ex: <b>${a.bets?.exacta || '-'}</b></div>
+    <div class="bet">Tri: <b>${a.bets?.trifecta || '-'}</b></div>
   `;
 }
 
-// Carga automática al abrir
 loadRaces();
 </script>
 </body>
