@@ -27,6 +27,7 @@
       --traffic-green: #22c55e;
       --traffic-yellow: #facc15;
       --traffic-red: #ef4444;
+      --accent-purple: #a855f7;
     }
 
     .espn-ticker-container {
@@ -143,14 +144,6 @@
     .btn-load { background: #2563eb; }
     .btn-all { background: #facc15; color: #000; }
     .btn-ticket { background: var(--accent-soccer); color: #052e16; }
-    .mlb-btn { background: var(--mlb-blue); }
-    .soccer-btn { background: var(--accent-soccer); }
-    .nba-btn { background: var(--accent-nba); }
-
-    .nav-btn.active {
-      outline: 2px solid #fff;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
 
     .league-title {
       color: var(--accent-soccer);
@@ -299,7 +292,6 @@
     .bet-no { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
     .bet-strong { background: var(--accent-soccer); color: #052e16; }
 
-    /* Estilos de Alineaciones */
     .lineup-container {
       background: rgba(0,0,0,0.25);
       border-radius: 10px;
@@ -334,7 +326,7 @@
 <div class="container">
   <div class="brand-header">
     <img src="/logo.png" class="brand-logo" onerror="this.src='/logo.png'">
-    <h1>Data More Picks</h1>
+    <h1>Data More Soccer</h1>
   </div>
 
   <div class="selector">
@@ -342,9 +334,22 @@
     <button class="btn-action btn-load" onclick="loadGames()">Cargar Juegos</button>
     <button class="btn-action btn-all" id="analyzeAllBtn" onclick="analyzeAll()">⚡ Analizar Todos</button>
     <button class="btn-action btn-ticket" onclick="generateSoccerTicket()">🎟️ Generar Ticket</button>
-    <a href="/" class="nav-btn mlb-btn">⚾ MLB</a>
-    <a href="/soccer" class="nav-btn soccer-btn active">⚽ Soccer</a>
-    <a href="/nba" class="nav-btn nba-btn">🏀 NBA</a>
+
+    <a href="/" style="text-decoration:none;">
+      <button type="button" style="background:#2563eb;">⚾ MLB</button>
+    </a>
+
+    <a href="/soccer" style="text-decoration:none;">
+      <button type="button" style="background:#16a34a; outline: 2px solid #fff;">⚽ Soccer</button>
+    </a>
+
+    <a href="/nba" style="text-decoration:none;">
+      <button type="button" style="background:#f97316;">🏀 NBA</button>
+    </a>
+
+    <a href="/horse.html" style="text-decoration:none;">
+      <button type="button" style="background:#a855f7;">🏇 Hipismo</button>
+    </a>
   </div>
 
   <div id="gamesList"></div>

@@ -24,9 +24,10 @@
       --border-dark: #1e293b;
       --gold: #facc15;
       --traffic-red: #ef4444;
+      --accent-purple: #a855f7;
     }
 
-    /* --- NUEVOS ESTILOS SOLICITADOS --- */
+    /* --- NUEVOS ESTILOS --- */
     .team-record {
       display: block;
       font-size: 11px;
@@ -60,15 +61,8 @@
       justify-content: center;
     }
 
-    .last5-item.win {
-      background: #22c55e;
-      color: #000;
-    }
-
-    .last5-item.loss {
-      background: #ef4444;
-      color: #fff;
-    }
+    .last5-item.win { background: #22c55e; color: #000; }
+    .last5-item.loss { background: #ef4444; color: #fff; }
 
     .count-box {
       display: flex;
@@ -80,7 +74,11 @@
       margin-top: 5px;
     }
 
-    /* --- ESTILOS RESTANTES --- */
+    .btn-horse {
+      background: var(--accent-purple) !important;
+    }
+
+    /* --- ESTILOS GENERALES --- */
     .espn-ticker-container {
         width: 100%;
         background: #0b0e14;
@@ -262,6 +260,7 @@
       <a href="/" style="text-decoration:none;"><button type="button" style="background:#2563eb;">⚾ MLB</button></a>
       <a href="/soccer" style="text-decoration:none;"><button type="button" style="background:#16a34a;">⚽ Soccer</button></a>
       <a href="/nba" style="text-decoration:none;"><button type="button" style="background:#f97316;">🏀 NBA</button></a>
+      <a href="/horse.html" style="text-decoration:none;"><button type="button" class="btn-horse">🏇 Hipismo</button></a>
     </div>
 
     <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--text-subtle);">Listo...</div>
