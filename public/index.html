@@ -27,7 +27,7 @@
       --accent-purple: #a855f7;
     }
 
-    /* --- NUEVOS ESTILOS DE NAVEGACIÓN --- */
+    /* --- NAVEGACIÓN --- */
     .nav-sports {
       display: flex;
       gap: 14px;
@@ -66,7 +66,7 @@
     .nav-nba { background:#f97316; }
     .nav-horse { background:#a855f7; }
 
-    /* --- CAMBIO SOLICITADO: BARRA DE CONTROLES CSS --- */
+    /* --- BARRA DE CONTROLES --- */
     .controls-bar,
     .topbar {
       display: flex;
@@ -111,52 +111,36 @@
       color: black !important;
     }
 
+    /* --- ESTILO BOTÓN ANALIZAR SOLICITADO --- */
+    .analyze-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 0;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    }
+
+    .analyze-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(37,99,235,0.45);
+    }
+
     /* --- RESTO DE ESTILOS ORIGINALES --- */
-    .team-record {
-      display: block;
-      font-size: 11px;
-      color: #22c55e;
-      font-weight: 900;
-      margin-top: 3px;
-    }
-
-    .team-streak {
-      display: block;
-      font-size: 9px;
-      color: #94a3b8;
-      margin-top: 2px;
-    }
-
-    .last5-box {
-      display: flex;
-      justify-content: center;
-      gap: 4px;
-      margin-top: 4px;
-    }
-
-    .last5-item {
-      width: 18px;
-      height: 18px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 900;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
+    .team-record { display: block; font-size: 11px; color: #22c55e; font-weight: 900; margin-top: 3px; }
+    .team-streak { display: block; font-size: 9px; color: #94a3b8; margin-top: 2px; }
+    .last5-box { display: flex; justify-content: center; gap: 4px; margin-top: 4px; }
+    .last5-item { width: 18px; height: 18px; border-radius: 4px; font-size: 11px; font-weight: 900; display: inline-flex; align-items: center; justify-content: center; }
     .last5-item.win { background: #22c55e; color: #000; }
     .last5-item.loss { background: #ef4444; color: #fff; }
 
-    .count-box {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      font-size: 10px;
-      color: #facc15;
-      font-weight: 900;
-      margin-top: 5px;
-    }
+    .count-box { display: flex; justify-content: center; gap: 6px; font-size: 10px; color: #facc15; font-weight: 900; margin-top: 5px; }
 
     .espn-ticker-container {
         width: 100%;
@@ -474,7 +458,9 @@
               </div>
             </div>
             ${renderLineups(lData)}
-            <div id="results-${game.gamePk}"><button onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}', '${game.status}')" style="width:100%">ANALIZAR</button></div>`;
+            <div id="results-${game.gamePk}">
+              <button class="analyze-btn" onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}', '${game.status}')">ANALIZAR</button>
+            </div>`;
           gamesGrid.appendChild(card);
         }
         status.textContent = `${data.games.length} juegos listos.`;
@@ -553,7 +539,7 @@
     }
 
     async function analyzeAll() {
-      const btns = document.querySelectorAll('button[onclick^="analyzeGame"]');
+      const btns = document.querySelectorAll('.analyze-btn');
       for (const b of btns) { b.click(); await new Promise(r => setTimeout(r, 850)); }
     }
 
