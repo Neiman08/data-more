@@ -21,7 +21,7 @@
     .meta { color:#94a3b8; font-size:13px; margin-bottom:12px; }
     .pick-box { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35); padding:12px; border-radius:10px; margin-bottom:12px; }
     .section-title { color:#38bdf8; font-size:13px; font-weight:900; margin:12px 0 8px; text-transform:uppercase; }
-    .runner,.rank-row { display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:13px; }
+    .rank-row { display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:13px; }
     .bet { font-size:13px; background:#0f172a; padding:8px; border-radius:8px; margin-top:6px; }
     .small { color:#94a3b8; font-size:12px; }
   </style>
@@ -70,7 +70,7 @@ async function loadRaces() {
 
           <div class="section-title">Retrospecto oficial</div>
           <iframe
-            src="/api/horse-racing/pdf?track=${race.track.toLowerCase()}&date=${race.date}"
+            src="/api/horse-racing/pdf?track=${race.track.toLowerCase()}&date=${race.date}#page=${race.raceNumber}"
             style="width:100%; height:650px; border:1px solid #334155; border-radius:12px; background:white;">
           </iframe>
         </div>
@@ -107,6 +107,7 @@ function renderAnalysis(a) {
   `;
 }
 
+// Carga inicial
 loadRaces();
 </script>
 
