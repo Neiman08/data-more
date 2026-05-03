@@ -18,6 +18,8 @@ const TEAM_ABBR = {
 const last5Cache = {};
 const LAST5_CACHE_TTL = 1000 * 60 * 10;
 
+// --- HELPERS ---
+
 function getChicagoDate() {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Chicago',
@@ -55,9 +57,7 @@ async function getLast5(teamId, beforeDate) {
     if (!teamId) return '---';
     const cacheKey = `${teamId}-${beforeDate}`;
     const cached = last5Cache[cacheKey];
-    if (cached && Date.now() - cached.time < LAST5_CACHE_TTL) {
-      return cached.value;
-    }
+    if (cached && Date.now() - cached.time < LAST5_CACHE_TTL) return cached.value;
 
     const end = new Date(beforeDate || new Date());
     end.setDate(end.getDate() - 1);
@@ -76,27 +76,21 @@ async function getLast5(teamId, beforeDate) {
       for (const game of day.games || []) {
         if (game.status?.abstractGameState !== 'Final') continue;
         const isHome = Number(game.teams?.home?.team?.id) === Number(teamId);
-        const teamScore = isHome ? Number(game.teams?.home?.score ?? 0) : Number(game.teams?.away?.score ?? 0);
-        const oppScore = isHome ? Number(game.teams?.away?.score ?? 0) : Number(game.teams?.home?.score ?? 0);
+        const teamScore = isHome ? (game.teams.home.score ?? 0) : (game.teams.away.score ?? 0);
+        const oppScore = isHome ? (game.teams.away.score ?? 0) : (game.teams.home.score ?? 0);
         results.push({ date: game.gameDate, result: teamScore > oppScore ? 'W' : 'L' });
       }
     }
 
-    const value = results
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5)
-      .map(g => g.result)
-      .join(' ') || '---';
-
+    const value = results.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(g => g.result).join(' ') || '---';
     last5Cache[cacheKey] = { time: Date.now(), value };
     return value;
   } catch (err) {
-    console.error('Error getLast5:', err);
     return '---';
   }
 }
 
-// --- RUTAS ACTUALIZADAS ---
+// --- RUTAS ACTUALIZADAS (GAMES & LIVE) ---
 
 router.get('/games', async (req, res) => {
   try {
@@ -126,12 +120,10 @@ router.get('/games', async (req, res) => {
         homeAbbrev: TEAM_ABBR[homeTeam?.team?.name] || '',
         awayPitcher: awayTeam?.probablePitcher?.fullName || 'TBD',
         homePitcher: homeTeam?.probablePitcher?.fullName || 'TBD',
-        
-        // ✅ SCORE
         awayScore: awayTeam?.score ?? 0,
         homeScore: homeTeam?.score ?? 0,
-
-        // ✅ RECORD (FIXED)
+        
+        // RECORD
         awayWins: awayTeam?.leagueRecord?.wins ?? 0,
         awayLosses: awayTeam?.leagueRecord?.losses ?? 0,
         homeWins: homeTeam?.leagueRecord?.wins ?? 0,
@@ -140,20 +132,19 @@ router.get('/games', async (req, res) => {
         awayLast5,
         homeLast5,
 
-        // ✅ LIVE DATA
+        // LIVE DATA
         inning: game.linescore?.currentInningOrdinal || '',
         inningState: game.linescore?.inningState || '',
         balls: game.linescore?.balls ?? 0,
         strikes: game.linescore?.strikes ?? 0,
         outs: game.linescore?.outs ?? 0,
 
-        // ✅ BASES
+        // BASES
         runnerOn1b: !!game.linescore?.offense?.first,
         runnerOn2b: !!game.linescore?.offense?.second,
         runnerOn3b: !!game.linescore?.offense?.third
       };
     }));
-
     res.json({ ok: true, date: queryDate, games });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -171,13 +162,9 @@ router.get('/live-scores', async (req, res) => {
       inningState: g.linescore?.inningState || '',
       homeScore: g.teams?.home?.score ?? 0,
       awayScore: g.teams?.away?.score ?? 0,
-      
-      // ✅ CONTADOR
       balls: g.linescore?.balls ?? 0,
       strikes: g.linescore?.strikes ?? 0,
       outs: g.linescore?.outs ?? 0,
-
-      // ✅ BASES
       runnerOn1b: !!g.linescore?.offense?.first,
       runnerOn2b: !!g.linescore?.offense?.second,
       runnerOn3b: !!g.linescore?.offense?.third
@@ -188,6 +175,82 @@ router.get('/live-scores', async (req, res) => {
   }
 });
 
-// ... (Resto de rutas como /lineup/:id, /player-props/:gamePk permanecen igual)
+// --- RUTAS DE DETALLE (LINEUPS & PROPS) ---
+
+router.get('/lineup/:id', async (req, res) => {
+  try {
+    const response = await fetch(`https://statsapi.mlb.com/api/v1/game/${req.params.id}/boxscore`);
+    const data = await response.json();
+    res.json({
+      ok: true,
+      awayLineup: formatLineup(data?.teams?.away?.players),
+      homeLineup: formatLineup(data?.teams?.home?.players)
+    });
+  } catch (error) {
+    res.json({ ok: false, awayLineup: [], homeLineup: [] });
+  }
+});
+
+router.get('/player-props/:gamePk', async (req, res) => {
+  try {
+    const { gamePk } = req.params;
+    const season = new Date().getFullYear();
+    const boxRes = await fetch(`https://statsapi.mlb.com/api/v1/game/${gamePk}/boxscore`);
+    const boxData = await boxRes.json();
+
+    const players = [
+      ...Object.values(boxData?.teams?.home?.players || {}),
+      ...Object.values(boxData?.teams?.away?.players || {})
+    ].filter(p => p.battingOrder && p.person?.id);
+
+    const allProps = (await Promise.all(players.map(async (player) => {
+      try {
+        const id = player.person.id;
+        const statsRes = await fetch(`https://statsapi.mlb.com/api/v1/people/${id}/stats?stats=season&group=hitting&season=${season}`);
+        const statsData = await statsRes.json();
+        const stat = statsData?.stats?.[0]?.splits?.[0]?.stat || {};
+
+        const avg = Number(stat.avg || 0);
+        const obp = Number(stat.obp || 0);
+        const slg = Number(stat.slg || 0);
+        const ops = Number(stat.ops || 0);
+        const ab = Number(stat.atBats || 0);
+        const hits = Number(stat.hits || 0);
+        const hr = Number(stat.homeRuns || 0);
+
+        const hitRate = ab > 0 ? hits / ab : avg || 0;
+        const hrRate = ab > 0 ? hr / ab : 0;
+
+        const hitChance = Math.min(88, Math.max(35, Math.round((hitRate * 100) + (obp * 18) + (ops * 10))));
+        const hrChance = Math.min(35, Math.max(2, Math.round((hrRate * 100) + (slg * 12) + (ops * 4))));
+
+        return {
+          name: player.person.fullName,
+          personId: id,
+          team: player.parentTeamId || '',
+          hitChance,
+          hrChance,
+          homeRuns: hr,
+          avg,
+          ops,
+          slg,
+          rating: hitChance >= 68 ? 'Alta' : hitChance >= 55 ? 'Media' : 'Baja'
+        };
+      } catch { return null; }
+    }))).filter(Boolean);
+
+    res.json({ 
+      ok: true, 
+      topHits: [...allProps].sort((a, b) => b.hitChance - a.hitChance).slice(0, 3), 
+      topHR: [...allProps].sort((a, b) => b.hrChance - a.hrChance).slice(0, 3) 
+    });
+  } catch (error) {
+    res.json({ ok: false, topHits: [], topHR: [] });
+  }
+});
+
+router.get('/analyze/:gamePk', async (req, res) => {
+  res.json({ ok: true, message: `Análisis para ${req.params.gamePk}`, timestamp: new Date().toISOString() });
+});
 
 export default router;
