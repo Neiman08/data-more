@@ -1,3 +1,6 @@
+/**
+ * UTILIDADES MATEMÁTICAS Y DE PARSEO
+ */
 function num(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
@@ -31,6 +34,9 @@ function impliedProbabilityFromOdds(odds) {
   return 100 / (frac + 1);
 }
 
+/**
+ * CÁLCULO DE SCORES INDIVIDUALES
+ */
 function getSpeedScore(horse) {
   const figs = horse.speedFigures || [];
   if (!figs.length) return 35;
@@ -54,7 +60,6 @@ function getSpeedScore(horse) {
 function getConsistencyScore(horse) {
   const figs = horse.speedFigures || [];
   if (figs.length < 3) return 45;
-
   const v = variance(figs);
   return clamp(100 - v);
 }
@@ -69,7 +74,6 @@ function getFormScore(horse) {
   const overall = avg(figs);
 
   let score = 50;
-
   if (last > prev) score += 10;
   if (recent > overall) score += 12;
   if (last >= 85) score += 10;
@@ -83,10 +87,8 @@ function getClassScore(horse, race) {
   const purse = num(race?.purse, 0);
 
   let score = 50;
-
   if (type.includes('stakes')) score += 15;
   if (type.includes('allowance')) score += 10;
-  if (type.includes('claiming')) score += 0;
   if (type.includes('maiden')) score -= 5;
 
   if (purse >= 75000) score += 12;
@@ -98,14 +100,12 @@ function getClassScore(horse, race) {
 
 function getHumanScore(horse) {
   let score = 50;
-
   const jockey = String(horse.jockey || '').toLowerCase();
   const trainer = String(horse.trainer || '').toLowerCase();
 
   if (jockey && jockey !== 'no data') score += 8;
   if (trainer && trainer !== 'no data') score += 8;
 
-  // Ajustes temporales hasta integrar porcentajes reales
   const strongNames = ['irad', 'ortiz', 'prat', 'velazquez', 'saez', 'gafalione', 'zayas', 'rosario'];
   if (strongNames.some(n => jockey.includes(n))) score += 8;
 
@@ -114,7 +114,6 @@ function getHumanScore(horse) {
 
 function getContextScore(horse, race) {
   let score = 50;
-
   const surface = String(race?.surface || '').toLowerCase();
   const distance = String(race?.distance || '').toLowerCase();
 
@@ -133,8 +132,6 @@ function getPaceScore(horse, race) {
   const recent = avg(figs.slice(-3));
 
   let score = 50;
-
-  // Proxy temporal: caballos con picos altos y forma reciente fuerte tienen más capacidad táctica
   if (peak >= 90) score += 12;
   if (recent >= 75) score += 10;
   if (last >= recent) score += 5;
@@ -142,22 +139,18 @@ function getPaceScore(horse, race) {
   return clamp(score);
 }
 
+/**
+ * ANÁLISIS DE VALOR Y CONFIANZA
+ */
 function getValueScore(horse, rawModelProb) {
   const implied = impliedProbabilityFromOdds(horse.odds);
 
   if (!implied) {
-    return {
-      valueScore: 45,
-      impliedProbability: null,
-      edge: null,
-      valueTag: 'SIN ODDS'
-    };
+    return { valueScore: 45, impliedProbability: null, edge: null, valueTag: 'SIN ODDS' };
   }
 
   const edge = rawModelProb - implied;
-
-  let valueScore = 50 + edge * 2;
-  valueScore = clamp(valueScore);
+  let valueScore = clamp(50 + edge * 2);
 
   let valueTag = 'NO VALUE';
   if (edge >= 10) valueTag = 'VALUE ALTO';
@@ -174,13 +167,15 @@ function getValueScore(horse, rawModelProb) {
 
 function getConfidence(top, second, fieldSize) {
   const diff = num(top?.probability) - num(second?.probability);
-
   if (fieldSize >= 10 && diff < 4) return 'BAJA';
   if (diff >= 8 && num(top?.probability) >= 22) return 'ALTA';
   if (diff >= 4) return 'MEDIA';
   return 'BAJA';
 }
 
+/**
+ * FUNCIÓN PRINCIPAL DE ANÁLISIS DE CARRERA
+ */
 export function analyzeRace(race) {
   if (!race || !Array.isArray(race.runners) || race.runners.length === 0) {
     return null;
@@ -195,14 +190,15 @@ export function analyzeRace(race) {
     const contextScore = getContextScore(horse, race);
     const paceScore = getPaceScore(horse, race);
 
+    // NUEVA PONDERACIÓN SOLICITADA
     const rawScore =
-      speedScore * 0.28 +
-      formScore * 0.16 +
-      classScore * 0.12 +
-      paceScore * 0.14 +
-      humanScore * 0.10 +
-      contextScore * 0.08 +
-      consistencyScore * 0.07;
+      speedScore * 0.40 +
+      formScore * 0.20 +
+      classScore * 0.15 +
+      paceScore * 0.10 +
+      humanScore * 0.07 +
+      contextScore * 0.05 +
+      consistencyScore * 0.03;
 
     return {
       ...horse,
@@ -227,9 +223,8 @@ export function analyzeRace(race) {
   const withValue = withRawProb.map(h => {
     const value = getValueScore(h, h.rawModelProbability);
 
-    const finalScore =
-      h.rawScore * 0.88 +
-      value.valueScore * 0.12;
+    // Ajuste final mezclando rawScore con el valor detectado (88% vs 12%)
+    const finalScore = h.rawScore * 0.88 + value.valueScore * 0.12;
 
     return {
       ...h,
@@ -267,15 +262,12 @@ export function analyzeRace(race) {
         : 'RIESGO',
 
     top3: ranked.slice(0, 3),
-
     valueBets,
-
     bets: {
       win: top?.name || 'N/A',
       exacta: top && second ? `${top.name} / ${second.name}` : 'N/A',
       trifecta: top && second && third ? `${top.name} / ${second.name} / ${third.name}` : 'N/A'
     },
-
     fullRanking: ranked
   };
 }
