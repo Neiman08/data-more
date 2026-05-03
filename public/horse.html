@@ -68,13 +68,11 @@ async function loadRaces() {
 
           ${analysis ? renderAnalysis(analysis) : ''}
 
-          <div class="section-title">Corredores</div>
-          ${race.runners.map(h => `
-            <div class="runner">
-              <span><b>#${h.number}</b> ${h.name}<br><span class="small">${h.jockey || 'Sin jockey'}</span></span>
-              <span>${h.odds || 'N/A'}</span>
-            </div>
-          `).join('')}
+          <div class="section-title">Retrospecto oficial</div>
+          <iframe
+            src="/api/horse-racing/pdf?track=${race.track.toLowerCase()}&date=${race.date}"
+            style="width:100%; height:650px; border:1px solid #334155; border-radius:12px; background:white;">
+          </iframe>
         </div>
       `;
     });

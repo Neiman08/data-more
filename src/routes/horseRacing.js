@@ -7,7 +7,39 @@ const router = express.Router();
 console.log('✅ Router de Hípica (Versión Pro: Parser Semi-Inteligente Blindado) cargado');
 
 /* =========================================================
-   🛠️ ENDPOINT DE DIAGNÓSTICO
+   📄 ENDPOINT: PROXY PDF (VISUALIZACIÓN)
+   Sirve el PDF directamente al frontend evitando CORS
+========================================================= */
+router.get('/pdf', async (req, res) => {
+  try {
+    const { date, track } = req.query;
+
+    if (!date || !track) {
+      return res.status(400).send('Faltan parámetros date y track');
+    }
+
+    const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return res.status(404).send('PDF no disponible todavía en el servidor de origen');
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline'); // Permite ver en el navegador
+    res.send(buffer);
+
+  } catch (error) {
+    console.error('❌ Error sirviendo PDF:', error);
+    res.status(500).send('Error cargando PDF');
+  }
+});
+
+/* =========================================================
+   🛠️ ENDPOINT: DIAGNÓSTICO DE COORDENADAS
+   Útil para calibrar el parser si el formato del PDF cambia
 ========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
@@ -30,6 +62,7 @@ router.get('/debug-coordinates', async (req, res) => {
       y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
+    // Ordenar de arriba hacia abajo (Y descendente) y de izquierda a derecha (X ascendente)
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
@@ -39,7 +72,8 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 IMPORTACIÓN ESTRUCTURADA (VERSION SEMI-INTELIGENTE)
+   🚀 ENDPOINT: IMPORTACIÓN ESTRUCTURADA + IA
+   Extrae datos por coordenadas y aplica el modelo predictivo
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
@@ -66,7 +100,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // Agrupar por filas
+      // 1. Agrupar tokens por filas (tolerancia de 4 puntos de altura)
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 4);
@@ -77,18 +111,21 @@ router.get('/import-structured', async (req, res) => {
         row.items.push(token);
       });
 
+      // Ordenar filas por altura y items por posición horizontal
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
       const runners = [];
 
       rows.forEach((row, rowIndex) => {
+        // Buscar el número del caballo (1-2 dígitos en el margen izquierdo)
         const numberToken = row.items.find(it =>
           /^\d{1,2}$/.test(it.text) && it.x > 5 && it.x < 25
         );
 
         if (numberToken && runners.find(r => r.number === numberToken.text)) return;
 
+        // Extraer nombre del caballo (Bloque central izquierdo)
         const nameTokens = row.items
           .filter(it =>
             it.x > 30 &&
@@ -105,6 +142,7 @@ router.get('/import-structured', async (req, res) => {
         const horseName = nameTokens.join(' ').trim();
         if (!numberToken || !horseName || horseName.length < 3) return;
 
+        // Buscar Jinete (Escaneo en fila actual y superiores)
         const upperRows = rows.slice(Math.max(0, rowIndex - 6), rowIndex);
         const jockeyToken = [...upperRows, row]
           .flatMap(r => r.items)
@@ -117,8 +155,9 @@ router.get('/import-structured', async (req, res) => {
 
         const jockey = jockeyToken
           ? jockeyToken.text.replace(/[0-9,]/g, '').trim()
-          : null;
+          : 'No data';
 
+        // Buscar Momios (Odds) en filas inferiores
         const lowerRows = rows.slice(rowIndex + 1, rowIndex + 8);
         const oddsToken = lowerRows
           .flatMap(r => r.items)
@@ -130,6 +169,7 @@ router.get('/import-structured', async (req, res) => {
 
         const odds = oddsToken ? oddsToken.text.replace('-', '/') : 'N/A';
 
+        // Extraer Speed Figures (Margen derecho del PDF)
         const nearbyRows = rows.slice(Math.max(0, rowIndex - 4), rowIndex + 3);
         const speedFigures = nearbyRows
           .flatMap(r => r.items)
@@ -156,7 +196,7 @@ router.get('/import-structured', async (req, res) => {
       }
     }
 
-    // 🔥 AQUÍ ESTÁ LA MAGIA (ANÁLISIS PARA TODAS LAS CARRERAS)
+    // Aplicar lógica de análisis (IA/Modelo Matemático) a cada carrera
     const racesWithAnalysis = allRaces.map(race => ({
       ...race,
       analysis: analyzeRace(race)
