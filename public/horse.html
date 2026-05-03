@@ -58,9 +58,8 @@ async function loadRaces() {
 
     container.innerHTML = '';
 
-    data.races.forEach((race, index) => {
-      const isFirst = index === 0;
-      const analysis = isFirst ? data.analysis : null;
+    data.races.forEach((race) => {
+      const analysis = race.analysis;
 
       container.innerHTML += `
         <div class="card">
@@ -96,7 +95,7 @@ function renderAnalysis(a) {
     </div>
 
     <div class="section-title">Top 3</div>
-    ${a.top3.map((h, i) => `
+    ${(a.top3 || []).map((h, i) => `
       <div class="rank-row">
         <span>${i + 1}. ${h.name}</span>
         <span>${h.probability}%</span>
@@ -104,9 +103,9 @@ function renderAnalysis(a) {
     `).join('')}
 
     <div class="section-title">Apuestas sugeridas</div>
-    <div class="bet">Win: ${a.bets.win}</div>
-    <div class="bet">Exacta: ${a.bets.exacta}</div>
-    <div class="bet">Trifecta: ${a.bets.trifecta}</div>
+    <div class="bet">Win: ${a.bets?.win || 'N/A'}</div>
+    <div class="bet">Exacta: ${a.bets?.exacta || 'N/A'}</div>
+    <div class="bet">Trifecta: ${a.bets?.trifecta || 'N/A'}</div>
   `;
 }
 
