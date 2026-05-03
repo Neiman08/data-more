@@ -4,10 +4,11 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Extracción Multitoken) cargado');
+console.log('✅ Router de Hípica (Versión Estructurada Final) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT 1: DIAGNÓSTICO DE COORDENADAS
+   Uso: /api/horse-racing/debug-coordinates?track=gp&date=2026-05-02&page=1
 ========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
@@ -33,7 +34,11 @@ router.get('/debug-coordinates', async (req, res) => {
       w: parseFloat(item.width.toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    tokens.sort((a, b) => b.y - a.y || a.x - b.x);
+    // Ordenamiento por flujo de lectura lógico
+    tokens.sort((a, b) => {
+      if (Math.abs(a.y - b.y) > 5) return b.y - a.y;
+      return a.x - b.x;
+    });
 
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
   } catch (error) {
@@ -43,6 +48,7 @@ router.get('/debug-coordinates', async (req, res) => {
 
 /* =========================================================
    🚀 ENDPOINT 2: IMPORTACIÓN ESTRUCTURADA (PRO)
+   Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
@@ -88,20 +94,21 @@ router.get('/import-structured', async (req, res) => {
       rows.forEach((row, rowIndex) => {
         const firstItem = row.items[0];
         
-        // NÚMERO DEL CABALLO: Rango x entre 130 y 180
+        // NÚMERO DEL CABALLO: Rango x entre 130 y 180 (según diagnóstico GP)
         if (/^\d{1,2}$/.test(firstItem?.text) && firstItem.x > 130 && firstItem.x < 180) {
           
-          // 🔥 NOMBRE (MULTI-TOKEN): Rango x entre 170 y 260
+          // NOMBRE (MULTI-TOKEN): Rango x entre 170 y 260
           const nameTokens = row.items
             .filter(it => it.x > 170 && it.x < 260)
             .map(it => it.text);
           const horseName = nameTokens.join(' ').trim();
           
           if (horseName) {
+            // Odds: Buscamos en la fila de abajo en la misma zona izquierda
             const nextRow = rows[rowIndex + 1];
             const odds = nextRow?.items.find(it => it.x < 180 && it.text.includes('-'))?.text || "N/A";
             
-            // 🔥 JOCKEY (LIMPIEZA DE BASURA): Rango x entre 300 y 420
+            // JOCKEY (MULTI-TOKEN + LIMPIEZA): Rango x entre 300 y 420
             const jockey = row.items
               .filter(it => it.x > 300 && it.x < 420)
               .map(it => it.text)
@@ -109,7 +116,7 @@ router.get('/import-structured', async (req, res) => {
               .replace(/[0-9.,]/g, '')
               .trim() || "Unknown";
             
-            // 🔥 SPEED FIGURES (FILTRO DE RANGO LÓGICO): zona derecha (x > 530)
+            // SPEED FIGURES (FILTRO DE RANGO): zona derecha (x > 530)
             const speedFigures = row.items
               .filter(it => it.x > 530)
               .map(it => parseInt(it.text))
@@ -141,6 +148,7 @@ router.get('/import-structured', async (req, res) => {
       url,
       totalRaces: allRaces.length,
       races: allRaces,
+      // Solo ejecutamos el análisis si hay carreras detectadas
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
