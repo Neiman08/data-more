@@ -1,6 +1,6 @@
 import express from 'express';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { analyzeRace } from '../utils/horseScoring.js';
+import { analyzeRace } from '../utils/horseModel.js';
 
 const router = express.Router();
 
