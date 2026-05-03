@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data More Horse Racing</title>
+  <title>Data More Horse Racing | Premium</title>
   <style>
     /* 1. Configuración de Scroll y Base */
     html, body {
@@ -13,25 +13,73 @@
       margin:0; 
       background:#0d1117; 
       color:white; 
-      font-family:Arial,sans-serif; 
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
       padding:20px;
     }
 
-    .header { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
-    .logo { width:55px; height:55px; }
-    h1 { margin:0; font-size:28px; font-weight:900; }
+    .header { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+    .logo { width:55px; height:55px; border-radius: 12px; }
+    h1 { margin:0; font-size:28px; font-weight:900; letter-spacing: -1px; }
     
-    /* 2. Controles */
-    .controls { display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap; align-items: center; }
-    button, a, input, select { border:none; border-radius:10px; padding:12px 18px; font-weight:800; cursor:pointer; text-decoration:none; color:white; transition: 0.2s; }
-    
-    input[type="date"], select { background: #161b22; border: 1px solid #30363d; color: white; outline: none; }
-    input[type="date"]:focus, select:focus { border-color: #8b5cf6; }
-    
-    .btn-load { background:#8b5cf6; }
-    .btn-mlb { background:#2563eb; }
-    .btn-soccer { background:#22c55e; color:#052e16; }
-    .btn-nba { background:#f97316; }
+    /* 2. BARRA DE CONTROLES UNIVERSAL (ESTILO NIVEL DIOS) */
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 25px 0;
+      flex-wrap: wrap;
+      background: rgba(22, 27, 34, 0.8);
+      padding: 15px;
+      border-radius: 16px;
+      border: 1px solid #30363d;
+      backdrop-filter: blur(10px);
+    }
+
+    .controls-bar input, .controls-bar select {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: white;
+      font-weight: bold;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    .controls-bar input:focus, .controls-bar select:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+    }
+
+    button, .nav-link {
+      border:none;
+      border-radius:10px;
+      padding:12px 20px;
+      font-weight:800;
+      cursor:pointer;
+      text-decoration:none;
+      color:white;
+      transition: 0.2s transform, 0.2s background;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button:active { transform: scale(0.95); }
+
+    .btn-load { background: #2563eb; }
+    .btn-load:hover { background: #1d4ed8; }
+
+    .btn-analyze { background: #facc15; color: black; }
+    .btn-analyze:hover { background: #eab308; }
+
+    .btn-ticket { background: #22c55e; color: #052e16; }
+    .btn-ticket:hover { background: #16a34a; }
+
+    /* Navegación rápida */
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .nav-link { font-size: 12px; padding: 8px 14px; background: #21262d; border: 1px solid #30363d; }
+    .nav-link.active { background: #8b5cf6; border-color: #a855f7; }
 
     /* 3. Grid Adaptativo */
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -46,9 +94,9 @@
       border-left:4px solid #a855f7;
       border-radius:14px;
       padding:14px;
-      transition: 0.2s;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+    .card:hover { transform: translateY(-5px); border-color: #8b5cf6; box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
     
     .card.alta { border-left: 4px solid #22c55e; }
     .card.media { border-left: 4px solid #facc15; }
@@ -65,9 +113,9 @@
       padding:10px;
     }
     
-    .section-title { color:#38bdf8; font-size:11px; font-weight:900; margin:12px 0 8px; text-transform:uppercase; letter-spacing: 0.5px; }
+    .section-title { color:#38bdf8; font-size:11px; font-weight:900; margin:12px 0 8px; text-transform:uppercase; letter-spacing: 1px; }
     .rank-row, .bet { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.07); font-size:12px; }
-    .bet { background:#0f172a; padding:8px; border-radius:8px; margin-top:6px; border-bottom:none; }
+    .bet { background:#0f172a; padding:8px; border-radius:8px; margin-top:6px; border-bottom:none; color: #e2e8f0; }
     
     /* 5. Estilos de PDF */
     .pdf-full {
@@ -77,23 +125,17 @@
       border:1px solid #30363d;
       border-radius:16px;
       padding:18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
 
     .pdf-wrapper {
       width: 100%;
-      height: 850px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      height: 800px;
+      overflow: hidden;
       border-radius: 12px;
-      background: white;
+      background: #f1f5f9;
     }
 
-    .pdf-wrapper iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    .pdf-wrapper iframe { width: 100%; height: 100%; border: none; }
   </style>
 </head>
 
@@ -103,8 +145,16 @@
     <h1>DATA MORE HORSE</h1>
   </div>
 
-  <div class="controls">
+  <div class="nav-tabs">
+    <a class="nav-link active" href="/horse">🏇 Carreras</a>
+    <a class="nav-link" href="/">⚾ MLB</a>
+    <a class="nav-link" href="/soccer">⚽ Soccer</a>
+    <a class="nav-link" href="/nba">🏀 NBA</a>
+  </div>
+
+  <div class="controls-bar">
     <input type="date" id="dateInput">
+    
     <select id="trackSelect">
       <option value="gp">Gulfstream Park</option>
       <option value="sa">Santa Anita Park</option>
@@ -113,11 +163,10 @@
       <option value="kee">Keeneland</option>
       <option value="bel">Belmont / Aqueduct</option>
     </select>
-  
-    <button class="btn-load" onclick="loadRaces()">🏇 Cargar Retrospecto</button>
-    <a class="btn-mlb" href="/">⚾ MLB</a>
-    <a class="btn-soccer" href="/soccer">⚽ Soccer</a>
-    <a class="btn-nba" href="/nba">🏀 NBA</a>
+
+    <button class="btn-load" onclick="loadRaces()">Cargar</button>
+    <button class="btn-analyze" onclick="alert('Analizando base de datos...')">⚡ Analizar Todos</button>
+    <button class="btn-ticket" onclick="alert('Generando ticket inteligente...')">🎟 Generar Ticket</button>
   </div>
 
   <div id="races" class="grid"></div>
@@ -133,7 +182,7 @@ document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
 
 async function loadRaces() {
   const container = document.getElementById('races');
-  container.innerHTML = '<div class="card">Cargando datos y retrospecto...</div>';
+  container.innerHTML = '<div class="card" style="grid-column: 1/-1; text-align:center;">⌛ Procesando Big Data y Retrospectos...</div>';
 
   const track = document.getElementById('trackSelect').value;
   const date = document.getElementById('dateInput').value;
@@ -143,7 +192,7 @@ async function loadRaces() {
     const data = await res.json();
 
     if (!data.ok || !data.races.length) {
-      container.innerHTML = `<div class="card">No hay datos disponibles para la selección actual.</div>`;
+      container.innerHTML = `<div class="card" style="grid-column:1/-1">No hay datos disponibles para esta fecha o hipódromo.</div>`;
       return;
     }
 
@@ -157,23 +206,19 @@ async function loadRaces() {
         <div class="card ${confClass}">
           <div class="race-title">🏇 Carrera ${race.raceNumber}</div>
           <div class="meta">${race.track.toUpperCase()} • ${race.date}</div>
-          ${a ? renderAnalysis(a) : '<p style="font-size:12px; color:#64748b;">Análisis pendiente...</p>'}
+          ${a ? renderAnalysis(a) : '<p style="font-size:12px; color:#64748b;">Análisis en proceso...</p>'}
         </div>
       `;
     });
 
-    // Inyección de PDF con botón de apertura externa
+    // Inyección de PDF
     container.innerHTML += `
       <div class="pdf-full">
-        <div class="section-title">Retrospecto oficial completo</div>
-
-        <a
-          href="/api/horse-racing/pdf?track=${track}&date=${date}"
-          target="_blank"
-          style="display:block;text-align:center;background:#a855f7;color:white;padding:14px;border-radius:12px;font-weight:900;margin-bottom:12px;">
-          📄 Abrir PDF completo
+        <div class="section-title">Retrospecto Oficial (Daily Racing Form)</div>
+        <a href="/api/horse-racing/pdf?track=${track}&date=${date}" target="_blank"
+          style="display:block;text-align:center;background:#a855f7;color:white;padding:12px;border-radius:10px;font-weight:900;margin-bottom:15px;text-decoration:none;">
+          📄 Expandir PDF Full Screen
         </a>
-
         <div class="pdf-wrapper">
           <iframe src="/api/horse-racing/pdf?track=${track}&date=${date}"></iframe>
         </div>
@@ -181,7 +226,7 @@ async function loadRaces() {
     `;
 
   } catch (err) {
-    container.innerHTML = `<div class="card">Error en la carga: ${err.message}</div>`;
+    container.innerHTML = `<div class="card" style="grid-column:1/-1">⚠️ Error de conexión: ${err.message}</div>`;
   }
 }
 
@@ -195,7 +240,7 @@ function renderAnalysis(a) {
       <span style="font-size:11px; color:#94a3b8">Confianza ${a.confidence}</span>
     </div>
 
-    <div class="section-title">Top 3</div>
+    <div class="section-title">Top 3 Probabilidades</div>
     ${(a.top3 || []).map((h, i) => `
       <div class="rank-row">
         <span>${i + 1}. ${h.name}</span>
@@ -203,13 +248,14 @@ function renderAnalysis(a) {
       </div>
     `).join('')}
 
-    <div class="section-title">Apuestas</div>
-    <div class="bet">Win: <b>${a.bets?.win || '-'}</b></div>
-    <div class="bet">Ex: <b>${a.bets?.exacta || '-'}</b></div>
-    <div class="bet">Tri: <b>${a.bets?.trifecta || '-'}</b></div>
+    <div class="section-title">Estrategia Sugerida</div>
+    <div class="bet">WIN: <b>${a.bets?.win || '-'}</b></div>
+    <div class="bet">EXA: <b>${a.bets?.exacta || '-'}</b></div>
+    <div class="bet">TRI: <b>${a.bets?.trifecta || '-'}</b></div>
   `;
 }
 
+// Carga inicial
 loadRaces();
 </script>
 </body>

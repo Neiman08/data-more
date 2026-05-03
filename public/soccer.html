@@ -26,9 +26,42 @@
 
     /* HEADER & NAV */
     .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-    .selector { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
-    .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .nav-sports { display: flex; gap: 10px; flex-wrap: wrap; }
+    
+    /* CONTROLES UNIFICADOS */
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .controls-bar input {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #000;
+      color: white;
+      font-weight: bold;
+    }
+    .btn-universal {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      transition: opacity 0.2s;
+    }
+    .btn-universal:hover { opacity: 0.8; }
+    .btn-load { background: #2563eb; }
+    .btn-analyze-all { background: #facc15; color: black; }
+    .btn-ticket { background: #22c55e; }
+
+    .nav-sports { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
     .nav-btn { width: 140px; height: 45px; border-radius: 12px; border: none; color: white; font-weight: 900; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
     .nav-mlb { background: #2563eb; }
     .nav-soccer { background: #22c55e; color: #052e16; outline: 3px solid #fff; }
@@ -60,18 +93,18 @@
     <h1>Data More Soccer</h1>
   </div>
 
-  <div class="selector">
-    <div class="action-row">
-      <input type="date" id="dateSelect" onchange="loadGames()">
-      <button class="nav-btn" style="background:#2563eb; width:auto; padding:0 20px" onclick="loadGames()">Cargar</button>
-      <button class="nav-btn" style="background:#facc15; color:#000; width:auto; padding:0 20px" onclick="analyzeAll()">⚡ Analizar Todos</button>
-    </div>
-    <div class="nav-sports">
-      <a href="/" class="nav-btn nav-mlb">⚾ MLB</a>
-      <a href="/soccer" class="nav-btn nav-soccer">⚽ Soccer</a>
-      <a href="/nba" class="nav-btn nav-nba">🏀 NBA</a>
-      <a href="/horse.html" class="nav-btn nav-horse">🏇 Hipismo</a>
-    </div>
+  <div class="controls-bar">
+    <input type="date" id="dateSelect" onchange="loadGames()">
+    <button class="btn-universal btn-load" onclick="loadGames()">Cargar</button>
+    <button class="btn-universal btn-analyze-all" onclick="analyzeAll()">⚡ Analizar Todos</button>
+    <button class="btn-universal btn-ticket" onclick="alert('Generando ticket de apuestas...')">🎟 Generar Ticket</button>
+  </div>
+
+  <div class="nav-sports">
+    <a href="/" class="nav-btn nav-mlb">⚾ MLB</a>
+    <a href="/soccer" class="nav-btn nav-soccer">⚽ Soccer</a>
+    <a href="/nba" class="nav-btn nav-nba">🏀 NBA</a>
+    <a href="/horse.html" class="nav-btn nav-horse">🏇 Hipismo</a>
   </div>
 
   <div id="gamesList"></div>

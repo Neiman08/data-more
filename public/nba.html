@@ -60,6 +60,52 @@
     .nav-soccer { background:#22c55e; color:#052e16; }
     .nav-nba { background:#f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.3); }
     .nav-horse { background:#a855f7; }
+
+    /* --- CSS DE LA BARRA DE CONTROLES --- */
+    .controls-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .controls-bar input {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+    }
+
+    .btn-load {
+      background: #2563eb;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-analyze {
+      background: #facc15;
+      color: black;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-ticket {
+      background: #22c55e;
+      color: #052e16;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
     /* ------------------------------ */
 
     .espn-ticker-container {
@@ -122,45 +168,6 @@
     .brand-logo { width: 50px; height: 50px; object-fit: contain; }
     h1 { margin: 0; font-size: 24px; font-weight: 800; color: #fff; text-transform: uppercase; }
 
-    .selector {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .action-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-
-    input[type="date"] {
-      padding: 10px;
-      border-radius: 8px;
-      background: #fff;
-      color: #000;
-      border: none;
-      font-weight: bold;
-    }
-
-    .btn-action {
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #fff;
-    }
-
-    .btn-load { background: #2563eb; }
-    .btn-all { background: #64748b; }
-    .btn-ticket { background: var(--accent-soccer); color: #052e16; }
-
     .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
 
     .game-card {
@@ -182,7 +189,7 @@
     .team-pro img { width: 45px; height: 45px; object-fit: contain; margin-bottom: 6px; }
     .team-name { font-size: 12px; font-weight: 700; color: #fff; text-align: center; }
 
-    .btn-analyze {
+    .btn-analyze-game {
       background: #2563eb; color: white; border: none; padding: 10px;
       border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;
       font-size: 12px; text-transform: uppercase;
@@ -236,20 +243,18 @@
     </a>
   </div>
 
-  <div class="selector">
-    <div class="action-row">
-      <input type="date" id="dateSelect" onchange="loadGames()">
-      <button class="btn-action btn-load" onclick="loadGames()">Cargar NBA</button>
-      <button class="btn-action btn-all" id="analyzeAllBtn" onclick="analyzeAll()">⚡ Analizar Todos</button>
-      <button class="btn-action btn-ticket" onclick="generateNBATicket()">🎟️ Generar Ticket</button>
-    </div>
+  <div class="controls-bar">
+    <input type="date" id="dateSelect" onchange="loadGames()">
+
+    <button class="btn-load" onclick="loadGames()">Cargar</button>
+    <button class="btn-analyze" id="analyzeAllBtn" onclick="analyzeAll()">⚡ Analizar Todos</button>
+    <button class="btn-ticket" onclick="generateNBATicket()">🎟 Generar Ticket</button>
   </div>
 
   <div id="gamesList"></div>
 </div>
 
 <script>
-// El resto del JS se mantiene igual para conservar la lógica de análisis
 function escapeHtml(v) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -299,7 +304,7 @@ async function loadGames() {
             <div class="team-pro"><img src="${game.awayLogo || '/logo.png'}"><span class="team-name">${game.awayTeam}</span></div>
           </div>
           <div style="font-size:11px; text-align:center; margin-bottom:12px; color:#94a3b8;">${game.time}</div>
-          <button class="btn-analyze btn-single" onclick="analyze(this, '${game.gameId}')">ANALIZAR NBA</button>
+          <button class="btn-analyze-game btn-single" onclick="analyze(this, '${game.gameId}')">ANALIZAR NBA</button>
           <div id="res-${game.gameId}" class="pick-res"></div>
         </div>`;
     });

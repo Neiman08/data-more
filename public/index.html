@@ -66,7 +66,44 @@
     .nav-nba { background:#f97316; }
     .nav-horse { background:#a855f7; }
 
-    /* --- ESTILOS DE LA TABLA Y TARJETAS --- */
+    /* --- 1. MODIFICACIÓN: CONTENEDOR UNIVERSAL CSS --- */
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .controls-bar input {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      background: #1e293b;
+      color: white;
+    }
+
+    .btn-load { background: #2563eb; }
+    .btn-analyze { background: #facc15; color: black; }
+    .btn-ticket { background: #22c55e; color: black; }
+
+    .btn-control {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-control:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+    /* --- RESTO DE TUS ESTILOS ORIGINALES --- */
     .team-record {
       display: block;
       font-size: 11px;
@@ -183,15 +220,6 @@
     .brand-logo { width: 50px; border-radius: 10px; }
     h1 { margin: 0; font-size: 24px; color: #7dd3fc; }
 
-    .topbar {
-      display: flex; gap: 10px; flex-wrap: wrap; background: var(--bg-card);
-      padding: 12px; border-radius: 12px; margin-bottom: 20px; align-items: center; border: 1px solid var(--border-dark);
-    }
-    input[type="date"] { padding: 8px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
-    button { padding: 8px 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; background: var(--primary-blue); transition: 0.2s; font-size: 13px; }
-    button:hover { opacity: 0.8; transform: translateY(-1px); }
-    .ticket-btn { background: var(--accent-green); color: #000; }
-
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
     @media (max-width: 1400px) { .grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, 1fr); } }
@@ -303,11 +331,12 @@
       </div>
     </div>
 
-    <div class="topbar">
+    <div class="controls-bar">
       <input type="date" id="dateInput" />
-      <button onclick="loadGames()">Cargar Juegos</button>
-      <button onclick="analyzeAll()" style="background: #475569;">Analizar Todos</button>
-      <button class="ticket-btn">🎟️ Generar Ticket</button>
+
+      <button onclick="loadGames()" class="btn-control btn-load">Cargar</button>
+      <button onclick="analyzeAll()" class="btn-control btn-analyze">⚡ Analizar Todos</button>
+      <button class="btn-control btn-ticket">🎟 Generar Ticket</button>
     </div>
 
     <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--text-subtle);">Listo...</div>
@@ -315,7 +344,6 @@
   </div>
 
   <script>
-    // Se mantiene toda tu lógica de JavaScript intacta para que el sitio funcione igual
     const dateInput = document.getElementById("dateInput");
     const gamesGrid = document.getElementById("gamesGrid");
     const status = document.getElementById("status");
