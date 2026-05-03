@@ -4,18 +4,25 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
+console.log('✅ Router de Hípica (Versión Estructurada con Filtros de Precisión) cargado');
+
 /* =========================================================
    🛠️ ENDPOINT DE DIAGNÓSTICO
+   Uso: /api/horse-racing/debug-coordinates?track=gp&date=2026-05-02&page=1
 ========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
+    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
+
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
     const pdf = await pdfjs.getDocument({ data }).promise;
-    const pdfPage = await pdf.getPage(parseInt(page));
+    
+    const pageNum = parseInt(page);
+    const pdfPage = await pdf.getPage(pageNum);
     const textContent = await pdfPage.getTextContent();
 
     const tokens = textContent.items.map(item => ({
@@ -32,15 +39,18 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 IMPORTACIÓN ESTRUCTURADA (OPTIMIZADA)
+   🚀 IMPORTACIÓN ESTRUCTURADA (VERSIÓN DEFINITIVA)
+   Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
     const { date, track } = req.query;
+    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
+
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     
     const response = await fetch(url);
-    if (!response.ok) throw new Error('PDF no encontrado');
+    if (!response.ok) throw new Error('PDF no encontrado en el servidor origen');
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
@@ -58,6 +68,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
+      // 1. Agrupar por líneas (Y) con margen de 5px
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 5);
@@ -71,22 +82,28 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
+      // 2. Extraer corredores con filtros de precisión
       const runners = [];
       rows.forEach((row, rowIndex) => {
-        // FLEXIBILIDAD: Buscamos cualquier token que sea un número en la zona izquierda
+        // Anclaje: Número del caballo en zona izquierda (x: 100-190)
         const numberToken = row.items.find(it => /^\d{1,2}$/.test(it.text) && it.x > 100 && it.x < 190);
         
         if (numberToken) {
-          // NOMBRE: Un poco más de margen a la izquierda (160 en adelante)
+          // 🔥 NOMBRE: Rango x: 180-240 y filtro estricto de texto (evita pesos/fechas)
           const nameTokens = row.items
-            .filter(it => it.x > 160 && it.x < 280)
-            .map(it => it.text);
+            .filter(it => it.x > 180 && it.x < 240)
+            .map(it => it.text)
+            .filter(t => /^[A-Za-zÁÉÍÓÚÑáéíóúñ'.-]+$/.test(t));
+
           const horseName = nameTokens.join(' ').trim();
           
           if (horseName && horseName.length > 3) {
+            // 🔥 ODDS: Formato N-N normalizado a N/N
             const nextRow = rows[rowIndex + 1];
-            const odds = nextRow?.items.find(it => it.x < 190 && it.text.includes('-'))?.text || "N/A";
+            const oddsMatch = nextRow?.items.find(it => /^\d+[-/]\d+$/.test(it.text));
+            const odds = oddsMatch ? oddsMatch.text.replace('-', '/') : "N/A";
             
+            // JOCKEY: Rango x: 290-430 con limpieza de basura numérica
             const jockey = row.items
               .filter(it => it.x > 290 && it.x < 430)
               .map(it => it.text)
@@ -94,6 +111,7 @@ router.get('/import-structured', async (req, res) => {
               .replace(/[0-9.,]/g, '')
               .trim() || "Unknown";
             
+            // SPEED FIGURES: Rango x: > 520 y valores realistas (20-120)
             const speedFigures = row.items
               .filter(it => it.x > 520)
               .map(it => parseInt(it.text))
@@ -102,9 +120,9 @@ router.get('/import-structured', async (req, res) => {
             runners.push({
               number: numberToken.text,
               name: horseName,
-              odds,
-              jockey,
-              speedFigures
+              odds: odds,
+              jockey: jockey,
+              speedFigures: speedFigures
             });
           }
         }
@@ -125,11 +143,12 @@ router.get('/import-structured', async (req, res) => {
       url,
       totalRaces: allRaces.length,
       races: allRaces,
+      // Protección: Solo analiza si existen carreras detectadas
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Error en el Parser Estructurado:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
