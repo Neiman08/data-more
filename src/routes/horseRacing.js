@@ -4,11 +4,10 @@ import { analyzeRace } from '../utils/horseScoring.js';
 
 const router = express.Router();
 
-console.log('✅ Router de Hípica (Versión Estructurada Final - Null Safe & Multilínea) cargado');
+console.log('✅ Router de Hípica (Versión Pro: Parser Semi-Inteligente Blindado) cargado');
 
 /* =========================================================
    🛠️ ENDPOINT DE DIAGNÓSTICO
-   Uso: /api/horse-racing/debug-coordinates?track=gp&date=2026-05-02&page=1
 ========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
@@ -31,7 +30,6 @@ router.get('/debug-coordinates', async (req, res) => {
       y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenamiento por flujo de lectura lógico (Y descendente, X ascendente)
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
@@ -41,8 +39,7 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 IMPORTACIÓN ESTRUCTURADA (VERSIÓN 100% SEGURA)
-   Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
+   🚀 IMPORTACIÓN ESTRUCTURADA (VERSION SEMI-INTELIGENTE)
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
@@ -69,7 +66,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // 1. Agrupar por líneas (Y) con margen de error de 4px
+      // 1. Agrupar por líneas (Y)
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 4);
@@ -83,58 +80,78 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
+      // 2. Extraer corredores con lógica de vecindad y anti-duplicados
       const runners = [];
+
       rows.forEach((row, rowIndex) => {
-        
-        // 🔥 ANCLAJE: Número del caballo (Central en x: 140-165 según debug GP)
-        const numberToken = row.items.find(it => 
-          /^\d{1,2}$/.test(it.text) && it.x > 140 && it.x < 165
+        // Número del caballo: (Anclaje x: 5-25)
+        const numberToken = row.items.find(it =>
+          /^\d{1,2}$/.test(it.text) && it.x > 5 && it.x < 25
         );
-        
-        if (numberToken) {
-          const nextRow = rows[rowIndex + 1];
 
-          // 🔥 NOMBRE: Ubicado a la izquierda del número (x ~34)
-          const horseName = row.items.find(it => 
-            it.x > 30 && it.x < 150 && 
+        // 🔥 CONTROL DE DUPLICADOS: Si el número ya fue procesado, saltamos la fila
+        if (numberToken && runners.find(r => r.number === numberToken.text)) return;
+
+        // NOMBRE (MULTI-TOKEN): Limpieza de Studs y prefijos
+        const nameTokens = row.items
+          .filter(it =>
+            it.x > 30 &&
+            it.x < 145 &&
             /^[A-Za-zÁÉÍÓÚÑáéíóúñ' .-]+$/.test(it.text) &&
-            it.text.length > 3
-          )?.text?.trim();
-          
-          if (horseName) {
-            // ODDS: Buscamos el formato N-N debajo del nombre/número (x < 60)
-            const oddsMatch = nextRow?.items.find(it => /^\d+[-/]\d+$/.test(it.text) && it.x < 60);
-            const odds = oddsMatch ? oddsMatch.text.replace('-', '/') : "N/A";
-            
-            // 🔥 JOCKEY (SOLUCIÓN 100% SEGURA): Multitoken y Multilínea (Rango x: 160-240)
-            const jockeyItems = [row, nextRow]
-              .filter(Boolean)
-              .flatMap(r => r.items);
+            !it.text.startsWith('Stud') &&
+            !it.text.startsWith('CA') &&
+            !it.text.startsWith('CC') &&
+            !it.text.startsWith('CT') &&
+            !it.text.startsWith('p.')
+          )
+          .map(it => it.text);
 
-            const jockey = jockeyItems
-              .filter(it => 
-                it.x > 160 && it.x < 240 && 
-                /^[A-Za-zÁÉÍÓÚÑáéíóúñ.]+$/.test(it.text)
-              )
-              .map(it => it.text)
-              .join(' ')
-              .trim() || null; // 👈 Null-safe para no bloquear el sistema
-            
-            // RATINGS / SPEED FIGURES: Zona derecha extrema (x > 500)
-            const speedFigures = row.items
-              .filter(it => it.x > 500)
-              .map(it => parseInt(it.text))
-              .filter(n => !isNaN(n) && n > 10 && n < 130);
+        const horseName = nameTokens.join(' ').trim();
 
-            runners.push({
-              number: numberToken.text,
-              name: horseName,
-              odds: odds,
-              jockey: jockey, // 👈 Se envía jockey o null
-              speedFigures: speedFigures
-            });
-          }
-        }
+        if (!numberToken || !horseName || horseName.length < 3) return;
+
+        // 🔥 JOCKEY: Escaneo de vecindad superior e incluye fila actual
+        const upperRows = rows.slice(Math.max(0, rowIndex - 6), rowIndex);
+        const jockeyToken = [...upperRows, row]
+          .flatMap(r => r.items)
+          .find(it =>
+            it.x > 160 &&
+            it.x < 260 &&
+            /[A-Za-z]/.test(it.text) &&
+            it.text.includes('.')
+          );
+
+        const jockey = jockeyToken
+          ? jockeyToken.text.replace(/[0-9,]/g, '').trim()
+          : null;
+
+        // 🔥 ODDS: Escaneo de vecindad inferior
+        const lowerRows = rows.slice(rowIndex + 1, rowIndex + 8);
+        const oddsToken = lowerRows
+          .flatMap(r => r.items)
+          .find(it =>
+            it.x > 5 &&
+            it.x < 40 &&
+            /\d+[-/]\d+$/.test(it.text)
+          );
+
+        const odds = oddsToken ? oddsToken.text.replace('-', '/') : 'N/A';
+
+        // SPEED FIGURES: Tomar ratings cercanos
+        const nearbyRows = rows.slice(Math.max(0, rowIndex - 4), rowIndex + 3);
+        const speedFigures = nearbyRows
+          .flatMap(r => r.items)
+          .filter(it => it.x > 530)
+          .map(it => parseInt(it.text))
+          .filter(n => !isNaN(n) && n > 10 && n < 130);
+
+        runners.push({
+          number: numberToken.text,
+          name: horseName,
+          odds,
+          jockey,
+          speedFigures
+        });
       });
 
       if (runners.length > 0) {
@@ -152,12 +169,11 @@ router.get('/import-structured', async (req, res) => {
       url,
       totalRaces: allRaces.length,
       races: allRaces,
-      // Analizamos la primera carrera para el scoring rápido
       analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
     });
 
   } catch (error) {
-    console.error('❌ Error Crítico en el Parser Estructurado:', error);
+    console.error('❌ Error Crítico en el Parser:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });
