@@ -17,8 +17,6 @@ router.get('/debug-coordinates', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('No se pudo descargar el PDF');
-
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
     const pdf = await pdfjs.getDocument({ data }).promise;
@@ -33,9 +31,7 @@ router.get('/debug-coordinates', async (req, res) => {
       y: parseFloat(item.transform[5].toFixed(2))
     })).filter(item => item.text.trim() !== "");
 
-    // Ordenamiento por flujo de lectura lógico
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
-
     res.json({ ok: true, tokens: tokens.slice(0, 500) });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -43,7 +39,7 @@ router.get('/debug-coordinates', async (req, res) => {
 });
 
 /* =========================================================
-   🚀 IMPORTACIÓN ESTRUCTURADA (VERSIÓN DEFINITIVA GP)
+   🚀 IMPORTACIÓN ESTRUCTURADA (RANGOS PRECISOS GP)
    Uso: /api/horse-racing/import-structured?track=gp&date=2026-05-02
 ========================================================= */
 router.get('/import-structured', async (req, res) => {
@@ -53,7 +49,7 @@ router.get('/import-structured', async (req, res) => {
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error('PDF no encontrado en el servidor');
+    if (!response.ok) throw new Error('PDF no encontrado en el servidor origen');
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
@@ -71,7 +67,7 @@ router.get('/import-structured', async (req, res) => {
         y: item.transform[5]
       })).filter(t => t.text !== "");
 
-      // 1. Agrupar por líneas (Y) con margen de 4px
+      // 1. Agrupar por líneas (Y) con margen de error de 4px
       const rows = [];
       tokens.forEach(token => {
         let row = rows.find(r => Math.abs(r.y - token.y) < 4);
@@ -85,35 +81,35 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
-      // 2. Extraer corredores con los rangos calibrados para Gulfstream Park
       const runners = [];
       rows.forEach((row, rowIndex) => {
         
-        // 🔥 NÚMERO (Anclaje central: x ~150)
+        // 🔥 ANCLAJE: Número del caballo (Central en x: 150)
         const numberToken = row.items.find(it => 
           /^\d{1,2}$/.test(it.text) && it.x > 140 && it.x < 165
         );
         
         if (numberToken) {
-          // 🔥 NOMBRE (Ubicado a la izquierda del número: x ~34)
+          // 🔥 NOMBRE: Ubicado a la IZQUIERDA del número (x: ~34)
           const horseName = row.items.find(it => 
             it.x > 30 && it.x < 150 && 
-            /^[A-Za-zÁÉÍÓÚÑáéíóúñ' .-]+$/.test(it.text)
+            /^[A-Za-zÁÉÍÓÚÑáéíóúñ' .-]+$/.test(it.text) &&
+            it.text.length > 3
           )?.text?.trim();
           
           if (horseName) {
-            // ODDS (Normalización de formato debajo del nombre/número)
+            // ODDS: Buscamos en la línea de abajo en la columna de la izquierda
             const nextRow = rows[rowIndex + 1];
             const oddsMatch = nextRow?.items.find(it => /^\d+[-/]\d+$/.test(it.text) && it.x < 60);
             const odds = oddsMatch ? oddsMatch.text.replace('-', '/') : "N/A";
             
-            // 🔥 JOCKEY (Ubicado a la derecha del número: x ~176)
+            // 🔥 JOCKEY: Ubicado a la DERECHA del número (x: ~176)
             const jockey = row.items.find(it => 
-              it.x > 170 && it.x < 230 && 
+              it.x > 170 && it.x < 240 && 
               /^[A-Za-zÁÉÍÓÚÑáéíóúñ. ]+$/.test(it.text)
             )?.text || "Unknown";
             
-            // RATINGS / SPEED FIGURES (Zona derecha: x > 530)
+            // RATINGS / SPEED FIGURES: Zona derecha extrema
             const speedFigures = row.items
               .filter(it => it.x > 500)
               .map(it => parseInt(it.text))
