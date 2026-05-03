@@ -1,87 +1,281 @@
+function num(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function clamp(v, min = 0, max = 100) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function avg(arr) {
+  if (!arr?.length) return 0;
+  return arr.reduce((a, b) => a + num(b), 0) / arr.length;
+}
+
+function variance(arr) {
+  if (!arr?.length) return 100;
+  const m = avg(arr);
+  return arr.reduce((s, v) => s + Math.pow(num(v) - m, 2), 0) / arr.length;
+}
+
+function parseOdds(odds) {
+  if (!odds || odds === 'N/A') return null;
+  const [a, b] = String(odds).replace('-', '/').split('/').map(Number);
+  if (!a || !b) return null;
+  return a / b;
+}
+
+function impliedProbabilityFromOdds(odds) {
+  const frac = parseOdds(odds);
+  if (!frac) return null;
+  return 100 / (frac + 1);
+}
+
+function getSpeedScore(horse) {
+  const figs = horse.speedFigures || [];
+  if (!figs.length) return 35;
+
+  const recent = figs.slice(-3);
+  const last = figs[figs.length - 1];
+  const recentAvg = avg(recent);
+  const overallAvg = avg(figs);
+  const peak = Math.max(...figs);
+  const trend = recentAvg - overallAvg;
+
+  return clamp(
+    overallAvg * 0.35 +
+    recentAvg * 0.35 +
+    last * 0.15 +
+    peak * 0.10 +
+    clamp(trend + 50, 0, 100) * 0.05
+  );
+}
+
+function getConsistencyScore(horse) {
+  const figs = horse.speedFigures || [];
+  if (figs.length < 3) return 45;
+
+  const v = variance(figs);
+  return clamp(100 - v);
+}
+
+function getFormScore(horse) {
+  const figs = horse.speedFigures || [];
+  if (figs.length < 2) return 45;
+
+  const last = figs[figs.length - 1];
+  const prev = figs[figs.length - 2];
+  const recent = avg(figs.slice(-3));
+  const overall = avg(figs);
+
+  let score = 50;
+
+  if (last > prev) score += 10;
+  if (recent > overall) score += 12;
+  if (last >= 85) score += 10;
+  if (last < 50) score -= 15;
+
+  return clamp(score);
+}
+
+function getClassScore(horse, race) {
+  const type = String(race?.type || race?.raceType || '').toLowerCase();
+  const purse = num(race?.purse, 0);
+
+  let score = 50;
+
+  if (type.includes('stakes')) score += 15;
+  if (type.includes('allowance')) score += 10;
+  if (type.includes('claiming')) score += 0;
+  if (type.includes('maiden')) score -= 5;
+
+  if (purse >= 75000) score += 12;
+  else if (purse >= 40000) score += 8;
+  else if (purse >= 25000) score += 4;
+
+  return clamp(score);
+}
+
+function getHumanScore(horse) {
+  let score = 50;
+
+  const jockey = String(horse.jockey || '').toLowerCase();
+  const trainer = String(horse.trainer || '').toLowerCase();
+
+  if (jockey && jockey !== 'no data') score += 8;
+  if (trainer && trainer !== 'no data') score += 8;
+
+  // Ajustes temporales hasta integrar porcentajes reales
+  const strongNames = ['irad', 'ortiz', 'prat', 'velazquez', 'saez', 'gafalione', 'zayas', 'rosario'];
+  if (strongNames.some(n => jockey.includes(n))) score += 8;
+
+  return clamp(score);
+}
+
+function getContextScore(horse, race) {
+  let score = 50;
+
+  const surface = String(race?.surface || '').toLowerCase();
+  const distance = String(race?.distance || '').toLowerCase();
+
+  if (surface.includes('turf') || surface.includes('dirt') || surface.includes('tapeta')) score += 5;
+  if (distance) score += 5;
+
+  return clamp(score);
+}
+
+function getPaceScore(horse, race) {
+  const figs = horse.speedFigures || [];
+  if (!figs.length) return 45;
+
+  const last = figs[figs.length - 1];
+  const peak = Math.max(...figs);
+  const recent = avg(figs.slice(-3));
+
+  let score = 50;
+
+  // Proxy temporal: caballos con picos altos y forma reciente fuerte tienen más capacidad táctica
+  if (peak >= 90) score += 12;
+  if (recent >= 75) score += 10;
+  if (last >= recent) score += 5;
+
+  return clamp(score);
+}
+
+function getValueScore(horse, rawModelProb) {
+  const implied = impliedProbabilityFromOdds(horse.odds);
+
+  if (!implied) {
+    return {
+      valueScore: 45,
+      impliedProbability: null,
+      edge: null,
+      valueTag: 'SIN ODDS'
+    };
+  }
+
+  const edge = rawModelProb - implied;
+
+  let valueScore = 50 + edge * 2;
+  valueScore = clamp(valueScore);
+
+  let valueTag = 'NO VALUE';
+  if (edge >= 10) valueTag = 'VALUE ALTO';
+  else if (edge >= 5) valueTag = 'VALUE MEDIO';
+  else if (edge >= 2) valueTag = 'VALUE BAJO';
+
+  return {
+    valueScore,
+    impliedProbability: Number(implied.toFixed(2)),
+    edge: Number(edge.toFixed(2)),
+    valueTag
+  };
+}
+
+function getConfidence(top, second, fieldSize) {
+  const diff = num(top?.probability) - num(second?.probability);
+
+  if (fieldSize >= 10 && diff < 4) return 'BAJA';
+  if (diff >= 8 && num(top?.probability) >= 22) return 'ALTA';
+  if (diff >= 4) return 'MEDIA';
+  return 'BAJA';
+}
+
 export function analyzeRace(race) {
-  if (!race || !race.runners || race.runners.length === 0) {
+  if (!race || !Array.isArray(race.runners) || race.runners.length === 0) {
     return null;
   }
 
-  const runners = race.runners.map(r => {
-    const figs = r.speedFigures || [];
+  const base = race.runners.map(horse => {
+    const speedScore = getSpeedScore(horse);
+    const consistencyScore = getConsistencyScore(horse);
+    const formScore = getFormScore(horse);
+    const classScore = getClassScore(horse, race);
+    const humanScore = getHumanScore(horse);
+    const contextScore = getContextScore(horse, race);
+    const paceScore = getPaceScore(horse, race);
 
-    if (figs.length === 0) {
-      return { ...r, score: 0, probability: 0 };
-    }
-
-    // 🔥 PROMEDIO
-    const avg = figs.reduce((a, b) => a + b, 0) / figs.length;
-
-    // 🔥 ÚLTIMO VALOR (forma reciente)
-    const last = figs[figs.length - 1];
-
-    // 🔥 TENDENCIA (últimos 3)
-    const recent = figs.slice(-3);
-    const trend = recent.length > 0
-      ? recent.reduce((a, b) => a + b, 0) / recent.length
-      : avg;
-
-    // 🔥 CONSISTENCIA (menos variación = mejor)
-    const variance = figs.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / figs.length;
-    const consistency = 100 - Math.min(variance, 100);
-
-    // 🔥 ODDS FACTOR (valor escondido)
-    let oddsFactor = 5;
-    if (r.odds && r.odds !== "N/A") {
-      const [num] = r.odds.split('/');
-      oddsFactor = 100 / (parseFloat(num) + 1);
-    }
-
-    // 🧠 SCORE FINAL
-    const score =
-      avg * 0.5 +
-      trend * 0.2 +
-      last * 0.1 +
-      consistency * 0.1 +
-      oddsFactor * 0.1;
+    const rawScore =
+      speedScore * 0.28 +
+      formScore * 0.16 +
+      classScore * 0.12 +
+      paceScore * 0.14 +
+      humanScore * 0.10 +
+      contextScore * 0.08 +
+      consistencyScore * 0.07;
 
     return {
-      ...r,
-      avg: Math.round(avg),
-      trend: Math.round(trend),
-      last,
-      consistency: Math.round(consistency),
-      score
+      ...horse,
+      speedScore: Number(speedScore.toFixed(2)),
+      formScore: Number(formScore.toFixed(2)),
+      classScore: Number(classScore.toFixed(2)),
+      paceScore: Number(paceScore.toFixed(2)),
+      humanScore: Number(humanScore.toFixed(2)),
+      contextScore: Number(contextScore.toFixed(2)),
+      consistencyScore: Number(consistencyScore.toFixed(2)),
+      rawScore
     };
   });
 
-  // 🔥 ORDENAR
-  runners.sort((a, b) => b.score - a.score);
+  const rawTotal = base.reduce((s, h) => s + h.rawScore, 0);
 
-  // 🔥 PROBABILIDADES
-  const total = runners.reduce((sum, r) => sum + r.score, 0);
+  const withRawProb = base.map(h => ({
+    ...h,
+    rawModelProbability: rawTotal ? (h.rawScore / rawTotal) * 100 : 0
+  }));
 
-  runners.forEach(r => {
-    r.probability = total > 0
-      ? ((r.score / total) * 100).toFixed(2)
-      : 0;
+  const withValue = withRawProb.map(h => {
+    const value = getValueScore(h, h.rawModelProbability);
+
+    const finalScore =
+      h.rawScore * 0.88 +
+      value.valueScore * 0.12;
+
+    return {
+      ...h,
+      impliedProbability: value.impliedProbability,
+      edge: value.edge,
+      valueTag: value.valueTag,
+      valueScore: Number(value.valueScore.toFixed(2)),
+      score: Number(finalScore.toFixed(2))
+    };
   });
 
-  // 🔥 PICKS
-  const top = runners[0];
-  const second = runners[1];
-  const third = runners[2];
+  const total = withValue.reduce((s, h) => s + h.score, 0);
+
+  const ranked = withValue
+    .map(h => ({
+      ...h,
+      probability: total ? Number(((h.score / total) * 100).toFixed(2)) : 0
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const top = ranked[0];
+  const second = ranked[1];
+  const third = ranked[2];
+
+  const valueBets = ranked
+    .filter(h => h.edge !== null && h.edge >= 3)
+    .slice(0, 3);
 
   return {
-    pick: top?.name,
-    confidence:
-      top?.probability > 25 ? "ALTA" :
-      top?.probability > 18 ? "MEDIA" : "BAJA",
+    pick: top?.name || 'N/A',
+    confidence: getConfidence(top, second, ranked.length),
+    playable:
+      top?.probability >= 18 && (top?.probability - (second?.probability || 0)) >= 3
+        ? 'JUGABLE'
+        : 'RIESGO',
 
-    top3: runners.slice(0, 3),
+    top3: ranked.slice(0, 3),
+
+    valueBets,
 
     bets: {
-      win: top?.name,
-      exacta: `${top?.name} / ${second?.name}`,
-      trifecta: `${top?.name} / ${second?.name} / ${third?.name}`
+      win: top?.name || 'N/A',
+      exacta: top && second ? `${top.name} / ${second.name}` : 'N/A',
+      trifecta: top && second && third ? `${top.name} / ${second.name} / ${third.name}` : 'N/A'
     },
 
-    fullRanking: runners
+    fullRanking: ranked
   };
 }
