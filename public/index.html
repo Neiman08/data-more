@@ -66,21 +66,22 @@
     .nav-nba { background:#f97316; }
     .nav-horse { background:#a855f7; }
 
-    /* --- 1. MODIFICACIÓN: CONTENEDOR UNIVERSAL CSS --- */
-    .controls-bar {
+    /* --- CAMBIO SOLICITADO: BARRA DE CONTROLES CSS --- */
+    .controls-bar,
+    .topbar {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       gap: 12px;
-      margin: 20px 0;
       flex-wrap: wrap;
       background: var(--bg-card);
-      padding: 15px;
+      padding: 12px;
       border-radius: 12px;
+      margin-bottom: 20px;
       border: 1px solid var(--border-dark);
     }
 
-    .controls-bar input {
+    .topbar input {
       padding: 10px;
       border-radius: 8px;
       border: none;
@@ -89,21 +90,28 @@
       color: white;
     }
 
-    .btn-load { background: #2563eb; }
-    .btn-analyze { background: #facc15; color: black; }
-    .btn-ticket { background: #22c55e; color: black; }
-
-    .btn-control {
+    .topbar button {
       padding: 10px 20px;
       border-radius: 8px;
       border: none;
       font-weight: 900;
       cursor: pointer;
       transition: 0.3s;
+      background: #2563eb;
+      color: white;
     }
-    .btn-control:hover { transform: scale(1.05); filter: brightness(1.1); }
 
-    /* --- RESTO DE TUS ESTILOS ORIGINALES --- */
+    .topbar button:hover {
+      transform: scale(1.05);
+      filter: brightness(1.1);
+    }
+
+    .ticket-btn {
+      background: #22c55e !important;
+      color: black !important;
+    }
+
+    /* --- RESTO DE ESTILOS ORIGINALES --- */
     .team-record {
       display: block;
       font-size: 11px;
@@ -331,12 +339,18 @@
       </div>
     </div>
 
-    <div class="controls-bar">
+    <div class="topbar">
       <input type="date" id="dateInput" />
 
-      <button onclick="loadGames()" class="btn-control btn-load">Cargar</button>
-      <button onclick="analyzeAll()" class="btn-control btn-analyze">⚡ Analizar Todos</button>
-      <button class="btn-control btn-ticket">🎟 Generar Ticket</button>
+      <button onclick="loadGames()">Cargar</button>
+
+      <button onclick="analyzeAll()" style="background:#facc15;color:#000;">
+        ⚡ Analizar Todos
+      </button>
+
+      <button class="ticket-btn">
+        🎟️ Generar Ticket
+      </button>
     </div>
 
     <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--text-subtle);">Listo...</div>
