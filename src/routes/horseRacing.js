@@ -80,19 +80,16 @@ router.get('/import-structured', async (req, res) => {
       rows.sort((a, b) => b.y - a.y);
       rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
-      // 2. Extraer corredores con lógica de vecindad y anti-duplicados
+      // 2. Extraer corredores
       const runners = [];
 
       rows.forEach((row, rowIndex) => {
-        // Número del caballo: (Anclaje x: 5-25)
         const numberToken = row.items.find(it =>
           /^\d{1,2}$/.test(it.text) && it.x > 5 && it.x < 25
         );
 
-        // 🔥 CONTROL DE DUPLICADOS: Si el número ya fue procesado, saltamos la fila
         if (numberToken && runners.find(r => r.number === numberToken.text)) return;
 
-        // NOMBRE (MULTI-TOKEN): Limpieza de Studs y prefijos
         const nameTokens = row.items
           .filter(it =>
             it.x > 30 &&
@@ -110,7 +107,6 @@ router.get('/import-structured', async (req, res) => {
 
         if (!numberToken || !horseName || horseName.length < 3) return;
 
-        // 🔥 JOCKEY: Escaneo de vecindad superior e incluye fila actual
         const upperRows = rows.slice(Math.max(0, rowIndex - 6), rowIndex);
         const jockeyToken = [...upperRows, row]
           .flatMap(r => r.items)
@@ -125,7 +121,6 @@ router.get('/import-structured', async (req, res) => {
           ? jockeyToken.text.replace(/[0-9,]/g, '').trim()
           : null;
 
-        // 🔥 ODDS: Escaneo de vecindad inferior
         const lowerRows = rows.slice(rowIndex + 1, rowIndex + 8);
         const oddsToken = lowerRows
           .flatMap(r => r.items)
@@ -137,7 +132,6 @@ router.get('/import-structured', async (req, res) => {
 
         const odds = oddsToken ? oddsToken.text.replace('-', '/') : 'N/A';
 
-        // SPEED FIGURES: Tomar ratings cercanos
         const nearbyRows = rows.slice(Math.max(0, rowIndex - 4), rowIndex + 3);
         const speedFigures = nearbyRows
           .flatMap(r => r.items)
@@ -164,12 +158,15 @@ router.get('/import-structured', async (req, res) => {
       }
     }
 
+    // --- AQUÍ ESTÁ EL CAMBIO DE ESTRUCTURA ---
+    const analysis = allRaces.length ? analyzeRace(allRaces[0]) : null;
+
     res.json({
       ok: true,
       url,
       totalRaces: allRaces.length,
-      races: allRaces,
-      analysis: allRaces.length ? analyzeRace(allRaces[0]) : null
+      analysis,
+      races: allRaces
     });
 
   } catch (error) {
