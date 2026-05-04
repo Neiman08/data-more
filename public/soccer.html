@@ -202,6 +202,64 @@
 
     .loading { animation: pulse 1s infinite; color: var(--green); font-size: 12px; text-align: center; padding: 10px; }
     @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+    /* --- PARCHE FIX MOBILE --- */
+    .match-card,
+    .game-card,
+    .card {
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+      position: relative !important;
+    }
+
+    .analysis-box,
+    .analysis-result,
+    .result-box,
+    .prediction-box,
+    .ai-analysis,
+    #lineup,
+    [id^="analysis-"],
+    [id^="result-"],
+    [id^="results-"],
+    .pick-res {
+      position: relative !important;
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+      margin-top: 18px !important;
+      z-index: 2 !important;
+    }
+
+    @media (max-width: 768px) {
+      .match-card,
+      .game-card,
+      .card {
+        padding-bottom: 28px !important;
+        margin-bottom: 34px !important;
+      }
+
+      .analysis-box,
+      .analysis-result,
+      .result-box,
+      .prediction-box,
+      .ai-analysis,
+      [id^="analysis-"],
+      [id^="result-"],
+      [id^="results-"],
+      .pick-res {
+        display: block !important;
+        width: 100% !important;
+        clear: both !important;
+      }
+
+      .games-grid,
+      .grid,
+      #gamesGrid,
+      #soccerGrid {
+        gap: 34px !important;
+      }
+    }
   </style>
 </head>
 <body>
