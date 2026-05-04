@@ -27,8 +27,12 @@ const cache = {
 };
 
 function getHeaders() {
+  const key = process.env.API_FOOTBALL_KEY || process.env.FOOTBALL_API_KEY;
+
+  console.log('SOCCER API KEY:', key ? 'CARGADA' : 'NO CARGADA');
+
   return {
-    'x-apisports-key': process.env.FOOTBALL_API_KEY
+    'x-apisports-key': key
   };
 }
 
@@ -274,17 +278,11 @@ router.get('/lineups/:fixtureId', async (req, res) => {
   try {
     const lineups = await getLineups(req.params.fixtureId);
 
-    if (!lineups) {
-      return res.json({
-        ok: false,
-        message: 'Alineaciones no disponibles',
-        lineups: []
-      });
-    }
-
     res.json({
       ok: true,
-      lineups
+      available: !!lineups,
+      message: lineups ? 'Alineaciones disponibles' : 'Aún no publicadas',
+      lineups: lineups || []
     });
   } catch (error) {
     res.json({
@@ -301,8 +299,9 @@ router.get('/player-props/:fixtureId', async (req, res) => {
 
     if (!lineups) {
       return res.json({
-        ok: false,
-        message: 'Alineaciones no disponibles',
+        ok: true,
+        available: !!lineups,
+        message: lineups ? 'Alineaciones disponibles' : 'Aún no publicadas',
         props: []
       });
     }
