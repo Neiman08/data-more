@@ -227,7 +227,7 @@
 </main>
 
 <script>
-// --- LÓGICA FUNCIONAL PRESERVADA ---
+// --- LÓGICA FUNCIONAL ---
 function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
 
 async function initTicker() {
@@ -302,33 +302,95 @@ async function analyze(btn, matchId, leagueKey) {
     const data = await res.json();
     const a = data.analysis || data;
 
-    const oneX2 = a.oneX2 || a.probabilities || {};
-    const props = a.playerProps || a.props || [];
+    function pct(v) {
+      if (v === undefined || v === null || v === '' || Number.isNaN(Number(v))) return '?';
+      return Number(v).toFixed(2) + '%';
+    }
+
+    const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
+
+    const homePct =
+      oneX2.home ??
+      oneX2.local ??
+      oneX2.homeWin ??
+      a.homeWin ??
+      a.homeWinPct ??
+      a.localWinPct ??
+      a.homeProbability;
+
+    const drawPct =
+      oneX2.draw ??
+      oneX2.empate ??
+      oneX2.tie ??
+      a.draw ??
+      a.drawPct ??
+      a.tieProbability;
+
+    const awayPct =
+      oneX2.away ??
+      oneX2.visitante ??
+      oneX2.awayWin ??
+      a.awayWin ??
+      a.awayWinPct ??
+      a.visitWinPct ??
+      a.awayProbability;
+
+    const props =
+      a.playerProps ||
+      a.props ||
+      a.players ||
+      a.lineupProps ||
+      data.playerProps ||
+      data.props ||
+      [];
+
+    const lineup =
+      a.lineups ||
+      a.lineup ||
+      data.lineups ||
+      data.lineup ||
+      [];
+
+    let propsHtml = '';
+
+    if (props && props.length) {
+      propsHtml = props.map(p => `
+        <div class="stat-row">
+          <span>${p.player || p.name || 'Jugador'}</span>
+          <b>${p.prediction || p.market || p.pick || ''}</b>
+        </div>
+      `).join('');
+    } else if (lineup && lineup.length) {
+      propsHtml = lineup.map(p => `
+        <div class="stat-row">
+          <span>${p.player || p.name || 'Jugador'}</span>
+          <b>${p.position || p.pos || 'Titular'}</b>
+        </div>
+      `).join('');
+    } else {
+      propsHtml = `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`;
+    }
 
     resDiv.innerHTML = `
       <div class="stat-row"><span>🎯 PICK:</span><b>${a.pick || 'N/A'}</b></div>
-      <div class="stat-row"><span>Probabilidad:</span><b style="color:var(--green)">${a.probability || a.pickProbability || 'N/A'}%</b></div>
+
+      <div class="stat-row">
+        <span>Probabilidad:</span>
+        <b style="color:var(--green)">${pct(a.probability ?? a.pickProbability ?? a.winProbability).replace('%', '')}%</b>
+      </div>
+
       <div class="stat-row"><span>Confianza:</span><b>${(a.confidence || 'MEDIA').toUpperCase()}</b></div>
-      
+
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
         <span>1X2 %:</span>
-        <b>${oneX2.home ?? a.homeWin ?? '?'} | ${oneX2.draw ?? a.draw ?? '?'} | ${oneX2.away ?? a.awayWin ?? '?'}</b>
+        <b>${pct(homePct)} | ${pct(drawPct)} | ${pct(awayPct)}</b>
       </div>
 
       <div class="stat-row"><span>Goles +2.5:</span><b>${a.overUnder || a.goals25 || a.over25 || 'N/A'}</b></div>
       <div class="stat-row"><span>Ambos anotan:</span><b>${a.btts || a.bothTeamsScore || 'N/A'}</b></div>
-      
+
       <div class="prop-title">Player Props / Alineación</div>
-      ${
-        props.length
-          ? props.map(p => `
-              <div class="stat-row">
-                <span>${p.player || p.name}</span>
-                <b>${p.prediction || p.market || ''}</b>
-              </div>
-            `).join('')
-          : `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`
-      }
+      ${propsHtml}
     `;
 
     btn.innerText = 'RE-ANALIZAR';
