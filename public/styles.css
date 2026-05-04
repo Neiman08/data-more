@@ -168,3 +168,37 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+/* 🔧 FIX BOTONES ANALIZAR EN TARJETAS MÓVIL */
+@media (max-width: 768px) {
+  .game-card,
+  .match-card,
+  .card-game,
+  .prediction-card,
+  .pick-card {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 24px !important;
+  }
+
+  .game-card button,
+  .match-card button,
+  .card-game button,
+  .prediction-card button,
+  .pick-card button,
+  .analyze-btn,
+  .btn-analyze {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    margin-top: 22px !important;
+    margin-bottom: 0 !important;
+    z-index: 10 !important;
+  }
+
+  .lineup-box,
+  .lineups,
+  .lineup-status {
+    margin-bottom: 16px !important;
+  }
+}
