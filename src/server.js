@@ -190,11 +190,29 @@ app.get('/api/stats/daily-performance', async (req, res) => {
 
 // --- FRONTEND ---
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
+
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
+app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, '../public/login.html')));
+
 app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, '../public/registro.html')));
+app.get('/registro.html', (req, res) => res.sendFile(path.join(__dirname, '../public/registro.html')));
+
 app.get('/soccer', (req, res) => res.sendFile(path.join(__dirname, '../public/soccer.html')));
+app.get('/soccer.html', (req, res) => res.sendFile(path.join(__dirname, '../public/soccer.html')));
+
 app.get('/nba', (req, res) => res.sendFile(path.join(__dirname, '../public/nba.html')));
+app.get('/nba.html', (req, res) => res.sendFile(path.join(__dirname, '../public/nba.html')));
+
 app.get('/horse', (req, res) => res.sendFile(path.join(__dirname, '../public/horse.html')));
+app.get('/horse.html', (req, res) => res.sendFile(path.join(__dirname, '../public/horse.html')));
+
+app.get('/mlb.html', (req, res) => res.sendFile(path.join(__dirname, '../public/mlb.html')));
+app.get('/picks.html', (req, res) => res.sendFile(path.join(__dirname, '../public/picks.html')));
+app.get('/precios.html', (req, res) => res.sendFile(path.join(__dirname, '../public/precios.html')));
+app.get('/resultados.html', (req, res) => res.sendFile(path.join(__dirname, '../public/resultados.html')));
+app.get('/estadisticas.html', (req, res) => res.sendFile(path.join(__dirname, '../public/estadisticas.html')));
+app.get('/faq.html', (req, res) => res.sendFile(path.join(__dirname, '../public/faq.html')));
+
 app.get('/pro', (req, res) => res.sendFile(path.join(__dirname, '../public/pro.html')));
 app.get('/pago-manual', (req, res) => res.sendFile(path.join(__dirname, '../public/pago-manual.html')));
 app.get('/admin-payments', (req, res) => res.sendFile(path.join(__dirname, '../public/admin-payments.html')));

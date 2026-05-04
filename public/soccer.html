@@ -2,93 +2,229 @@
 <html lang="es">
 <head>
   <script>
+    // BLOQUE DE SEGURIDAD
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-    if (!user || !user.proActivo) { window.location.href = '/pago-manual'; }
+    if (!user || !user.proActivo) { 
+      window.location.href = '/pago-manual'; 
+    }
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soccer Picks PRO | Data More</title>
+  <title>Data More | Soccer Analytics Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
+    /* --- SISTEMA DE DISEÑO UNIFICADO --- */
     :root {
-      --bg-dark: #0d1117; --card-bg: #161b22; --border-color: #30363d;
-      --text-main: #c9d1d9; --accent-blue: #38bdf8; --accent-soccer: #22c55e;
-      --traffic-green: #22c55e; --traffic-yellow: #facc15; --traffic-red: #ef4444;
+      --green: #6bff19;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #ffffff;
+      --muted: #888d93;
+      --bg-panel: rgba(20, 25, 30, 0.6);
     }
-    body { background: var(--bg-dark); color: var(--text-main); font-family: sans-serif; margin: 0; }
-    .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-    
-    /* TICKER */
-    .espn-ticker-container { width: 100%; background: #0b0e14; border-bottom: 1px solid var(--border-color); height: 40px; display: flex; align-items: center; overflow: hidden; position: sticky; top: 0; z-index: 10000; }
-    .ticker-wrapper { display: flex; white-space: nowrap; animation: ticker-scroll 150s linear infinite; }
-    .ticker-item { display: flex; align-items: center; padding: 0 30px; border-right: 1px solid #1e293b; font-size: 12px; font-weight: 600; }
-    .ticker-item img { width: 20px; height: 20px; margin: 0 6px; }
-    @keyframes ticker-scroll { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
 
-    /* HEADER & NAV */
-    .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-    
-    /* CONTROLES UNIFICADOS */
-    .controls-bar {
-      display: flex; gap: 12px; align-items: center; margin: 20px 0; flex-wrap: wrap;
-      background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
     }
-    .controls-bar input { padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #000; color: white; font-weight: bold; }
-    .btn-universal { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; transition: opacity 0.2s; }
-    .btn-universal:hover { opacity: 0.8; }
-    .btn-load { background: #2563eb; }
-    .btn-analyze-all { background: #facc15; color: black; }
-    .btn-ticket { background: #22c55e; }
 
-    .nav-sports { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
-    .nav-btn { width: 140px; height: 45px; border-radius: 12px; border: none; color: white; font-weight: 900; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
-    .nav-mlb { background: #2563eb; }
-    .nav-soccer { background: #22c55e; color: #052e16; outline: 3px solid #fff; }
-    .nav-nba { background: #f97316; }
-    .nav-horse { background: #a855f7; }
+    main.page {
+      max-width: 1440px;
+      margin: 0 auto;
+      background: radial-gradient(circle at 30% 30%, #0a1a0a 0%, #020509 60%);
+      position: relative;
+      padding-bottom: 40px;
+      min-height: 100vh;
+    }
 
-    /* CARDS */
-    .league-title { color: var(--accent-soccer); margin: 25px 0 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; text-transform: uppercase; font-size: 16px; }
-    .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
-    .game-card { background: var(--card-bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); border-left: 4px solid var(--accent-soccer); }
-    .matchup-pro { display: flex; justify-content: space-between; align-items: center; }
-    .team-pro { display: flex; flex-direction: column; align-items: center; width: 40%; text-align: center; }
-    .team-pro img { width: 40px; height: 40px; margin-bottom: 5px; }
-    .box-score { background: #000; padding: 5px 10px; border-radius: 5px; color: var(--accent-soccer); font-weight: 800; }
-    .btn-analyze { background: #2563eb; color: #fff; width: 100%; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; margin-top: 10px; }
-    .pick-res { margin-top: 10px; padding: 10px; background: #000; border-radius: 8px; display: none; font-size: 12px; }
-    .stat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #222; }
+    /* --- TICKER DE RESULTADOS --- */
+    .espn-ticker-container {
+        width: 100%;
+        background: #000;
+        border-bottom: 1px solid var(--border);
+        height: 40px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        position: sticky;
+        top: 0;
+        z-index: 10000;
+    }
+    .ticker-wrapper {
+        display: flex;
+        white-space: nowrap;
+        animation: ticker-scroll 150s linear infinite;
+    }
+    .ticker-item {
+        display: flex;
+        align-items: center;
+        padding: 0 30px;
+        border-right: 1px solid var(--border);
+        height: 40px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    .ticker-item img { width: 18px; height: 18px; object-fit: contain; margin: 0 6px; }
+    .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
+    .ticker-status { margin-left: 10px; color: var(--green); font-size: 9px; font-weight: bold; }
+    
+    @keyframes ticker-scroll {
+        0% { transform: translateX(0%); }
+        100% { transform: translateX(-100%); }
+    }
+
+    /* --- NAVEGACIÓN PRINCIPAL --- */
+    header {
+      height: 70px;
+      padding: 0 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      position: sticky;
+      top: 40px;
+      z-index: 1000;
+    }
+
+    .logo { font-weight: 900; font-size: 22px; letter-spacing: -1px; font-family: 'Anton', sans-serif; text-transform: uppercase; }
+    .logo span { color: var(--green); }
+
+    nav { display: flex; gap: 20px; }
+    nav a { color: #fff; text-decoration: none; font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
+    nav a.active { opacity: 1; border-bottom: 2px solid var(--green); padding-bottom: 25px; margin-bottom: -25px; }
+
+    /* --- CONTENEDOR --- */
+    .container { padding: 30px 50px; }
+
+    h1.page-title {
+      font-family: 'Anton';
+      font-size: 32px;
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 25px;
+      letter-spacing: -1px;
+    }
+    h1.page-title span { color: var(--green); }
+
+    /* --- NAVEGACIÓN DE DEPORTES --- */
+    .nav-sports { display: flex; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+    .nav-btn {
+      padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border);
+      color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer;
+      background: rgba(255,255,255,0.03); transition: all 0.2s; text-transform: uppercase;
+    }
+    .nav-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 800; }
+
+    /* --- CONTROLES --- */
+    .topbar { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; }
+    .topbar input[type="date"] {
+      background: #111; border: 1px solid var(--border); padding: 12px; border-radius: 8px;
+      color: #fff; font-family: 'Inter', sans-serif; font-weight: 600;
+    }
+    .btn-action {
+      background: var(--green); color: #000; padding: 12px 24px; border-radius: 8px;
+      font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; font-size: 13px;
+    }
+    .btn-sec { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+
+    /* --- GRID DE 4 COLUMNAS --- */
+    .league-title {
+      font-family: 'Anton'; color: var(--green); margin: 30px 0 15px; 
+      font-size: 18px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .games-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;
+    }
+    @media (max-width: 1300px) { .games-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 1000px) { .games-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 650px) { .games-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; backdrop-filter: blur(10px); display: flex; flex-direction: column;
+    }
+
+    /* --- ELEMENTOS INTERNOS TARJETA --- */
+    .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .team-box { text-align: center; flex: 1; }
+    .team-logo { width: 40px; height: 40px; object-fit: contain; margin-bottom: 8px; }
+    .team-name { display: block; font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
+
+    .score-center { flex: 1; text-align: center; }
+    .score-now { font-size: 24px; font-weight: 900; color: var(--green); font-family: 'Anton', sans-serif; }
+    .game-time { font-size: 10px; color: var(--muted); font-weight: 700; margin-top: 4px; }
+
+    .analyze-btn {
+      width: 100%; background: var(--green); color: #000; border: none; border-radius: 8px;
+      padding: 12px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 15px;
+      text-transform: uppercase; transition: opacity 0.2s;
+    }
+
+    /* --- RESULTADOS ANÁLISIS --- */
+    .pick-res { 
+      margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); 
+      border-radius: 10px; border-left: 4px solid var(--green); display: none;
+    }
+    .stat-row { 
+      display: flex; justify-content: space-between; padding: 6px 0; 
+      border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; 
+    }
+    .stat-row span { color: var(--muted); font-weight: 600; }
+    .stat-row b { color: #fff; font-weight: 800; }
+    
+    .prop-title { color: #facc15; font-size: 10px; font-weight: 900; margin: 12px 0 8px; text-transform: uppercase; }
+
+    .loading { animation: pulse 1s infinite; color: var(--green); font-size: 12px; text-align: center; padding: 10px; }
+    @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
   </style>
 </head>
 <body>
 
-<div class="espn-ticker-container">
-  <div class="ticker-wrapper" id="tickerWrapper">Cargando marcadores...</div>
-</div>
-
-<div class="container">
-  <div class="brand-header">
-    <img src="/logo.png" style="width:50px">
-    <h1>Data More Soccer</h1>
+<main class="page">
+  <div class="espn-ticker-container">
+    <div class="ticker-wrapper" id="tickerWrapper">Cargando marcadores en vivo...</div>
   </div>
 
-  <div class="controls-bar">
-    <input type="date" id="dateSelect" onchange="loadGames()">
-    <button class="btn-universal btn-load" onclick="loadGames()">Cargar</button>
-    <button class="btn-universal btn-analyze-all" onclick="analyzeAll()">⚡ Analizar Todos</button>
-    <button class="btn-universal btn-ticket" onclick="alert('Generando ticket de apuestas...')">🎟 Generar Ticket</button>
-  </div>
+  <header>
+    <div class="logo">DATA-<span>MORE</span></div>
+    <nav>
+      <a href="/">Inicio</a>
+      <a class="active" href="/soccer">Picks</a>
+      <a href="/precios">Precios</a>
+      <a href="/estadisticas">Estadísticas</a>
+    </nav>
+    <div class="header-actions">
+      <span style="font-size:12px; color:#fff; font-weight:700;">👤 PRO ACTIVE</span>
+    </div>
+  </header>
 
-  <div class="nav-sports">
-    <a href="/" class="nav-btn nav-mlb">⚾ MLB</a>
-    <a href="/soccer" class="nav-btn nav-soccer">⚽ Soccer</a>
-    <a href="/nba" class="nav-btn nav-nba">🏀 NBA</a>
-    <a href="/horse.html" class="nav-btn nav-horse">🏇 Hipismo</a>
-  </div>
+  <div class="container">
+    <h1 class="page-title">SOCCER <span>ANALYTICS PRO</span></h1>
 
-  <div id="gamesList"></div>
-</div>
+    <div class="nav-sports">
+        <a href="/"><button class="nav-btn">⚾ MLB</button></a>
+        <a href="/soccer"><button class="nav-btn active">⚽ Fútbol</button></a>
+        <a href="/nba"><button class="nav-btn">🏀 NBA</button></a>
+        <a href="/horse.html"><button class="nav-btn">🏇 Hipismo</button></a>
+    </div>
+
+    <div class="topbar">
+      <input type="date" id="dateSelect">
+      <button class="btn-action" onclick="loadGames()">Cargar Pizarra</button>
+      <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ Analizar Todo</button>
+    </div>
+
+    <div id="gamesList"></div>
+  </div>
+</main>
 
 <script>
+// --- LÓGICA FUNCIONAL PRESERVADA ---
 function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
 
 async function initTicker() {
@@ -97,7 +233,13 @@ async function initTicker() {
     const res = await fetch('/api/soccer/games-global');
     const data = await res.json();
     if(data.ok) {
-      const content = data.games.map(g => `<div class="ticker-item"><img src="${g.homeLogo}">${g.homeScore}-${g.awayScore}<img src="${g.awayLogo}"> <span>${g.time}</span></div>`).join('');
+      const content = data.games.map(g => `
+        <div class="ticker-item">
+            <img src="${g.homeLogo}">
+            <span class="ticker-score">${g.homeScore ?? 0}</span> - <span class="ticker-score">${g.awayScore ?? 0}</span>
+            <img src="${g.awayLogo}"> 
+            <span class="ticker-status">${g.time}</span>
+        </div>`).join('');
       ticker.innerHTML = content + content;
     }
   } catch(e) {}
@@ -106,12 +248,12 @@ async function initTicker() {
 async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
-  container.innerHTML = '<p style="text-align:center">Cargando...</p>';
+  container.innerHTML = '<div class="loading">Sincronizando ligas globales...</div>';
   
   try {
     const res = await fetch(`/api/soccer/games-global?date=${date}`);
     const data = await res.json();
-    if(!data.ok) return;
+    if(!data.ok) { container.innerHTML = '<p>No hay juegos disponibles.</p>'; return; }
 
     const grouped = {};
     data.games.forEach(g => { (grouped[g.leagueName] = grouped[g.leagueName] || []).push(g); });
@@ -121,24 +263,35 @@ async function loadGames() {
       let html = `<h2 class="league-title">${escapeHtml(league)}</h2><div class="games-grid">`;
       games.forEach(g => {
         html += `
-          <div class="game-card">
-            <div class="matchup-pro">
-              <div class="team-pro"><img src="${g.homeLogo}"><span>${escapeHtml(g.homeTeam)}</span></div>
-              <div class="box-score">${g.homeScore ?? 0} - ${g.awayScore ?? 0}</div>
-              <div class="team-pro"><img src="${g.awayLogo}"><span>${escapeHtml(g.awayTeam)}</span></div>
+          <div class="card">
+            <div class="match-header">
+              <div class="team-box">
+                <img src="${g.homeLogo}" class="team-logo" onerror="this.src='/logo.png'">
+                <span class="team-name">${escapeHtml(g.homeTeam)}</span>
+              </div>
+              <div class="score-center">
+                <div class="score-now">${g.homeScore ?? 0} - ${g.awayScore ?? 0}</div>
+                <div class="game-time">${g.time || 'Programado'}</div>
+              </div>
+              <div class="team-box">
+                <img src="${g.awayLogo}" class="team-logo" onerror="this.src='/logo.png'">
+                <span class="team-name">${escapeHtml(g.awayTeam)}</span>
+              </div>
             </div>
-            <button class="btn-analyze" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">ANALIZAR IA</button>
+            <button class="analyze-btn" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">ANALIZAR CON IA</button>
             <div id="res-${g.matchId}" class="pick-res"></div>
           </div>`;
       });
       html += `</div>`;
       container.innerHTML += html;
     }
-  } catch(e) { container.innerHTML = 'Error.'; }
+  } catch(e) { container.innerHTML = '<p>Error al cargar pizarra.</p>'; }
 }
 
 async function analyze(btn, matchId, leagueKey) {
-  btn.innerText = 'Analizando...';
+  const resDiv = document.getElementById(`res-${matchId}`);
+  resDiv.style.display = 'block';
+  resDiv.innerHTML = '<div class="loading">Consultando IA...</div>';
   btn.disabled = true;
 
   try {
@@ -146,55 +299,53 @@ async function analyze(btn, matchId, leagueKey) {
     const data = await res.json();
     const a = data.analysis || data;
 
-    const resDiv = document.getElementById(`res-${matchId}`);
-    resDiv.style.display = 'block';
-
     const oneX2 = a.oneX2 || a.probabilities || {};
     const props = a.playerProps || a.props || [];
 
     resDiv.innerHTML = `
       <div class="stat-row"><span>🎯 PICK:</span><b>${a.pick || 'N/A'}</b></div>
-      <div class="stat-row"><span>Prob. Pick:</span><b>${a.probability || a.pickProbability || 'N/A'}%</b></div>
-      <div class="stat-row"><span>Confianza:</span><b>${a.confidence || 'N/A'}</b></div>
-      <div class="stat-row"><span>Mercado:</span><b>${a.market || '1X2 / Principal'}</b></div>
-
-      <div class="stat-row">
-        <span>1X2 (L/E/V):</span>
-        <b>${oneX2.home ?? a.homeWin ?? 'N/A'}% | ${oneX2.draw ?? a.draw ?? 'N/A'}% | ${oneX2.away ?? a.awayWin ?? 'N/A'}%</b>
+      <div class="stat-row"><span>Probabilidad:</span><b style="color:var(--green)">${a.probability || a.pickProbability || 'N/A'}%</b></div>
+      <div class="stat-row"><span>Confianza:</span><b>${(a.confidence || 'MEDIA').toUpperCase()}</b></div>
+      
+      <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
+        <span>1X2 %:</span>
+        <b>${oneX2.home ?? a.homeWin ?? '?'} | ${oneX2.draw ?? a.draw ?? '?'} | ${oneX2.away ?? a.awayWin ?? '?'}</b>
       </div>
 
       <div class="stat-row"><span>Goles +2.5:</span><b>${a.overUnder || a.goals25 || a.over25 || 'N/A'}</b></div>
-      <div class="stat-row"><span>Ambos marcan:</span><b>${a.btts || a.bothTeamsScore || 'N/A'}</b></div>
-      <div class="stat-row"><span>Handicap:</span><b>${a.handicap || 'N/A'}</b></div>
-      <div class="stat-row"><span>Total Proyectado:</span><b>${a.projectedTotal || a.totalProjected || 'N/A'}</b></div>
-
-      <div style="margin-top:10px;color:#38bdf8;font-weight:900;">PLAYER PROPS / ALINEACIONES</div>
+      <div class="stat-row"><span>Ambos anotan:</span><b>${a.btts || a.bothTeamsScore || 'N/A'}</b></div>
+      
+      <div class="prop-title">Player Props / Alineación</div>
       ${
         props.length
           ? props.map(p => `
               <div class="stat-row">
                 <span>${p.player || p.name}</span>
-                <b>${p.prediction || p.market || ''} ${p.probability ? p.probability + '%' : ''}</b>
+                <b>${p.prediction || p.market || ''}</b>
               </div>
             `).join('')
-          : `<div style="font-size:12px;color:#94a3b8;margin-top:6px;">Alineaciones no disponibles aún.</div>`
+          : `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`
       }
     `;
 
-    btn.innerText = 'RE-ANALIZAR IA';
+    btn.innerText = 'RE-ANALIZAR';
     btn.disabled = false;
 
   } catch(e) {
-    btn.innerText = 'Error';
+    resDiv.innerHTML = '<div style="color:red; font-size:10px;">Error de análisis</div>';
     btn.disabled = false;
   }
 }
 
 async function analyzeAll() {
-  const btns = document.querySelectorAll('.btn-analyze');
-  for(let b of btns) { b.click(); await new Promise(r => setTimeout(r, 1000)); }
+  const btns = document.querySelectorAll('.analyze-btn');
+  for(let b of btns) { 
+    b.click(); 
+    await new Promise(r => setTimeout(r, 1200)); 
+  }
 }
 
+// Inicialización
 document.getElementById('dateSelect').value = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Chicago'}).format(new Date());
 initTicker();
 loadGames();

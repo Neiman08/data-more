@@ -4,12 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login | Data More</title>
-  
-  <script>
-    if (localStorage.getItem('user')) {
-      window.location.href = '/';
-    }
-  </script>
 
   <style>
     body {
@@ -22,6 +16,7 @@
       justify-content: center;
       min-height: 100vh;
     }
+
     .card {
       background: #0b1224;
       padding: 35px;
@@ -29,7 +24,29 @@
       width: 360px;
       text-align: center;
       border: 1px solid #1e293b;
+      box-shadow: 0 0 30px rgba(107, 255, 25, 0.12);
     }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .logo span {
+      color: #6bff19;
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: 26px;
+    }
+
+    p {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
     input {
       width: 100%;
       padding: 13px;
@@ -39,28 +56,49 @@
       background: #111827;
       color: white;
       box-sizing: border-box;
+      outline: none;
     }
+
+    input:focus {
+      border-color: #6bff19;
+    }
+
     button {
       width: 100%;
       padding: 14px;
       margin-top: 12px;
-      background: #22c55e;
+      background: #6bff19;
       color: #000;
       border: none;
       border-radius: 10px;
       font-weight: 900;
       cursor: pointer;
     }
+
     button:hover {
-      background: #1eb054;
+      background: #58d914;
     }
-    a { color: #3b82f6; text-decoration: none; }
-    #msg { color: #facc15; font-size: 14px; margin-top: 10px; }
+
+    a {
+      color: #6bff19;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    #msg {
+      color: #facc15;
+      font-size: 14px;
+      margin-top: 12px;
+      min-height: 18px;
+    }
   </style>
 </head>
+
 <body>
+
   <div class="card">
-    <img src="/logo.png" style="width:70px;" onerror="this.style.display='none'">
+    <div class="logo">DATA-<span>MORE</span></div>
+
     <h1>Iniciar Sesión</h1>
     <p>Accede a tu cuenta Data More</p>
 
@@ -71,7 +109,7 @@
 
     <p id="msg"></p>
 
-    <p>¿No tienes cuenta? <a href="/registro">Regístrate</a></p>
+    <p>¿No tienes cuenta? <a href="registro.html">Regístrate</a></p>
   </div>
 
   <script>
@@ -86,7 +124,7 @@
       }
 
       try {
-        msg.textContent = 'Cargando...'; // Feedback visual
+        msg.textContent = 'Cargando...';
 
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -101,13 +139,14 @@
           return;
         }
 
-        // Guardar datos y redirigir
         localStorage.setItem('user', JSON.stringify(data.user));
-        window.location.href = '/';
+        window.location.href = 'index.html';
+
       } catch (err) {
         msg.textContent = 'Error conectando con el servidor.';
       }
     }
   </script>
+
 </body>
 </html>
