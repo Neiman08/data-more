@@ -202,3 +202,43 @@
     margin-bottom: 16px !important;
   }
 }
+/* 🔥 FIX DEFINITIVO MLB MOBILE - BOTÓN DENTRO DE CADA TARJETA */
+@media (max-width: 768px) {
+  #gamesGrid.grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  #gamesGrid .card {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    padding: 24px !important;
+    display: block !important;
+  }
+
+  #gamesGrid .match-header {
+    margin-bottom: 18px !important;
+  }
+
+  #gamesGrid .lineup-container {
+    margin-bottom: 18px !important;
+  }
+
+  #gamesGrid [id^="results-"] {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+    position: relative !important;
+    z-index: 20 !important;
+  }
+
+  #gamesGrid .analyze-btn {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+    padding: 16px !important;
+    position: relative !important;
+    z-index: 30 !important;
+  }
+}
