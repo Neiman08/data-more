@@ -162,6 +162,17 @@
     .score-now { font-size: 24px; font-weight: 900; color: var(--green); font-family: 'Anton', sans-serif; }
     .game-time { font-size: 10px; color: var(--muted); font-weight: 700; margin-top: 4px; }
 
+    .soccer-lineup-box {
+      font-size: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
     .analyze-btn {
       width: 100%; background: var(--green); color: #000; border: none; border-radius: 8px;
       padding: 12px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 15px;
@@ -243,7 +254,7 @@
 </main>
 
 <script>
-// --- LÓGICA FUNCIONAL PRESERVADA ---
+// --- LÓGICA FUNCIONAL ---
 function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
 
 async function initTicker() {
@@ -297,6 +308,11 @@ async function loadGames() {
                 <span class="team-name">${escapeHtml(g.awayTeam)}</span>
               </div>
             </div>
+            
+            <div class="soccer-lineup-box" id="lineup-${g.matchId}">
+              Alineaciones confirmadas pendientes...
+            </div>
+
             <button class="analyze-btn" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">ANALIZAR CON IA</button>
             <div id="res-${g.matchId}" class="pick-res"></div>
           </div>`;
@@ -443,6 +459,11 @@ async function analyze(btn, matchId, leagueKey) {
       `;
     } else {
       lineupsHtml = `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`;
+    }
+
+    const lineupBox = document.getElementById(`lineup-${matchId}`);
+    if (lineupBox) {
+      lineupBox.innerHTML = lineupsHtml;
     }
 
     resDiv.innerHTML = `
