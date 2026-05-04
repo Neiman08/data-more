@@ -1,0 +1,100 @@
+/* 📱 MOBILE FIX GLOBAL DATA-MORE */
+@media (max-width: 768px) {
+
+  /* CONTENEDOR GENERAL */
+  main.page {
+    padding: 0 10px;
+  }
+
+  /* HEADER */
+  header {
+    padding: 0 15px;
+    height: 60px;
+  }
+
+  nav {
+    display: none; /* 🔥 Oculta menú grande en móvil */
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .btn-login,
+  .btn-reg {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  /* HERO */
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 30px 15px;
+    border-radius: 10px;
+  }
+
+  h1 {
+    font-size: 34px !important;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  /* BOTONES */
+  .hero-btns {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-main,
+  .btn-sec {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* WIDGETS */
+  .hero-widgets {
+    margin-top: 20px;
+  }
+
+  .widget {
+    padding: 18px;
+  }
+
+  /* STATS */
+  .stats-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 30px 15px;
+  }
+
+  .stat-box {
+    justify-content: flex-start;
+  }
+
+  /* TARJETAS */
+  .sports-grid {
+    grid-template-columns: 1fr;
+    padding: 30px 15px;
+  }
+
+  .card {
+    height: 180px;
+  }
+
+  /* BOTÓN ANALIZAR (PÁGINAS MLB/NBA/SOCCER) */
+  button,
+  .card-btn {
+    width: 100%;
+  }
+
+  /* BANNER FINAL */
+  .banner-cta {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+    padding: 25px;
+  }
+
+}

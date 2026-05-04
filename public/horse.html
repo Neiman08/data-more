@@ -1,10 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script>
+    // BLOQUE DE SEGURIDAD
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!user || !user.proActivo) { 
+      window.location.href = '/pago-manual'; 
+    }
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Data More | Horse Racing Analytics Pro</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+
   <style>
     /* --- SISTEMA DE DISEÑO UNIFICADO --- */
     :root {
