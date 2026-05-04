@@ -1,3 +1,9 @@
+<script>
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (user) {
+    window.location.href = 'mlb.html';
+  }
+</script>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -179,7 +185,7 @@
   <section class="hero">
     <div class="hero-content">
       <p class="tagline">INTELIGENCIA. ESTADÍSTICAS. RESULTADOS.</p>
-      <h1>GANA CON <span>DATA.</span><br>NO CON <span>SUERTE.</span></h1>
+      <h1>GANA CON <span>DATA.</span><br>NO con <span>SUERTE.</span></h1>
       <p class="subtitle">Predicciones deportivas con inteligencia artificial en Hipismo, MLB, NBA y Fútbol. Más análisis. Mejores resultados.</p>
       <div class="hero-btns">
         <a href="registro.html" class="btn-main">REGÍSTRATE GRATIS →</a>

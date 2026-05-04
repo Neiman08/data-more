@@ -5,7 +5,7 @@
     // BLOQUE DE SEGURIDAD: Validación de sesión antes de cargar el DOM
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user) {
-      window.location.href = '/login';
+      window.location.href = 'login.html';
     }
   </script>
   <meta charset="UTF-8" />
@@ -364,7 +364,7 @@
 </main>
 
   <script>
-    // --- LÓGICA DE JAVASCRIPT (Mantenida intacta) ---
+    // --- LÓGICA DE JAVASCRIPT ---
     const dateInput = document.getElementById("dateInput");
     const gamesGrid = document.getElementById("gamesGrid");
     const status = document.getElementById("status");
@@ -451,7 +451,6 @@
             ? `<div class="live-tag status-live">● EN VIVO</div>` 
             : `<div class="live-tag status-other">${game.status}</div>`;
 
-          // Marcador de bases adaptado
           const basesHtml = `
             <div class="bases-container">
                 <div class="diamond-box"><div id="base2-${game.gamePk}" class="base ${game.runnerOn2b ? 'active' : ''}"></div></div>
@@ -512,7 +511,6 @@
         const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
         const isPro = loggedUser && loggedUser.proActivo === true;
         
-        // Lógica de guardado de picks (solo pre-game)
         const allowedStatuses = ['Scheduled', 'Pre-Game', 'Warmup', 'Preview'];
         const canSavePick = allowedStatuses.some(s => String(gameStatus || '').toLowerCase().includes(s.toLowerCase()));
 
@@ -532,7 +530,6 @@
         const conf = String(a.confidence || "").toLowerCase();
         let colorClass = conf.includes("alta") ? "border-alta" : (conf.includes("media") ? "border-media" : "border-baja");
         
-        // HTML Moneyline (Gratis)
         let html = `
           <div class="prediction-box ${colorClass}">
             <div class="section-header">
@@ -543,7 +540,6 @@
             <div class="data-mono">Probabilidad Modelo: ${Number(winPct).toFixed(2)}%</div>
           </div>`;
 
-        // Bloqueo si no es PRO
         if (!isPro) {
             html += `
               <div class="pro-lock-panel">
@@ -554,7 +550,6 @@
             container.innerHTML = html; return;
         }
 
-        // HTML Datos PRO
         html += `
           <div class="section">
             <div class="section-header"><span style="color:#2563eb">📊 Hándicap (Run Line)</span></div>
@@ -570,7 +565,6 @@
             <div class="section-header"><span style="color:#facc15">💎 Player Props Destacados</span></div>`;
 
         if (propData.ok) {
-          // Top Hits
           if(propData.topHits && propData.topHits.length > 0) {
             html += `<div style="font-size:10px; color:var(--green); font-weight:800; margin: 8px 0 5px 0; text-transform:uppercase;">Mejores Prob. Hit</div>`;
             propData.topHits.forEach(p => {
@@ -586,7 +580,6 @@
             });
           }
 
-          // Top HR
           if(propData.topHR && propData.topHR.length > 0) {
             html += `<div style="font-size:10px; color:#facc15; font-weight:800; margin: 12px 0 5px 0; text-transform:uppercase;">Mejores Prob. Home Run</div>`;
             propData.topHR.forEach(p => {
@@ -617,7 +610,7 @@
       status.textContent = `Analizando ${btns.length} juegos secuencialmente...`;
       for (const b of btns) { 
           b.click(); 
-          await new Promise(r => setTimeout(r, 1500)); // Aumentado delay para evitar saturación api
+          await new Promise(r => setTimeout(r, 1500)); 
       }
       status.textContent = "Análisis masivo completado.";
     }
@@ -634,9 +627,8 @@
       } catch (e) { console.log("Stats default", e); }
     }
 
-    // Marcadores en vivo (WebSockets simplificado con polling)
     async function updateLiveScores() {
-      if(document.visibilityState !== 'visible') return; // No actualizar si la pestaña no está activa
+      if(document.visibilityState !== 'visible') return;
       try {
         const res = await fetch(`/api/baseball/live-scores?t=${Date.now()}`);
         const data = await res.json();
@@ -647,7 +639,6 @@
             if (scoreEl) scoreEl.textContent = `${g.awayScore} - ${g.homeScore}`;
             if (inningEl) inningEl.textContent = `${g.inningState || ''} ${g.inning || ''}`;
             
-            // Actualizar bases si el panel existe
             const b1 = document.querySelector(`#base1-${g.gamePk}`);
             const b2 = document.querySelector(`#base2-${g.gamePk}`);
             const b3 = document.querySelector(`#base3-${g.gamePk}`);
@@ -662,9 +653,9 @@
             }
           });
         }
-      } catch (e) { /* Silencioso */ }
+      } catch (e) { }
     }
-    setInterval(updateLiveScores, 30000); // Polling cada 30s
+    setInterval(updateLiveScores, 30000);
 
     function renderLineups(data) {
       if (!data.ok || !data.awayLineup || data.awayLineup.length === 0) 
@@ -685,7 +676,6 @@
         </div>`;
     }
 
-    // Renderizado del Header dinámico (Login/Logout)
     function renderHeaderActions() {
       const user = JSON.parse(localStorage.getItem('user') || 'null');
       const container = document.getElementById('headerActions');
@@ -712,7 +702,6 @@
         window.location.href = 'index.html';
     }
 
-    // Inicialización
     loadGames();
     initTicker();
     updateRealStats();
