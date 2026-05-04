@@ -184,6 +184,22 @@
 
     .loading { animation: pulse 1s infinite; color: var(--green); font-size: 12px; text-align: center; padding: 10px; }
     @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+    /* NUEVOS AJUSTES DE DISEÑO PARA ALINEACIONES */
+    .pick-res {
+      display: none;
+      width: 100%;
+      overflow: visible;
+    }
+    .pick-res .stat-row {
+      gap: 12px;
+    }
+    .pick-res .stat-row span {
+      text-align: left;
+    }
+    .pick-res .stat-row b {
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -227,7 +243,7 @@
 </main>
 
 <script>
-// --- LÓGICA FUNCIONAL ---
+// --- LÓGICA FUNCIONAL PRESERVADA ---
 function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
 
 async function initTicker() {
@@ -307,68 +323,126 @@ async function analyze(btn, matchId, leagueKey) {
       return Number(v).toFixed(2) + '%';
     }
 
+    function val(...items) {
+      for (const item of items) {
+        if (item !== undefined && item !== null && item !== '') return item;
+      }
+      return 'N/A';
+    }
+
     const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
 
-    const homePct =
-      oneX2.home ??
-      oneX2.local ??
-      oneX2.homeWin ??
-      a.homeWin ??
-      a.homeWinPct ??
-      a.localWinPct ??
-      a.homeProbability;
+    const homePct = val(
+      oneX2.home,
+      oneX2.local,
+      oneX2.homeWin,
+      a.homeWin,
+      a.homeWinPct,
+      a.localWinPct,
+      a.homeProbability
+    );
 
-    const drawPct =
-      oneX2.draw ??
-      oneX2.empate ??
-      oneX2.tie ??
-      a.draw ??
-      a.drawPct ??
-      a.tieProbability;
+    const drawPct = val(
+      oneX2.draw,
+      oneX2.empate,
+      oneX2.tie,
+      a.draw,
+      a.drawPct,
+      a.tieProbability
+    );
 
-    const awayPct =
-      oneX2.away ??
-      oneX2.visitante ??
-      oneX2.awayWin ??
-      a.awayWin ??
-      a.awayWinPct ??
-      a.visitWinPct ??
-      a.awayProbability;
+    const awayPct = val(
+      oneX2.away,
+      oneX2.visitante,
+      oneX2.awayWin,
+      a.awayWin,
+      a.awayWinPct,
+      a.visitWinPct,
+      a.awayProbability
+    );
+
+    const over25 = val(
+      a.over25,
+      a.goals25,
+      a.overUnder,
+      a.totalGoalsPick,
+      a.totalPick,
+      a.markets?.over25,
+      a.totals?.over25,
+      a.totals?.pick
+    );
+
+    const btts = val(
+      a.btts,
+      a.bothTeamsScore,
+      a.bothTeamsToScore,
+      a.ambosAnotan,
+      a.markets?.btts
+    );
 
     const props =
       a.playerProps ||
       a.props ||
-      a.players ||
+      a.playersProps ||
       a.lineupProps ||
       data.playerProps ||
       data.props ||
       [];
 
-    const lineup =
+    const lineups =
       a.lineups ||
       a.lineup ||
+      a.startingLineups ||
       data.lineups ||
       data.lineup ||
+      data.startingLineups ||
       [];
 
-    let propsHtml = '';
+    let lineupsHtml = '';
 
     if (props && props.length) {
-      propsHtml = props.map(p => `
+      lineupsHtml = props.map(p => `
         <div class="stat-row">
           <span>${p.player || p.name || 'Jugador'}</span>
-          <b>${p.prediction || p.market || p.pick || ''}</b>
+          <b>${p.prediction || p.market || p.pick || p.prop || ''}</b>
         </div>
       `).join('');
-    } else if (lineup && lineup.length) {
-      propsHtml = lineup.map(p => `
+    } else if (Array.isArray(lineups) && lineups.length) {
+      lineupsHtml = lineups.map(p => `
         <div class="stat-row">
           <span>${p.player || p.name || 'Jugador'}</span>
-          <b>${p.position || p.pos || 'Titular'}</b>
+          <b>${p.position || p.pos || p.team || 'Titular'}</b>
         </div>
       `).join('');
+    } else if (lineups.home || lineups.away) {
+      const homePlayers = lineups.home || [];
+      const awayPlayers = lineups.away || [];
+
+      lineupsHtml = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
+          <div>
+            <div class="prop-title">Local</div>
+            ${homePlayers.map(p => `
+              <div class="stat-row">
+                <span>${p.player || p.name || 'Jugador'}</span>
+                <b>${p.position || p.pos || ''}</b>
+              </div>
+            `).join('')}
+          </div>
+
+          <div>
+            <div class="prop-title">Visitante</div>
+            ${awayPlayers.map(p => `
+              <div class="stat-row">
+                <span>${p.player || p.name || 'Jugador'}</span>
+                <b>${p.position || p.pos || ''}</b>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
     } else {
-      propsHtml = `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`;
+      lineupsHtml = `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`;
     }
 
     resDiv.innerHTML = `
@@ -376,21 +450,31 @@ async function analyze(btn, matchId, leagueKey) {
 
       <div class="stat-row">
         <span>Probabilidad:</span>
-        <b style="color:var(--green)">${pct(a.probability ?? a.pickProbability ?? a.winProbability).replace('%', '')}%</b>
+        <b style="color:var(--green)">${pct(a.probability ?? a.pickProbability ?? a.winProbability)}</b>
       </div>
 
-      <div class="stat-row"><span>Confianza:</span><b>${(a.confidence || 'MEDIA').toUpperCase()}</b></div>
+      <div class="stat-row">
+        <span>Confianza:</span>
+        <b>${(a.confidence || 'MEDIA').toUpperCase()}</b>
+      </div>
 
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
         <span>1X2 %:</span>
         <b>${pct(homePct)} | ${pct(drawPct)} | ${pct(awayPct)}</b>
       </div>
 
-      <div class="stat-row"><span>Goles +2.5:</span><b>${a.overUnder || a.goals25 || a.over25 || 'N/A'}</b></div>
-      <div class="stat-row"><span>Ambos anotan:</span><b>${a.btts || a.bothTeamsScore || 'N/A'}</b></div>
+      <div class="stat-row">
+        <span>Goles +2.5:</span>
+        <b>${over25}</b>
+      </div>
+
+      <div class="stat-row">
+        <span>Ambos anotan:</span>
+        <b>${btts}</b>
+      </div>
 
       <div class="prop-title">Player Props / Alineación</div>
-      ${propsHtml}
+      ${lineupsHtml}
     `;
 
     btn.innerText = 'RE-ANALIZAR';
