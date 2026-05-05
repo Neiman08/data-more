@@ -168,6 +168,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
 /* 🔧 FIX BOTONES ANALIZAR EN TARJETAS MÓVIL */
 @media (max-width: 768px) {
   .game-card,
@@ -202,7 +203,8 @@
     margin-bottom: 16px !important;
   }
 }
-/* 🔥 FIX DEFINITIVO MLB MOBILE - BOTÓN DENTRO DE CADA TARJETA */
+
+/* 🔥 FIX DEFINITIVO MLB MOBILE */
 @media (max-width: 768px) {
   #gamesGrid.grid {
     grid-template-columns: 1fr !important;
@@ -241,4 +243,45 @@
     position: relative !important;
     z-index: 30 !important;
   }
+}
+
+/* =========================================
+🔥 HERO CONTRASTE NIVEL DIOS (LO NUEVO)
+========================================= */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0,0,0,0.78) 0%,
+      rgba(0,0,0,0.58) 45%,
+      rgba(0,0,0,0.35) 100%
+    );
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero-content,
+.hero-widgets {
+  position: relative;
+  z-index: 2;
+}
+
+.hero h1,
+.hero .tagline,
+.hero .subtitle {
+  text-shadow: 0 5px 24px rgba(0,0,0,0.95);
+}
+
+.hero .subtitle {
+  color: rgba(255,255,255,0.92);
+  font-weight: 600;
 }
