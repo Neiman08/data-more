@@ -4,20 +4,21 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import rateLimit from 'express-rate-limit';
 
-// Modelos
+// Models
 import User from './models/User.js';
 import Pick from './models/Pick.js';
 import GameAnalysis from './models/GameAnalysis.js';
 import PaymentRequest from './models/PaymentRequest.js';
 
-// Rutas modulares
+// Routes
 import gamesRoutes from './routes/games.js';
 import baseballRoutes from './routes/baseball.js';
 import soccerRoutes from './routes/soccer.js';
 import nbaRoutes from './routes/nba.js';
 import horseRoutes from './routes/horseRacing.js';
-import gameCenter from './routes/gameCenter.js'; // <--- INTEGRADO
+import gameCenter from './routes/gameCenter.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -30,17 +31,31 @@ if (!process.env.MONGO_URI) {
 }
 
 if (!process.env.MONGO_URI) {
-  console.error('❌ ERROR: MONGO_URI no está definida.');
+  console.error('❌ ERROR: MONGO_URI is not defined.');
   process.exit(1);
 }
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('🚀 Conectado a MongoDB Atlas (Data More PRO)'))
-  .catch(err => console.error('❌ Error de conexión a MongoDB:', err));
+  .then(() => console.log('🚀 Connected to MongoDB Atlas (Data More PRO)'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+
+// API protection
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    ok: false,
+    error: 'Too many requests. Please try again later.'
+  }
+});
+
+app.use('/api', apiLimiter);
 
 // --- AUTH ---
 app.post('/api/auth/register', async (req, res) => {
@@ -49,7 +64,7 @@ app.post('/api/auth/register', async (req, res) => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).send('<h1>Error</h1><p>El correo ya está registrado.</p>');
+      return res.status(400).send('<h1>Error</h1><p>This email is already registered.</p>');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -57,7 +72,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     res.redirect('/login');
   } catch {
-    res.status(500).send('Error en registro');
+    res.status(500).send('Registration error');
   }
 });
 
@@ -67,7 +82,7 @@ app.post('/api/auth/login', async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.json({ ok: false, message: 'Credenciales inválidas' });
+      return res.json({ ok: false, message: 'Invalid credentials' });
     }
 
     res.json({
@@ -81,11 +96,11 @@ app.post('/api/auth/login', async (req, res) => {
       }
     });
   } catch {
-    res.json({ ok: false });
+    res.json({ ok: false, message: 'Login error' });
   }
 });
 
-// --- PAGOS ---
+// --- PAYMENTS ---
 app.post('/api/payment-request', async (req, res) => {
   try {
     const { nombre, email, metodo } = req.body;
@@ -115,7 +130,7 @@ app.post('/api/activate-pro', async (req, res) => {
     );
 
     if (requestId) {
-      await PaymentRequest.findByIdAndUpdate(requestId, { status: 'aprobado' });
+      await PaymentRequest.findByIdAndUpdate(requestId, { status: 'approved' });
     }
 
     res.json({ ok: true });
@@ -144,7 +159,7 @@ app.use('/api/baseball', baseballRoutes);
 app.use('/api/soccer', soccerRoutes);
 app.use('/api', nbaRoutes);
 app.use('/api/horse-racing', horseRoutes);
-app.use('/api/game-center', gameCenter); // <--- CONECTADO
+app.use('/api/game-center', gameCenter);
 
 // --- STATS ENDPOINT ---
 app.get('/api/stats/daily-performance', async (req, res) => {
@@ -181,11 +196,11 @@ app.get('/api/stats/daily-performance', async (req, res) => {
         ? `HR: ${hrWinners.join(', ')} ✅`
         : hitWinners.length
           ? `Hits: ${hitWinners.join(', ')} ✅`
-          : 'Pendiente'
+          : 'Pending'
     });
 
   } catch (err) {
-    console.error('Error stats:', err);
+    console.error('Stats error:', err);
     res.status(500).json({ ok: false });
   }
 });
@@ -226,5 +241,5 @@ app.get('/admin-payments', (req, res) => res.sendFile(path.join(__dirname, '../p
 // --- START ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
