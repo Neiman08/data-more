@@ -325,6 +325,26 @@
       padding:40px;
     }
 
+    /* Nuevas clases solicitadas */
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .team-box {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .team-box span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block; /* Asegura que el truncado funcione correctamente */
+    }
+
     @media(max-width:850px){
       .page{padding:12px;}
 

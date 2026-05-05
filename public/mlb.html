@@ -438,22 +438,47 @@
         const lRes = await fetch(`/api/baseball/lineup/${game.gamePk}`).catch(() => null);
         const lData = lRes ? await lRes.json() : { ok: false };
 
-        const isLive = game.status === 'In Progress' || game.status === 'Live';
-        const liveTagHtml = isLive 
-          ? `<div class="live-tag status-live">● LIVE</div>` 
-          : `<div class="live-tag status-other">${game.status}</div>`;
+        // ===== NUEVA LÓGICA DE NORMALIZACIÓN Y RENDERING =====
+        const rawStatus = (game.status || '').toLowerCase();
 
-        const basesHtml = `
+        const isPregame =
+          rawStatus.includes('pre') ||
+          rawStatus.includes('scheduled') ||
+          rawStatus.includes('preview') ||
+          rawStatus.includes('warmup');
+
+        const isLive =
+          rawStatus.includes('live') ||
+          rawStatus.includes('progress') ||
+          rawStatus.includes('in progress');
+
+        const awayScore = Number.isFinite(game.awayScore) ? game.awayScore : 0;
+        const homeScore = Number.isFinite(game.homeScore) ? game.homeScore : 0;
+        const inningText = isPregame ? '' : (game.inning || '');
+        const balls = Number.isFinite(game.balls) ? game.balls : 0;
+        const strikes = Number.isFinite(game.strikes) ? game.strikes : 0;
+        const outs = Number.isFinite(game.outs) ? game.outs : 0;
+
+        const liveTagHtml = isLive
+          ? `<div class="live-tag status-live">● LIVE</div>`
+          : `<div class="live-tag status-other">${game.status || 'PRE-GAME'}</div>`;
+
+        const basesHtml = isLive ? `
           <div class="bases-container">
-              <div class="diamond-box"><div id="base2-${game.gamePk}" class="base ${game.runnerOn2b ? 'active' : ''}"></div></div>
-              <div class="diamond-box"><div id="base3-${game.gamePk}" class="base ${game.runnerOn3b ? 'active' : ''}"></div><div id="base1-${game.gamePk}" class="base ${game.runnerOn1b ? 'active' : ''}"></div></div>
+              <div class="diamond-box">
+                <div id="base2-${game.gamePk}" class="base ${game.runnerOn2b ? 'active' : ''}"></div>
+              </div>
+              <div class="diamond-box">
+                <div id="base3-${game.gamePk}" class="base ${game.runnerOn3b ? 'active' : ''}"></div>
+                <div id="base1-${game.gamePk}" class="base ${game.runnerOn1b ? 'active' : ''}"></div>
+              </div>
               <div class="count-box">
-                  <span id="balls-${game.gamePk}">B: ${game.balls || 0}</span> |
-                  <span id="strikes-${game.gamePk}">S: ${game.strikes || 0}</span> |
-                  <span id="outs-${game.gamePk}">O: ${game.outs || 0}</span>
+                  <span id="balls-${game.gamePk}">B: ${balls}</span> |
+                  <span id="strikes-${game.gamePk}">S: ${strikes}</span> |
+                  <span id="outs-${game.gamePk}">O: ${outs}</span>
               </div>
           </div>
-        `;
+        ` : '';
 
         card.innerHTML = `
           <div class="match-header" onclick="window.location.href='/game-detail.html?gamePk=${game.gamePk}&date=${dateInput.value}'" style="cursor:pointer;">
@@ -466,9 +491,9 @@
             </div>
             <div class="game-status-center">
               ${liveTagHtml}
-              <div style="font-size:10px; color:var(--muted); margin-top:2px;" id="inning-text-${game.gamePk}">${game.inning || ''}</div>
-              <div class="score-now" id="score-${game.gamePk}">${game.awayScore || 0} - ${game.homeScore || 0}</div>
-              ${isLive ? basesHtml : ''}
+              <div style="font-size:10px; color:var(--muted); margin-top:2px;" id="inning-text-${game.gamePk}">${inningText}</div>
+              <div class="score-now" id="score-${game.gamePk}">${awayScore} - ${homeScore}</div>
+              ${basesHtml}
             </div>
             <div class="team-box">
               <img src="/logos/${game.homeAbbrev}.png" class="team-logo">
@@ -505,7 +530,6 @@
       <div class="props-market-title">${title}</div>
       ${players.map(p => {
         const imgSrc = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId}/headshot/67/current`;
-
         const statLine = type === 'hit'
           ? `Prob: ${p.hitChance}% | AVG: ${p.avg} | OPS: ${p.ops}`
           : `Prob: ${p.hrChance}% | HR: ${p.homeRuns} | SLG: ${p.slg}`;
@@ -577,7 +601,6 @@
       }
 
       const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
-      
       const confRaw = String(a.confidence || "").toLowerCase();
       let confNormalized = "low";
 
@@ -629,29 +652,15 @@
 
       if (propData.ok) {
         const allProps = propData.allProps || [];
-
-        // 🔥 SHARP MODE CALCULATIONS
-        const sortedHits = [...allProps]
-          .sort((a, b) => Number(b.hitChance || 0) - Number(a.hitChance || 0));
-
-        const sortedHR = [...allProps]
-          .sort((a, b) => Number(b.hrChance || 0) - Number(a.hrChance || 0));
-
-        // 🎯 LOCK = mayor probabilidad de hit
+        const sortedHits = [...allProps].sort((a, b) => Number(b.hitChance || 0) - Number(a.hitChance || 0));
+        const sortedHR = [...allProps].sort((a, b) => Number(b.hrChance || 0) - Number(a.hrChance || 0));
         const lockPlayer = sortedHits[0];
-
-        // 💣 HR PICK = mayor probabilidad HR
         const hrPlayer = sortedHR[0];
-
-        // 💎 VALUE = buen % pero no top 1 (sorpresa)
         const valuePlayer = sortedHits.find(p => Number(p.hitChance) > 55 && Number(p.hitChance) < 70);
 
         html += `
         <div style="margin-bottom:15px;">
-
-          <div style="font-size:10px;color:#6bff19;font-weight:900;margin-bottom:5px;">
-            🔒 LOCK OF THE GAME
-          </div>
+          <div style="font-size:10px;color:#6bff19;font-weight:900;margin-bottom:5px;">🔒 LOCK OF THE GAME</div>
           ${lockPlayer ? `
             <div class="player-row" style="border:1px solid #6bff19;">
               <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${lockPlayer.personId}/headshot/67/current" class="player-img">
@@ -662,9 +671,7 @@
             </div>
           ` : ''}
 
-          <div style="font-size:10px;color:#facc15;font-weight:900;margin:10px 0 5px;">
-            💣 HR PICK OF THE GAME
-          </div>
+          <div style="font-size:10px;color:#facc15;font-weight:900;margin:10px 0 5px;">💣 HR PICK OF THE GAME</div>
           ${hrPlayer ? `
             <div class="player-row" style="border:1px solid #facc15;">
               <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${hrPlayer.personId}/headshot/67/current" class="player-img">
@@ -674,30 +681,11 @@
               </div>
             </div>
           ` : ''}
-
-          <div style="font-size:10px;color:#38bdf8;font-weight:900;margin:10px 0 5px;">
-            💎 VALUE PLAYER
-          </div>
-          ${valuePlayer ? `
-            <div class="player-row" style="border:1px solid #38bdf8;">
-              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${valuePlayer.personId}/headshot/67/current" class="player-img">
-              <div>
-                <div class="p-name">${valuePlayer.name}</div>
-                <div class="p-stats">Hit Prob: ${valuePlayer.hitChance}%</div>
-              </div>
-            </div>
-          ` : ''}
-
         </div>
         `;
 
-        const topHits = [...allProps]
-          .sort((a, b) => Number(b.hitChance || 0) - Number(a.hitChance || 0))
-          .slice(0, 3);
-
-        const topHR = [...allProps]
-          .sort((a, b) => Number(b.hrChance || 0) - Number(a.hrChance || 0))
-          .slice(0, 3);
+        const topHits = sortedHits.slice(0, 3);
+        const topHR = sortedHR.slice(0, 3);
 
         html += `
           <div class="section-header" style="margin-top:20px;"><span style="color:#facc15">💎 Top Player Props</span></div>
@@ -722,12 +710,10 @@
   async function analyzeAll() {
     const btns = document.querySelectorAll('.analyze-btn');
     status.textContent = `Running AI analysis on ${btns.length} games...`;
-
     for (const b of btns) { 
       b.click(); 
       await new Promise(r => setTimeout(r, 1500)); 
     }
-
     status.textContent = "All games analyzed successfully.";
   }
 
@@ -735,41 +721,34 @@
     try {
       const res = await fetch('/api/stats/daily-performance?t=' + Date.now());
       const data = await res.json();
-
       if (data.ok) {
-        document.getElementById('statML').textContent = data.mlSuccess + '%';
-        document.getElementById('statProps').textContent = data.propsSuccess + '%';
-        document.getElementById('totalVerdes').textContent = data.totalWins;
+        // Asignación de elementos si existen en el DOM
+        if(document.getElementById('statML')) document.getElementById('statML').textContent = data.mlSuccess + '%';
+        if(document.getElementById('statProps')) document.getElementById('statProps').textContent = data.propsSuccess + '%';
+        if(document.getElementById('totalVerdes')) document.getElementById('totalVerdes').textContent = data.totalWins;
       }
-    } catch (e) {
-      console.log("Stats default", e);
-    }
+    } catch (e) {}
   }
 
   async function updateLiveScores() {
     if (document.visibilityState !== 'visible') return;
-
     try {
       const res = await fetch(`/api/baseball/live-scores?t=${Date.now()}`);
       const data = await res.json();
-
       if (data.ok && data.games) {
         data.games.forEach(g => {
           const scoreEl = document.querySelector(`#score-${g.gamePk}`);
           const inningEl = document.querySelector(`#inning-text-${g.gamePk}`);
-
           if (scoreEl) scoreEl.textContent = `${g.awayScore} - ${g.homeScore}`;
           if (inningEl) inningEl.textContent = `${g.inningState || ''} ${g.inning || ''}`;
           
           const b1 = document.querySelector(`#base1-${g.gamePk}`);
           const b2 = document.querySelector(`#base2-${g.gamePk}`);
           const b3 = document.querySelector(`#base3-${g.gamePk}`);
-
           if (b1) {
             g.runnerOn1b ? b1.classList.add('active') : b1.classList.remove('active');
             g.runnerOn2b ? b2.classList.add('active') : b2.classList.remove('active');
             g.runnerOn3b ? b3.classList.add('active') : b3.classList.remove('active');
-            
             document.querySelector(`#balls-${g.gamePk}`).textContent = `B: ${g.balls || 0}`;
             document.querySelector(`#strikes-${g.gamePk}`).textContent = `S: ${g.strikes || 0}`;
             document.querySelector(`#outs-${g.gamePk}`).textContent = `O: ${g.outs || 0}`;
@@ -785,13 +764,11 @@
     if (!data.ok || !data.awayLineup || data.awayLineup.length === 0) {
       return '<div style="font-size:9px; text-align:center; padding:10px; color:var(--muted); background:rgba(0,0,0,0.1); border-radius:8px; margin-bottom:15px;">Pending confirmed lineups...</div>';
     }
-    
     const renderSide = (l) => l.slice(0, 9).map(p => `
       <div class="player-line">
         <span><span class="order-num">${String(p.battingOrder).charAt(0)}</span> ${p.name}</span>
         <span class="pos-tag">${p.pos}</span>
       </div>`).join('');
-      
     return `
       <div class="lineup-container">
           <div style="display:flex; justify-content:space-between; gap:10px;">
@@ -804,7 +781,6 @@
   function renderHeaderActions() {
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     const container = document.getElementById('headerActions');
-
     if (!user) {
       container.innerHTML = `
         <a href="login.html" class="btn-login">LOG IN</a>
@@ -815,7 +791,6 @@
       const planTag = user.proActivo 
         ? '<span style="color:var(--green); font-weight:800; margin-left:5px;">[PRO]</span>' 
         : '<span style="color:#facc15; font-weight:800; margin-left:5px;">[FREE]</span>';
-          
       container.innerHTML = `
         <span style="font-size:12px; color:#fff; font-weight:700;">👤 ${userName}${planTag}</span>
         <button class="btn-logout" onclick="logout()">LOG OUT</button>
