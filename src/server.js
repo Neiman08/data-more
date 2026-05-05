@@ -213,6 +213,10 @@ app.get('/resultados.html', (req, res) => res.sendFile(path.join(__dirname, '../
 app.get('/estadisticas.html', (req, res) => res.sendFile(path.join(__dirname, '../public/estadisticas.html')));
 app.get('/faq.html', (req, res) => res.sendFile(path.join(__dirname, '../public/faq.html')));
 
+app.get('/game-detail.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/game-detail.html'));
+});
+
 app.get('/pro', (req, res) => res.sendFile(path.join(__dirname, '../public/pro.html')));
 app.get('/pago-manual', (req, res) => res.sendFile(path.join(__dirname, '../public/pago-manual.html')));
 app.get('/admin-payments', (req, res) => res.sendFile(path.join(__dirname, '../public/admin-payments.html')));

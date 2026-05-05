@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detalle del Juego | Data More</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --green:#6bff19;
+      --card:rgba(8,12,16,.88);
+      --border:rgba(255,255,255,.10);
+      --muted:#a9b0b8;
+      --gold:#facc15;
+      --red:#ef4444;
+      --blue:#38bdf8;
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:'Inter',sans-serif;
+      background:
+        linear-gradient(rgba(0,0,0,.88), rgba(0,0,0,.96)),
+        url("logos/IMG_0579.JPG");
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
+      color:#fff;
+    }
+
+    .page{
+      max-width:1250px;
+      margin:0 auto;
+      padding:24px;
+    }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:22px;
+    }
+
+    .back{
+      color:var(--green);
+      text-decoration:none;
+      font-weight:900;
+      border:1px solid rgba(107,255,25,.35);
+      padding:10px 16px;
+      border-radius:10px;
+      background:rgba(255,255,255,.05);
+    }
+
+    .logo{font-weight:900;font-size:22px;}
+    .logo span{color:var(--green);}
+
+    .hero-card,.panel{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:24px;
+      backdrop-filter:blur(14px);
+      box-shadow:0 22px 60px rgba(0,0,0,.55);
+      margin-bottom:24px;
+    }
+
+    .hero-card{border-color:rgba(107,255,25,.35);}
+
+    .matchup{
+      display:grid;
+      grid-template-columns:1fr 280px 1fr;
+      gap:28px;
+      align-items:center;
+      text-align:center;
+    }
+
+    .team img{
+      width:95px;
+      height:95px;
+      object-fit:contain;
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.65));
+    }
+
+    .team h2{
+      font-family:'Anton',sans-serif;
+      font-size:44px;
+      margin:10px 0 4px;
+      letter-spacing:1px;
+    }
+
+    .record{
+      color:var(--green);
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .pitcher{
+      color:var(--gold);
+      font-size:13px;
+      font-weight:900;
+      margin-top:7px;
+    }
+
+    .status{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .predictor-title{
+      color:var(--green);
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      font-size:14px;
+      margin-bottom:12px;
+    }
+
+    .circle-chart{
+      width:205px;
+      height:205px;
+      border-radius:50%;
+      background:conic-gradient(
+        var(--gold) 0%,
+        var(--gold) var(--away),
+        var(--red) var(--away),
+        var(--red) 100%
+      );
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin:0 auto;
+      box-shadow:0 0 45px rgba(0,0,0,.65);
+    }
+
+    .circle-inner{
+      width:134px;
+      height:134px;
+      background:#05080c;
+      border-radius:50%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      font-weight:900;
+      border:1px solid rgba(255,255,255,.10);
+      font-size:18px;
+    }
+
+    .circle-inner .vs{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .pct-row{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .pct-box{
+      flex:1;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:10px;
+      font-weight:900;
+    }
+
+    .pct-box span{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:4px;
+    }
+
+    .section-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-bottom:24px;
+    }
+
+    .two-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .panel h3{
+      margin:0 0 14px;
+      font-size:15px;
+      color:var(--green);
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+
+    .sub-title{
+      color:#fff;
+      font-weight:900;
+      font-size:14px;
+      margin:8px 0 12px;
+    }
+
+    .stat-row{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      padding:9px 0;
+      font-size:13px;
+    }
+
+    .stat-row span:first-child{color:var(--muted);}
+    .stat-row span:last-child{font-weight:900;text-align:right;}
+
+    .bar-row{margin:12px 0;}
+
+    .bar-top{
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:7px;
+    }
+
+    .bar-bg{
+      width:100%;
+      height:10px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .bar-fill{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--green),#d7ff31);
+      width:0%;
+    }
+
+    .player-card{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 0;
+      border-bottom:1px solid rgba(255,255,255,.07);
+    }
+
+    .player-card img{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#111;
+      border:1px solid rgba(255,255,255,.15);
+    }
+
+    .p-name{
+      font-weight:900;
+      display:block;
+      font-size:13px;
+    }
+
+    .p-info{
+      color:var(--muted);
+      font-size:11px;
+      display:block;
+      margin-top:3px;
+    }
+
+    .lineup-box{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .player{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:9px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:13px;
+    }
+
+    .num{
+      color:var(--green);
+      font-weight:900;
+      margin-right:6px;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:5px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      background:rgba(107,255,25,.12);
+      color:var(--green);
+      border:1px solid rgba(107,255,25,.35);
+      margin-bottom:12px;
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    .loading{
+      color:var(--green);
+      font-weight:900;
+      text-align:center;
+      padding:40px;
+    }
+
+    @media(max-width:850px){
+      .page{padding:16px;}
+      .matchup{grid-template-columns:1fr;}
+      .section-grid,.two-grid,.lineup-box{grid-template-columns:1fr;}
+      .circle-chart{width:190px;height:190px;}
+      .team h2{font-size:38px;}
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <div class="top">
+      <a href="mlb.html" class="back">← Volver a MLB</a>
+      <div class="logo">DATA-<span>MORE</span></div>
+    </div>
+
+    <div id="content" class="loading">Cargando información del juego...</div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const gamePk = params.get('gamePk');
+    const date = params.get('date');
+    const content = document.getElementById('content');
+
+    async function loadDetail(){
+      try{
+        if(!gamePk || !date){
+          content.innerHTML = 'Faltan parámetros del juego.';
+          return;
+        }
+
+        const [gamesRes,lineupRes,propsRes,analysisRes] = await Promise.all([
+          fetch(`/api/baseball/games?date=${date}`),
+          fetch(`/api/baseball/lineup/${gamePk}`).catch(()=>null),
+          fetch(`/api/baseball/player-props/${gamePk}`).catch(()=>null),
+          fetch(`/api/analyze/${gamePk}?date=${date}`).catch(()=>null)
+        ]);
+
+        const gamesData = await gamesRes.json();
+        const lineupData = lineupRes ? await lineupRes.json() : {ok:false};
+        const propsData = propsRes ? await propsRes.json() : {ok:false};
+        const analysisData = analysisRes ? await analysisRes.json() : {ok:false};
+
+        if(!gamesData.ok){
+          content.innerHTML = 'No se pudo cargar la cartelera.';
+          return;
+        }
+
+        const game = gamesData.games.find(g => String(g.gamePk) === String(gamePk));
+
+        if(!game){
+          content.innerHTML = 'Juego no encontrado.';
+          return;
+        }
+
+        const awayPct = Number(analysisData?.analysis?.away?.modelWinPct || 50);
+        const homePct = Number(analysisData?.analysis?.home?.modelWinPct || 50);
+
+        const awayPlayers = getTeamPlayers(propsData, game.awayAbbrev);
+        const homePlayers = getTeamPlayers(propsData, game.homeAbbrev);
+
+        content.className = '';
+
+        content.innerHTML = `
+          <section class="hero-card">
+            <div class="matchup">
+              <div class="team">
+                <img src="/logos/${game.awayAbbrev}.png" onerror="this.style.display='none'">
+                <h2>${game.awayAbbrev}</h2>
+                <div class="record">${game.awayWins || 0}-${game.awayLosses || 0}</div>
+                <div class="pitcher">${game.awayPitcher || 'Pitcher TBD'}</div>
+              </div>
+
+              <div>
+                <div class="status">${game.status || 'Scheduled'}</div>
+                <div class="predictor-title">Predictor de Duelo</div>
+
+                <div class="circle-chart" style="--away:${awayPct}%;">
+                  <div class="circle-inner">
+                    <span>${game.awayAbbrev}</span>
+                    <span class="vs">VS</span>
+                    <span>${game.homeAbbrev}</span>
+                  </div>
+                </div>
+
+                <div class="pct-row">
+                  <div class="pct-box"><span>${game.awayAbbrev}</span>${awayPct.toFixed(1)}%</div>
+                  <div class="pct-box"><span>${game.homeAbbrev}</span>${homePct.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              <div class="team">
+                <img src="/logos/${game.homeAbbrev}.png" onerror="this.style.display='none'">
+                <h2>${game.homeAbbrev}</h2>
+                <div class="record">${game.homeWins || 0}-${game.homeLosses || 0}</div>
+                <div class="pitcher">${game.homePitcher || 'Pitcher TBD'}</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-grid">
+            <div class="panel">
+              <h3>Resumen del Juego</h3>
+              <div class="stat-row"><span>Estado</span><span>${game.status || 'N/A'}</span></div>
+              <div class="stat-row"><span>Inning</span><span>${game.inning || 'Pre-game'}</span></div>
+              <div class="stat-row"><span>Visitante</span><span>${game.awayAbbrev}</span></div>
+              <div class="stat-row"><span>Local</span><span>${game.homeAbbrev}</span></div>
+            </div>
+
+            <div class="panel">
+              <h3>Forma Reciente</h3>
+              <div class="stat-row"><span>${game.awayAbbrev} últimos 5</span><span>${game.awayLast5 || 'Sin data'}</span></div>
+              <div class="stat-row"><span>${game.homeAbbrev} últimos 5</span><span>${game.homeLast5 || 'Sin data'}</span></div>
+              <div class="stat-row"><span>Record ${game.awayAbbrev}</span><span>${game.awayWins || 0}-${game.awayLosses || 0}</span></div>
+              <div class="stat-row"><span>Record ${game.homeAbbrev}</span><span>${game.homeWins || 0}-${game.homeLosses || 0}</span></div>
+            </div>
+
+            <div class="panel">
+              <h3>Pitchers Probables</h3>
+              <div class="stat-row"><span>${game.awayAbbrev}</span><span>${game.awayPitcher || 'TBD'}</span></div>
+              <div class="stat-row"><span>${game.homeAbbrev}</span><span>${game.homePitcher || 'TBD'}</span></div>
+              <div class="stat-row"><span>Lectura</span><span>Datos informativos</span></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Pitcher vs Equipo Rival</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayPitcher || 'Pitcher visitante'} vs ${game.homeAbbrev}</div>
+                ${renderRiskBars(homePct)}
+              </div>
+              <div>
+                <div class="sub-title">${game.homePitcher || 'Pitcher local'} vs ${game.awayAbbrev}</div>
+                ${renderRiskBars(awayPct)}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Jugadores Calientes para Hit</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayAbbrev}</div>
+                ${renderTeamHitPlayers(awayPlayers, propsData, 0)}
+              </div>
+              <div>
+                <div class="sub-title">${game.homeAbbrev}</div>
+                ${renderTeamHitPlayers(homePlayers, propsData, 1)}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Potencial de Poder / HR</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayAbbrev}</div>
+                ${renderTeamHRPlayers(awayPlayers, propsData, 0)}
+              </div>
+              <div>
+                <div class="sub-title">${game.homeAbbrev}</div>
+                ${renderTeamHRPlayers(homePlayers, propsData, 1)}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Líderes Ofensivos por Equipo</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayAbbrev}</div>
+                ${renderLeaders(awayPlayers, propsData, 0)}
+              </div>
+              <div>
+                <div class="sub-title">${game.homeAbbrev}</div>
+                ${renderLeaders(homePlayers, propsData, 1)}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Historial Directo de Temporada</h3>
+            <span class="badge">${game.awayAbbrev} vs ${game.homeAbbrev}</span>
+            <p class="note">
+              Aquí irá el historial directo de temporada: juegos disputados entre ambos,
+              victorias por equipo, carreras totales y resultados anteriores.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h3>Alineaciones Probables / Confirmadas</h3>
+            ${renderLineups(lineupData, propsData, game.awayAbbrev, game.homeAbbrev)}
+          </section>
+        `;
+
+      }catch(err){
+        console.error(err);
+        content.innerHTML = 'Error cargando detalle del juego.';
+      }
+    }
+
+    function renderRiskBars(pct){
+      const power = Math.max(20, Math.min(80, pct));
+      const contact = Math.max(25, Math.min(85, pct + 6));
+      const runs = Math.max(20, Math.min(80, pct - 4));
+
+      return `
+        ${bar('Riesgo de contacto', contact)}
+        ${bar('Riesgo de carreras', runs)}
+        ${bar('Riesgo de HR', power)}
+      `;
+    }
+
+    function bar(label, pct){
+      return `
+        <div class="bar-row">
+          <div class="bar-top"><span>${label}</span><span>${Number(pct).toFixed(0)}%</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+        </div>
+      `;
+    }
+
+    function getAllPlayers(propsData){
+      const arr = [];
+      if(propsData?.topHits) arr.push(...propsData.topHits);
+      if(propsData?.topHR) arr.push(...propsData.topHR);
+
+      const map = new Map();
+
+      arr.forEach(p => {
+        const key = p.personId || p.name;
+        if(!map.has(key)) map.set(key, {...p});
+        else map.set(key, {...map.get(key), ...p});
+      });
+
+      return Array.from(map.values());
+    }
+
+    function getTeamPlayers(propsData, abbr){
+      const all = getAllPlayers(propsData);
+
+      return all.filter(p => {
+        const t = String(p.team || p.teamAbbrev || p.abbrev || p.club || '').toUpperCase();
+        return t === String(abbr).toUpperCase();
+      });
+    }
+
+    function fallbackSplit(propsData, side){
+      const all = getAllPlayers(propsData);
+      return all.filter((_,i) => i % 2 === side);
+    }
+
+    function playerImg(p){
+      return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId || 0}/headshot/67/current`;
+    }
+
+    function renderTeamHitPlayers(players, propsData, side){
+      let list = players.length ? players : fallbackSplit(propsData, side);
+
+      list = list
+        .filter(p => p.hitChance || p.avg || p.ops)
+        .sort((a,b) => Number(b.hitChance || 0) - Number(a.hitChance || 0))
+        .slice(0,3);
+
+      if(!list.length) return `<p class="note">No hay datos de bateadores disponibles.</p>`;
+
+      return list.map(p => `
+        <div class="player-card">
+          <img src="${playerImg(p)}" onerror="this.src='${playerImg({personId:0})}'">
+          <div style="flex:1">
+            <span class="p-name">${p.name}</span>
+            <span class="p-info">AVG ${p.avg || '--'} | OPS ${p.ops || '--'}</span>
+            ${bar('Probabilidad de hit', Number(p.hitChance || 50))}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTeamHRPlayers(players, propsData, side){
+      let list = players.length ? players : fallbackSplit(propsData, side);
+
+      list = list
+        .filter(p => p.hrChance || p.homeRuns || p.slg)
+        .sort((a,b) => Number(b.hrChance || 0) - Number(a.hrChance || 0))
+        .slice(0,3);
+
+      if(!list.length) return `<p class="note">No hay datos de poder disponibles.</p>`;
+
+      return list.map(p => `
+        <div class="player-card">
+          <img src="${playerImg(p)}" onerror="this.src='${playerImg({personId:0})}'">
+          <div style="flex:1">
+            <span class="p-name">${p.name}</span>
+            <span class="p-info">HR ${p.homeRuns || '--'} | SLG ${p.slg || '--'}</span>
+            ${bar('Potencial de HR', Number(p.hrChance || 20))}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderLeaders(players, propsData, side){
+      let list = players.length ? players : fallbackSplit(propsData, side);
+
+      const avgLeader = [...list].sort((a,b) => Number(b.avg || 0) - Number(a.avg || 0))[0];
+      const hrLeader = [...list].sort((a,b) => Number(b.homeRuns || 0) - Number(a.homeRuns || 0))[0];
+      const opsLeader = [...list].sort((a,b) => Number(b.ops || 0) - Number(a.ops || 0))[0];
+
+      if(!avgLeader && !hrLeader && !opsLeader) return `<p class="note">Líderes no disponibles todavía.</p>`;
+
+      return `
+        <div class="stat-row"><span>Líder AVG</span><span>${avgLeader?.name || '--'} ${avgLeader?.avg || ''}</span></div>
+        <div class="stat-row"><span>Líder HR</span><span>${hrLeader?.name || '--'} ${hrLeader?.homeRuns || ''}</span></div>
+        <div class="stat-row"><span>Líder OPS</span><span>${opsLeader?.name || '--'} ${opsLeader?.ops || ''}</span></div>
+      `;
+    }
+
+    function renderLineups(data, propsData, awayAbbr, homeAbbr){
+      if(data.ok && data.awayLineup){
+        const renderSide = (lineup,title) => `
+          <div>
+            <h3>${title}</h3>
+            ${lineup.slice(0,9).map(p => `
+              <div class="player">
+                <span><span class="num">${String(p.battingOrder).charAt(0)}</span>${p.name}</span>
+                <span>${p.pos}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        return `
+          <div class="lineup-box">
+            ${renderSide(data.awayLineup, awayAbbr)}
+            ${renderSide(data.homeLineup, homeAbbr)}
+          </div>
+        `;
+      }
+
+      const away = fallbackSplit(propsData,0).slice(0,9);
+      const home = fallbackSplit(propsData,1).slice(0,9);
+
+      const renderProbable = (list,title) => `
+        <div>
+          <h3>${title} Probable</h3>
+          ${list.length ? list.map((p,i) => `
+            <div class="player">
+              <span><span class="num">${i+1}</span>${p.name}</span>
+              <span>BAT</span>
+            </div>
+          `).join('') : '<p class="note">Alineación probable pendiente.</p>'}
+        </div>
+      `;
+
+      return `
+        <div class="lineup-box">
+          ${renderProbable(away, awayAbbr)}
+          ${renderProbable(home, homeAbbr)}
+        </div>
+      `;
+    }
+
+    loadDetail();
+  </script>
+</body>
+</html>

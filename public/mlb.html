@@ -149,29 +149,6 @@
     .nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
     .nav-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 800; }
 
-    /* --- BARRA DE PROMO (Adaptada) --- */
-    .promo-banner {
-        background: linear-gradient(90deg, #0d140d 0%, #03070b 100%);
-        border: 1px solid rgba(107, 255, 25, 0.4);
-        border-radius: 12px;
-        margin-bottom: 25px;
-        padding: 20px 25px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .promo-stats { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-    .promo-tag { background: #facc15; color: #000; font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; letter-spacing: 1px; animation: pulse-gold 2s infinite; }
-    .stat-item { display: flex; align-items: center; gap: 8px; }
-    .stat-label { color: var(--muted); font-size: 12px; font-weight: 600; }
-    .stat-value { color: var(--green); font-size: 16px; font-weight: 900; }
-    
-    @keyframes pulse-gold {
-        0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
-    }
-
     /* --- CONTROLES (Unificados) --- */
     .topbar {
       display: flex;
@@ -331,25 +308,6 @@
         <a href="horse.html"><button type="button" class="nav-btn">🏇 Hipismo</button></a>
     </div>
 
-    <div class="promo-banner" id="promoBanner">
-      <div class="promo-stats">
-          <span class="promo-tag">LOGROS DE AYER 🏆</span>
-          <div class="stat-item">
-            <span class="stat-label">Efectividad ML:</span>
-            <span class="stat-value" id="statML">--%</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Player Props:</span>
-            <span class="stat-value" id="statProps">--%</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Picks Verdes:</span>
-            <span class="stat-value" id="totalVerdes" style="color:#facc15;">--</span>
-          </div>
-      </div>
-      <a href="registro.html" class="btn-reg">¡ÚNETE AHORA!</a>
-    </div>
-
     <div class="topbar">
       <input type="date" id="dateInput" />
       <button class="btn-action" onclick="loadGames()">Cargar Pizarra</button>
@@ -464,7 +422,7 @@
           `;
 
           card.innerHTML = `
-            <div class="match-header">
+            <div class="match-header" onclick="window.location.href='/game-detail.html?gamePk=${game.gamePk}&date=${dateInput.value}'" style="cursor:pointer;">
               <div class="team-box">
                 <img src="/logos/${game.awayAbbrev}.png" class="team-logo">
                 <span class="team-abbr">${game.awayAbbrev}</span>
