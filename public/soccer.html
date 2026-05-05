@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <script>
-    // BLOQUE DE SEGURIDAD
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user || !user.proActivo) { 
       window.location.href = '/pago-manual'; 
@@ -10,13 +9,12 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Data More | Soccer Analytics Pro</title>
+  <title>Data More | Soccer Prediction Engine</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
 
   <style>
-    /* --- SISTEMA DE DISEÑO UNIFICADO --- */
     :root {
       --green: #6bff19;
       --border: rgba(255, 255, 255, 0.08);
@@ -43,7 +41,6 @@
       min-height: 100vh;
     }
 
-    /* --- TICKER DE RESULTADOS --- */
     .espn-ticker-container {
         width: 100%;
         background: #000;
@@ -56,11 +53,13 @@
         top: 0;
         z-index: 10000;
     }
+
     .ticker-wrapper {
         display: flex;
         white-space: nowrap;
         animation: ticker-scroll 150s linear infinite;
     }
+
     .ticker-item {
         display: flex;
         align-items: center;
@@ -71,6 +70,7 @@
         font-weight: 600;
         color: var(--muted);
     }
+
     .ticker-item img { width: 18px; height: 18px; object-fit: contain; margin: 0 6px; }
     .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
     .ticker-status { margin-left: 10px; color: var(--green); font-size: 9px; font-weight: bold; }
@@ -80,7 +80,6 @@
         100% { transform: translateX(-100%); }
     }
 
-    /* --- NAVEGACIÓN PRINCIPAL --- */
     header {
       height: 70px;
       padding: 0 50px;
@@ -102,7 +101,6 @@
     nav a { color: #fff; text-decoration: none; font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
     nav a.active { opacity: 1; border-bottom: 2px solid var(--green); padding-bottom: 25px; margin-bottom: -25px; }
 
-    /* --- CONTENEDOR --- */
     .container { padding: 30px 50px; }
 
     h1.page-title {
@@ -110,40 +108,44 @@
       font-size: 32px;
       line-height: 1;
       text-transform: uppercase;
-      margin-bottom: 25px;
+      margin-bottom: 10px;
       letter-spacing: -1px;
     }
+
     h1.page-title span { color: var(--green); }
 
-    /* --- NAVEGACIÓN DE DEPORTES --- */
     .nav-sports { display: flex; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
     .nav-btn {
       padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border);
       color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer;
       background: rgba(255,255,255,0.03); transition: all 0.2s; text-transform: uppercase;
     }
+
     .nav-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 800; }
 
-    /* --- CONTROLES --- */
     .topbar { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; }
+
     .topbar input[type="date"] {
       background: #111; border: 1px solid var(--border); padding: 12px; border-radius: 8px;
       color: #fff; font-family: 'Inter', sans-serif; font-weight: 600;
     }
+
     .btn-action {
       background: var(--green); color: #000; padding: 12px 24px; border-radius: 8px;
       font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; font-size: 13px;
     }
+
     .btn-sec { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
 
-    /* --- GRID DE 4 COLUMNAS --- */
     .league-title {
       font-family: 'Anton'; color: var(--green); margin: 30px 0 15px; 
       font-size: 18px; text-transform: uppercase; letter-spacing: 1px;
     }
+
     .games-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;
     }
+
     @media (max-width: 1300px) { .games-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 1000px) { .games-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 650px) { .games-grid { grid-template-columns: 1fr; } }
@@ -153,7 +155,6 @@
       padding: 20px; backdrop-filter: blur(10px); display: flex; flex-direction: column;
     }
 
-    /* --- ELEMENTOS INTERNOS TARJETA --- */
     .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .team-box { text-align: center; flex: 1; }
     .team-logo { width: 40px; height: 40px; object-fit: contain; margin-bottom: 8px; }
@@ -184,17 +185,18 @@
       text-transform: uppercase; transition: opacity 0.2s;
     }
 
-    /* --- RESULTADOS ANÁLISIS --- */
     .pick-res { 
       margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); 
       border-radius: 10px; border-left: 4px solid var(--green); display: none;
       width: 100%; overflow: visible;
     }
+
     .stat-row { 
       display: flex; justify-content: space-between; padding: 6px 0; 
       border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; 
       gap: 12px;
     }
+
     .stat-row span { color: var(--muted); font-weight: 600; text-align: left; }
     .stat-row b { color: #fff; font-weight: 800; text-align: right; }
     
@@ -203,7 +205,6 @@
     .loading { animation: pulse 1s infinite; color: var(--green); font-size: 12px; text-align: center; padding: 10px; }
     @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
-    /* --- PARCHE FIX MOBILE --- */
     .match-card,
     .game-card,
     .card {
@@ -266,16 +267,16 @@
 
 <main class="page">
   <div class="espn-ticker-container">
-    <div class="ticker-wrapper" id="tickerWrapper">Cargando marcadores en vivo...</div>
+    <div class="ticker-wrapper" id="tickerWrapper">Loading live scores...</div>
   </div>
 
   <header>
     <div class="logo">DATA-<span>MORE</span></div>
     <nav>
-      <a href="/">Inicio</a>
+      <a href="/">Home</a>
       <a class="active" href="/soccer">Picks</a>
-      <a href="/precios">Precios</a>
-      <a href="/estadisticas">Estadísticas</a>
+      <a href="/precios">Pricing</a>
+      <a href="/estadisticas">Stats</a>
     </nav>
     <div class="header-actions">
       <span style="font-size:12px; color:#fff; font-weight:700;">👤 PRO ACTIVE</span>
@@ -283,19 +284,25 @@
   </header>
 
   <div class="container">
-    <h1 class="page-title">SOCCER <span>ANALYTICS PRO</span></h1>
+    <h1 class="page-title">SOCCER <span>AI PREDICTION ENGINE</span></h1>
+    <p style="color:var(--green); font-size:11px; font-weight:800; margin-bottom:10px;">
+      GLOBAL MATCH EDGE ANALYSIS
+    </p>
+    <p style="color:var(--muted); font-size:12px; margin-bottom:20px;">
+      Real-time soccer predictions powered by AI, market data and statistical models
+    </p>
 
     <div class="nav-sports">
         <a href="/"><button class="nav-btn">⚾ MLB</button></a>
-        <a href="/soccer"><button class="nav-btn active">⚽ Fútbol</button></a>
+        <a href="/soccer"><button class="nav-btn active">⚽ Soccer</button></a>
         <a href="/nba"><button class="nav-btn">🏀 NBA</button></a>
-        <a href="/horse.html"><button class="nav-btn">🏇 Hipismo</button></a>
+        <a href="/horse.html"><button class="nav-btn">🏇 Horse Racing</button></a>
     </div>
 
     <div class="topbar">
       <input type="date" id="dateSelect">
-      <button class="btn-action" onclick="loadGames()">Cargar Pizarra</button>
-      <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ Analizar Todo</button>
+      <button class="btn-action" onclick="loadGames()">LOAD BOARD</button>
+      <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ RUN FULL ANALYSIS</button>
     </div>
 
     <div id="gamesList"></div>
@@ -303,8 +310,9 @@
 </main>
 
 <script>
-// --- LÓGICA FUNCIONAL PRESERVADA ---
-function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); }
+function escapeHtml(v) { 
+  return String(v ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#039;"}[m])); 
+}
 
 async function initTicker() {
   const ticker = document.getElementById('tickerWrapper');
@@ -327,12 +335,12 @@ async function initTicker() {
 async function loadGames() {
   const date = document.getElementById('dateSelect').value;
   const container = document.getElementById('gamesList');
-  container.innerHTML = '<div class="loading">Sincronizando ligas globales...</div>';
+  container.innerHTML = '<div class="loading">Syncing global leagues...</div>';
   
   try {
     const res = await fetch(`/api/soccer/games-global?date=${date}`);
     const data = await res.json();
-    if(!data.ok) { container.innerHTML = '<p>No hay juegos disponibles.</p>'; return; }
+    if(!data.ok) { container.innerHTML = '<p>No games available.</p>'; return; }
 
     const grouped = {};
     data.games.forEach(g => { (grouped[g.leagueName] = grouped[g.leagueName] || []).push(g); });
@@ -350,7 +358,7 @@ async function loadGames() {
               </div>
               <div class="score-center">
                 <div class="score-now">${g.homeScore ?? 0} - ${g.awayScore ?? 0}</div>
-                <div class="game-time">${g.time || 'Programado'}</div>
+                <div class="game-time">${g.time || 'Scheduled'}</div>
               </div>
               <div class="team-box">
                 <img src="${g.awayLogo}" class="team-logo" onerror="this.src='/logo.png'">
@@ -359,23 +367,25 @@ async function loadGames() {
             </div>
 
             <div class="soccer-lineup-box" id="lineup-${g.matchId}">
-              Alineaciones confirmadas pendientes...
+              Confirmed lineups pending...
             </div>
 
-            <button class="analyze-btn" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">ANALIZAR CON IA</button>
+            <button class="analyze-btn" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">ANALYZE WITH AI</button>
             <div id="res-${g.matchId}" class="pick-res"></div>
           </div>`;
       });
       html += `</div>`;
       container.innerHTML += html;
     }
-  } catch(e) { container.innerHTML = '<p>Error al cargar pizarra.</p>'; }
+  } catch(e) { 
+    container.innerHTML = '<p>Error loading board.</p>'; 
+  }
 }
 
 async function analyze(btn, matchId, leagueKey) {
   const resDiv = document.getElementById(`res-${matchId}`);
   resDiv.style.display = 'block';
-  resDiv.innerHTML = '<div class="loading">Consultando IA...</div>';
+  resDiv.innerHTML = '<div class="loading">Running AI analysis...</div>';
   btn.disabled = true;
 
   try {
@@ -393,6 +403,25 @@ async function analyze(btn, matchId, leagueKey) {
         if (item !== undefined && item !== null && item !== '') return item;
       }
       return 'N/A';
+    }
+
+    function normalizeConfidence(confidence) {
+      const raw = String(confidence || '').toLowerCase();
+      if (raw.includes('alta') || raw.includes('high')) return 'HIGH';
+      if (raw.includes('media') || raw.includes('medium')) return 'MEDIUM';
+      if (raw.includes('baja') || raw.includes('low')) return 'LOW';
+      return String(confidence || 'MEDIUM').toUpperCase();
+    }
+
+    function translatePickValue(value) {
+      const raw = String(value ?? '');
+      return raw
+        .replace(/Empate/gi, 'Draw')
+        .replace(/Local/gi, 'Home')
+        .replace(/Visitante/gi, 'Away')
+        .replace(/Ambos anotan/gi, 'Both Teams To Score')
+        .replace(/Sí/gi, 'Yes')
+        .replace(/No/gi, 'No');
     }
 
     const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
@@ -459,15 +488,15 @@ async function analyze(btn, matchId, leagueKey) {
     if (props.length) {
       lineupsHtml = props.map(p => `
         <div class="stat-row">
-          <span>${p.player || p.name || 'Jugador'}</span>
-          <b>${p.prediction || p.market || p.pick || p.prop || ''}</b>
+          <span>${p.player || p.name || 'Player'}</span>
+          <b>${translatePickValue(p.prediction || p.market || p.pick || p.prop || '')}</b>
         </div>
       `).join('');
     } else if (lineupsArray.length) {
       lineupsHtml = lineupsArray.map(p => `
         <div class="stat-row">
-          <span>${p.player || p.name || 'Jugador'}</span>
-          <b>${p.position || p.pos || p.team || 'Titular'}</b>
+          <span>${p.player || p.name || 'Player'}</span>
+          <b>${p.position || p.pos || p.team || 'Starter'}</b>
         </div>
       `).join('');
     } else if (lineupsObject) {
@@ -477,20 +506,20 @@ async function analyze(btn, matchId, leagueKey) {
       lineupsHtml = `
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
           <div>
-            <div class="prop-title">Local</div>
+            <div class="prop-title">Home</div>
             ${homePlayers.map(p => `
               <div class="stat-row">
-                <span>${p.player || p.name || 'Jugador'}</span>
+                <span>${p.player || p.name || 'Player'}</span>
                 <b>${p.position || p.pos || ''}</b>
               </div>
             `).join('')}
           </div>
 
           <div>
-            <div class="prop-title">Visitante</div>
+            <div class="prop-title">Away</div>
             ${awayPlayers.map(p => `
               <div class="stat-row">
-                <span>${p.player || p.name || 'Jugador'}</span>
+                <span>${p.player || p.name || 'Player'}</span>
                 <b>${p.position || p.pos || ''}</b>
               </div>
             `).join('')}
@@ -498,7 +527,7 @@ async function analyze(btn, matchId, leagueKey) {
         </div>
       `;
     } else {
-      lineupsHtml = `<div style="font-size:10px; color:var(--muted)">Datos de alineación no disponibles</div>`;
+      lineupsHtml = `<div style="font-size:10px; color:var(--muted)">Lineup data not available</div>`;
     }
 
     const lineupBox = document.getElementById(`lineup-${matchId}`);
@@ -507,21 +536,21 @@ async function analyze(btn, matchId, leagueKey) {
     }
 
     resDiv.innerHTML = `
-      <div class="stat-row"><span>🎯 PICK:</span><b>${a.pick || 'N/A'}</b></div>
-      <div class="stat-row"><span>Probabilidad:</span><b style="color:var(--green)">${pct(a.probability ?? a.pickProbability ?? a.winProbability)}</b></div>
-      <div class="stat-row"><span>Confianza:</span><b>${(a.confidence || 'MEDIA').toUpperCase()}</b></div>
+      <div class="stat-row"><span>🎯 PICK:</span><b>${translatePickValue(a.pick || 'N/A')}</b></div>
+      <div class="stat-row"><span>Probability:</span><b style="color:var(--green)">${pct(a.probability ?? a.pickProbability ?? a.winProbability)}</b></div>
+      <div class="stat-row"><span>Confidence:</span><b>${normalizeConfidence(a.confidence)}</b></div>
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)"><span>1X2 %:</span><b>${pct(homePct)} | ${pct(drawPct)} | ${pct(awayPct)}</b></div>
-      <div class="stat-row"><span>Goles +2.5:</span><b>${over25}</b></div>
-      <div class="stat-row"><span>Ambos anotan:</span><b>${btts}</b></div>
-      <div class="prop-title">Player Props / Alineación</div>
+      <div class="stat-row"><span>Goals Over 2.5:</span><b>${translatePickValue(over25)}</b></div>
+      <div class="stat-row"><span>Both Teams To Score:</span><b>${translatePickValue(btts)}</b></div>
+      <div class="prop-title">Player Props / Lineups</div>
       ${lineupsHtml}
     `;
 
-    btn.innerText = 'RE-ANALIZAR';
+    btn.innerText = 'RE-ANALYZE';
     btn.disabled = false;
 
   } catch(e) {
-    resDiv.innerHTML = '<div style="color:red; font-size:10px;">Error de análisis</div>';
+    resDiv.innerHTML = '<div style="color:red; font-size:10px;">Analysis error</div>';
     btn.disabled = false;
   }
 }
@@ -534,7 +563,6 @@ async function analyzeAll() {
   }
 }
 
-// Inicialización
 document.getElementById('dateSelect').value = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Chicago'}).format(new Date());
 initTicker();
 loadGames();
