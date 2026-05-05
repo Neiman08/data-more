@@ -1,8 +1,10 @@
+MLB INGLES
+
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <script>
-    // BLOQUE DE SEGURIDAD: Validación de sesión antes de cargar el DOM
+    // SECURITY BLOCK: Session validation before loading DOM
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user) {
       window.location.href = 'login.html';
@@ -16,13 +18,13 @@
   <link rel="stylesheet" href="styles.css">
 
   <style>
-    /* --- SISTEMA DE DISEÑO UNIFICADO (De index.html) --- */
+    /* --- UNIFIED DESIGN SYSTEM --- */
     :root {
-      --green: #6bff19; /* Color principal de acento */
+      --green: #6bff19; 
       --border: rgba(255, 255, 255, 0.08);
       --text: #ffffff;
       --muted: #888d93;
-      --bg-panel: rgba(20, 25, 30, 0.6); /* Fondo de tarjetas con blur */
+      --bg-panel: rgba(20, 25, 30, 0.6);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,7 +43,7 @@
       padding-bottom: 40px;
     }
 
-    /* --- NAVEGACIÓN PRINCIPAL (De index.html) --- */
+    /* --- MAIN NAVIGATION --- */
     header {
       height: 70px;
       padding: 0 50px;
@@ -52,7 +54,7 @@
       background: rgba(0,0,0,0.5);
       backdrop-filter: blur(5px);
       position: sticky;
-      top: 40px; /* Debajo del ticker */
+      top: 40px; 
       z-index: 1000;
     }
 
@@ -68,7 +70,7 @@
     .btn-reg { background: var(--green); padding: 8px 18px; border-radius: 6px; color: #000; text-decoration: none; font-size: 12px; font-weight: 800; }
     .btn-logout { background: #ef4444; color: white; border: none; border-radius: 6px; padding: 8px 18px; font-size: 12px; font-weight: 800; cursor: pointer; }
 
-    /* --- TICKER DE RESULTADOS (Adaptado) --- */
+    /* --- SCORE TICKER --- */
     .espn-ticker-container {
         width: 100%;
         background: #000;
@@ -99,7 +101,7 @@
     }
     .ticker-item img { width: 16px; height: 16px; object-fit: contain; margin: 0 6px; }
     .sport-tag { font-size: 8px; padding: 2px 5px; border-radius: 4px; margin-right: 8px; font-weight: 900; text-transform: uppercase; }
-    .tag-mlb { background: #2563eb; color: white; } /* Mantenemos azul para MLB */
+    .tag-mlb { background: #2563eb; color: white; } 
     .tag-soccer { background: var(--green); color: #000; }
     .tag-nba { background: #f97316; color: white; }
     .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
@@ -110,7 +112,7 @@
         100% { transform: translateX(-100%); }
     }
 
-    /* --- CONTENEDOR PRINCIPAL --- */
+    /* --- MAIN CONTAINER --- */
     .container {
       padding: 30px 50px;
     }
@@ -125,7 +127,7 @@
     }
     h1.page-title span { color: var(--green); }
 
-    /* --- NAVEGACIÓN DE DEPORTES (Unificada) --- */
+    /* --- SPORTS NAVIGATION --- */
     .nav-sports {
       display: flex;
       gap: 12px;
@@ -149,7 +151,7 @@
     .nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
     .nav-btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: 800; }
 
-    /* --- CONTROLES (Unificados) --- */
+    /* --- CONTROLS --- */
     .topbar {
       display: flex;
       gap: 15px;
@@ -183,7 +185,7 @@
       color: #fff;
     }
 
-    /* --- GRID DE JUEGOS Y TARJETAS (Actualizado a 4 columnas) --- */
+    /* --- GAME GRID --- */
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -201,7 +203,7 @@
       backdrop-filter: blur(10px);
     }
 
-    /* --- ESTILOS INTERNOS DE TARJETA MLB (Unificados) --- */
+    /* --- MLB CARD STYLES --- */
     .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .team-box { text-align: center; flex: 1; }
     .team-logo { width: 45px; height: 45px; object-fit: contain; margin-bottom: 8px; }
@@ -232,7 +234,7 @@
     .order-num { color: var(--green); font-weight: bold; margin-right: 3px; }
     .pos-tag { color: var(--muted); font-size: 9px;}
 
-    /* Botón Analizar Grande (Estilo index) */
+    /* Analyze Button */
     .analyze-btn {
       width: 100%;
       background: var(--green);
@@ -249,7 +251,7 @@
     }
     .analyze-btn:hover { opacity: 0.8; }
 
-    /* Resultados del análisis */
+    /* Prediction Results */
     .prediction-box { padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid; }
     .border-baja { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
     .border-media { border-color: #facc15; background: rgba(250, 204, 21, 0.05); }
@@ -265,7 +267,7 @@
     .p-name { font-size: 12px; font-weight: 700; color: #fff; }
     .p-stats { font-size: 10px; color: var(--muted); }
 
-    /* Bloqueo PRO */
+    /* PRO Lock */
     .pro-lock-panel { padding: 20px; border: 1px solid #facc15; border-radius: 12px; background: rgba(250,204,21,0.03); text-align: center; margin-top: 10px; }
     .lock-title { font-size: 15px; font-weight: 800; color: #facc15; text-transform: uppercase;}
     .btn-upgrade { background: var(--green); color: #000; width: 100%; font-weight: 800; padding: 12px; border-radius: 8px; cursor: pointer; border: none; margin-top: 10px; font-size: 12px;}
@@ -280,22 +282,21 @@
 <main class="page">
   <div class="espn-ticker-container">
     <div class="ticker-wrapper" id="tickerWrapper">
-        <span class="ticker-item">Sincronizando marcadores en vivo...</span>
+        <span class="ticker-item">Syncing live scores...</span>
     </div>
   </div>
 
   <header>
     <div class="logo">DATA-<span>MORE</span></div>
     <nav>
-      <a href="index.html">Inicio</a>
+      <a href="index.html">Home</a>
       <a class="active" href="picks.html">Picks</a>
-      <a href="precios.html">Precios</a>
-      <a href="resultados.html">Resultados</a>
-      <a href="estadisticas.html">Estadísticas</a>
+      <a href="precios.html">Pricing</a>
+      <a href="resultados.html">Results</a>
+      <a href="estadisticas.html">Stats</a>
       <a href="faq.html">FAQ</a>
     </nav>
-    <div class="header-actions" id="headerActions">
-      </div>
+    <div class="header-actions" id="headerActions"></div>
   </header>
 
   <div class="container">
@@ -303,26 +304,24 @@
 
     <div class="nav-sports">
         <a href="mlb.html"><button type="button" class="nav-btn active">⚾ MLB</button></a>
-        <a href="soccer.html"><button type="button" class="nav-btn">⚽ Fútbol</button></a>
+        <a href="soccer.html"><button type="button" class="nav-btn">⚽ Soccer</button></a>
         <a href="nba.html"><button type="button" class="nav-btn">🏀 NBA</button></a>
-        <a href="horse.html"><button type="button" class="nav-btn">🏇 Hipismo</button></a>
+        <a href="horse.html"><button type="button" class="nav-btn">🏇 Horse Racing</button></a>
     </div>
 
     <div class="topbar">
       <input type="date" id="dateInput" />
-      <button class="btn-action" onclick="loadGames()">Cargar Pizarra</button>
-      <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ Analizar Todo</button>
+      <button class="btn-action" onclick="loadGames()">Load Board</button>
+      <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ Analyze All</button>
     </div>
 
-    <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--muted);">Listo...</div>
+    <div id="status" style="margin-bottom: 15px; font-size: 12px; color: var(--muted);">Ready...</div>
     
-    <div id="gamesGrid" class="grid">
-        </div>
+    <div id="gamesGrid" class="grid"></div>
   </div>
 </main>
 
   <script>
-    // --- LÓGICA DE JAVASCRIPT ---
     const dateInput = document.getElementById("dateInput");
     const gamesGrid = document.getElementById("gamesGrid");
     const status = document.getElementById("status");
@@ -339,7 +338,6 @@
 
     dateInput.value = getChicagoDate();
 
-    // Ticker Logic
     async function initTicker() {
         const ticker = document.getElementById('tickerWrapper');
         async function fetchScores() {
@@ -376,7 +374,7 @@
     }
 
     function renderLast5Boxes(str) {
-      if (!str || str === 'Sin data' || str === '---') return '';
+      if (!str || str === 'No data' || str === '---') return '';
       return `
         <div class="last5-box">
           ${str.split(' ').map(r => {
@@ -390,12 +388,12 @@
 
     async function loadGames() {
       const date = dateInput.value;
-      status.innerHTML = `<div class="loading">Actualizando pizarra...</div>`;
+      status.innerHTML = `<div class="loading">Updating board...</div>`;
       gamesGrid.innerHTML = "";
       try {
         const res = await fetch(`/api/baseball/games?date=${date}`);
         const data = await res.json();
-        if (!data.ok || !data.games.length) return status.textContent = "No hay juegos para esta fecha.";
+        if (!data.ok || !data.games.length) return status.textContent = "No games scheduled for this date.";
 
         for (const game of data.games) {
           const card = document.createElement("div");
@@ -406,7 +404,7 @@
 
           const isLive = game.status === 'In Progress' || game.status === 'Live';
           const liveTagHtml = isLive 
-            ? `<div class="live-tag status-live">● EN VIVO</div>` 
+            ? `<div class="live-tag status-live">● LIVE</div>` 
             : `<div class="live-tag status-other">${game.status}</div>`;
 
           const basesHtml = `
@@ -446,17 +444,17 @@
             </div>
             ${renderLineups(lData)}
             <div id="results-${game.gamePk}">
-              <button class="analyze-btn" onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}', '${game.status}')">ANALIZAR CON IA</button>
+              <button class="analyze-btn" onclick="analyzeGame('${game.gamePk}', '${game.awayAbbrev}', '${game.homeAbbrev}', '${game.status}')">ANALYZE WITH IA</button>
             </div>`;
           gamesGrid.appendChild(card);
         }
-        status.textContent = `${data.games.length} juegos cargados.`;
-      } catch (e) { status.textContent = "Error cargando la pizarra."; console.error(e); }
+        status.textContent = `${data.games.length} games loaded.`;
+      } catch (e) { status.textContent = "Error loading the board."; console.error(e); }
     }
 
     async function analyzeGame(gamePk, awayAbbrev, homeAbbrev, gameStatus) {
       const container = document.getElementById(`results-${gamePk}`);
-      container.innerHTML = `<div class="loading">Consultando modelos de IA...</div>`;
+      container.innerHTML = `<div class="loading">Consulting AI models...</div>`;
       try {
         const [anaRes, propRes] = await Promise.all([
           fetch(`/api/analyze/${gamePk}?date=${dateInput.value}`),
@@ -482,7 +480,7 @@
           fetch('/api/picks/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(picksToSave)}).catch(()=>{});
         }
 
-        if(!anaData.ok) { container.innerHTML = '<div style="font-size:11px; color:red; text-align:center;">Análisis no disponible</div>'; return;}
+        if(!anaData.ok) { container.innerHTML = '<div style="font-size:11px; color:red; text-align:center;">Analysis unavailable</div>'; return;}
 
         const winPct = a.pick === a.away.team ? a.away.modelWinPct : a.home.modelWinPct;
         const conf = String(a.confidence || "").toLowerCase();
@@ -491,40 +489,40 @@
         let html = `
           <div class="prediction-box ${colorClass}">
             <div class="section-header">
-              <span style="color:var(--text)">🔥 Ganador (Moneyline)</span>
+              <span style="color:var(--text)">🔥 Winner (Moneyline)</span>
               <span class="promo-tag" style="background:rgba(255,255,255,0.1); color:var(--text); animation:none;">${a.confidence.toUpperCase()}</span>
             </div>
             <span class="pick-val">${a.pick}</span>
-            <div class="data-mono">Probabilidad Modelo: ${Number(winPct).toFixed(2)}%</div>
+            <div class="data-mono">Model Probability: ${Number(winPct).toFixed(2)}%</div>
           </div>`;
 
         if (!isPro) {
             html += `
               <div class="pro-lock-panel">
-                <div class="lock-title">🔒 Datos PRO Bloqueados</div>
-                <p style="font-size:11px; color:var(--muted); margin: 5px 0 10px 0;">Suscríbete para ver Run Line, Totales y Player Props.</p>
-                <button onclick="window.location.href='/precios.html'" class="btn-upgrade">DESBLOQUEAR AHORA</button>
+                <div class="lock-title">🔒 PRO Data Locked</div>
+                <p style="font-size:11px; color:var(--muted); margin: 5px 0 10px 0;">Subscribe to view Run Line, Totals, and Player Props.</p>
+                <button onclick="window.location.href='/precios.html'" class="btn-upgrade">UNLOCK NOW</button>
               </div>`;
             container.innerHTML = html; return;
         }
 
         html += `
           <div class="section">
-            <div class="section-header"><span style="color:#2563eb">📊 Hándicap (Run Line)</span></div>
+            <div class="section-header"><span style="color:#2563eb">📊 Handicap (Run Line)</span></div>
             <span class="pick-val">${a.runLine?.pick || 'N/A'}</span>
-            <div class="data-mono">Prob. cubrir: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div>
+            <div class="data-mono">Cover Prob: ${Number(a.runLine?.coverProb || 0).toFixed(2)}%</div>
           </div>
           <div class="section">
-            <div class="section-header"><span style="color:var(--green)">📈 Totales de Equipo</span></div>
+            <div class="section-header"><span style="color:var(--green)">📈 Team Totals</span></div>
             <div class="player-line" style="font-size:11px;"><span>${awayAbbrev}</span> <span style="font-weight:700; color:#fff;">${a.teamTotals?.away?.pick || 'TBD'}</span></div>
             <div class="player-line" style="font-size:11px;"><span>${homeAbbrev}</span> <span style="font-weight:700; color:#fff;">${a.teamTotals?.home?.pick || 'TBD'}</span></div>
           </div>
           <div class="section" style="border:none">
-            <div class="section-header"><span style="color:#facc15">💎 Player Props Destacados</span></div>`;
+            <div class="section-header"><span style="color:#facc15">💎 Top Player Props</span></div>`;
 
         if (propData.ok) {
           if(propData.topHits && propData.topHits.length > 0) {
-            html += `<div style="font-size:10px; color:var(--green); font-weight:800; margin: 8px 0 5px 0; text-transform:uppercase;">Mejores Prob. Hit</div>`;
+            html += `<div style="font-size:10px; color:var(--green); font-weight:800; margin: 8px 0 5px 0; text-transform:uppercase;">Best Hit Probabilities</div>`;
             propData.topHits.forEach(p => {
               const imgSrc = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId}/headshot/67/current`;
               html += `
@@ -539,7 +537,7 @@
           }
 
           if(propData.topHR && propData.topHR.length > 0) {
-            html += `<div style="font-size:10px; color:#facc15; font-weight:800; margin: 12px 0 5px 0; text-transform:uppercase;">Mejores Prob. Home Run</div>`;
+            html += `<div style="font-size:10px; color:#facc15; font-weight:800; margin: 12px 0 5px 0; text-transform:uppercase;">Best Home Run Probabilities</div>`;
             propData.topHR.forEach(p => {
               const imgSrc = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId}/headshot/67/current`;
               html += `
@@ -553,24 +551,24 @@
             });
           }
           if((!propData.topHits || propData.topHits.length===0) && (!propData.topHR || propData.topHR.length===0)) {
-              html += `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px;">Props no disponibles para este juego</div>`;
+              html += `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px;">Props not available for this game</div>`;
           }
         } else {
-             html += `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px;">Error cargando props</div>`;
+             html += `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px;">Error loading props</div>`;
         }
         html += `</div>`;
         container.innerHTML = html;
-      } catch (e) { container.innerHTML = '<div style="font-size:11px; color:red; text-align:center;">Error de conexión</div>'; console.error(e); }
+      } catch (e) { container.innerHTML = '<div style="font-size:11px; color:red; text-align:center;">Connection error</div>'; console.error(e); }
     }
 
     async function analyzeAll() {
       const btns = document.querySelectorAll('.analyze-btn');
-      status.textContent = `Analizando ${btns.length} juegos secuencialmente...`;
+      status.textContent = `Analyzing ${btns.length} games sequentially...`;
       for (const b of btns) { 
           b.click(); 
           await new Promise(r => setTimeout(r, 1500)); 
       }
-      status.textContent = "Análisis masivo completado.";
+      status.textContent = "Bulk analysis completed.";
     }
 
     async function updateRealStats() {
@@ -617,7 +615,7 @@
 
     function renderLineups(data) {
       if (!data.ok || !data.awayLineup || data.awayLineup.length === 0) 
-        return '<div style="font-size:9px; text-align:center; padding:10px; color:var(--muted); background:rgba(0,0,0,0.1); border-radius:8px; margin-bottom:15px;">Lineups confirmados pendientes...</div>';
+        return '<div style="font-size:9px; text-align:center; padding:10px; color:var(--muted); background:rgba(0,0,0,0.1); border-radius:8px; margin-bottom:15px;">Pending confirmed lineups...</div>';
       
       const renderSide = (l) => l.slice(0, 9).map(p => `
         <div class="player-line">
@@ -639,8 +637,8 @@
       const container = document.getElementById('headerActions');
       if (!user) {
         container.innerHTML = `
-          <a href="login.html" class="btn-login">INICIAR SESIÓN</a>
-          <a href="registro.html" class="btn-reg">REGÍSTRATE</a>
+          <a href="login.html" class="btn-login">LOG IN</a>
+          <a href="registro.html" class="btn-reg">SIGN UP</a>
         `;
       } else {
         const userName = user.nombre || user.email.split('@')[0];
@@ -650,7 +648,7 @@
             
         container.innerHTML = `
           <span style="font-size:12px; color:#fff; font-weight:700;">👤 ${userName}${planTag}</span>
-          <button class="btn-logout" onclick="logout()">CERRAR SESIÓN</button>
+          <button class="btn-logout" onclick="logout()">LOG OUT</button>
         `;
       }
     }
