@@ -43,10 +43,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-// API protection
+// API protection - ACTUALIZADO A 180
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 40,
+  max: 180,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
