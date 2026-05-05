@@ -4,6 +4,7 @@
     window.location.href = 'mlb.html';
   }
 </script>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,6 +13,7 @@
   <title>Data More | Predicciones Deportivas</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
   <style>
     :root {
       --green: #6bff19;
@@ -62,7 +64,7 @@
       gap: 40px;
       align-items: start;
 
-      background-image: 
+      background-image:
         linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.65)),
         url("logos/IMG_0579.JPG");
 
@@ -74,41 +76,82 @@
       margin: 20px 0;
     }
 
-    .hero-content .tagline { color: var(--green); font-size: 11px; font-weight: 800; margin-bottom: 15px; letter-spacing: 0.5px; }
+    .hero-content .tagline {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 15px;
+      letter-spacing: 0.5px;
+    }
 
-    h1 {
-      font-family: 'Anton';
-      font-size: clamp(38px, 5vw, 62px); 
-      line-height: 0.9;
+    /* ✅ HERO TITLE CORREGIDO */
+    .hero-title {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(38px, 5vw, 62px);
+      line-height: 0.88;
       text-transform: uppercase;
       margin-bottom: 20px;
       letter-spacing: -1px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
     }
-    h1 span { color: var(--green); }
 
-    .subtitle { color: var(--muted); font-size: 15px; max-width: 450px; margin-bottom: 35px; line-height: 1.5; }
+    .hero-line {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      white-space: nowrap;
+    }
+
+    .green-text {
+      color: var(--green);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 450px;
+      margin-bottom: 35px;
+      line-height: 1.5;
+    }
 
     .hero-btns { display: flex; gap: 15px; margin-bottom: 20px; }
     .btn-main { background: var(--green); color: #000; padding: 14px 28px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 14px; }
     .btn-sec { border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 14px 28px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 14px; }
 
-    .widget { 
-        background: rgba(20, 25, 30, 0.4); 
-        border: 1px solid var(--border); 
-        border-radius: 16px; 
-        padding: 24px; 
-        margin-bottom: 15px;
-        backdrop-filter: blur(10px);
+    .widget {
+      background: rgba(20, 25, 30, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 15px;
+      backdrop-filter: blur(10px);
     }
-    
+
     .win-rate-flex { display: flex; justify-content: space-between; align-items: center; }
-    .circle-ui { 
-        width: 70px; height: 70px; border: 4px solid #14181c; 
-        border-top-color: var(--green); border-radius: 50%; 
-        display: flex; align-items: center; justify-content: center; 
-        font-weight: 900; font-size: 16px; 
+
+    .circle-ui {
+      width: 70px;
+      height: 70px;
+      border: 4px solid #14181c;
+      border-top-color: var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 16px;
     }
-    .pick-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; font-weight: 600; }
+
+    .pick-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
+      font-weight: 600;
+    }
 
     .stats-row {
       display: grid;
@@ -117,10 +160,27 @@
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    .stat-box { display: flex; align-items: center; gap: 15px; justify-content: center; }
-    .icon-circle { width: 45px; height: 45px; border: 1px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--green); }
 
-    .sports-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 40px 50px; }
+    .stat-box { display: flex; align-items: center; gap: 15px; justify-content: center; }
+
+    .icon-circle {
+      width: 45px;
+      height: 45px;
+      border: 1px solid var(--green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+    }
+
+    .sports-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 40px 50px;
+    }
+
     .card {
       height: 220px;
       background: #0a0d10;
@@ -135,14 +195,27 @@
       background-size: cover;
       background-position: center;
     }
+
     .card::before {
       content: '';
       position: absolute;
       inset: 0;
       background: linear-gradient(0deg, #000 20%, transparent 80%);
     }
+
     .card-content { z-index: 2; }
-    .card-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--green); color: var(--green); padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+
+    .card-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 10px;
+    }
 
     .banner-cta {
       margin: 40px 50px;
@@ -156,16 +229,82 @@
     }
 
     @media (max-width: 1024px) {
-      .hero, .stats-row, .sports-grid { grid-template-columns: 1fr; gap: 20px; }
-      .banner-cta { flex-direction: column; text-align: center; gap: 20px; }
+      .hero, .stats-row, .sports-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .banner-cta {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        height: auto;
+        padding: 16px 20px;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      nav {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+
+      .header-actions {
+        margin-left: auto;
+      }
+
+      .hero {
+        padding: 45px 24px;
+        margin: 12px 0;
+        grid-template-columns: 1fr;
+        background-position: 38% center;
+      }
+
+      .hero-title {
+        font-size: clamp(42px, 13vw, 58px);
+        line-height: 0.9;
+      }
+
+      .hero-line {
+        gap: 9px;
+      }
+
+      .hero-btns {
+        flex-direction: column;
+      }
+
+      .btn-main,
+      .btn-sec {
+        width: 100%;
+        text-align: center;
+      }
+
+      .stats-row,
+      .sports-grid {
+        padding: 30px 20px;
+      }
+
+      .banner-cta {
+        margin: 30px 20px;
+        padding: 28px;
+      }
     }
   </style>
 </head>
+
 <body>
 
 <main class="page">
   <header>
     <div class="logo">DATA-<span>MORE</span></div>
+
     <nav>
       <a class="active" href="index.html">Inicio</a>
       <a href="picks.html">Picks</a>
@@ -174,6 +313,7 @@
       <a href="estadisticas.html">Estadísticas</a>
       <a href="faq.html">FAQ</a>
     </nav>
+
     <div class="header-actions">
       <a href="login.html" class="btn-login" onclick="window.location.href='login.html'; return false;">
         INICIAR SESIÓN
@@ -185,12 +325,22 @@
   <section class="hero">
     <div class="hero-content">
       <p class="tagline">INTELIGENCIA. ESTADÍSTICAS. RESULTADOS.</p>
-      <h1>GANA CON <span>DATA.</span><br>NO con <span>SUERTE.</span></h1>
-      <p class="subtitle">Predicciones deportivas con inteligencia artificial en Hipismo, MLB, NBA y Fútbol. Más análisis. Mejores resultados.</p>
+
+      <!-- ✅ TÍTULO CORREGIDO -->
+      <h1 class="hero-title">
+        <span class="hero-line">GANA CON <span class="green-text">DATA.</span></span>
+        <span class="hero-line">NO CON <span class="green-text">SUERTE.</span></span>
+      </h1>
+
+      <p class="subtitle">
+        Predicciones deportivas con inteligencia artificial en Hipismo, MLB, NBA y Fútbol. Más análisis. Mejores resultados.
+      </p>
+
       <div class="hero-btns">
         <a href="registro.html" class="btn-main">REGÍSTRATE GRATIS →</a>
         <a href="picks.html" class="btn-sec">VER PICKS DE HOY 📊</a>
       </div>
+
       <p style="font-size: 12px; color: var(--muted);">⭐⭐⭐⭐⭐ +2,500 miembros ya están ganando</p>
     </div>
 
@@ -201,6 +351,7 @@
             <p style="font-size: 10px; color: var(--muted); margin-bottom: 8px;">WIN RATE</p>
             <div class="circle-ui">78%</div>
           </div>
+
           <div style="text-align: right;">
             <p style="font-size: 10px; color: var(--muted);">YIELD</p>
             <p style="color: var(--green); font-weight: 900; font-size: 24px;">+24.6%</p>
@@ -221,15 +372,26 @@
   <section class="stats-row">
     <div class="stat-box">
       <div class="icon-circle">🏆</div>
-      <div><p style="font-weight: 900; font-size: 20px;">+78%</p><p style="font-size: 10px; color: var(--muted);">EFECTIVIDAD EN HIPISMO/MLB</p></div>
+      <div>
+        <p style="font-weight: 900; font-size: 20px;">+78%</p>
+        <p style="font-size: 10px; color: var(--muted);">EFECTIVIDAD EN HIPISMO/MLB</p>
+      </div>
     </div>
+
     <div class="stat-box">
       <div class="icon-circle">📊</div>
-      <div><p style="font-weight: 900; font-size: 20px;">+65%</p><p style="font-size: 10px; color: var(--muted);">EN PLAYER PROPS</p></div>
+      <div>
+        <p style="font-weight: 900; font-size: 20px;">+65%</p>
+        <p style="font-size: 10px; color: var(--muted);">EN PLAYER PROPS</p>
+      </div>
     </div>
+
     <div class="stat-box">
       <div class="icon-circle">⚡</div>
-      <div><p style="font-weight: 900; font-size: 20px;">PICKS</p><p style="font-size: 10px; color: var(--muted);">EN TIEMPO REAL</p></div>
+      <div>
+        <p style="font-weight: 900; font-size: 20px;">PICKS</p>
+        <p style="font-size: 10px; color: var(--muted);">EN TIEMPO REAL</p>
+      </div>
     </div>
   </section>
 
@@ -261,6 +423,7 @@
       <h2 style="font-size: 22px; font-weight: 900;">EMPIEZA HOY MISMO A GANAR</h2>
       <p style="color: var(--muted); font-size: 14px;">Únete a la comunidad que convierte la data en dinero.</p>
     </div>
+
     <a href="registro.html" class="btn-reg" style="padding: 16px 32px; font-size: 14px;">REGÍSTRATE AHORA →</a>
   </section>
 </main>
