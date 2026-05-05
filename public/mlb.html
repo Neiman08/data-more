@@ -625,49 +625,85 @@
         </div>
 
         <div class="section" style="border:none">
-          <div class="section-header"><span style="color:#facc15">💎 Top Player Props</span></div>
       `;
 
       if (propData.ok) {
         const allProps = propData.allProps || [];
 
-        const awayPlayers = allProps.filter(p =>
-          String(p.teamAbbrev || p.team || '').toUpperCase() === String(awayAbbrev).toUpperCase()
-        );
+        // 🔥 SHARP MODE CALCULATIONS
+        const sortedHits = [...allProps]
+          .sort((a, b) => Number(b.hitChance || 0) - Number(a.hitChance || 0));
 
-        const homePlayers = allProps.filter(p =>
-          String(p.teamAbbrev || p.team || '').toUpperCase() === String(homeAbbrev).toUpperCase()
-        );
+        const sortedHR = [...allProps]
+          .sort((a, b) => Number(b.hrChance || 0) - Number(a.hrChance || 0));
 
-        const awayTopHits = [...awayPlayers]
+        // 🎯 LOCK = mayor probabilidad de hit
+        const lockPlayer = sortedHits[0];
+
+        // 💣 HR PICK = mayor probabilidad HR
+        const hrPlayer = sortedHR[0];
+
+        // 💎 VALUE = buen % pero no top 1 (sorpresa)
+        const valuePlayer = sortedHits.find(p => Number(p.hitChance) > 55 && Number(p.hitChance) < 70);
+
+        html += `
+        <div style="margin-bottom:15px;">
+
+          <div style="font-size:10px;color:#6bff19;font-weight:900;margin-bottom:5px;">
+            🔒 LOCK OF THE GAME
+          </div>
+          ${lockPlayer ? `
+            <div class="player-row" style="border:1px solid #6bff19;">
+              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${lockPlayer.personId}/headshot/67/current" class="player-img">
+              <div>
+                <div class="p-name">${lockPlayer.name}</div>
+                <div class="p-stats">Hit Prob: ${lockPlayer.hitChance}%</div>
+              </div>
+            </div>
+          ` : ''}
+
+          <div style="font-size:10px;color:#facc15;font-weight:900;margin:10px 0 5px;">
+            💣 HR PICK OF THE GAME
+          </div>
+          ${hrPlayer ? `
+            <div class="player-row" style="border:1px solid #facc15;">
+              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${hrPlayer.personId}/headshot/67/current" class="player-img">
+              <div>
+                <div class="p-name">${hrPlayer.name}</div>
+                <div class="p-stats">HR Prob: ${hrPlayer.hrChance}%</div>
+              </div>
+            </div>
+          ` : ''}
+
+          <div style="font-size:10px;color:#38bdf8;font-weight:900;margin:10px 0 5px;">
+            💎 VALUE PLAYER
+          </div>
+          ${valuePlayer ? `
+            <div class="player-row" style="border:1px solid #38bdf8;">
+              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${valuePlayer.personId}/headshot/67/current" class="player-img">
+              <div>
+                <div class="p-name">${valuePlayer.name}</div>
+                <div class="p-stats">Hit Prob: ${valuePlayer.hitChance}%</div>
+              </div>
+            </div>
+          ` : ''}
+
+        </div>
+        `;
+
+        const topHits = [...allProps]
           .sort((a, b) => Number(b.hitChance || 0) - Number(a.hitChance || 0))
           .slice(0, 3);
 
-        const homeTopHits = [...homePlayers]
-          .sort((a, b) => Number(b.hitChance || 0) - Number(a.hitChance || 0))
-          .slice(0, 3);
-
-        const awayTopHR = [...awayPlayers]
-          .sort((a, b) => Number(b.hrChance || 0) - Number(a.hrChance || 0))
-          .slice(0, 3);
-
-        const homeTopHR = [...homePlayers]
+        const topHR = [...allProps]
           .sort((a, b) => Number(b.hrChance || 0) - Number(a.hrChance || 0))
           .slice(0, 3);
 
         html += `
-          <div class="props-team-grid">
-            <div>
-              <div class="props-team-title">${awayAbbrev}</div>
-              ${renderPlayerList('Top 3 Hit Probability', awayTopHits, 'hit')}
-              ${renderPlayerList('Top 3 HR Potential', awayTopHR, 'hr')}
-            </div>
-
-            <div>
-              <div class="props-team-title">${homeAbbrev}</div>
-              ${renderPlayerList('Top 3 Hit Probability', homeTopHits, 'hit')}
-              ${renderPlayerList('Top 3 HR Potential', homeTopHR, 'hr')}
-            </div>
+          <div class="section-header" style="margin-top:20px;"><span style="color:#facc15">💎 Top Player Props</span></div>
+          <div>
+            ${renderPlayerList('🔥 Top 3 Hit Probability (Game)', topHits, 'hit')}
+            ${renderPlayerList('💣 Top 3 HR Potential (Game)', topHR, 'hr')}
           </div>
         `;
       } else {

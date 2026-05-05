@@ -10,11 +10,9 @@ const LEAGUES = {
   seriea: { id: 135, name: 'Serie A' },
   bundesliga: { id: 78, name: 'Bundesliga' },
   ligue1: { id: 61, name: 'Ligue 1' },
-
   champions: { id: 2, name: 'Champions League' },
   europa: { id: 3, name: 'Europa League' },
   conference: { id: 848, name: 'Conference League' },
-
   brasil: { id: 71, name: 'Brasileirão Serie A' },
   argentina: { id: 128, name: 'Liga Argentina' },
   mls: { id: 253, name: 'MLS' },
@@ -28,8 +26,6 @@ const cache = {
 
 function getHeaders() {
   const key = process.env.API_FOOTBALL_KEY || process.env.FOOTBALL_API_KEY;
-
-  console.log('SOCCER API KEY:', key ? 'CARGADA' : 'NO CARGADA');
 
   return {
     'x-apisports-key': key
@@ -197,7 +193,7 @@ function buildPlayerPropsFromLineups(lineups) {
         name: p.name,
         team: team.teamName,
         pos: p.pos,
-        market: 'Gol / Tiros',
+        market: 'Goal / Shots',
         goalChance,
         shotChance
       });
@@ -229,6 +225,17 @@ async function getLast5TeamMatches(teamId, date) {
   }
 }
 
+function buildPublicSoccerAnalysis(analysis) {
+  return {
+    pick: analysis.pick || null,
+    probability: Number(analysis.probability || analysis.pickProbability || 0).toFixed(2),
+    confidence: analysis.confidence || 'MEDIUM',
+    oneX2: analysis.oneX2 || analysis.probabilities || null,
+    over25: analysis.over25 || analysis.totalPick || null,
+    btts: analysis.btts || analysis.bothTeamsToScore || null
+  };
+}
+
 router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
@@ -240,14 +247,13 @@ router.get('/games', async (req, res) => {
       ok: true,
       selectedDate: date,
       leagueKey,
-      season: getSoccerSeason(date, leagueKey),
       count: games.length,
       games
     });
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error.message,
+      error: 'Unable to load soccer games.',
       games: []
     });
   }
@@ -261,14 +267,13 @@ router.get('/games-global', async (req, res) => {
     res.json({
       ok: true,
       selectedDate: date,
-      season: getSoccerSeason(date),
       count: games.length,
       games
     });
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error.message,
+      error: 'Unable to load global soccer games.',
       games: []
     });
   }
@@ -281,13 +286,13 @@ router.get('/lineups/:fixtureId', async (req, res) => {
     res.json({
       ok: true,
       available: !!lineups,
-      message: lineups ? 'Alineaciones disponibles' : 'Aún no publicadas',
+      message: lineups ? 'Lineups available' : 'Lineups not published yet',
       lineups: lineups || []
     });
   } catch (error) {
     res.json({
       ok: false,
-      error: error.message,
+      error: 'Unable to load lineups.',
       lineups: []
     });
   }
@@ -300,8 +305,8 @@ router.get('/player-props/:fixtureId', async (req, res) => {
     if (!lineups) {
       return res.json({
         ok: true,
-        available: !!lineups,
-        message: lineups ? 'Alineaciones disponibles' : 'Aún no publicadas',
+        available: false,
+        message: 'Lineups not published yet',
         props: []
       });
     }
@@ -315,7 +320,7 @@ router.get('/player-props/:fixtureId', async (req, res) => {
   } catch (error) {
     res.json({
       ok: false,
-      error: error.message,
+      error: 'Unable to load player props.',
       props: []
     });
   }
@@ -332,7 +337,7 @@ router.get('/analyze/:id', async (req, res) => {
     if (!matchRaw) {
       return res.status(404).json({
         ok: false,
-        error: 'Partido no encontrado'
+        error: 'Match not found.'
       });
     }
 
@@ -341,7 +346,7 @@ router.get('/analyze/:id', async (req, res) => {
       getLast5TeamMatches(matchRaw.awayTeamId, date)
     ]);
 
-    const analysis = buildSoccerAnalysis({
+    const privateAnalysis = buildSoccerAnalysis({
       match: {
         matchId: matchRaw.matchId,
         matchup: `${matchRaw.homeTeam} vs ${matchRaw.awayTeam}`,
@@ -358,16 +363,13 @@ router.get('/analyze/:id', async (req, res) => {
 
     res.json({
       ok: true,
-      selectedDate: date,
-      leagueKey: matchRaw.leagueKey || leagueKey,
-      season: getSoccerSeason(date, matchRaw.leagueKey || leagueKey),
-      analysis
+      analysis: buildPublicSoccerAnalysis(privateAnalysis)
     });
 
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: 'Unable to run soccer analysis.'
     });
   }
 });
@@ -380,84 +382,38 @@ router.get('/ticket-global', async (req, res) => {
     res.json({
       ok: true,
       selectedDate: date,
-      season: getSoccerSeason(date),
       gamesAnalyzed: games.length,
       ticket: {
-        ticketType: 'Ticket Global Soccer',
+        ticketType: 'Global Soccer Ticket',
         totalPicks: 0,
         picks: [],
-        seguro: [],
-        medio: [],
-        grande: [],
-        note: 'Conectado a API-Football con ligas principales y temporada correcta.'
+        safe: [],
+        medium: [],
+        aggressive: [],
+        note: 'Connected to major global soccer leagues.'
       }
     });
   } catch (error) {
     res.status(500).json({
       ok: false,
-      error: error.message,
+      error: 'Unable to build global soccer ticket.',
       ticket: {
         ticketType: 'Error',
         totalPicks: 0,
         picks: [],
-        seguro: [],
-        medio: [],
-        grande: []
+        safe: [],
+        medium: [],
+        aggressive: []
       }
     });
   }
 });
 
-router.get('/debug', async (req, res) => {
-  try {
-    const date = req.query.date || getDate(req);
-    const season = getSoccerSeason(date);
-
-    const tests = [
-      `/fixtures?date=${date}`,
-      ...Object.entries(LEAGUES).map(([key, league]) =>
-        `/fixtures?league=${league.id}&season=${getSoccerSeason(date, key)}&date=${date}`
-      )
-    ];
-
-    const results = [];
-
-    for (const url of tests) {
-      const data = await apiFootball(url);
-
-      results.push({
-        url,
-        results: data?.results,
-        errors: data?.errors,
-        count: data?.response?.length || 0,
-        sample: (data?.response || []).slice(0, 5).map(g => ({
-          fixtureId: g.fixture.id,
-          leagueId: g.league.id,
-          league: g.league.name,
-          season: g.league.season,
-          home: g.teams.home.name,
-          away: g.teams.away.name,
-          date: g.fixture.date,
-          status: g.fixture.status.short,
-          score: `${g.goals.home ?? 0}-${g.goals.away ?? 0}`
-        }))
-      });
-    }
-
-    res.json({
-      ok: true,
-      date,
-      season,
-      apiKeyLoaded: !!process.env.FOOTBALL_API_KEY,
-      leagues: LEAGUES,
-      results
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: error.message
-    });
-  }
+router.get('/debug', (req, res) => {
+  return res.status(404).json({
+    ok: false,
+    error: 'Not found'
+  });
 });
 
 export default router;

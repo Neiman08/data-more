@@ -166,7 +166,7 @@ async function getPitcherStats(pitcherId, season) {
       BB: safeNumber(stat.baseOnBalls),
       HR: safeNumber(stat.homeRuns),
       gamesStarted: safeNumber(stat.gamesStarted),
-      record: stat.wins != null && stat.losses != null ? `${stat.wins}-${stat.losses}` : 'Pendiente'
+      record: stat.wins != null && stat.losses != null ? `${stat.wins}-${stat.losses}` : 'Pending'
     };
   } catch (err) {
     console.error('Error getPitcherStats:', err);
@@ -200,7 +200,6 @@ async function getTeamStats(teamId, season) {
       RBI: safeNumber(hitting.rbi),
       BB: safeNumber(hitting.baseOnBalls),
       K: safeNumber(hitting.strikeOuts),
-
       ERA: pitching.era || null,
       WHIP: pitching.whip || null,
       pitchingBB: safeNumber(pitching.baseOnBalls),
@@ -224,7 +223,7 @@ async function getHeadToHead(awayTeamId, homeTeamId, date) {
         homeRuns: 0,
         lastResults: [],
         games: [],
-        note: 'Equipos no disponibles'
+        note: 'Teams unavailable'
       };
     }
 
@@ -247,8 +246,6 @@ async function getHeadToHead(awayTeamId, homeTeamId, date) {
         if (g.status?.abstractGameState !== 'Final') continue;
 
         const actualAwayId = Number(g.teams?.away?.team?.id);
-        const actualHomeId = Number(g.teams?.home?.team?.id);
-
         const actualAwayScore = Number(g.teams?.away?.score ?? 0);
         const actualHomeScore = Number(g.teams?.home?.score ?? 0);
 
@@ -284,7 +281,7 @@ async function getHeadToHead(awayTeamId, homeTeamId, date) {
       avgHomeRuns: games.length ? Number((homeRuns / games.length).toFixed(2)) : 0,
       lastResults: sortedGames.slice(0, 5).map(g => g.winner),
       games: sortedGames.slice(0, 5),
-      note: games.length ? 'Datos reales de enfrentamientos esta temporada' : 'Sin enfrentamientos finalizados esta temporada'
+      note: games.length ? 'Real head-to-head data from this season' : 'No completed head-to-head games this season'
     };
   } catch (err) {
     console.error('Error getHeadToHead:', err);
@@ -296,14 +293,96 @@ async function getHeadToHead(awayTeamId, homeTeamId, date) {
       homeRuns: 0,
       lastResults: [],
       games: [],
-      note: 'No se pudo cargar Head-to-Head'
+      note: 'Unable to load head-to-head data'
     };
   }
 }
 
-/* ============================
-   GAMES
-============================ */
+function buildPublicGameCenter({
+  awayTeam,
+  homeTeam,
+  awayPitcherStats,
+  homePitcherStats,
+  awayTeamStats,
+  homeTeamStats,
+  headToHead
+}) {
+  return {
+    ok: true,
+    pitcherStats: {
+      away: {
+        name: awayTeam?.probablePitcher?.fullName || 'TBD',
+        ERA: awayPitcherStats?.ERA || '--',
+        WHIP: awayPitcherStats?.WHIP || '--',
+        record: awayPitcherStats?.record || '--'
+      },
+      home: {
+        name: homeTeam?.probablePitcher?.fullName || 'TBD',
+        ERA: homePitcherStats?.ERA || '--',
+        WHIP: homePitcherStats?.WHIP || '--',
+        record: homePitcherStats?.record || '--'
+      }
+    },
+    teamStats: {
+      away: {
+        AVG: awayTeamStats?.AVG || '--',
+        OPS: awayTeamStats?.OPS || '--',
+        runs: awayTeamStats?.runs || 0,
+        HR: awayTeamStats?.HR || 0,
+        ERA: awayTeamStats?.ERA || '--',
+        WHIP: awayTeamStats?.WHIP || '--'
+      },
+      home: {
+        AVG: homeTeamStats?.AVG || '--',
+        OPS: homeTeamStats?.OPS || '--',
+        runs: homeTeamStats?.runs || 0,
+        HR: homeTeamStats?.HR || 0,
+        ERA: homeTeamStats?.ERA || '--',
+        WHIP: homeTeamStats?.WHIP || '--'
+      }
+    },
+    headToHead: {
+      totalGames: headToHead.totalGames,
+      awayWins: headToHead.awayWins,
+      homeWins: headToHead.homeWins,
+      awayRuns: headToHead.awayRuns,
+      homeRuns: headToHead.homeRuns,
+      note: headToHead.note
+    },
+    injuries: {
+      away: [],
+      home: []
+    },
+    bullpen: {
+      away: {
+        last3DaysIP: 'Pending',
+        bullpenERA: 'Pending',
+        bullpenWHIP: 'Pending',
+        fatigueLevel: 'Pending'
+      },
+      home: {
+        last3DaysIP: 'Pending',
+        bullpenERA: 'Pending',
+        bullpenWHIP: 'Pending',
+        fatigueLevel: 'Pending'
+      }
+    },
+    weather: {
+      temperature: 'Pending',
+      windSpeed: 'Pending',
+      windDirection: 'Pending',
+      humidity: 'Pending',
+      parkFactor: 'Pending'
+    },
+    odds: {
+      openLine: 'Pending',
+      currentLine: 'Pending',
+      movement: 'Pending',
+      modelEdge: 'Pending',
+      vegasImplied: 'Pending'
+    }
+  };
+}
 
 router.get('/games', async (req, res) => {
   try {
@@ -330,43 +409,31 @@ router.get('/games', async (req, res) => {
         date: game.gameDate ? game.gameDate.split('T')[0] : queryDate,
         time: formatTime(game.gameDate),
         gameTime: formatTime(game.gameDate),
-
         status: game.status?.detailedState || 'Scheduled',
         abstractStatus: game.status?.abstractGameState || '',
-
         awayTeamId,
         homeTeamId,
-
         awayTeamName: awayTeam?.team?.name || '',
         homeTeamName: homeTeam?.team?.name || '',
-
         awayAbbrev: TEAM_ABBR[awayTeam?.team?.name] || TEAM_ID_TO_ABBR[awayTeamId] || '',
         homeAbbrev: TEAM_ABBR[homeTeam?.team?.name] || TEAM_ID_TO_ABBR[homeTeamId] || '',
-
         awayPitcher: awayTeam?.probablePitcher?.fullName || 'TBD',
         homePitcher: homeTeam?.probablePitcher?.fullName || 'TBD',
-
         awayPitcherId: awayTeam?.probablePitcher?.id || null,
         homePitcherId: homeTeam?.probablePitcher?.id || null,
-
         awayScore: awayTeam?.score ?? 0,
         homeScore: homeTeam?.score ?? 0,
-
         awayWins: awayTeam?.leagueRecord?.wins ?? 0,
         awayLosses: awayTeam?.leagueRecord?.losses ?? 0,
         homeWins: homeTeam?.leagueRecord?.wins ?? 0,
         homeLosses: homeTeam?.leagueRecord?.losses ?? 0,
-
         awayLast5,
         homeLast5,
-
         inning: game.linescore?.currentInningOrdinal || '',
         inningState: game.linescore?.inningState || '',
-
         balls: game.linescore?.balls ?? 0,
         strikes: game.linescore?.strikes ?? 0,
         outs: game.linescore?.outs ?? 0,
-
         runnerOn1b: game.linescore?.offense?.first ? true : false,
         runnerOn2b: game.linescore?.offense?.second ? true : false,
         runnerOn3b: game.linescore?.offense?.third ? true : false
@@ -375,13 +442,9 @@ router.get('/games', async (req, res) => {
 
     res.json({ ok: true, date: queryDate, games });
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({ ok: false, error: 'Unable to load MLB games.' });
   }
 });
-
-/* ============================
-   GAME CENTER PRO
-============================ */
 
 router.get('/game-center/:gamePk', async (req, res) => {
   try {
@@ -393,11 +456,10 @@ router.get('/game-center/:gamePk', async (req, res) => {
     const gamesRes = await fetch(gamesUrl);
     const gamesData = await gamesRes.json();
     const rawGames = gamesData.dates?.[0]?.games || [];
-
     const rawGame = rawGames.find(g => String(g.gamePk) === String(gamePk));
 
     if (!rawGame) {
-      return res.json({ ok: false, error: 'Juego no encontrado' });
+      return res.json({ ok: false, error: 'Game not found.' });
     }
 
     const awayTeam = rawGame.teams?.away;
@@ -422,99 +484,21 @@ router.get('/game-center/:gamePk', async (req, res) => {
       getHeadToHead(awayTeamId, homeTeamId, queryDate)
     ]);
 
-    const awayWinPct = 50;
-    const homeWinPct = 50;
-
-    const advancedModel = {
-      projectedRuns: {
-        away: 4.2,
-        home: 5.1,
-        total: 9.3
-      },
-      simulation: {
-        runs: 100000,
-        awayWinPct,
-        homeWinPct,
-        mostCommonScore: "5-4",
-        volatility: "Media"
-      },
-      marketEdge: {
-        modelFavorite: homeWinPct >= awayWinPct ? (TEAM_ID_TO_ABBR[homeTeamId] || 'HOME') : (TEAM_ID_TO_ABBR[awayTeamId] || 'AWAY'),
-        vegasFavorite: "Pendiente",
-        modelPct: Math.max(awayWinPct, homeWinPct),
-        vegasImpliedPct: null,
-        edgePct: null,
-        status: "Pendiente de odds reales"
-      },
-      alerts: [
-        "Juego con ventaja moderada del modelo",
-        "Revisar bullpen antes de apostar",
-        "Confirmar lineup antes del primer pitch"
-      ]
-    };
-
-    res.json({
-      ok: true,
-      pitcherStats: {
-        away: {
-          name: awayTeam?.probablePitcher?.fullName || 'TBD',
-          ...awayPitcherStats
-        },
-        home: {
-          name: homeTeam?.probablePitcher?.fullName || 'TBD',
-          ...homePitcherStats
-        }
-      },
-      teamStats: {
-        away: awayTeamStats,
-        home: homeTeamStats
-      },
-      headToHead,
-      injuries: {
-        away: [],
-        home: [],
-        note: 'Pendiente de conexión con reporte de lesiones'
-      },
-      bullpen: {
-        away: {
-          last3DaysIP: 'Pendiente',
-          bullpenERA: 'Pendiente',
-          bullpenWHIP: 'Pendiente',
-          fatigueLevel: 'Pendiente'
-        },
-        home: {
-          last3DaysIP: 'Pendiente',
-          bullpenERA: 'Pendiente',
-          bullpenWHIP: 'Pendiente',
-          fatigueLevel: 'Pendiente'
-        }
-      },
-      weather: {
-        temperature: 'Pendiente',
-        windSpeed: 'Pendiente',
-        windDirection: 'Pendiente',
-        humidity: 'Pendiente',
-        parkFactor: 'Pendiente'
-      },
-      odds: {
-        openLine: 'Pendiente',
-        currentLine: 'Pendiente',
-        movement: 'Pendiente',
-        modelEdge: 'Pendiente',
-        vegasImplied: 'Pendiente'
-      },
-      advancedModel
-    });
+    res.json(buildPublicGameCenter({
+      awayTeam,
+      homeTeam,
+      awayPitcherStats,
+      homePitcherStats,
+      awayTeamStats,
+      homeTeamStats,
+      headToHead
+    }));
 
   } catch (error) {
     console.error('Error game-center:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({ ok: false, error: 'Unable to load game center.' });
   }
 });
-
-/* ============================
-   LINEUP
-============================ */
 
 router.get('/lineup/:id', async (req, res) => {
   try {
@@ -530,10 +514,6 @@ router.get('/lineup/:id', async (req, res) => {
     res.json({ ok: false, awayLineup: [], homeLineup: [] });
   }
 });
-
-/* ============================
-   PLAYER PROPS
-============================ */
 
 router.get('/player-props/:gamePk', async (req, req_res) => {
   try {
@@ -551,16 +531,13 @@ router.get('/player-props/:gamePk', async (req, req_res) => {
     async function getPlayerStats(player) {
       try {
         const id = player.person.id;
-        
-        // CORRECCIÓN APLICADA AQUÍ
         const teamId =
           player.parentTeamId ||
           player.currentTeam?.id ||
           player.team?.id ||
           null;
 
-        const teamAbbrev =
-          TEAM_ID_TO_ABBR[Number(teamId)] || '';
+        const teamAbbrev = TEAM_ID_TO_ABBR[Number(teamId)] || '';
 
         const statsRes = await fetch(
           `https://statsapi.mlb.com/api/v1/people/${id}/stats?stats=season&group=hitting&season=${season}`
@@ -597,7 +574,7 @@ router.get('/player-props/:gamePk', async (req, req_res) => {
           avg,
           ops,
           slg,
-          rating: hitChance >= 68 ? 'Alta' : hitChance >= 55 ? 'Media' : 'Baja'
+          rating: hitChance >= 68 ? 'High' : hitChance >= 55 ? 'Medium' : 'Low'
         };
       } catch {
         return null;
@@ -614,10 +591,6 @@ router.get('/player-props/:gamePk', async (req, req_res) => {
     req_res.json({ ok: false, allProps: [], topHits: [], topHR: [] });
   }
 });
-
-/* ============================
-   LIVE SCORES
-============================ */
 
 router.get('/live-scores', async (req, res) => {
   try {
@@ -646,7 +619,10 @@ router.get('/live-scores', async (req, res) => {
 });
 
 router.get('/analyze/:gamePk', async (req, res) => {
-  res.json({ ok: true, message: `Análisis para ${req.params.gamePk}`, timestamp: new Date().toISOString() });
+  res.json({
+    ok: false,
+    error: 'Secure MLB analysis engine is not connected in baseball.js. Connect this route to your private scoring engine.'
+  });
 });
 
 export default router;
