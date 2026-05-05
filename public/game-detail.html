@@ -325,21 +325,19 @@
       padding:40px;
     }
 
-    /* --- MOBILE OPTIMIZATION BLOQUE SOLICITADO --- */
+    /* --- MOBILE OPTIMIZATION --- */
     @media(max-width:850px){
       .page { padding: 12px; }
 
-      /* Layout principal */
       .matchup{
         display:flex;
         flex-direction:column;
         gap:20px;
       }
 
-      /* Equipos estilo app */
       .team{
         display:flex;
-        flex-direction: row; /* Cambio a horizontal en mobile */
+        flex-direction: row;
         align-items:center;
         justify-content:space-between;
         text-align:left;
@@ -356,7 +354,7 @@
       .team img{
         width:60px;
         height:60px;
-        order: 2; /* Imagen a la derecha */
+        order: 2;
       }
 
       .team h2{
@@ -364,7 +362,6 @@
         margin:0;
       }
 
-      /* Predictor centrado y limpio */
       .circle-chart{
         width:180px;
         height:180px;
@@ -377,9 +374,8 @@
         font-size:16px;
       }
 
-      /* Porcentajes en columna */
       .pct-row{
-        flex-direction:row; /* Se mantiene row para no ocupar tanto alto */
+        flex-direction:row;
         gap:10px;
       }
 
@@ -389,7 +385,6 @@
         padding: 8px;
       }
 
-      /* Panels en una columna */
       .section-grid,
       .two-grid,
       .lineup-box{
@@ -397,7 +392,6 @@
         gap: 12px;
       }
 
-      /* Cards de jugadores optimizadas */
       .player-card{
         flex-direction:row;
         align-items:center;
@@ -417,7 +411,6 @@
         font-size:11px;
       }
 
-      /* Barras más compactas */
       .bar-top{
         font-size:11px;
       }
@@ -427,7 +420,6 @@
         border-radius: 18px;
       }
 
-      /* Padding inferior tipo app */
       body{
         padding-bottom:60px;
       }
@@ -451,7 +443,6 @@
   </main>
 
   <script>
-    // LÓGICA JS ORIGINAL SIN CAMBIOS
     const params = new URLSearchParams(window.location.search);
     const gamePk = params.get('gamePk');
     const date = params.get('date');
@@ -471,6 +462,37 @@
           fetch(`/api/analyze/${gamePk}?date=${date}`).catch(()=>null)
         ]);
 
+        const centerRes = await fetch(`/api/baseball/game-center/${gamePk}?date=${date}`);
+        const centerData = await centerRes.json();
+
+        // 2. Data More Advanced Logic
+        const advancedModel = centerData.advancedModel || {
+          projectedRuns: {
+            away: 'Pendiente',
+            home: 'Pendiente',
+            total: 'Pendiente'
+          },
+          simulation: {
+            runs: 'Pendiente',
+            awayWinPct: 'Pendiente',
+            homeWinPct: 'Pendiente',
+            mostCommonScore: 'Pendiente',
+            volatility: 'Pendiente'
+          },
+          marketEdge: {
+            modelFavorite: 'Pendiente',
+            vegasFavorite: 'Pendiente',
+            modelPct: 'Pendiente',
+            vegasImpliedPct: 'Pendiente',
+            edgePct: 'Pendiente',
+            status: 'Pendiente de odds reales'
+          },
+          alerts: [
+            'Confirmar lineup antes del primer pitch',
+            'Revisar bullpen antes de apostar'
+          ]
+        };
+
         const gamesData = await gamesRes.json();
         const lineupData = lineupRes ? await lineupRes.json() : {ok:false};
         const propsData = propsRes ? await propsRes.json() : {ok:false};
@@ -487,6 +509,12 @@
           content.innerHTML = 'Juego no encontrado.';
           return;
         }
+
+        const headToHead = centerData.headToHead || {};
+        const injuries = centerData.injuries || {};
+        const bullpen = centerData.bullpen || {};
+        const weather = centerData.weather || {};
+        const odds = centerData.odds || {};
 
         const awayPct = Number(analysisData?.analysis?.away?.modelWinPct || 50);
         const homePct = Number(analysisData?.analysis?.home?.modelWinPct || 50);
@@ -563,6 +591,30 @@
           </section>
 
           <section class="panel">
+            <h3>Pitchers Detallados</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayAbbrev}</div>
+                <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.away?.wins || 0}-${centerData?.pitcherStats?.away?.losses || 0}</span></div>
+                <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.away?.ERA || '--'}</span></div>
+                <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.away?.WHIP || '--'}</span></div>
+                <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.away?.K || 0}</span></div>
+                <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.away?.BB || 0}</span></div>
+                <div class="stat-row"><span>HR permitidos</span><span>${centerData?.pitcherStats?.away?.HR || 0}</span></div>
+              </div>
+              <div>
+                <div class="sub-title">${game.homeAbbrev}</div>
+                <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.home?.wins || 0}-${centerData?.pitcherStats?.home?.losses || 0}</span></div>
+                <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.home?.ERA || '--'}</span></div>
+                <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.home?.WHIP || '--'}</span></div>
+                <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.home?.K || 0}</span></div>
+                <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.home?.BB || 0}</span></div>
+                <div class="stat-row"><span>HR permitidos</span><span>${centerData?.pitcherStats?.home?.HR || 0}</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
             <h3>Pitcher vs Equipo Rival</h3>
             <div class="two-grid">
               <div>
@@ -574,6 +626,55 @@
                 ${renderRiskBars(awayPct)}
               </div>
             </div>
+          </section>
+
+          <section class="panel">
+            <h3>Comparativa de Equipos</h3>
+            <div class="stat-row"><span>AVG</span><span>${centerData?.teamStats?.away?.AVG || '--'} | ${centerData?.teamStats?.home?.AVG || '--'}</span></div>
+            <div class="stat-row"><span>Carreras</span><span>${centerData?.teamStats?.away?.runs || 0} | ${centerData?.teamStats?.home?.runs || 0}</span></div>
+            <div class="stat-row"><span>Hits</span><span>${centerData?.teamStats?.away?.hits || 0} | ${centerData?.teamStats?.home?.hits || 0}</span></div>
+            <div class="stat-row"><span>HR</span><span>${centerData?.teamStats?.away?.HR || 0} | ${centerData?.teamStats?.home?.HR || 0}</span></div>
+            <div class="stat-row"><span>OBP</span><span>${centerData?.teamStats?.away?.OBP || '--'} | ${centerData?.teamStats?.home?.OBP || '--'}</span></div>
+            <div class="stat-row"><span>SLG</span><span>${centerData?.teamStats?.away?.SLG || '--'} | ${centerData?.teamStats?.home?.SLG || '--'}</span></div>
+            <div class="stat-row"><span>ERA</span><span>${centerData?.teamStats?.away?.ERA || '--'} | ${centerData?.teamStats?.home?.ERA || '--'}</span></div>
+            <div class="stat-row"><span>WHIP</span><span>${centerData?.teamStats?.away?.WHIP || '--'} | ${centerData?.teamStats?.home?.WHIP || '--'}</span></div>
+          </section>
+
+          <section class="panel">
+            <h3>Data More Advanced Edge</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">Proyección de Carreras</div>
+                <div class="stat-row"><span>${game.awayAbbrev}</span><span>${advancedModel.projectedRuns.away}</span></div>
+                <div class="stat-row"><span>${game.homeAbbrev}</span><span>${advancedModel.projectedRuns.home}</span></div>
+                <div class="stat-row"><span>Total Proyectado</span><span>${advancedModel.projectedRuns.total}</span></div>
+              </div>
+
+              <div>
+                <div class="sub-title">Simulación</div>
+                <div class="stat-row"><span>Corridas</span><span>${advancedModel.simulation.runs}</span></div>
+                <div class="stat-row"><span>${game.awayAbbrev} Win %</span><span>${advancedModel.simulation.awayWinPct}%</span></div>
+                <div class="stat-row"><span>${game.homeAbbrev} Win %</span><span>${advancedModel.simulation.homeWinPct}%</span></div>
+                <div class="stat-row"><span>Score común</span><span>${advancedModel.simulation.mostCommonScore}</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Edge vs Vegas</h3>
+            <div class="stat-row"><span>Favorito Modelo</span><span>${advancedModel.marketEdge.modelFavorite}</span></div>
+            <div class="stat-row"><span>Favorito Vegas</span><span>${advancedModel.marketEdge.vegasFavorite}</span></div>
+            <div class="stat-row"><span>Prob. Modelo</span><span>${advancedModel.marketEdge.modelPct}%</span></div>
+            <div class="stat-row"><span>Prob. Vegas</span><span>${advancedModel.marketEdge.vegasImpliedPct ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Edge</span><span>${advancedModel.marketEdge.edgePct ?? 'Pendiente'}</span></div>
+            <p class="note">${advancedModel.marketEdge.status}</p>
+          </section>
+
+          <section class="panel">
+            <h3>Alertas Data More</h3>
+            ${advancedModel.alerts.map(a => `
+              <div class="stat-row"><span>⚠️</span><span>${a}</span></div>
+            `).join('')}
           </section>
 
           <section class="panel">
@@ -605,26 +706,102 @@
           </section>
 
           <section class="panel">
-            <h3>Líderes Ofensivos por Equipo</h3>
+            <h3>Historial Directo de Temporada</h3>
+            <span class="badge">${game.awayAbbrev} vs ${game.homeAbbrev}</span>
+
+            <div class="stat-row">
+              <span>Juegos disputados</span>
+              <span>${headToHead.totalGames ?? 0}</span>
+            </div>
+            <div class="stat-row">
+              <span>Victorias ${game.awayAbbrev}</span>
+              <span>${headToHead.awayWins ?? 0}</span>
+            </div>
+            <div class="stat-row">
+              <span>Victorias ${game.homeAbbrev}</span>
+              <span>${headToHead.homeWins ?? 0}</span>
+            </div>
+            <div class="stat-row">
+              <span>Carreras ${game.awayAbbrev}</span>
+              <span>${headToHead.awayRuns ?? 0}</span>
+            </div>
+            <div class="stat-row">
+              <span>Carreras ${game.homeAbbrev}</span>
+              <span>${headToHead.homeRuns ?? 0}</span>
+            </div>
+            <p class="note">${headToHead.note || 'Sin historial disponible todavía.'}</p>
+          </section>
+
+          <section class="panel">
+            <h3>Reporte de Lesiones</h3>
             <div class="two-grid">
               <div>
                 <div class="sub-title">${game.awayAbbrev}</div>
-                ${renderLeaders(awayPlayers, propsData, 0)}
+                ${
+                  injuries.away && injuries.away.length
+                    ? injuries.away.map(i => `
+                      <div class="stat-row">
+                        <span>${i.player}</span>
+                        <span>${i.status || 'N/A'}</span>
+                      </div>
+                    `).join('')
+                    : '<p class="note">Sin lesiones conectadas todavía.</p>'
+                }
               </div>
               <div>
                 <div class="sub-title">${game.homeAbbrev}</div>
-                ${renderLeaders(homePlayers, propsData, 1)}
+                ${
+                  injuries.home && injuries.home.length
+                    ? injuries.home.map(i => `
+                      <div class="stat-row">
+                        <span>${i.player}</span>
+                        <span>${i.status || 'N/A'}</span>
+                      </div>
+                    `).join('')
+                    : '<p class="note">Sin lesiones conectadas todavía.</p>'
+                }
               </div>
             </div>
           </section>
 
           <section class="panel">
-            <h3>Historial Directo de Temporada</h3>
-            <span class="badge">${game.awayAbbrev} vs ${game.homeAbbrev}</span>
-            <p class="note">
-              Aquí irá el historial directo de temporada: juegos disputados entre ambos,
-              victorias por equipo, carreras totales y resultados anteriores.
-            </p>
+            <h3>Bullpen Fatigue</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayAbbrev}</div>
+                <div class="stat-row"><span>IP últimos 3 días</span><span>${bullpen.away?.last3DaysIP ?? 'Pendiente'}</span></div>
+                <div class="stat-row"><span>ERA bullpen</span><span>${bullpen.away?.bullpenERA ?? 'Pendiente'}</span></div>
+                <div class="stat-row"><span>WHIP bullpen</span><span>${bullpen.away?.bullpenWHIP ?? 'Pendiente'}</span></div>
+                <div class="stat-row"><span>Fatiga</span><span>${bullpen.away?.fatigueLevel ?? 'Pendiente'}</span></div>
+              </div>
+              <div>
+                <div class="sub-title">${game.homeAbbrev}</div>
+                <div class="stat-row"><span>IP últimos 3 días</span><span>${bullpen.home?.last3DaysIP ?? 'Pendiente'}</span></div>
+                <div class="stat-row"><span>ERA bullpen</span><span>${bullpen.home?.bullpenERA ?? 'Pendiente'}</span></div>
+                <div class="stat-row"><span>WHIP bullpen</span><span>${bullpen.home?.bullpenWHIP ?? 'Pendiente'}</span></div>
+                <div class="stat-row"><span>Fatiga</span><span>${bullpen.home?.fatigueLevel ?? 'Pendiente'}</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Clima / Estadio</h3>
+            <div class="stat-row"><span>Temperatura</span><span>${weather.temperature ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Viento</span><span>${weather.windSpeed ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Dirección del viento</span><span>${weather.windDirection ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Humedad</span><span>${weather.humidity ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Park Factor</span><span>${weather.parkFactor ?? 'Pendiente'}</span></div>
+            <p class="note">El clima puede afectar totales, HR y producción ofensiva.</p>
+          </section>
+
+          <section class="panel">
+            <h3>Mercado / Edge vs Vegas</h3>
+            <div class="stat-row"><span>Línea apertura</span><span>${odds.openLine ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Línea actual</span><span>${odds.currentLine ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Movimiento</span><span>${odds.movement ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Prob. Vegas</span><span>${odds.vegasImplied ?? 'Pendiente'}</span></div>
+            <div class="stat-row"><span>Edge Modelo</span><span>${odds.modelEdge ?? 'Pendiente'}</span></div>
+            <p class="note">Esta sección permitirá comparar el modelo Data More contra el mercado real.</p>
           </section>
 
           <section class="panel">
@@ -738,23 +915,7 @@
       `).join('');
     }
 
-    function renderLeaders(players, propsData, side){
-      let list = players.length ? players : fallbackSplit(propsData, side);
-
-      const avgLeader = [...list].sort((a,b) => Number(b.avg || 0) - Number(a.avg || 0))[0];
-      const hrLeader = [...list].sort((a,b) => Number(b.homeRuns || 0) - Number(a.homeRuns || 0))[0];
-      const opsLeader = [...list].sort((a,b) => Number(b.ops || 0) - Number(a.ops || 0))[0];
-
-      if(!avgLeader && !hrLeader && !opsLeader) return `<p class="note">Líderes no disponibles todavía.</p>`;
-
-      return `
-        <div class="stat-row"><span>Líder AVG</span><span>${avgLeader?.name || '--'} ${avgLeader?.avg || ''}</span></div>
-        <div class="stat-row"><span>Líder HR</span><span>${hrLeader?.name || '--'} ${hrLeader?.homeRuns || ''}</span></div>
-        <div class="stat-row"><span>Líder OPS</span><span>${opsLeader?.name || '--'} ${opsLeader?.ops || ''}</span></div>
-      `;
-    }
-
-    function renderLineups(data, propsData, awayAbbr, homeAbbr){
+    function renderLineups(data, propsData, awayAbbrev, homeAbbrev){
       if(data.ok && data.awayLineup){
         const renderSide = (lineup,title) => `
           <div>
@@ -770,8 +931,8 @@
 
         return `
           <div class="lineup-box">
-            ${renderSide(data.awayLineup, awayAbbr)}
-            ${renderSide(data.homeLineup, homeAbbr)}
+            ${renderSide(data.awayLineup, awayAbbrev)}
+            ${renderSide(data.homeLineup, homeAbbrev)}
           </div>
         `;
       }
@@ -793,8 +954,8 @@
 
       return `
         <div class="lineup-box">
-          ${renderProbable(away, awayAbbr)}
-          ${renderProbable(home, homeAbbr)}
+          ${renderProbable(away, awayAbbrev)}
+          ${renderProbable(home, homeAbbrev)}
         </div>
       `;
     }
@@ -803,4 +964,3 @@
   </script>
 </body>
 </html>
-

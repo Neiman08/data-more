@@ -17,6 +17,7 @@ import baseballRoutes from './routes/baseball.js';
 import soccerRoutes from './routes/soccer.js';
 import nbaRoutes from './routes/nba.js';
 import horseRoutes from './routes/horseRacing.js';
+import gameCenter from './routes/gameCenter.js'; // <--- INTEGRADO
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -143,6 +144,7 @@ app.use('/api/baseball', baseballRoutes);
 app.use('/api/soccer', soccerRoutes);
 app.use('/api', nbaRoutes);
 app.use('/api/horse-racing', horseRoutes);
+app.use('/api/game-center', gameCenter); // <--- CONECTADO
 
 // --- STATS ENDPOINT ---
 app.get('/api/stats/daily-performance', async (req, res) => {
