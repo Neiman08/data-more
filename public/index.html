@@ -1,16 +1,16 @@
-<script>
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  if (user) {
-    window.location.href = 'mlb.html';
-  }
-</script>
-
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
+  <script>
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    if (user) {
+      window.location.href = 'mlb.html';
+    }
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Data More | Predicciones Deportivas</title>
+  <title>Data More | AI Sports Predictions</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 
@@ -46,16 +46,59 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .logo { font-weight: 900; font-size: 22px; letter-spacing: -1px; }
+    .logo {
+      font-weight: 900;
+      font-size: 22px;
+      letter-spacing: -1px;
+    }
+
     .logo span { color: var(--green); }
 
-    nav { display: flex; gap: 20px; }
-    nav a { color: #fff; text-decoration: none; font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
-    nav a.active { opacity: 1; border-bottom: 2px solid var(--green); padding-bottom: 25px; margin-bottom: -25px; }
+    nav {
+      display: flex;
+      gap: 20px;
+    }
 
-    .header-actions { display: flex; gap: 12px; }
-    .btn-login { border: 1px solid rgba(255,255,255,0.5); padding: 8px 18px; border-radius: 6px; color: #fff; text-decoration: none; font-size: 12px; font-weight: 700; }
-    .btn-reg { background: var(--green); padding: 8px 18px; border-radius: 6px; color: #000; text-decoration: none; font-size: 12px; font-weight: 800; }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+
+    nav a.active {
+      opacity: 1;
+      border-bottom: 2px solid var(--green);
+      padding-bottom: 25px;
+      margin-bottom: -25px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-login {
+      border: 1px solid rgba(255,255,255,0.5);
+      padding: 8px 18px;
+      border-radius: 6px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn-reg {
+      background: var(--green);
+      padding: 8px 18px;
+      border-radius: 6px;
+      color: #000;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+    }
 
     .hero {
       padding: 60px 50px;
@@ -63,15 +106,12 @@
       grid-template-columns: 1.2fr 0.8fr;
       gap: 40px;
       align-items: start;
-
       background-image:
         linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.65)),
         url("logos/IMG_0579.JPG");
-
       background-size: cover;
       background-position: 30% center;
       background-repeat: no-repeat;
-
       border-radius: 12px;
       margin: 20px 0;
     }
@@ -80,27 +120,23 @@
       color: var(--green);
       font-size: 11px;
       font-weight: 800;
-      margin-bottom: 15px;
+      margin-bottom: 18px;
       letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
-    /* ✅ HERO TITLE CORREGIDO */
     .hero-title {
       font-family: 'Anton', sans-serif;
-      font-size: clamp(38px, 5vw, 62px);
-      line-height: 0.88;
+      font-size: clamp(42px, 5.4vw, 70px);
+      line-height: 1.02;
       text-transform: uppercase;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       letter-spacing: -1px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+      max-width: 760px;
     }
 
-    .hero-line {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
+    .hero-title .title-line {
+      display: block;
       white-space: nowrap;
     }
 
@@ -109,16 +145,39 @@
     }
 
     .subtitle {
-      color: var(--muted);
+      color: #ffffff;
       font-size: 15px;
-      max-width: 450px;
+      max-width: 620px;
       margin-bottom: 35px;
       line-height: 1.5;
+      font-weight: 700;
     }
 
-    .hero-btns { display: flex; gap: 15px; margin-bottom: 20px; }
-    .btn-main { background: var(--green); color: #000; padding: 14px 28px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 14px; }
-    .btn-sec { border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 14px 28px; border-radius: 8px; font-weight: 800; text-decoration: none; font-size: 14px; }
+    .hero-btns {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .btn-main {
+      background: var(--green);
+      color: #000;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .btn-sec {
+      border: 1px solid rgba(255,255,255,0.5);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 14px;
+    }
 
     .widget {
       background: rgba(20, 25, 30, 0.4);
@@ -129,7 +188,11 @@
       backdrop-filter: blur(10px);
     }
 
-    .win-rate-flex { display: flex; justify-content: space-between; align-items: center; }
+    .win-rate-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
     .circle-ui {
       width: 70px;
@@ -161,7 +224,12 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .stat-box { display: flex; align-items: center; gap: 15px; justify-content: center; }
+    .stat-box {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+    }
 
     .icon-circle {
       width: 45px;
@@ -203,7 +271,9 @@
       background: linear-gradient(0deg, #000 20%, transparent 80%);
     }
 
-    .card-content { z-index: 2; }
+    .card-content {
+      z-index: 2;
+    }
 
     .card-btn {
       background: rgba(255,255,255,0.1);
@@ -229,7 +299,9 @@
     }
 
     @media (max-width: 1024px) {
-      .hero, .stats-row, .sports-grid {
+      .hero,
+      .stats-row,
+      .sports-grid {
         grid-template-columns: 1fr;
         gap: 20px;
       }
@@ -261,19 +333,19 @@
       }
 
       .hero {
-        padding: 45px 24px;
+        padding: 42px 24px;
         margin: 12px 0;
         grid-template-columns: 1fr;
         background-position: 38% center;
       }
 
       .hero-title {
-        font-size: clamp(42px, 13vw, 58px);
-        line-height: 0.9;
+        font-size: clamp(38px, 12vw, 56px);
+        line-height: 1.04;
       }
 
-      .hero-line {
-        gap: 9px;
+      .hero-title .title-line {
+        white-space: normal;
       }
 
       .hero-btns {
@@ -306,42 +378,39 @@
     <div class="logo">DATA-<span>MORE</span></div>
 
     <nav>
-      <a class="active" href="index.html">Inicio</a>
+      <a class="active" href="index.html">Home</a>
       <a href="picks.html">Picks</a>
-      <a href="precios.html">Precios</a>
-      <a href="resultados.html">Resultados</a>
-      <a href="estadisticas.html">Estadísticas</a>
+      <a href="precios.html">Pricing</a>
+      <a href="resultados.html">Results</a>
+      <a href="estadisticas.html">Stats</a>
       <a href="faq.html">FAQ</a>
     </nav>
 
     <div class="header-actions">
-      <a href="login.html" class="btn-login" onclick="window.location.href='login.html'; return false;">
-        INICIAR SESIÓN
-      </a>
-      <a href="registro.html" class="btn-reg">REGÍSTRATE</a>
+      <a href="login.html" class="btn-login" onclick="window.location.href='login.html'; return false;">LOG IN</a>
+      <a href="registro.html" class="btn-reg">SIGN UP</a>
     </div>
   </header>
 
   <section class="hero">
     <div class="hero-content">
-      <p class="tagline">INTELIGENCIA. ESTADÍSTICAS. RESULTADOS.</p>
+      <p class="tagline">INTELLIGENCE. STATISTICS. RESULTS.</p>
 
-      <!-- ✅ TÍTULO CORREGIDO -->
       <h1 class="hero-title">
-        <span class="hero-line">GANA CON <span class="green-text">DATA.</span></span>
-        <span class="hero-line">NO CON <span class="green-text">SUERTE.</span></span>
+        <span class="title-line">WIN WITH <span class="green-text">DATA.</span></span>
+        <span class="title-line">NOT WITH <span class="green-text">LUCK.</span></span>
       </h1>
 
       <p class="subtitle">
-        Predicciones deportivas con inteligencia artificial en Hipismo, MLB, NBA y Fútbol. Más análisis. Mejores resultados.
+        AI-powered sports predictions for Horse Racing, MLB, NBA, and Soccer. More analysis. Better results.
       </p>
 
       <div class="hero-btns">
-        <a href="registro.html" class="btn-main">REGÍSTRATE GRATIS →</a>
-        <a href="picks.html" class="btn-sec">VER PICKS DE HOY 📊</a>
+        <a href="registro.html" class="btn-main">SIGN UP FOR FREE →</a>
+        <a href="picks.html" class="btn-sec">VIEW TODAY'S PICKS 📊</a>
       </div>
 
-      <p style="font-size: 12px; color: var(--muted);">⭐⭐⭐⭐⭐ +2,500 miembros ya están ganando</p>
+      <p style="font-size: 12px; color: var(--muted);">⭐⭐⭐⭐⭐ +2,500 members are already winning</p>
     </div>
 
     <div class="hero-widgets">
@@ -361,8 +430,8 @@
       </div>
 
       <div class="widget">
-        <p style="font-size: 11px; font-weight: 800; margin-bottom: 15px;">TOP PICKS DE HOY</p>
-        <div class="pick-row"><span>🐎 Carrera 5 - Churchill Downs</span> <span>#3 Gana</span></div>
+        <p style="font-size: 11px; font-weight: 800; margin-bottom: 15px;">TODAY'S TOP PICKS</p>
+        <div class="pick-row"><span>🐎 Race 5 - Churchill Downs</span> <span>#3 Win</span></div>
         <div class="pick-row"><span>⚾ LA Dodgers</span> <span>-135</span></div>
         <div class="pick-row"><span>🏀 Boston Celtics</span> <span>-6.5</span></div>
       </div>
@@ -374,7 +443,7 @@
       <div class="icon-circle">🏆</div>
       <div>
         <p style="font-weight: 900; font-size: 20px;">+78%</p>
-        <p style="font-size: 10px; color: var(--muted);">EFECTIVIDAD EN HIPISMO/MLB</p>
+        <p style="font-size: 10px; color: var(--muted);">HORSE RACING / MLB ACCURACY</p>
       </div>
     </div>
 
@@ -382,15 +451,15 @@
       <div class="icon-circle">📊</div>
       <div>
         <p style="font-weight: 900; font-size: 20px;">+65%</p>
-        <p style="font-size: 10px; color: var(--muted);">EN PLAYER PROPS</p>
+        <p style="font-size: 10px; color: var(--muted);">PLAYER PROPS PERFORMANCE</p>
       </div>
     </div>
 
     <div class="stat-box">
       <div class="icon-circle">⚡</div>
       <div>
-        <p style="font-weight: 900; font-size: 20px;">PICKS</p>
-        <p style="font-size: 10px; color: var(--muted);">EN TIEMPO REAL</p>
+        <p style="font-weight: 900; font-size: 20px;">REAL-TIME PICKS</p>
+        <p style="font-size: 10px; color: var(--muted);">LIVE UPDATES</p>
       </div>
     </div>
   </section>
@@ -398,33 +467,33 @@
   <section class="sports-grid">
     <div class="card" style="background-image: url('logos/HIPISMO.png');">
       <div class="card-content">
-        <p style="color: var(--green); font-size: 18px; font-weight: 900;">HIPISMO PICKS</p>
-        <button class="card-btn" onclick="window.location.href='horse.html'">VER PICKS</button>
+        <p style="color: var(--green); font-size: 18px; font-weight: 900;">HORSE RACING PICKS</p>
+        <button class="card-btn" onclick="window.location.href='horse.html'">VIEW PICKS</button>
       </div>
     </div>
 
     <div class="card" style="background-image: url('logos/MLB.png');">
       <div class="card-content">
         <p style="color: var(--green); font-size: 18px; font-weight: 900;">MLB PICKS</p>
-        <button class="card-btn" onclick="window.location.href='mlb.html'">VER PICKS</button>
+        <button class="card-btn" onclick="window.location.href='mlb.html'">VIEW PICKS</button>
       </div>
     </div>
 
     <div class="card" style="background-image: url('logos/NBA.png');">
       <div class="card-content">
         <p style="color: var(--green); font-size: 18px; font-weight: 900;">NBA PICKS</p>
-        <button class="card-btn" onclick="window.location.href='nba.html'">VER PICKS</button>
+        <button class="card-btn" onclick="window.location.href='nba.html'">VIEW PICKS</button>
       </div>
     </div>
   </section>
 
   <section class="banner-cta">
     <div>
-      <h2 style="font-size: 22px; font-weight: 900;">EMPIEZA HOY MISMO A GANAR</h2>
-      <p style="color: var(--muted); font-size: 14px;">Únete a la comunidad que convierte la data en dinero.</p>
+      <h2 style="font-size: 22px; font-weight: 900;">START WINNING TODAY</h2>
+      <p style="color: var(--muted); font-size: 14px;">Join the community turning data into profit.</p>
     </div>
 
-    <a href="registro.html" class="btn-reg" style="padding: 16px 32px; font-size: 14px;">REGÍSTRATE AHORA →</a>
+    <a href="registro.html" class="btn-reg" style="padding: 16px 32px; font-size: 14px;">SIGN UP NOW →</a>
   </section>
 </main>
 
