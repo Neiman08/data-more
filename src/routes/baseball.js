@@ -307,39 +307,123 @@ function buildPublicGameCenter({
   homeTeamStats,
   headToHead
 }) {
+  const awayRunsPerGame = awayTeamStats?.runs ? awayTeamStats.runs / 35 : 4.2;
+  const homeRunsPerGame = homeTeamStats?.runs ? homeTeamStats.runs / 35 : 4.2;
+
+  const awayPitcherERA = Number(awayPitcherStats?.ERA || awayTeamStats?.ERA || 4.20);
+  const homePitcherERA = Number(homePitcherStats?.ERA || homeTeamStats?.ERA || 4.20);
+
+  const projectedAwayRuns = Math.max(
+    2.1,
+    ((awayRunsPerGame * 0.65) + (homePitcherERA * 0.35))
+  ).toFixed(2);
+
+  const projectedHomeRuns = Math.max(
+    2.1,
+    ((homeRunsPerGame * 0.65) + (awayPitcherERA * 0.35) + 0.15)
+  ).toFixed(2);
+
+  const projectedTotal = (
+    Number(projectedAwayRuns) + Number(projectedHomeRuns)
+  ).toFixed(2);
+
+  const awayWinPct = Math.round(
+    (Number(projectedAwayRuns) / (Number(projectedAwayRuns) + Number(projectedHomeRuns))) * 100
+  );
+
+  const homeWinPct = 100 - awayWinPct;
+
+  const modelFavorite =
+    homeWinPct > awayWinPct
+      ? homeTeam?.team?.name
+      : awayTeam?.team?.name;
+
   return {
     ok: true,
     pitcherStats: {
       away: {
         name: awayTeam?.probablePitcher?.fullName || 'TBD',
+        wins: awayPitcherStats?.wins ?? 0,
+        losses: awayPitcherStats?.losses ?? 0,
         ERA: awayPitcherStats?.ERA || '--',
         WHIP: awayPitcherStats?.WHIP || '--',
+        IP: awayPitcherStats?.IP || '--',
+        K: awayPitcherStats?.K ?? 0,
+        BB: awayPitcherStats?.BB ?? 0,
+        HR: awayPitcherStats?.HR ?? 0,
+        gamesStarted: awayPitcherStats?.gamesStarted ?? 0,
         record: awayPitcherStats?.record || '--'
       },
       home: {
         name: homeTeam?.probablePitcher?.fullName || 'TBD',
+        wins: homePitcherStats?.wins ?? 0,
+        losses: homePitcherStats?.losses ?? 0,
         ERA: homePitcherStats?.ERA || '--',
         WHIP: homePitcherStats?.WHIP || '--',
+        IP: homePitcherStats?.IP || '--',
+        K: homePitcherStats?.K ?? 0,
+        BB: homePitcherStats?.BB ?? 0,
+        HR: homePitcherStats?.HR ?? 0,
+        gamesStarted: homePitcherStats?.gamesStarted ?? 0,
         record: homePitcherStats?.record || '--'
       }
     },
     teamStats: {
       away: {
         AVG: awayTeamStats?.AVG || '--',
+        OBP: awayTeamStats?.OBP || '--',
+        SLG: awayTeamStats?.SLG || '--',
         OPS: awayTeamStats?.OPS || '--',
-        runs: awayTeamStats?.runs || 0,
-        HR: awayTeamStats?.HR || 0,
+        runs: awayTeamStats?.runs ?? 0,
+        hits: awayTeamStats?.hits ?? 0,
+        HR: awayTeamStats?.HR ?? 0,
+        RBI: awayTeamStats?.RBI ?? 0,
+        BB: awayTeamStats?.BB ?? 0,
+        K: awayTeamStats?.K ?? 0,
         ERA: awayTeamStats?.ERA || '--',
         WHIP: awayTeamStats?.WHIP || '--'
       },
       home: {
         AVG: homeTeamStats?.AVG || '--',
+        OBP: homeTeamStats?.OBP || '--',
+        SLG: homeTeamStats?.SLG || '--',
         OPS: homeTeamStats?.OPS || '--',
-        runs: homeTeamStats?.runs || 0,
-        HR: homeTeamStats?.HR || 0,
+        runs: homeTeamStats?.runs ?? 0,
+        hits: homeTeamStats?.hits ?? 0,
+        HR: homeTeamStats?.HR ?? 0,
+        RBI: homeTeamStats?.RBI ?? 0,
+        BB: homeTeamStats?.BB ?? 0,
+        K: homeTeamStats?.K ?? 0,
         ERA: homeTeamStats?.ERA || '--',
         WHIP: homeTeamStats?.WHIP || '--'
       }
+    },
+    advancedModel: {
+      projectedRuns: {
+        away: projectedAwayRuns,
+        home: projectedHomeRuns,
+        total: projectedTotal
+      },
+      simulation: {
+        runs: projectedTotal,
+        awayWinPct,
+        homeWinPct,
+        mostCommonScore: `${Math.round(projectedAwayRuns)}-${Math.round(projectedHomeRuns)}`,
+        volatility: projectedTotal >= 9 ? 'High' : projectedTotal >= 7.5 ? 'Medium' : 'Low'
+      },
+      marketEdge: {
+        modelFavorite,
+        vegasFavorite: 'Pending odds',
+        modelPct: Math.max(awayWinPct, homeWinPct),
+        vegasImpliedPct: 'Pending',
+        edgePct: 'Pending',
+        status: 'Model edge ready. Waiting for real sportsbook odds.'
+      },
+      alerts: [
+        'Review confirmed lineup before first pitch',
+        'Check bullpen usage before final betting decision',
+        projectedTotal >= 9 ? 'High scoring environment detected' : 'Moderate scoring projection'
+      ]
     },
     headToHead: {
       totalGames: headToHead.totalGames,
