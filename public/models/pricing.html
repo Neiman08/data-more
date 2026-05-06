@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data More | Pricing</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+
+    :root {
+      --green: #6bff19;
+      --bg: #020509;
+      --card: rgba(12,16,20,.82);
+      --border: rgba(255,255,255,.08);
+      --muted: #8f98a1;
+      --gold: #facc15;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background:
+        linear-gradient(rgba(0,0,0,.90), rgba(0,0,0,.95)),
+        url('logos/IMG_0579.JPG');
+
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+
+      color: white;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 60px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .logo span {
+      color: var(--green);
+    }
+
+    .back-btn {
+      border: 1px solid rgba(255,255,255,.15);
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      background: rgba(255,255,255,.04);
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 70px;
+    }
+
+    .hero p {
+      color: var(--green);
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 1px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(48px, 8vw, 90px);
+      line-height: 1;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: -2px;
+    }
+
+    .hero h1 span {
+      color: var(--green);
+    }
+
+    .hero-sub {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #c5cbd2;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .plan {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 34px;
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,.45);
+    }
+
+    .plan::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right,
+        rgba(107,255,25,.10),
+        transparent 40%);
+      pointer-events: none;
+    }
+
+    .plan.popular {
+      border: 1px solid rgba(107,255,25,.45);
+      transform: scale(1.03);
+      box-shadow: 0 0 60px rgba(107,255,25,.15);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: var(--green);
+      color: black;
+      font-weight: 900;
+      font-size: 11px;
+      padding: 7px 12px;
+      border-radius: 999px;
+    }
+
+    .plan-name {
+      font-size: 13px;
+      color: var(--green);
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+
+    .price-main {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .price {
+      font-size: 72px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -3px;
+    }
+
+    .per {
+      color: var(--muted);
+      font-size: 16px;
+      padding-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .mini-price {
+      color: var(--green);
+      font-weight: 900;
+      margin-bottom: 26px;
+      font-size: 14px;
+    }
+
+    .desc {
+      color: #c2c9d0;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 28px;
+      min-height: 80px;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+
+    .feature {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #edf1f5;
+    }
+
+    .feature span {
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .cta {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: .25s ease;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .cta.free {
+      background: rgba(255,255,255,.08);
+      color: white;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .cta.pro {
+      background: var(--green);
+      color: black;
+      box-shadow: 0 0 35px rgba(107,255,25,.25);
+    }
+
+    .cta.elite {
+      background: linear-gradient(135deg, #facc15, #ffe88b);
+      color: black;
+      box-shadow: 0 0 35px rgba(250,204,21,.25);
+    }
+
+    .cta:hover {
+      transform: translateY(-3px);
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 70px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-note strong {
+      color: white;
+    }
+
+    @media(max-width: 1100px) {
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .plan.popular {
+        transform: none;
+      }
+    }
+
+    @media(max-width: 768px) {
+
+      .hero h1 {
+        font-size: 56px;
+      }
+
+      .page {
+        padding: 26px 18px 80px;
+      }
+
+      .plan {
+        padding: 28px;
+      }
+
+      .price {
+        font-size: 56px;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <main class="page">
+
+    <div class="topbar">
+      <div class="logo">DATA-<span>MORE</span></div>
+
+      <a href="index.html" class="back-btn">
+        ← BACK HOME
+      </a>
+    </div>
+
+    <section class="hero">
+
+      <p>PREMIUM AI SPORTS ANALYTICS</p>
+
+      <h1>
+        CHOOSE YOUR <span>EDGE</span>
+      </h1>
+
+      <div class="hero-sub">
+        Data More transforms statistics, simulations, and AI models into high-level sports betting analysis for MLB, NBA, Soccer, and Horse Racing.
+      </div>
+
+    </section>
+
+    <section class="pricing-grid">
+
+      <!-- FREE -->
+
+      <div class="plan">
+
+        <div class="plan-name">STARTER</div>
+
+        <div class="price-main">
+          <div class="price">$0</div>
+          <div class="per">FREE</div>
+        </div>
+
+        <div class="mini-price">
+          Get started with basic picks
+        </div>
+
+        <div class="desc">
+          Perfect for casual users who want to experience the power of AI sports predictions.
+        </div>
+
+        <div class="features">
+
+          <div class="feature"><span>✓</span> Basic MLB Picks</div>
+          <div class="feature"><span>✓</span> Moneyline Predictions</div>
+          <div class="feature"><span>✓</span> Limited Daily Picks</div>
+          <div class="feature"><span>✓</span> Live Scores</div>
+          <div class="feature"><span>✓</span> Win Probability</div>
+          <div class="feature"><span>✓</span> Limited Horse Racing</div>
+          <div class="feature"><span>✓</span> Public Picks Access</div>
+
+        </div>
+
+        <button class="cta free"
+          onclick="window.location.href='registro.html'">
+          START FREE
+        </button>
+
+      </div>
+
+      <!-- PRO -->
+
+      <div class="plan popular">
+
+        <div class="popular-badge">
+          MOST POPULAR
+        </div>
+
+        <div class="plan-name">DATA MORE PRO</div>
+
+        <div class="price-main">
+          <div class="price">$29</div>
+          <div class="per">/MONTH</div>
+        </div>
+
+        <div class="mini-price">
+          ≈ $1 PER DAY
+        </div>
+
+        <div class="desc">
+          Built for serious bettors who want advanced analytics, props, simulations and premium betting tools.
+        </div>
+
+        <div class="features">
+
+          <div class="feature"><span>✓</span> EVERYTHING IN FREE</div>
+          <div class="feature"><span>✓</span> Team Totals</div>
+          <div class="feature"><span>✓</span> Run Line Picks</div>
+          <div class="feature"><span>✓</span> AI Player Props</div>
+          <div class="feature"><span>✓</span> Top HR Picks</div>
+          <div class="feature"><span>✓</span> Top Hit Picks</div>
+          <div class="feature"><span>✓</span> Model vs Vegas Edge</div>
+          <div class="feature"><span>✓</span> Bullpen Fatigue</div>
+          <div class="feature"><span>✓</span> Weather Edge</div>
+          <div class="feature"><span>✓</span> Premium Game Detail</div>
+          <div class="feature"><span>✓</span> NBA + Soccer Picks</div>
+          <div class="feature"><span>✓</span> Horse Racing PRO</div>
+          <div class="feature"><span>✓</span> No Ads</div>
+
+        </div>
+
+        <button class="cta pro"
+          onclick="window.location.href='pago-manual.html'">
+          GO PRO NOW
+        </button>
+
+      </div>
+
+      <!-- ELITE -->
+
+      <div class="plan">
+
+        <div class="plan-name" style="color: var(--gold);">
+          DATA MORE ELITE
+        </div>
+
+        <div class="price-main">
+          <div class="price">$79</div>
+          <div class="per">/MONTH</div>
+        </div>
+
+        <div class="mini-price" style="color: var(--gold);">
+          VIP SHARP BETTOR ACCESS
+        </div>
+
+        <div class="desc">
+          Elite tools for high-volume bettors who want the maximum AI edge possible.
+        </div>
+
+        <div class="features">
+
+          <div class="feature"><span>🔥</span> EVERYTHING IN PRO</div>
+          <div class="feature"><span>🔥</span> VIP Best Bets</div>
+          <div class="feature"><span>🔥</span> Million Simulations</div>
+          <div class="feature"><span>🔥</span> Sharp Money Detection</div>
+          <div class="feature"><span>🔥</span> Steam Move Alerts</div>
+          <div class="feature"><span>🔥</span> Live Betting Signals</div>
+          <div class="feature"><span>🔥</span> Same Game Parlay AI</div>
+          <div class="feature"><span>🔥</span> Personalized Daily Card</div>
+          <div class="feature"><span>🔥</span> Premium Discord Access</div>
+          <div class="feature"><span>🔥</span> Advanced Betting Dashboard</div>
+          <div class="feature"><span>🔥</span> AI Betting Assistant</div>
+          <div class="feature"><span>🔥</span> Bankroll Tracker</div>
+          <div class="feature"><span>🔥</span> Priority Support</div>
+
+        </div>
+
+        <button class="cta elite"
+          onclick="window.location.href='pago-manual.html'">
+          JOIN ELITE
+        </button>
+
+      </div>
+
+    </section>
+
+    <div class="footer-note">
+      Trusted by <strong>2,500+</strong> sports bettors using AI analytics daily.
+    </div>
+
+  </main>
+
+</body>
+</html>
