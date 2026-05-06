@@ -11,6 +11,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data More | AI Sports Predictions</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 
@@ -22,7 +23,11 @@
       --muted: #888d93;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       background: #000;
@@ -52,7 +57,9 @@
       letter-spacing: -1px;
     }
 
-    .logo span { color: var(--green); }
+    .logo span {
+      color: var(--green);
+    }
 
     nav {
       display: flex;
@@ -374,128 +381,305 @@
 <body>
 
 <main class="page">
-  <header>
-    <div class="logo">DATA-<span>MORE</span></div>
 
-    <nav>
-      <a class="active" href="index.html">Home</a>
-      <a href="picks.html">Picks</a>
-      <a href="precios.html">Pricing</a>
-      <a href="resultados.html">Results</a>
-      <a href="estadisticas.html">Stats</a>
-      <a href="faq.html">FAQ</a>
-    </nav>
+<header>
+  <div class="logo">DATA-<span>MORE</span></div>
 
-    <div class="header-actions">
-      <a href="login.html" class="btn-login" onclick="window.location.href='login.html'; return false;">LOG IN</a>
-      <a href="registro.html" class="btn-reg">SIGN UP</a>
+  <nav>
+    <a class="active" href="index.html">Home</a>
+    <a href="picks.html">Picks</a>
+    <a href="precios.html">Pricing</a>
+    <a href="resultados.html">Results</a>
+    <a href="estadisticas.html">Stats</a>
+    <a href="faq.html">FAQ</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="login.html" class="btn-login">LOG IN</a>
+    <a href="registro.html" class="btn-reg">SIGN UP</a>
+  </div>
+</header>
+
+<section class="hero">
+
+  <div class="hero-content">
+
+    <p class="tagline">
+      INTELLIGENCE. STATISTICS. RESULTS.
+    </p>
+
+    <h1 class="hero-title">
+      <span class="title-line">
+        WIN WITH <span class="green-text">DATA.</span>
+      </span>
+
+      <span class="title-line">
+        NOT WITH <span class="green-text">LUCK.</span>
+      </span>
+    </h1>
+
+    <p class="subtitle">
+      AI-powered sports predictions for Horse Racing, MLB, NBA, and Soccer.
+      More analysis. Better results.
+    </p>
+
+    <div class="hero-btns">
+      <a href="registro.html" class="btn-main">
+        SIGN UP FOR FREE →
+      </a>
+
+      <a href="picks.html" class="btn-sec">
+        VIEW TODAY'S PICKS 📊
+      </a>
     </div>
-  </header>
 
-  <section class="hero">
-    <div class="hero-content">
-      <p class="tagline">INTELLIGENCE. STATISTICS. RESULTS.</p>
+    <p style="font-size:12px;color:var(--muted);">
+      ⭐⭐⭐⭐⭐ +2,500 members are already winning
+    </p>
 
-      <h1 class="hero-title">
-        <span class="title-line">WIN WITH <span class="green-text">DATA.</span></span>
-        <span class="title-line">NOT WITH <span class="green-text">LUCK.</span></span>
-      </h1>
+  </div>
 
-      <p class="subtitle">
-        AI-powered sports predictions for Horse Racing, MLB, NBA, and Soccer. More analysis. Better results.
+  <div class="hero-widgets">
+
+    <div class="widget">
+
+      <div class="win-rate-flex">
+
+        <div>
+          <p style="font-size:10px;color:var(--muted);margin-bottom:8px;">
+            WIN RATE
+          </p>
+
+          <div class="circle-ui">78%</div>
+        </div>
+
+        <div style="text-align:right;">
+          <p style="font-size:10px;color:var(--muted);">
+            YIELD
+          </p>
+
+          <p style="color:var(--green);font-weight:900;font-size:24px;">
+            +24.6%
+          </p>
+
+          <div style="
+            height:20px;
+            width:60px;
+            background:var(--green);
+            opacity:.2;
+            clip-path:polygon(
+              0 100%,
+              20% 70%,
+              40% 85%,
+              60% 40%,
+              80% 50%,
+              100% 0,
+              100% 100%
+            );
+            margin-left:auto;
+          "></div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- DYNAMIC TOP PICKS -->
+
+    <div class="widget">
+
+      <p style="
+        font-size:11px;
+        font-weight:800;
+        margin-bottom:15px;
+      ">
+        TODAY'S TOP PICKS
       </p>
 
-      <div class="hero-btns">
-        <a href="registro.html" class="btn-main">SIGN UP FOR FREE →</a>
-        <a href="picks.html" class="btn-sec">VIEW TODAY'S PICKS 📊</a>
-      </div>
+      <div id="topPicksList">
 
-      <p style="font-size: 12px; color: var(--muted);">⭐⭐⭐⭐⭐ +2,500 members are already winning</p>
-    </div>
-
-    <div class="hero-widgets">
-      <div class="widget">
-        <div class="win-rate-flex">
-          <div>
-            <p style="font-size: 10px; color: var(--muted); margin-bottom: 8px;">WIN RATE</p>
-            <div class="circle-ui">78%</div>
-          </div>
-
-          <div style="text-align: right;">
-            <p style="font-size: 10px; color: var(--muted);">YIELD</p>
-            <p style="color: var(--green); font-weight: 900; font-size: 24px;">+24.6%</p>
-            <div style="height: 20px; width: 60px; background: var(--green); opacity: 0.2; clip-path: polygon(0 100%, 20% 70%, 40% 85%, 60% 40%, 80% 50%, 100% 0, 100% 100%); margin-left: auto;"></div>
-          </div>
+        <div class="pick-row">
+          <span>Loading strongest picks...</span>
+          <span>--</span>
         </div>
+
       </div>
 
-      <div class="widget">
-        <p style="font-size: 11px; font-weight: 800; margin-bottom: 15px;">TODAY'S TOP PICKS</p>
-        <div class="pick-row"><span>🐎 Race 5 - Churchill Downs</span> <span>#3 Win</span></div>
-        <div class="pick-row"><span>⚾ LA Dodgers</span> <span>-135</span></div>
-        <div class="pick-row"><span>🏀 Boston Celtics</span> <span>-6.5</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="stats-row">
-    <div class="stat-box">
-      <div class="icon-circle">🏆</div>
-      <div>
-        <p style="font-weight: 900; font-size: 20px;">+78%</p>
-        <p style="font-size: 10px; color: var(--muted);">HORSE RACING / MLB ACCURACY</p>
-      </div>
     </div>
 
-    <div class="stat-box">
-      <div class="icon-circle">📊</div>
-      <div>
-        <p style="font-weight: 900; font-size: 20px;">+65%</p>
-        <p style="font-size: 10px; color: var(--muted);">PLAYER PROPS PERFORMANCE</p>
-      </div>
-    </div>
+  </div>
 
-    <div class="stat-box">
-      <div class="icon-circle">⚡</div>
-      <div>
-        <p style="font-weight: 900; font-size: 20px;">REAL-TIME PICKS</p>
-        <p style="font-size: 10px; color: var(--muted);">LIVE UPDATES</p>
-      </div>
-    </div>
-  </section>
+</section>
 
-  <section class="sports-grid">
-    <div class="card" style="background-image: url('logos/HIPISMO.png');">
-      <div class="card-content">
-        <p style="color: var(--green); font-size: 18px; font-weight: 900;">HORSE RACING PICKS</p>
-        <button class="card-btn" onclick="window.location.href='horse.html'">VIEW PICKS</button>
-      </div>
-    </div>
+<section class="stats-row">
 
-    <div class="card" style="background-image: url('logos/MLB.png');">
-      <div class="card-content">
-        <p style="color: var(--green); font-size: 18px; font-weight: 900;">MLB PICKS</p>
-        <button class="card-btn" onclick="window.location.href='mlb.html'">VIEW PICKS</button>
-      </div>
-    </div>
+  <div class="stat-box">
+    <div class="icon-circle">🏆</div>
 
-    <div class="card" style="background-image: url('logos/NBA.png');">
-      <div class="card-content">
-        <p style="color: var(--green); font-size: 18px; font-weight: 900;">NBA PICKS</p>
-        <button class="card-btn" onclick="window.location.href='nba.html'">VIEW PICKS</button>
-      </div>
-    </div>
-  </section>
-
-  <section class="banner-cta">
     <div>
-      <h2 style="font-size: 22px; font-weight: 900;">START WINNING TODAY</h2>
-      <p style="color: var(--muted); font-size: 14px;">Join the community turning data into profit.</p>
-    </div>
+      <p style="font-weight:900;font-size:20px;">
+        +78%
+      </p>
 
-    <a href="registro.html" class="btn-reg" style="padding: 16px 32px; font-size: 14px;">SIGN UP NOW →</a>
-  </section>
+      <p style="font-size:10px;color:var(--muted);">
+        HORSE RACING / MLB ACCURACY
+      </p>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="icon-circle">📊</div>
+
+    <div>
+      <p style="font-weight:900;font-size:20px;">
+        +65%
+      </p>
+
+      <p style="font-size:10px;color:var(--muted);">
+        PLAYER PROPS PERFORMANCE
+      </p>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="icon-circle">⚡</div>
+
+    <div>
+      <p style="font-weight:900;font-size:20px;">
+        REAL-TIME PICKS
+      </p>
+
+      <p style="font-size:10px;color:var(--muted);">
+        LIVE UPDATES
+      </p>
+    </div>
+  </div>
+
+</section>
+
+<section class="sports-grid">
+
+  <div class="card" style="background-image:url('logos/HIPISMO.png');">
+    <div class="card-content">
+      <p style="color:var(--green);font-size:18px;font-weight:900;">
+        HORSE RACING PICKS
+      </p>
+
+      <button class="card-btn"
+        onclick="window.location.href='horse.html'">
+        VIEW PICKS
+      </button>
+    </div>
+  </div>
+
+  <div class="card" style="background-image:url('logos/MLB.png');">
+    <div class="card-content">
+      <p style="color:var(--green);font-size:18px;font-weight:900;">
+        MLB PICKS
+      </p>
+
+      <button class="card-btn"
+        onclick="window.location.href='mlb.html'">
+        VIEW PICKS
+      </button>
+    </div>
+  </div>
+
+  <div class="card" style="background-image:url('logos/NBA.png');">
+    <div class="card-content">
+      <p style="color:var(--green);font-size:18px;font-weight:900;">
+        NBA PICKS
+      </p>
+
+      <button class="card-btn"
+        onclick="window.location.href='nba.html'">
+        VIEW PICKS
+      </button>
+    </div>
+  </div>
+
+</section>
+
+<section class="banner-cta">
+
+  <div>
+    <h2 style="font-size:22px;font-weight:900;">
+      START WINNING TODAY
+    </h2>
+
+    <p style="color:var(--muted);font-size:14px;">
+      Join the community turning data into profit.
+    </p>
+  </div>
+
+  <a href="registro.html"
+     class="btn-reg"
+     style="padding:16px 32px;font-size:14px;">
+    SIGN UP NOW →
+  </a>
+
+</section>
+
 </main>
+
+<script>
+
+async function loadTodayTopPicks() {
+
+  const box = document.getElementById('topPicksList');
+
+  try {
+
+    const res = await fetch('/api/top-picks');
+    const data = await res.json();
+
+    if (!data.ok || !data.picks || !data.picks.length) {
+
+      box.innerHTML = `
+        <div class="pick-row">
+          <span>No strong picks available</span>
+          <span>--</span>
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML = data.picks.map(pick => `
+
+      <div class="pick-row">
+
+        <span>
+          ${pick.icon} ${pick.label}
+        </span>
+
+        <span style="
+          color:var(--green);
+          font-weight:900;
+        ">
+          ${pick.market}
+        </span>
+
+      </div>
+
+    `).join('');
+
+  } catch (err) {
+
+    console.error('TOP PICKS ERROR:', err);
+
+    box.innerHTML = `
+      <div class="pick-row">
+        <span>Error loading picks</span>
+        <span>--</span>
+      </div>
+    `;
+  }
+}
+
+loadTodayTopPicks();
+
+</script>
 
 </body>
 </html>
