@@ -629,11 +629,11 @@ app.get('/picks.html', (req, res) => {
   );
 });
 
-app.get('/precios.html', (req, res) => {
+app.get('/pricing.html', (req, res) => {
   res.sendFile(
     path.join(
       __dirname,
-      '../public/precios.html'
+      '../public/pricing.html'
     )
   );
 });
