@@ -93,7 +93,11 @@ function buildOfficialBestByGame(board) {
     .sort((a, b) => {
       const confDiff = (b.confidenceScore || 0) - (a.confidenceScore || 0);
       if (confDiff !== 0) return confDiff;
-      return (b.valueScore || b.probability || 0) - (a.valueScore || a.probability || 0);
+
+      return (
+        (b.valueScore || b.probability || 0) -
+        (a.valueScore || a.probability || 0)
+      );
     })
     .slice(0, 10);
 }
@@ -111,6 +115,7 @@ function buildAIBoard(games) {
       game.awayTeamName ||
       game.awayName ||
       game.away ||
+      game.awayAbbrev ||
       "";
 
     const homeTeam =
@@ -118,6 +123,7 @@ function buildAIBoard(games) {
       game.homeTeamName ||
       game.homeName ||
       game.home ||
+      game.homeAbbrev ||
       "";
 
     const gameLabel =
@@ -360,7 +366,7 @@ router.post("/analyze", async (req, res) => {
 
     const aiBoard = buildAIBoard(games);
 
-    console.log("🔥 RAW GAMES:");
+    console.log("🔥 RAW GAME SAMPLE:");
     console.log(JSON.stringify(games[0], null, 2));
 
     console.log("✅ AI BOARD:");
@@ -406,65 +412,28 @@ Do NOT recalculate probabilities.
 Do NOT use raw schedule data.
 Do NOT use recent records unless they are included in the board.
 
-━━━━━━━━━━━━━━━━━━━━
-
-IMPORTANT:
-
+IMPORTANT RULES:
 - HIGH, MEDIUM, and LOW are confidence levels.
 - Risk must be: Low, Medium, Medium-high, or High.
 - If Confidence is LOW, Risk must be Medium-high or High.
 - If Confidence is MEDIUM, Risk must be Medium.
 - If Confidence is HIGH, Risk can be Low or Medium.
 
-━━━━━━━━━━━━━━━━━━━━
-
 GAME EXCLUSIVITY RULE:
-
 For each game, there can be ONLY ONE main recommended play.
-
-You must use officialBestByGame as the official list for:
+Use officialBestByGame as the official list for:
 - BEST PLAYS
 - CONSERVATIVE TICKET
 - AGGRESSIVE TICKET
 
-Example:
-- If you choose Yankees -1.5 as the best value from that game,
-  you must NOT recommend Yankees ML in any other main section.
-
-- If you choose Minnesota ML,
-  you must NOT recommend Minnesota -1.5 as a main pick.
-
-You must decide which market represents the BEST REAL VALUE from each game:
-- Moneyline
-- Run Line
-- Team Total
-- Over/Under
-- Player Prop
-
-and keep full consistency.
-
 FORBIDDEN:
 - Recommending ML and RL from the same team as strong plays at the same time.
-- Saying RL has better value and then listing ML as the better play.
 - Duplicating the same game across correlated markets.
-
-HIERARCHY:
-1. BEST PLAYS defines the official slate picks.
-2. BEST MONEYLINE can only include teams whose true best market is Moneyline.
-3. BEST RUN LINE can only include teams whose true best market is Run Line.
-4. If a team appears in BEST RUN LINE, it cannot appear in BEST MONEYLINE.
-5. Tickets must follow the same logic.
-
-━━━━━━━━━━━━━━━━━━━━
+- Inventing unavailable picks.
 
 TOTALS RULE:
-
 - If rankedTeamTotals has plays, you must evaluate if any deserve to be included.
 - If there is a Team Total Over or Under, it can be used as a recommended Over/Under play.
-- Do NOT say “No Over/Under or Team Totals available” if rankedTeamTotals has picks.
-- If there is no full-game total, Team Totals are valid markets.
-
-━━━━━━━━━━━━━━━━━━━━
 
 CONSERVATIVE TICKET:
 - Maximum 4 plays.
@@ -477,9 +446,7 @@ AGGRESSIVE TICKET:
 - Maximum 5 plays.
 - Only one play per game.
 - Use ONLY picks included in officialBestByGame.
-- May include 1 Hit Prop or 1 HR Prop if there is value, but it must not duplicate a game with another strong pick.
-
-━━━━━━━━━━━━━━━━━━━━
+- May include 1 Hit Prop or 1 HR Prop if there is value.
 
 BOARD:
 ${JSON.stringify(aiBoard, null, 2)}
@@ -567,18 +534,7 @@ Include ONLY picks from officialBestByGame where market is Run Line.
 
 🔥 TOP 5 HIT PROPS
 
-MANDATORY:
-- If rankedHitProps has data, you MUST show the best 5 Hit Props.
-- You CANNOT say "Hit Props unavailable" if data exists.
-- Use the exact probabilities from the board.
-
-FORMAT:
-1. Name (TEAM) - Probability: XX
-2. Name (TEAM) - Probability: XX
-3. Name (TEAM) - Probability: XX
-4. Name (TEAM) - Probability: XX
-5. Name (TEAM) - Probability: XX
-
+If rankedHitProps has data, show the best 5 Hit Props.
 Only if rankedHitProps is empty respond:
 ⚠️ Hit Props unavailable.
 
@@ -586,20 +542,8 @@ Only if rankedHitProps is empty respond:
 
 💣 TOP 5 HR PROPS
 
-MANDATORY:
-- If rankedHrProps has data, you MUST show the best 5 HR Props.
-- You CANNOT say "HR Props unavailable" if rankedHrProps has data.
-- Use the exact probabilities from the board.
-- Order them from highest to lowest probability.
-
-FORMAT:
-1. Name (TEAM) - Probability: XX
-2. Name (TEAM) - Probability: XX
-3. Name (TEAM) - Probability: XX
-4. Name (TEAM) - Probability: XX
-5. Name (TEAM) - Probability: XX
-
-Only if rankedHrProps is completely empty respond:
+If rankedHrProps has data, show the best 5 HR Props.
+Only if rankedHrProps is empty respond:
 ⚠️ HR Props unavailable.
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -625,7 +569,7 @@ Only if rankedHrProps is completely empty respond:
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
@@ -640,18 +584,26 @@ Only if rankedHrProps is completely empty respond:
       temperature: 0
     });
 
+    const analysis =
+      completion.choices?.[0]?.message?.content ||
+      "No analysis generated.";
+
     res.json({
       success: true,
       board: aiBoard,
-      analysis: completion.choices[0].message.content
+      analysis
     });
 
   } catch (error) {
-    console.error("AI ERROR:", error);
+    console.error("AI ERROR FULL:", error);
 
     res.status(500).json({
       success: false,
-      error: "AI analysis failed"
+      error: "AI analysis failed",
+      details: error.message || String(error),
+      status: error.status || null,
+      code: error.code || null,
+      type: error.type || null
     });
   }
 });
