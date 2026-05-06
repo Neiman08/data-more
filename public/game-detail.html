@@ -325,26 +325,6 @@
       padding:40px;
     }
 
-    /* Nuevas clases solicitadas */
-    .match-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .team-box {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .team-box span {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block; /* Asegura que el truncado funcione correctamente */
-    }
-
     @media(max-width:850px){
       .page{padding:12px;}
 
@@ -464,43 +444,15 @@
           return;
         }
 
-        const [gamesRes,lineupRes,propsRes,analysisRes] = await Promise.all([
+        const [gamesRes,lineupRes,propsRes,analysisRes,centerRes] = await Promise.all([
           fetch(`/api/baseball/games?date=${date}`),
           fetch(`/api/baseball/lineup/${gamePk}`).catch(()=>null),
           fetch(`/api/baseball/player-props/${gamePk}`).catch(()=>null),
-          fetch(`/api/analyze/${gamePk}?date=${date}`).catch(()=>null)
+          fetch(`/api/analyze/${gamePk}?date=${date}`).catch(()=>null),
+          fetch(`/api/baseball/game-center/${gamePk}?date=${date}`)
         ]);
 
-        const centerRes = await fetch(`/api/baseball/game-center/${gamePk}?date=${date}`);
         const centerData = await centerRes.json();
-
-        const advancedModel = centerData.advancedModel || {
-          projectedRuns: {
-            away: 'Pending',
-            home: 'Pending',
-            total: 'Pending'
-          },
-          simulation: {
-            runs: 'Pending',
-            awayWinPct: 'Pending',
-            homeWinPct: 'Pending',
-            mostCommonScore: 'Pending',
-            volatility: 'Pending'
-          },
-          marketEdge: {
-            modelFavorite: 'Pending',
-            vegasFavorite: 'Pending',
-            modelPct: 'Pending',
-            vegasImpliedPct: 'Pending',
-            edgePct: 'Pending',
-            status: 'Pending real odds'
-          },
-          alerts: [
-            'Confirm lineup before first pitch',
-            'Review bullpen usage before betting'
-          ]
-        };
-
         const gamesData = await gamesRes.json();
         const lineupData = lineupRes ? await lineupRes.json() : {ok:false};
         const propsData = propsRes ? await propsRes.json() : {ok:false};
@@ -517,6 +469,25 @@
           content.innerHTML = 'Game not found.';
           return;
         }
+
+        const edge = centerData.advancedEdge || {};
+        const advancedModel = {
+          projectedRuns: {
+            away: edge.awayProjectedRuns ?? 'Pending',
+            home: edge.homeProjectedRuns ?? 'Pending',
+            total: edge.projectedTotal ?? 'Pending'
+          },
+          simulation: {
+            runs: edge.simulationRuns ?? '1,000,000',
+            awayWinPct: edge.awayWinPct ?? 'Pending',
+            homeWinPct: edge.homeWinPct ?? 'Pending',
+            mostCommonScore: edge.mostCommonScore ?? 'Pending'
+          },
+          alerts: centerData.advancedModel?.alerts || [
+            'Confirm lineup before first pitch',
+            'Review bullpen usage before betting'
+          ]
+        };
 
         const headToHead = centerData.headToHead || {};
         const injuries = centerData.injuries || {};
@@ -653,29 +624,30 @@
             <div class="two-grid">
               <div>
                 <div class="sub-title">Projected Runs</div>
-                <div class="stat-row"><span>${game.awayAbbrev}</span><span>${advancedModel.projectedRuns.away}</span></div>
-                <div class="stat-row"><span>${game.homeAbbrev}</span><span>${advancedModel.projectedRuns.home}</span></div>
-                <div class="stat-row"><span>Projected Total</span><span>${advancedModel.projectedRuns.total}</span></div>
+                <div class="stat-row"><span>${game.awayAbbrev}</span><span id="awayProjectedRuns">${advancedModel.projectedRuns.away}</span></div>
+                <div class="stat-row"><span>${game.homeAbbrev}</span><span id="homeProjectedRuns">${advancedModel.projectedRuns.home}</span></div>
+                <div class="stat-row"><span>Projected Total</span><span id="projectedTotal">${advancedModel.projectedRuns.total}</span></div>
               </div>
 
               <div>
                 <div class="sub-title">Simulation</div>
-                <div class="stat-row"><span>Runs</span><span>${advancedModel.simulation.runs}</span></div>
-                <div class="stat-row"><span>${game.awayAbbrev} Win %</span><span>${advancedModel.simulation.awayWinPct}%</span></div>
-                <div class="stat-row"><span>${game.homeAbbrev} Win %</span><span>${advancedModel.simulation.homeWinPct}%</span></div>
-                <div class="stat-row"><span>Most Common Score</span><span>${advancedModel.simulation.mostCommonScore}</span></div>
+                <div class="stat-row"><span>Runs</span><span id="simulationRuns">${advancedModel.simulation.runs}</span></div>
+                <div class="stat-row"><span>${game.awayAbbrev} Win %</span><span id="awayWinPct">${advancedModel.simulation.awayWinPct}${advancedModel.simulation.awayWinPct !== 'Pending' ? '%' : ''}</span></div>
+                <div class="stat-row"><span>${game.homeAbbrev} Win %</span><span id="homeWinPct">${advancedModel.simulation.homeWinPct}${advancedModel.simulation.homeWinPct !== 'Pending' ? '%' : ''}</span></div>
+                <div class="stat-row"><span>Most Common Score</span><span id="mostCommonScore">${advancedModel.simulation.mostCommonScore}</span></div>
               </div>
             </div>
           </section>
 
           <section class="panel">
             <h3>Model vs Vegas Edge</h3>
-            <div class="stat-row"><span>Model Favorite</span><span>${advancedModel.marketEdge.modelFavorite}</span></div>
-            <div class="stat-row"><span>Vegas Favorite</span><span>${advancedModel.marketEdge.vegasFavorite}</span></div>
-            <div class="stat-row"><span>Model Probability</span><span>${advancedModel.marketEdge.modelPct}%</span></div>
-            <div class="stat-row"><span>Vegas Probability</span><span>${advancedModel.marketEdge.vegasImpliedPct ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Edge</span><span>${advancedModel.marketEdge.edgePct ?? 'Pending'}</span></div>
-            <p class="note">${advancedModel.marketEdge.status}</p>
+            <div class="stat-row"><span>Model Favorite</span><div id="modelFavorite">--</div></div>
+            <div class="stat-row"><span>Vegas Favorite</span><div id="vegasFavorite">--</div></div>
+            <div class="stat-row"><span>Model Probability</span><div id="modelProbability">--</div></div>
+            <div class="stat-row"><span>Vegas Probability</span><div id="vegasProbability">--</div></div>
+            <div class="stat-row"><span>Edge</span><div id="edgeSignal" style="color:var(--green); font-weight:900;">--</div></div>
+            <div class="stat-row"><span>Bet Signal</span><div id="betSignal">--</div></div>
+            <div class="stat-row"><span>Value Rating</span><div id="valueRating">--</div></div>
           </section>
 
           <section class="panel">
@@ -817,6 +789,15 @@
             ${renderLineups(lineupData, propsData, game.awayAbbrev, game.homeAbbrev)}
           </section>
         `;
+
+        // Update Model vs Vegas Edge elements after innerHTML is set
+        document.getElementById('modelFavorite').textContent = centerData.modelVegasEdge?.modelFavorite || '--';
+        document.getElementById('vegasFavorite').textContent = centerData.modelVegasEdge?.vegasFavorite || '--';
+        document.getElementById('modelProbability').textContent = centerData.modelVegasEdge?.modelProbability || '--';
+        document.getElementById('vegasProbability').textContent = centerData.modelVegasEdge?.vegasImplied || '--';
+        document.getElementById('edgeSignal').textContent = centerData.modelVegasEdge?.edgeSignal || '--';
+        document.getElementById('betSignal').textContent = centerData.modelVegasEdge?.betSignal || '--';
+        document.getElementById('valueRating').textContent = centerData.modelVegasEdge?.valueRating || '--';
 
       }catch(err){
         console.error(err);
