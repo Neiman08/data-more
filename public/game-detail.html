@@ -1033,7 +1033,7 @@
 
     function imgFallback(el){
       el.onerror = null;
-      el.src = '/logos/player-placeholder.png';
+      el.src = '/logos/mlb_generic.png';
     }
 
     async function loadDetail(){
@@ -1061,41 +1061,64 @@
           return;
         }
 
-        const edge = centerData.advancedEdge || {};
+        const analysis = analysisData.analysis || {};
+        const edge = centerData.advancedEdge || analysis.advancedEdge || {};
+
+        const modelVegasEdge =
+          centerData.modelVegasEdge ||
+          analysis.modelVegasEdge ||
+          analysis.vegasEdge ||
+          {};
+
         const advancedModel = {
           projectedRuns: {
-            away: edge.awayProjectedRuns ?? 'Pending',
-            home: edge.homeProjectedRuns ?? 'Pending',
-            total: edge.projectedTotal ?? 'Pending'
+            away:
+              edge.awayProjectedRuns ??
+              analysis.projectedRuns?.away ??
+              analysis.away?.projectedRuns ??
+              analysis.teamTotals?.away?.projectedRuns ??
+              analysis.teamTotals?.away?.runs ??
+              'Pending',
+
+            home:
+              edge.homeProjectedRuns ??
+              analysis.projectedRuns?.home ??
+              analysis.home?.projectedRuns ??
+              analysis.teamTotals?.home?.projectedRuns ??
+              analysis.teamTotals?.home?.runs ??
+              'Pending',
+
+            total:
+              edge.projectedTotal ??
+              analysis.projectedRuns?.total ??
+              analysis.projectedTotal ??
+              analysis.combinedProjectedTotal ??
+              analysis.totalProjectedRuns ??
+              'Pending'
           },
           simulation: {
-            runs: edge.simulationRuns ?? '1,000,000',
-            awayWinPct: edge.awayWinPct ?? 'Pending',
-            homeWinPct: edge.homeWinPct ?? 'Pending',
-            mostCommonScore: edge.mostCommonScore ?? 'Pending'
-          },
-          alerts: centerData.advancedModel?.alerts || [
-            'Confirm lineup before first pitch',
-            'Review bullpen usage before betting'
-          ]
+            runs: edge.simulationRuns ?? analysis.simulation?.runs ?? '1,000,000',
+            awayWinPct: edge.awayWinPct ?? analysis.simulation?.awayWinPct ?? analysis.away?.modelWinPct ?? 'Pending',
+            homeWinPct: edge.homeWinPct ?? analysis.simulation?.homeWinPct ?? analysis.home?.modelWinPct ?? 'Pending',
+            mostCommonScore: edge.mostCommonScore ?? analysis.simulation?.mostCommonScore ?? 'Pending'
+          }
         };
 
         const odds = centerData.odds || {};
         const awayPct = Number(analysisData?.analysis?.away?.modelWinPct || 50);
         const homePct = Number(analysisData?.analysis?.home?.modelWinPct || 50);
 
-        const awayPlayers = getTeamPlayers(propsData, game.awayAbbrev);
-        const homePlayers = getTeamPlayers(propsData, game.homeAbbrev);
+        const awayHitPlayers = getTopHits(game, propsData, game.awayAbbrev);
+        const homeHitPlayers = getTopHits(game, propsData, game.homeAbbrev);
+
+        const awayHrPlayers = getTopHR(game, propsData, game.awayAbbrev);
+        const homeHrPlayers = getTopHR(game, propsData, game.homeAbbrev);
 
         const awayPitcherId = getPitcherId(centerData, game, 'away');
         const homePitcherId = getPitcherId(centerData, game, 'home');
 
         const awayPitcherImg = pitcherImg(awayPitcherId);
         const homePitcherImg = pitcherImg(homePitcherId);
-
-        console.log('AWAY PITCHER ID:', awayPitcherId, game.awayPitcher);
-        console.log('HOME PITCHER ID:', homePitcherId, game.homePitcher);
-        console.log('CENTER PITCHER STATS:', centerData.pitcherStats);
 
         content.className = '';
 
@@ -1370,15 +1393,29 @@
           </section>
 
           <section class="panel">
-            <h3>Top Hit Players</h3>
+            <h3>🔥 Top 3 Hit Probability (Game)</h3>
             <div class="two-grid">
               <div>
                 <div class="sub-title">${game.awayAbbrev}</div>
-                ${renderTeamHitPlayers(awayPlayers, propsData, 0)}
+                ${renderPlayerCards(awayHitPlayers, 'hit')}
               </div>
               <div>
                 <div class="sub-title">${game.homeAbbrev}</div>
-                ${renderTeamHitPlayers(homePlayers, propsData, 1)}
+                ${renderPlayerCards(homeHitPlayers, 'hit')}
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>💣 Top 3 HR Potential (Game)</h3>
+            <div class="two-grid">
+              <div>
+                <div class="sub-title">${game.awayAbbrev}</div>
+                ${renderPlayerCards(awayHrPlayers, 'hr')}
+              </div>
+              <div>
+                <div class="sub-title">${game.homeAbbrev}</div>
+                ${renderPlayerCards(homeHrPlayers, 'hr')}
               </div>
             </div>
           </section>
@@ -1389,10 +1426,17 @@
           </section>
         `;
 
-        document.getElementById('modelFavorite').textContent = centerData.modelVegasEdge?.modelFavorite || '--';
-        document.getElementById('vegasFavorite').textContent = centerData.modelVegasEdge?.vegasFavorite || '--';
-        document.getElementById('edgeSignal').textContent = centerData.modelVegasEdge?.edgeSignal || '--';
-        document.getElementById('betSignal').textContent = centerData.modelVegasEdge?.betSignal || '--';
+        document.getElementById('modelFavorite').textContent =
+          modelVegasEdge.modelFavorite || analysis.pick || '--';
+
+        document.getElementById('vegasFavorite').textContent =
+          modelVegasEdge.vegasFavorite || odds.vegasFavorite || odds.favorite || '--';
+
+        document.getElementById('edgeSignal').textContent =
+          modelVegasEdge.edgeSignal || modelVegasEdge.edge || odds.modelEdge || '--';
+
+        document.getElementById('betSignal').textContent =
+          modelVegasEdge.betSignal || modelVegasEdge.signal || '--';
 
         await loadLiveGamecast();
         if(liveGamecastTimer) clearInterval(liveGamecastTimer);
@@ -1527,9 +1571,100 @@
       }
     }
 
-    function getTeamPlayers(propsData, abbrev){
-      if(!propsData || !propsData.players) return [];
-      return propsData.players.filter(p => p.teamAbbrev === abbrev);
+    function normalizePlayersFromSources(game, propsData){
+      const sources = [
+        game?.topHitPlayers,
+        game?.topHits,
+        game?.hitPlayers,
+        game?.topHomeRunPlayers,
+        game?.topHrPlayers,
+        game?.topHRPlayers,
+        game?.homeRunPotential,
+        game?.hrPotential,
+        propsData?.players,
+        propsData?.topHitPlayers,
+        propsData?.topHits,
+        propsData?.topHomeRunPlayers,
+        propsData?.topHRPlayers,
+        propsData?.homeRunPotential,
+        propsData?.hrPotential
+      ];
+
+      return sources.flatMap(x => Array.isArray(x) ? x : []);
+    }
+
+    function getTopHits(game, propsData, teamAbbrev){
+      const all = normalizePlayersFromSources(game, propsData);
+
+      return all
+        .filter(p => {
+          const type = String(p.propType || p.type || p.category || '').toLowerCase();
+          const team = p.teamAbbrev || p.team || p.teamCode || '';
+          return (!teamAbbrev || team === teamAbbrev) &&
+            (type.includes('hit') || p.hitProbability || p.avg || p.AVG || p.ops || p.OPS);
+        })
+        .slice(0, 3);
+    }
+
+    function getTopHR(game, propsData, teamAbbrev){
+      const all = normalizePlayersFromSources(game, propsData);
+
+      const teamPlayers = all.filter(p => {
+        const team = p.teamAbbrev || p.team || p.teamCode || '';
+        return !teamAbbrev || team === teamAbbrev;
+      });
+
+      const hrPlayers = teamPlayers.filter(p => {
+        const type = String(p.propType || p.type || p.category || p.market || '').toLowerCase();
+
+        return (
+          type.includes('hr') ||
+          type.includes('home') ||
+          p.hrProbability != null ||
+          p.homeRunProbability != null ||
+          p.hrProb != null ||
+          p.HRProb != null ||
+          p.hr != null ||
+          p.HR != null ||
+          p.homeRuns != null ||
+          p.slg != null ||
+          p.SLG != null
+        );
+      });
+
+      return hrPlayers
+        .sort((a,b) => {
+          const pa = Number(a.hrProbability ?? a.homeRunProbability ?? a.hrProb ?? a.probability ?? a.prob ?? 0);
+          const pb = Number(b.hrProbability ?? b.homeRunProbability ?? b.hrProb ?? b.probability ?? b.prob ?? 0);
+          return pb - pa;
+        })
+        .slice(0, 3);
+    }
+
+    function playerHeadshot(p){
+      const id = p.personId || p.playerId || p.id || p.mlbId;
+      if(!id) return '/logos/mlb_generic.png';
+      return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${id}/headshot/67/current`;
+    }
+
+    function renderPlayerCards(players, type = 'hit'){
+      if(!players.length) return '<p class="note">No player data found.</p>';
+
+      return players.map(p => `
+        <div class="player-card">
+          <img src="${playerHeadshot(p)}" onerror="this.src='/logos/mlb_generic.png'">
+          <div>
+            <span class="p-name">${p.playerName || p.name || '--'}</span>
+            <span class="p-info">
+              ${
+                type === 'hr'
+                  ? `Prob: ${p.hrProbability ?? p.homeRunProbability ?? p.hrProb ?? p.probability ?? p.prob ?? '--'}% | HR: ${p.hr ?? p.HR ?? p.homeRuns ?? '--'} | SLG: ${p.slg ?? p.SLG ?? '--'}`
+                  : `Prob: ${p.probability ?? p.prob ?? '--'}% | AVG: ${p.avg ?? p.AVG ?? '--'} | OPS: ${p.ops ?? p.OPS ?? '--'}`
+              }
+            </span>
+          </div>
+        </div>
+      `).join('');
     }
 
     function renderRiskBars(pct){
@@ -1541,33 +1676,47 @@
       `;
     }
 
-    function renderTeamHitPlayers(players, propsData, side){
-      if(!players.length) return '<p class="note">No hitter data found.</p>';
-      return players.filter(p => p.propType === 'Hits').slice(0,4).map(p => `
-        <div class="player-card">
-          <img src="https://img.mlbstatic.com/mlb-photos/person/main/v2/${p.playerId}.png">
-          <div>
-            <span class="p-name">${p.playerName}</span>
-            <span class="p-info">Over 0.5: ${p.overOdds} | Edge: ${p.edge}%</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
     function renderLineups(lineupData, propsData, away, home){
-      if(!lineupData.ok || !lineupData.lineups) return '<p class="note">Lineups not yet confirmed.</p>';
-      const aL = lineupData.lineups.away || [];
-      const hL = lineupData.lineups.home || [];
+      const awayLineup =
+        lineupData.awayLineup ||
+        lineupData.lineups?.away ||
+        lineupData.away ||
+        lineupData.teams?.away?.lineup ||
+        [];
+
+      const homeLineup =
+        lineupData.homeLineup ||
+        lineupData.lineups?.home ||
+        lineupData.home ||
+        lineupData.teams?.home?.lineup ||
+        [];
+
+      if(!lineupData.ok || (!awayLineup.length && !homeLineup.length)){
+        return '<p class="note">Lineups not yet confirmed.</p>';
+      }
+
+      const renderSide = (lineup) => lineup.slice(0,9).map(p => {
+        const order = String(p.battingOrder || p.order || '').charAt(0) || '';
+        const name = p.name || p.playerName || '--';
+        const pos = p.pos || p.position || '--';
+
+        return `
+          <div class="player">
+            <span><span class="num">${order}</span>${name}</span>
+            <span class="badge">${pos}</span>
+          </div>
+        `;
+      }).join('');
 
       return `
         <div class="lineup-box">
           <div>
             <div class="sub-title">${away}</div>
-            ${aL.map(p => `<div class="player"><span class="num">${p.order}</span> ${p.name} <span class="badge">${p.pos}</span></div>`).join('')}
+            ${renderSide(awayLineup)}
           </div>
           <div>
             <div class="sub-title">${home}</div>
-            ${hL.map(p => `<div class="player"><span class="num">${p.order}</span> ${p.name} <span class="badge">${p.pos}</span></div>`).join('')}
+            ${renderSide(homeLineup)}
           </div>
         </div>
       `;
