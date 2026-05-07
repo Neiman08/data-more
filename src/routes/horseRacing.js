@@ -12,6 +12,9 @@ const TRACKS = [
   { name: 'Mountaineer', code: 'mnr' },
   { name: 'Parx Racing', code: 'prx' },
   { name: 'Thistledown', code: 'tdn' },
+  { name: 'Delta Downs', code: 'ded' },
+  { name: 'Horseshoe Indianapolis', code: 'ind' },
+  { name: 'Penn National', code: 'pen' },
 
   // PRINCIPALES USA
   { name: 'Gulfstream Park', code: 'gp' },
@@ -38,12 +41,11 @@ const TRACKS = [
   { name: 'Evangeline Downs', code: 'evd' },
   { name: 'Finger Lakes', code: 'fl' },
   { name: 'Prairie Meadows', code: 'prm' },
-  { name: 'Indiana Grand', code: 'ind' },
   { name: 'Hawthorne', code: 'haw' },
   { name: 'Canterbury Park', code: 'cbt' },
   { name: 'Will Rogers Downs', code: 'wr' },
 
-  // HARNESS / MIXTOS (algunos días aparecen)
+  // HARNESS / MIXTOS
   { name: 'Meadowlands', code: 'med' },
   { name: 'Yonkers Raceway', code: 'yon' },
   { name: 'Hoosier Park', code: 'hoo' }
@@ -118,7 +120,8 @@ router.get('/pdf', async (req, res) => {
     const buffer = Buffer.from(await response.arrayBuffer());
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline'); 
+    res.setHeader('Content-Disposition', 'inline');
+
     res.send(buffer);
 
   } catch (error) {
@@ -133,29 +136,45 @@ router.get('/pdf', async (req, res) => {
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
-    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
+
+    if (!date || !track) {
+      throw new Error("Parámetros track y date obligatorios.");
+    }
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+
     const response = await fetch(url);
+
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
+
     const pdf = await pdfjs.getDocument({ data }).promise;
-    
+
     const pageNum = parseInt(page);
+
     const pdfPage = await pdf.getPage(pageNum);
+
     const textContent = await pdfPage.getTextContent();
 
     const tokens = textContent.items.map(item => ({
       text: item.str,
       x: parseFloat(item.transform[4].toFixed(2)),
       y: parseFloat(item.transform[5].toFixed(2))
-    })).filter(item => item.text.trim() !== "");
+    }))
+    .filter(item => item.text.trim() !== "");
 
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
-    res.json({ ok: true, tokens: tokens.slice(0, 500) });
+    res.json({
+      ok: true,
+      tokens: tokens.slice(0, 500)
+    });
+
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
@@ -165,49 +184,79 @@ router.get('/debug-coordinates', async (req, res) => {
 router.get('/import-structured', async (req, res) => {
   try {
     const { date, track } = req.query;
-    if (!date || !track) throw new Error("Parámetros track y date obligatorios.");
+
+    if (!date || !track) {
+      throw new Error("Parámetros track y date obligatorios.");
+    }
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
+
     const response = await fetch(url);
-    if (!response.ok) throw new Error('PDF no encontrado en el servidor origen');
+
+    if (!response.ok) {
+      throw new Error('PDF no encontrado en el servidor origen');
+    }
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
+
     const pdf = await pdfjs.getDocument({ data }).promise;
 
     const allRaces = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
+
       const page = await pdf.getPage(i);
+
       const textContent = await page.getTextContent();
-      
+
       const tokens = textContent.items.map(item => ({
         text: item.str.trim(),
         x: item.transform[4],
         y: item.transform[5]
-      })).filter(t => t.text !== "");
+      }))
+      .filter(t => t.text !== "");
 
       const rows = [];
+
       tokens.forEach(token => {
+
         let row = rows.find(r => Math.abs(r.y - token.y) < 4);
+
         if (!row) {
-          row = { y: token.y, items: [] };
+          row = {
+            y: token.y,
+            items: []
+          };
+
           rows.push(row);
         }
+
         row.items.push(token);
       });
 
       rows.sort((a, b) => b.y - a.y);
-      rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
+
+      rows.forEach(r =>
+        r.items.sort((a, b) => a.x - b.x)
+      );
 
       const runners = [];
 
       rows.forEach((row, rowIndex) => {
+
         const numberToken = row.items.find(it =>
-          /^\d{1,2}$/.test(it.text) && it.x > 5 && it.x < 25
+          /^\d{1,2}$/.test(it.text) &&
+          it.x > 5 &&
+          it.x < 25
         );
 
-        if (numberToken && runners.find(r => r.number === numberToken.text)) return;
+        if (
+          numberToken &&
+          runners.find(r => r.number === numberToken.text)
+        ) {
+          return;
+        }
 
         const nameTokens = row.items
           .filter(it =>
@@ -223,9 +272,20 @@ router.get('/import-structured', async (req, res) => {
           .map(it => it.text);
 
         const horseName = nameTokens.join(' ').trim();
-        if (!numberToken || !horseName || horseName.length < 3) return;
 
-        const upperRows = rows.slice(Math.max(0, rowIndex - 6), rowIndex);
+        if (
+          !numberToken ||
+          !horseName ||
+          horseName.length < 3
+        ) {
+          return;
+        }
+
+        const upperRows = rows.slice(
+          Math.max(0, rowIndex - 6),
+          rowIndex
+        );
+
         const jockeyToken = [...upperRows, row]
           .flatMap(r => r.items)
           .find(it =>
@@ -239,7 +299,11 @@ router.get('/import-structured', async (req, res) => {
           ? jockeyToken.text.replace(/[0-9,]/g, '').trim()
           : 'No data';
 
-        const lowerRows = rows.slice(rowIndex + 1, rowIndex + 8);
+        const lowerRows = rows.slice(
+          rowIndex + 1,
+          rowIndex + 8
+        );
+
         const oddsToken = lowerRows
           .flatMap(r => r.items)
           .find(it =>
@@ -248,14 +312,24 @@ router.get('/import-structured', async (req, res) => {
             /\d+[-/]\d+$/.test(it.text)
           );
 
-        const odds = oddsToken ? oddsToken.text.replace('-', '/') : 'N/A';
+        const odds = oddsToken
+          ? oddsToken.text.replace('-', '/')
+          : 'N/A';
 
-        const nearbyRows = rows.slice(Math.max(0, rowIndex - 4), rowIndex + 3);
+        const nearbyRows = rows.slice(
+          Math.max(0, rowIndex - 4),
+          rowIndex + 3
+        );
+
         const speedFigures = nearbyRows
           .flatMap(r => r.items)
           .filter(it => it.x > 530)
           .map(it => parseInt(it.text))
-          .filter(n => !isNaN(n) && n > 10 && n < 130);
+          .filter(n =>
+            !isNaN(n) &&
+            n > 10 &&
+            n < 130
+          );
 
         runners.push({
           number: numberToken.text,
@@ -270,7 +344,7 @@ router.get('/import-structured', async (req, res) => {
         allRaces.push({
           raceNumber: i,
           track: track.toUpperCase(),
-          date: date,
+          date,
           runners
         });
       }
@@ -289,8 +363,13 @@ router.get('/import-structured', async (req, res) => {
     });
 
   } catch (error) {
+
     console.error('❌ Error Crítico en el Parser:', error);
-    res.status(500).json({ ok: false, error: error.message });
+
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
   }
 });
 
