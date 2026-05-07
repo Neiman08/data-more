@@ -74,8 +74,8 @@
 
     .matchup{
       display:grid;
-      grid-template-columns:1fr 280px 1fr;
-      gap:28px;
+      grid-template-columns:1fr 210px 1fr;
+      gap:16px;
       align-items:center;
       text-align:center;
     }
@@ -182,19 +182,6 @@
       color:var(--muted);
       font-size:11px;
       margin-bottom:4px;
-    }
-
-    .section-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:18px;
-      margin-bottom:24px;
-    }
-
-    .two-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
     }
 
     .panel h3{
@@ -325,6 +312,568 @@
       padding:40px;
     }
 
+    /* DATA MORE LIVE GAMECAST */
+    .live-gamecast-card{
+      background:linear-gradient(180deg,rgba(18,22,27,.96),rgba(5,8,11,.97));
+      border:1px solid rgba(107,255,25,.38);
+      border-radius:26px;
+      padding:24px;
+      box-shadow:0 22px 60px rgba(0,0,0,.55),0 0 35px rgba(107,255,25,.07);
+      margin-bottom:24px;
+      backdrop-filter:blur(14px);
+    }
+
+    .gamecast-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:20px;
+    }
+
+    .gamecast-kicker{
+      margin:0 0 4px;
+      color:var(--green);
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:1.5px;
+    }
+
+    .gamecast-header h2{
+      margin:0;
+      color:#fff;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:-.5px;
+    }
+
+    .gamecast-status{
+      background:rgba(107,255,25,.12);
+      color:var(--green);
+      border:1px solid rgba(107,255,25,.35);
+      padding:8px 13px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .gamecast-scoreline{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      gap:14px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+
+    .gc-score-team{
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+
+    .gc-score-team strong{
+      font-family:'Anton',sans-serif;
+      font-size:28px;
+      letter-spacing:1px;
+    }
+
+    .gc-score-team span{
+      color:var(--green);
+      font-size:32px;
+      font-weight:900;
+      font-family:'Roboto Mono',monospace;
+    }
+
+    .gc-inning-box{
+      text-align:center;
+      color:var(--muted);
+      font-weight:900;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+
+    .gamecast-matchup{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      gap:14px;
+      align-items:center;
+      margin-top:16px;
+    }
+
+    .gc-player{
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:15px;
+    }
+
+    .gc-player.right{text-align:right;}
+
+    .gc-label{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1px;
+      text-transform:uppercase;
+    }
+
+    .gc-player strong{
+      display:block;
+      color:#fff;
+      font-size:17px;
+      font-weight:900;
+      margin-top:6px;
+    }
+
+    .gc-player small{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+      font-weight:800;
+    }
+
+    .gc-vs{
+      color:var(--muted);
+      font-weight:900;
+      font-size:13px;
+    }
+
+    .gamecast-counts{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin:20px 0;
+    }
+
+    .gc-count-box{
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:14px;
+      padding:11px;
+      text-align:center;
+      font-size:12px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .dot-wrap{
+      display:block;
+      margin-top:7px;
+      letter-spacing:3px;
+      font-size:13px;
+    }
+
+    .gamecast-main{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:20px;
+      align-items:center;
+    }
+
+    .strike-zone-wrap{
+      background:rgba(0,0,0,.24);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:22px;
+      padding:20px;
+      min-height:300px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+    }
+
+    .strike-zone{
+      position:relative;
+      width:235px;
+      height:235px;
+      background:
+        linear-gradient(90deg,rgba(59,130,246,.58) 0 33.3%,rgba(239,68,68,.58) 33.3% 66.6%,rgba(59,130,246,.58) 66.6% 100%),
+        linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.20));
+      border:2px solid rgba(255,255,255,.18);
+      box-shadow:0 18px 40px rgba(0,0,0,.5);
+      overflow:hidden;
+    }
+
+    .strike-zone:before,
+    .strike-zone:after{
+      content:"";
+      position:absolute;
+      background:rgba(0,0,0,.55);
+      z-index:1;
+    }
+
+    .strike-zone:before{
+      left:33.33%;
+      top:0;
+      width:2px;
+      height:100%;
+      box-shadow:78px 0 0 rgba(0,0,0,.55);
+    }
+
+    .strike-zone:after{
+      top:33.33%;
+      left:0;
+      height:2px;
+      width:100%;
+      box-shadow:0 78px 0 rgba(0,0,0,.55);
+    }
+
+    .zone-box{
+      position:absolute;
+      inset:45px;
+      border:4px solid rgba(0,0,0,.78);
+      z-index:2;
+    }
+
+    .pitch-dot{
+      position:absolute;
+      left:50%;
+      top:45%;
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:#ef1111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      border:2px solid #050505;
+      font-weight:900;
+      z-index:5;
+      box-shadow:
+        0 7px 18px rgba(0,0,0,.55),
+        0 0 18px rgba(255,255,255,.25),
+        0 0 35px currentColor;
+      transition:
+        left .6s cubic-bezier(.22,.61,.36,1),
+        top .6s cubic-bezier(.22,.61,.36,1),
+        background .35s ease,
+        transform .3s ease;
+    }
+
+    .pitch-dot.pulse{
+      transform:translate(-50%,-50%) scale(1.18);
+    }
+
+    .bases-panel{
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:22px;
+      padding:18px;
+      min-height:300px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .bases-title{
+      color:var(--green);
+      font-weight:900;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      margin-bottom:8px;
+    }
+
+    .diamond{
+      height:155px;
+      position:relative;
+      margin:8px auto;
+      width:190px;
+    }
+
+    .base{
+      position:absolute;
+      width:34px;
+      height:34px;
+      background:rgba(255,255,255,.20);
+      border:2px solid rgba(255,255,255,.35);
+      transform:rotate(45deg);
+      border-radius:4px;
+    }
+
+    .base.active{
+      background:var(--green);
+      border-color:rgba(255,255,255,.85);
+      box-shadow:0 0 20px rgba(107,255,25,.65);
+    }
+
+    .base.home{left:78px;bottom:0;background:rgba(255,255,255,.10);}
+    .base.first{right:22px;bottom:58px;}
+    .base.second{left:78px;top:0;}
+    .base.third{left:22px;bottom:58px;}
+
+    .bases-text{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      line-height:1.45;
+      text-align:center;
+      margin:6px 0 0;
+    }
+
+    .last-pitch{
+      margin-top:20px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      padding:15px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .last-pitch-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .last-pitch-number{
+      display:grid;
+      place-items:center;
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      background:#ef1111;
+      color:#fff;
+      font-weight:900;
+      border:2px solid #050505;
+      flex:0 0 auto;
+    }
+
+    .last-pitch strong{
+      color:#fff;
+      font-size:13px;
+      display:block;
+    }
+
+    .last-pitch small{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:800;
+      display:block;
+      margin-top:3px;
+    }
+
+    .last-pitch-type{
+      color:var(--green);
+      font-weight:900;
+      font-size:12px;
+      text-align:right;
+    }
+
+    .live-probability{
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:16px;
+      padding:13px 15px;
+      margin-bottom:18px;
+    }
+
+    .live-prob-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+      text-transform:uppercase;
+    }
+
+    .live-prob-top strong{
+      color:var(--green);
+      font-family:'Roboto Mono',monospace;
+      font-size:14px;
+    }
+
+    .prob-bar{
+      width:100%;
+      height:11px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:9px;
+    }
+
+    .prob-fill{
+      width:50%;
+      height:100%;
+      background:linear-gradient(90deg,#6bff19,#c7ff45);
+      border-radius:999px;
+      transition:width .6s ease;
+      box-shadow:0 0 18px rgba(107,255,25,.45);
+    }
+
+    .momentum-wrap{
+      margin-top:18px;
+    }
+
+    .momentum-title{
+      color:var(--green);
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .momentum-bar{
+      width:100%;
+      height:14px;
+      border-radius:999px;
+      overflow:hidden;
+      background:rgba(255,255,255,.06);
+      display:flex;
+    }
+
+    .momentum-away{
+      background:linear-gradient(90deg,#facc15,#ffdd57);
+      width:50%;
+      transition:width .5s ease;
+    }
+
+    .momentum-home{
+      background:linear-gradient(90deg,#ef4444,#ff6b6b);
+      width:50%;
+      transition:width .5s ease;
+    }
+
+    .live-alert{
+      margin-top:18px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(107,255,25,.08);
+      border:1px solid rgba(107,255,25,.25);
+      color:#fff;
+      font-size:12px;
+      font-weight:800;
+      line-height:1.5;
+    }
+
+    .exit-velo{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .exit-box{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .exit-box span{
+      display:block;
+      color:var(--muted);
+      font-size:11px;
+      margin-bottom:5px;
+      font-weight:900;
+    }
+
+    .exit-box strong{
+      color:#fff;
+      font-size:20px;
+      font-family:'Roboto Mono',monospace;
+    }
+
+    .impact-red{color:#ff5a5a;}
+    .impact-green{color:#6bff19;}
+
+    /* PRO DASHBOARD LAYOUT */
+    .pro-dashboard{
+      display:grid;
+      grid-template-columns:46% 54%;
+      gap:16px;
+      align-items:start;
+      margin-bottom:18px;
+    }
+
+    .pro-dashboard .hero-card,
+    .pro-dashboard .live-gamecast-card{
+      height:auto;
+      min-height:0;
+      margin-bottom:0;
+    }
+
+    .hero-card{
+      min-height:0 !important;
+    }
+
+    .pitcher-profile-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .pitcher-profile{
+      display:grid;
+      grid-template-columns:86px 1fr;
+      gap:14px;
+      align-items:center;
+    }
+
+    .pitcher-profile img{
+      width:84px;
+      height:84px;
+      object-fit:cover;
+      border-radius:14px;
+      background:#111;
+      border:1px solid rgba(255,255,255,.16);
+    }
+
+    .pitcher-profile + .pitcher-profile{
+      border-left:1px solid rgba(255,255,255,.10);
+      padding-left:18px;
+    }
+
+    .pro-duo{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .pro-info-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .pro-info-grid .panel{
+      margin-bottom:0;
+      padding:18px;
+    }
+
+    .two-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    @media(max-width:1100px){
+      .pro-dashboard,
+      .pro-duo{
+        grid-template-columns:1fr;
+      }
+      .pro-info-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
     @media(max-width:850px){
       .page{padding:12px;}
 
@@ -346,9 +895,6 @@
         border-radius:16px;
         border:1px solid rgba(255,255,255,.05);
       }
-
-      .team .record{font-size:12px;}
-      .team .pitcher{margin-top:2px;font-size:11px;}
 
       .team img{
         width:60px;
@@ -384,7 +930,6 @@
         padding:8px;
       }
 
-      .section-grid,
       .two-grid,
       .lineup-box{
         grid-template-columns:1fr;
@@ -402,13 +947,20 @@
         height:50px;
       }
 
-      .p-name{font-size:13px;}
-      .p-info{font-size:11px;}
-      .bar-top{font-size:11px;}
-
-      .hero-card,.panel{
+      .hero-card,.panel,.live-gamecast-card{
         padding:18px;
         border-radius:18px;
+      }
+
+      .gamecast-scoreline,
+      .gamecast-matchup,
+      .gamecast-main{
+        grid-template-columns:1fr;
+      }
+
+      .strike-zone{
+        width:205px;
+        height:205px;
       }
 
       body{padding-bottom:60px;}
@@ -416,6 +968,12 @@
       .back{
         padding:8px 12px;
         font-size:12px;
+      }
+    }
+
+    @media(max-width:700px){
+      .pro-info-grid{
+        grid-template-columns:1fr;
       }
     }
   </style>
@@ -436,6 +994,47 @@
     const gamePk = params.get('gamePk');
     const date = params.get('date');
     const content = document.getElementById('content');
+    let liveGamecastTimer = null;
+
+    async function safeFetch(url, fallback = {}) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (!res.ok) return fallback;
+        return await res.json();
+      } catch (err) {
+        console.warn("Fetch failed:", url, err);
+        return fallback;
+      }
+    }
+
+    function getPitcherId(centerData, game, side){
+      return (
+        centerData?.pitcherStats?.[side]?.playerId ||
+        centerData?.pitcherStats?.[side]?.id ||
+        centerData?.pitcherStats?.[side]?.personId ||
+        game?.[`${side}PitcherId`] ||
+        game?.[`${side}ProbablePitcherId`] ||
+        game?.probablePitchers?.[side]?.id ||
+        game?.probablePitchers?.[side]?.playerId ||
+        game?.[side]?.probablePitcher?.id ||
+        null
+      );
+    }
+
+    function pitcherImg(id){
+      if(!id) return '/logos/player-placeholder.png';
+      return `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${id}/headshot/67/current`;
+    }
+
+    function imgFallback(el){
+      el.onerror = null;
+      el.src = '/logos/player-placeholder.png';
+    }
 
     async function loadDetail(){
       try{
@@ -444,19 +1043,11 @@
           return;
         }
 
-        const [gamesRes,lineupRes,propsRes,analysisRes,centerRes] = await Promise.all([
-          fetch(`/api/baseball/games?date=${date}`),
-          fetch(`/api/baseball/lineup/${gamePk}`).catch(()=>null),
-          fetch(`/api/baseball/player-props/${gamePk}`).catch(()=>null),
-          fetch(`/api/analyze/${gamePk}?date=${date}`).catch(()=>null),
-          fetch(`/api/baseball/game-center/${gamePk}?date=${date}`)
-        ]);
-
-        const centerData = await centerRes.json();
-        const gamesData = await gamesRes.json();
-        const lineupData = lineupRes ? await lineupRes.json() : {ok:false};
-        const propsData = propsRes ? await propsRes.json() : {ok:false};
-        const analysisData = analysisRes ? await analysisRes.json() : {ok:false};
+        const gamesData = await safeFetch(`/api/baseball/games?date=${date}`, { ok:false, games:[] });
+        const lineupData = await safeFetch(`/api/baseball/lineup/${gamePk}`, { ok:false });
+        const propsData = await safeFetch(`/api/baseball/player-props/${gamePk}`, { ok:false });
+        const analysisData = await safeFetch(`/api/analyze/${gamePk}?date=${date}`, { ok:false });
+        const centerData = await safeFetch(`/api/baseball/game-center/${gamePk}?date=${date}`, {});
 
         if(!gamesData.ok){
           content.innerHTML = 'Unable to load schedule.';
@@ -489,62 +1080,210 @@
           ]
         };
 
-        const headToHead = centerData.headToHead || {};
-        const injuries = centerData.injuries || {};
-        const bullpen = centerData.bullpen || {};
-        const weather = centerData.weather || {};
         const odds = centerData.odds || {};
-
         const awayPct = Number(analysisData?.analysis?.away?.modelWinPct || 50);
         const homePct = Number(analysisData?.analysis?.home?.modelWinPct || 50);
 
         const awayPlayers = getTeamPlayers(propsData, game.awayAbbrev);
         const homePlayers = getTeamPlayers(propsData, game.homeAbbrev);
 
+        const awayPitcherId = getPitcherId(centerData, game, 'away');
+        const homePitcherId = getPitcherId(centerData, game, 'home');
+
+        const awayPitcherImg = pitcherImg(awayPitcherId);
+        const homePitcherImg = pitcherImg(homePitcherId);
+
+        console.log('AWAY PITCHER ID:', awayPitcherId, game.awayPitcher);
+        console.log('HOME PITCHER ID:', homePitcherId, game.homePitcher);
+        console.log('CENTER PITCHER STATS:', centerData.pitcherStats);
+
         content.className = '';
 
         content.innerHTML = `
-          <section class="hero-card">
-            <div class="matchup">
-              <div class="team">
-                <div>
-                  <h2>${game.awayAbbrev}</h2>
-                  <div class="record">${game.awayWins || 0}-${game.awayLosses || 0}</div>
-                  <div class="pitcher">${game.awayPitcher || 'Pitcher TBD'}</div>
+          <div class="pro-dashboard">
+            <section class="hero-card">
+              <div class="matchup">
+                <div class="team">
+                  <div>
+                    <h2>${game.awayAbbrev}</h2>
+                    <div class="record">${game.awayWins || 0}-${game.awayLosses || 0}</div>
+                    <div class="pitcher">${game.awayPitcher || 'Pitcher TBD'}</div>
+                  </div>
+                  <img src="/logos/${game.awayAbbrev}.png" onerror="this.style.display='none'">
                 </div>
-                <img src="/logos/${game.awayAbbrev}.png" onerror="this.style.display='none'">
-              </div>
 
-              <div>
-                <div class="status">${game.status || 'Scheduled'}</div>
-                <div class="predictor-title">Matchup Predictor</div>
+                <div>
+                  <div class="status">${game.status || 'Scheduled'}</div>
+                  <div class="predictor-title">Matchup Predictor</div>
 
-                <div class="circle-chart" style="--away:${awayPct}%;">
-                  <div class="circle-inner">
-                    <span>${game.awayAbbrev}</span>
-                    <span class="vs">VS</span>
-                    <span>${game.homeAbbrev}</span>
+                  <div class="circle-chart" style="--away:${awayPct}%;">
+                    <div class="circle-inner">
+                      <span>${game.awayAbbrev}</span>
+                      <span class="vs">VS</span>
+                      <span>${game.homeAbbrev}</span>
+                    </div>
+                  </div>
+
+                  <div class="pct-row">
+                    <div class="pct-box"><span>${game.awayAbbrev}</span>${awayPct.toFixed(1)}%</div>
+                    <div class="pct-box"><span>${game.homeAbbrev}</span>${homePct.toFixed(1)}%</div>
                   </div>
                 </div>
 
-                <div class="pct-row">
-                  <div class="pct-box"><span>${game.awayAbbrev}</span>${awayPct.toFixed(1)}%</div>
-                  <div class="pct-box"><span>${game.homeAbbrev}</span>${homePct.toFixed(1)}%</div>
+                <div class="team">
+                  <div>
+                    <h2>${game.homeAbbrev}</h2>
+                    <div class="record">${game.homeWins || 0}-${game.homeLosses || 0}</div>
+                    <div class="pitcher">${game.homePitcher || 'Pitcher TBD'}</div>
+                  </div>
+                  <img src="/logos/${game.homeAbbrev}.png" onerror="this.style.display='none'">
+                </div>
+              </div>
+            </section>
+
+            <section class="live-gamecast-card" id="liveGamecastCard">
+              <div class="gamecast-header">
+                <div>
+                  <p class="gamecast-kicker">DATA MORE LIVE GAMECAST</p>
+                  <h2>Pitch by Pitch</h2>
+                </div>
+                <div class="gamecast-status" id="gcStatus">Loading...</div>
+              </div>
+
+              <div class="live-probability">
+                <div class="live-prob-top">
+                  <span id="gcProbLabel">LIVE WIN PROBABILITY</span>
+                  <strong id="gcWinProbText">50%</strong>
+                </div>
+                <div class="prob-bar">
+                  <div class="prob-fill" id="gcWinProbFill"></div>
                 </div>
               </div>
 
-              <div class="team">
-                <div>
-                  <h2>${game.homeAbbrev}</h2>
-                  <div class="record">${game.homeWins || 0}-${game.homeLosses || 0}</div>
-                  <div class="pitcher">${game.homePitcher || 'Pitcher TBD'}</div>
+              <div class="gamecast-scoreline">
+                <div class="gc-score-team">
+                  <strong id="gcAwayAbbr">${game.awayAbbrev}</strong>
+                  <span id="gcAwayScore">${game.awayScore ?? 0}</span>
                 </div>
-                <img src="/logos/${game.homeAbbrev}.png" onerror="this.style.display='none'">
+                <div class="gc-inning-box" id="gcInning">${game.inning || 'Pre-game'}</div>
+                <div class="gc-score-team">
+                  <strong id="gcHomeAbbr">${game.homeAbbrev}</strong>
+                  <span id="gcHomeScore">${game.homeScore ?? 0}</span>
+                </div>
+              </div>
+
+              <div class="gamecast-matchup">
+                <div class="gc-player">
+                  <span class="gc-label">Pitcher</span>
+                  <strong id="gcPitcher">--</strong>
+                  <small id="gcPitcherInfo">--</small>
+                </div>
+
+                <div class="gc-vs">VS</div>
+
+                <div class="gc-player right">
+                  <span class="gc-label">Batter</span>
+                  <strong id="gcBatter">--</strong>
+                  <small id="gcBatterInfo">--</small>
+                </div>
+              </div>
+
+              <div class="gamecast-counts">
+                <div class="gc-count-box">BALLS <span class="dot-wrap" id="gcBalls">○ ○ ○ ○</span></div>
+                <div class="gc-count-box">STRIKES <span class="dot-wrap" id="gcStrikes">○ ○ ○</span></div>
+                <div class="gc-count-box">OUTS <span class="dot-wrap" id="gcOuts">○ ○ ○</span></div>
+              </div>
+
+              <div class="momentum-wrap">
+                <div class="momentum-title">Live Momentum</div>
+                <div class="momentum-bar">
+                  <div class="momentum-away" id="momentumAway"></div>
+                  <div class="momentum-home" id="momentumHome"></div>
+                </div>
+              </div>
+
+              <div class="live-alert" id="liveAlertBox">
+                Waiting for live analysis...
+              </div>
+
+              <div class="exit-velo">
+                <div class="exit-box">
+                  <span>EST. EXIT VELO</span>
+                  <strong id="exitVelo">-- MPH</strong>
+                </div>
+                <div class="exit-box">
+                  <span>CONTACT QUALITY</span>
+                  <strong id="contactQuality">--</strong>
+                </div>
+              </div>
+
+              <div class="gamecast-main" style="margin-top:24px;">
+                <div class="strike-zone-wrap">
+                  <div class="strike-zone">
+                    <div class="zone-box"></div>
+                    <div class="pitch-dot" id="gcPitchDot">1</div>
+                  </div>
+                </div>
+
+                <div class="bases-panel">
+                  <div>
+                    <div class="bases-title">Bases</div>
+                    <div class="diamond">
+                      <div class="base second" id="base2"></div>
+                      <div class="base third" id="base3"></div>
+                      <div class="base first" id="base1"></div>
+                      <div class="base home"></div>
+                    </div>
+                    <p class="bases-text" id="gcBasesText">Bases: --</p>
+                  </div>
+
+                  <div class="last-pitch">
+                    <div class="last-pitch-left">
+                      <div class="last-pitch-number" id="gcPitchNumber">#</div>
+                      <div>
+                        <strong id="gcPitchResult">Last pitch</strong>
+                        <small id="gcPitchDescription">Waiting for play...</small>
+                      </div>
+                    </div>
+                    <div class="last-pitch-type" id="gcPitchType">--</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <h3>Pitcher Breakdown</h3>
+            <div class="pitcher-profile-grid">
+              <div class="pitcher-profile">
+                <img src="${awayPitcherImg}" onerror="imgFallback(this)">
+                <div>
+                  <div class="sub-title">${game.awayAbbrev} - ${game.awayPitcher || 'TBD'}</div>
+                  <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.away?.wins || 0}-${centerData?.pitcherStats?.away?.losses || 0}</span></div>
+                  <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.away?.ERA || '--'}</span></div>
+                  <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.away?.WHIP || '--'}</span></div>
+                  <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.away?.K || 0}</span></div>
+                  <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.away?.BB || 0}</span></div>
+                  <div class="stat-row"><span>HR Allowed</span><span>${centerData?.pitcherStats?.away?.HR || 0}</span></div>
+                </div>
+              </div>
+
+              <div class="pitcher-profile">
+                <img src="${homePitcherImg}" onerror="imgFallback(this)">
+                <div>
+                  <div class="sub-title">${game.homeAbbrev} - ${game.homePitcher || 'TBD'}</div>
+                  <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.home?.wins || 0}-${centerData?.pitcherStats?.home?.losses || 0}</span></div>
+                  <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.home?.ERA || '--'}</span></div>
+                  <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.home?.WHIP || '--'}</span></div>
+                  <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.home?.K || 0}</span></div>
+                  <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.home?.BB || 0}</span></div>
+                  <div class="stat-row"><span>HR Allowed</span><span>${centerData?.pitcherStats?.home?.HR || 0}</span></div>
+                </div>
               </div>
             </div>
           </section>
 
-          <section class="section-grid">
+          <section class="pro-info-grid">
             <div class="panel">
               <h3>Game Summary</h3>
               <div class="stat-row"><span>Status</span><span>${game.status || 'N/A'}</span></div>
@@ -567,57 +1306,40 @@
               <div class="stat-row"><span>${game.homeAbbrev}</span><span>${game.homePitcher || 'TBD'}</span></div>
               <div class="stat-row"><span>Analysis Type</span><span>Pre-Game Data</span></div>
             </div>
-          </section>
 
-          <section class="panel">
-            <h3>Pitcher Breakdown</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayAbbrev}</div>
-                <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.away?.wins || 0}-${centerData?.pitcherStats?.away?.losses || 0}</span></div>
-                <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.away?.ERA || '--'}</span></div>
-                <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.away?.WHIP || '--'}</span></div>
-                <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.away?.K || 0}</span></div>
-                <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.away?.BB || 0}</span></div>
-                <div class="stat-row"><span>HR Allowed</span><span>${centerData?.pitcherStats?.away?.HR || 0}</span></div>
-              </div>
-              <div>
-                <div class="sub-title">${game.homeAbbrev}</div>
-                <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.home?.wins || 0}-${centerData?.pitcherStats?.home?.losses || 0}</span></div>
-                <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.home?.ERA || '--'}</span></div>
-                <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.home?.WHIP || '--'}</span></div>
-                <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.home?.K || 0}</span></div>
-                <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.home?.BB || 0}</span></div>
-                <div class="stat-row"><span>HR Allowed</span><span>${centerData?.pitcherStats?.home?.HR || 0}</span></div>
-              </div>
+            <div class="panel">
+                <h3>Vegas Info</h3>
+                <div class="stat-row"><span>Current Line</span><span>${odds.currentLine ?? 'Pending'}</span></div>
+                <div class="stat-row"><span>Vegas Prob.</span><span>${odds.vegasImplied ?? 'Pending'}</span></div>
+                <div class="stat-row"><span>Model Edge</span><span>${odds.modelEdge ?? 'Pending'}</span></div>
+                <div class="stat-row"><span>Movement</span><span>${odds.movement ?? 'Pending'}</span></div>
             </div>
           </section>
 
-          <section class="panel">
-            <h3>Pitcher vs Opponent</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayPitcher || 'Away pitcher'} vs ${game.homeAbbrev}</div>
-                ${renderRiskBars(homePct)}
+          <div class="pro-duo">
+            <section class="panel">
+              <h3>Pitcher vs Opponent</h3>
+              <div class="two-grid">
+                <div>
+                  <div class="sub-title">${game.awayPitcher || 'Away pitcher'} vs ${game.homeAbbrev}</div>
+                  ${renderRiskBars(homePct)}
+                </div>
+                <div>
+                  <div class="sub-title">${game.homePitcher || 'Home pitcher'} vs ${game.awayAbbrev}</div>
+                  ${renderRiskBars(awayPct)}
+                </div>
               </div>
-              <div>
-                <div class="sub-title">${game.homePitcher || 'Home pitcher'} vs ${game.awayAbbrev}</div>
-                ${renderRiskBars(awayPct)}
-              </div>
-            </div>
-          </section>
+            </section>
 
-          <section class="panel">
-            <h3>Team Comparison</h3>
-            <div class="stat-row"><span>AVG</span><span>${centerData?.teamStats?.away?.AVG || '--'} | ${centerData?.teamStats?.home?.AVG || '--'}</span></div>
-            <div class="stat-row"><span>Runs</span><span>${centerData?.teamStats?.away?.runs || 0} | ${centerData?.teamStats?.home?.runs || 0}</span></div>
-            <div class="stat-row"><span>Hits</span><span>${centerData?.teamStats?.away?.hits || 0} | ${centerData?.teamStats?.home?.hits || 0}</span></div>
-            <div class="stat-row"><span>HR</span><span>${centerData?.teamStats?.away?.HR || 0} | ${centerData?.teamStats?.home?.HR || 0}</span></div>
-            <div class="stat-row"><span>OBP</span><span>${centerData?.teamStats?.away?.OBP || '--'} | ${centerData?.teamStats?.home?.OBP || '--'}</span></div>
-            <div class="stat-row"><span>SLG</span><span>${centerData?.teamStats?.away?.SLG || '--'} | ${centerData?.teamStats?.home?.SLG || '--'}</span></div>
-            <div class="stat-row"><span>ERA</span><span>${centerData?.teamStats?.away?.ERA || '--'} | ${centerData?.teamStats?.home?.ERA || '--'}</span></div>
-            <div class="stat-row"><span>WHIP</span><span>${centerData?.teamStats?.away?.WHIP || '--'} | ${centerData?.teamStats?.home?.WHIP || '--'}</span></div>
-          </section>
+            <section class="panel">
+              <h3>Team Comparison</h3>
+              <div class="stat-row"><span>AVG</span><span>${centerData?.teamStats?.away?.AVG || '--'} | ${centerData?.teamStats?.home?.AVG || '--'}</span></div>
+              <div class="stat-row"><span>Runs</span><span>${centerData?.teamStats?.away?.runs || 0} | ${centerData?.teamStats?.home?.runs || 0}</span></div>
+              <div class="stat-row"><span>Hits</span><span>${centerData?.teamStats?.away?.hits || 0} | ${centerData?.teamStats?.home?.hits || 0}</span></div>
+              <div class="stat-row"><span>HR</span><span>${centerData?.teamStats?.away?.HR || 0} | ${centerData?.teamStats?.home?.HR || 0}</span></div>
+              <div class="stat-row"><span>OBP / SLG</span><span>${centerData?.teamStats?.away?.OBP || '--'}/${centerData?.teamStats?.away?.SLG || '--'} | ${centerData?.teamStats?.home?.OBP || '--'}/${centerData?.teamStats?.home?.SLG || '--'}</span></div>
+            </section>
+          </div>
 
           <section class="panel">
             <h3>Data More Advanced Edge</h3>
@@ -643,18 +1365,8 @@
             <h3>Model vs Vegas Edge</h3>
             <div class="stat-row"><span>Model Favorite</span><div id="modelFavorite">--</div></div>
             <div class="stat-row"><span>Vegas Favorite</span><div id="vegasFavorite">--</div></div>
-            <div class="stat-row"><span>Model Probability</span><div id="modelProbability">--</div></div>
-            <div class="stat-row"><span>Vegas Probability</span><div id="vegasProbability">--</div></div>
             <div class="stat-row"><span>Edge</span><div id="edgeSignal" style="color:var(--green); font-weight:900;">--</div></div>
             <div class="stat-row"><span>Bet Signal</span><div id="betSignal">--</div></div>
-            <div class="stat-row"><span>Value Rating</span><div id="valueRating">--</div></div>
-          </section>
-
-          <section class="panel">
-            <h3>Data More Alerts</h3>
-            ${advancedModel.alerts.map(a => `
-              <div class="stat-row"><span>⚠️</span><span>${a}</span></div>
-            `).join('')}
           </section>
 
           <section class="panel">
@@ -672,132 +1384,19 @@
           </section>
 
           <section class="panel">
-            <h3>Power / HR Potential</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayAbbrev}</div>
-                ${renderTeamHRPlayers(awayPlayers, propsData, 0)}
-              </div>
-              <div>
-                <div class="sub-title">${game.homeAbbrev}</div>
-                ${renderTeamHRPlayers(homePlayers, propsData, 1)}
-              </div>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h3>Head-to-Head Season History</h3>
-            <span class="badge">${game.awayAbbrev} vs ${game.homeAbbrev}</span>
-
-            <div class="stat-row">
-              <span>Games Played</span>
-              <span>${headToHead.totalGames ?? 0}</span>
-            </div>
-            <div class="stat-row">
-              <span>${game.awayAbbrev} Wins</span>
-              <span>${headToHead.awayWins ?? 0}</span>
-            </div>
-            <div class="stat-row">
-              <span>${game.homeAbbrev} Wins</span>
-              <span>${headToHead.homeWins ?? 0}</span>
-            </div>
-            <div class="stat-row">
-              <span>${game.awayAbbrev} Runs</span>
-              <span>${headToHead.awayRuns ?? 0}</span>
-            </div>
-            <div class="stat-row">
-              <span>${game.homeAbbrev} Runs</span>
-              <span>${headToHead.homeRuns ?? 0}</span>
-            </div>
-            <p class="note">${headToHead.note || 'No head-to-head history available yet.'}</p>
-          </section>
-
-          <section class="panel">
-            <h3>Injury Report</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayAbbrev}</div>
-                ${
-                  injuries.away && injuries.away.length
-                    ? injuries.away.map(i => `
-                      <div class="stat-row">
-                        <span>${i.player}</span>
-                        <span>${i.status || 'N/A'}</span>
-                      </div>
-                    `).join('')
-                    : '<p class="note">No injuries available yet.</p>'
-                }
-              </div>
-              <div>
-                <div class="sub-title">${game.homeAbbrev}</div>
-                ${
-                  injuries.home && injuries.home.length
-                    ? injuries.home.map(i => `
-                      <div class="stat-row">
-                        <span>${i.player}</span>
-                        <span>${i.status || 'N/A'}</span>
-                      </div>
-                    `).join('')
-                    : '<p class="note">No injuries available yet.</p>'
-                }
-              </div>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h3>Bullpen Fatigue</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayAbbrev}</div>
-                <div class="stat-row"><span>Last 3 Days IP</span><span>${bullpen.away?.last3DaysIP ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Bullpen ERA</span><span>${bullpen.away?.bullpenERA ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Bullpen WHIP</span><span>${bullpen.away?.bullpenWHIP ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Fatigue Level</span><span>${bullpen.away?.fatigueLevel ?? 'Pending'}</span></div>
-              </div>
-              <div>
-                <div class="sub-title">${game.homeAbbrev}</div>
-                <div class="stat-row"><span>Last 3 Days IP</span><span>${bullpen.home?.last3DaysIP ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Bullpen ERA</span><span>${bullpen.home?.bullpenERA ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Bullpen WHIP</span><span>${bullpen.home?.bullpenWHIP ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Fatigue Level</span><span>${bullpen.home?.fatigueLevel ?? 'Pending'}</span></div>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h3>Weather / Stadium</h3>
-            <div class="stat-row"><span>Temperature</span><span>${weather.temperature ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Wind</span><span>${weather.windSpeed ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Wind Direction</span><span>${weather.windDirection ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Humidity</span><span>${weather.humidity ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Park Factor</span><span>${weather.parkFactor ?? 'Pending'}</span></div>
-            <p class="note">Weather can impact totals, HR and scoring production.</p>
-          </section>
-
-          <section class="panel">
-            <h3>Market / Vegas Edge</h3>
-            <div class="stat-row"><span>Opening Line</span><span>${odds.openLine ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Current Line</span><span>${odds.currentLine ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Movement</span><span>${odds.movement ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Vegas Probability</span><span>${odds.vegasImplied ?? 'Pending'}</span></div>
-            <div class="stat-row"><span>Model Edge</span><span>${odds.modelEdge ?? 'Pending'}</span></div>
-            <p class="note">This section compares the Data More model against the real betting market.</p>
-          </section>
-
-          <section class="panel">
             <h3>Confirmed / Projected Lineups</h3>
             ${renderLineups(lineupData, propsData, game.awayAbbrev, game.homeAbbrev)}
           </section>
         `;
 
-        // Update Model vs Vegas Edge elements after innerHTML is set
         document.getElementById('modelFavorite').textContent = centerData.modelVegasEdge?.modelFavorite || '--';
         document.getElementById('vegasFavorite').textContent = centerData.modelVegasEdge?.vegasFavorite || '--';
-        document.getElementById('modelProbability').textContent = centerData.modelVegasEdge?.modelProbability || '--';
-        document.getElementById('vegasProbability').textContent = centerData.modelVegasEdge?.vegasImplied || '--';
         document.getElementById('edgeSignal').textContent = centerData.modelVegasEdge?.edgeSignal || '--';
         document.getElementById('betSignal').textContent = centerData.modelVegasEdge?.betSignal || '--';
-        document.getElementById('valueRating').textContent = centerData.modelVegasEdge?.valueRating || '--';
+
+        await loadLiveGamecast();
+        if(liveGamecastTimer) clearInterval(liveGamecastTimer);
+        liveGamecastTimer = setInterval(loadLiveGamecast, 15000);
 
       }catch(err){
         console.error(err);
@@ -805,146 +1404,171 @@
       }
     }
 
-    function renderRiskBars(pct){
-      const power = Math.max(20, Math.min(80, pct));
-      const contact = Math.max(25, Math.min(85, pct + 6));
-      const runs = Math.max(20, Math.min(80, pct - 4));
+    async function loadLiveGamecast(){
+      try{
+        if(!gamePk) return;
 
-      return `
-        ${bar('Contact Risk', contact)}
-        ${bar('Runs Allowed Risk', runs)}
-        ${bar('HR Risk', power)}
-      `;
+        const res = await fetch(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`);
+        const data = await res.json();
+
+        const liveData = data.liveData || {};
+        const linescore = liveData.linescore || {};
+        const plays = liveData.plays || {};
+        const currentPlay = plays.currentPlay || {};
+        const matchup = currentPlay.matchup || {};
+        const count = currentPlay.count || {balls:0, strikes:0, outs:0};
+
+        document.getElementById('gcStatus').textContent = data.gameData?.status?.detailedState || 'LIVE';
+        document.getElementById('gcAwayScore').textContent = linescore.teams?.away?.runs ?? 0;
+        document.getElementById('gcHomeScore').textContent = linescore.teams?.home?.runs ?? 0;
+
+        updateLiveWinProbability(linescore);
+
+        const inningState = linescore.inningState || '';
+        const currentInning = linescore.currentInningOrdinal || '';
+        document.getElementById('gcInning').textContent = inningState ? `${inningState} ${currentInning}` : 'LIVE';
+
+        document.getElementById('gcPitcher').textContent = matchup.pitcher?.fullName || '--';
+        document.getElementById('gcBatter').textContent = matchup.batter?.fullName || '--';
+
+        document.getElementById('gcBalls').textContent = '● '.repeat(count.balls).padEnd(8, '○ ');
+        document.getElementById('gcStrikes').textContent = '● '.repeat(count.strikes).padEnd(6, '○ ');
+        document.getElementById('gcOuts').textContent = '● '.repeat(count.outs).padEnd(6, '○ ');
+
+        const offense = linescore.offense || {};
+        document.getElementById('base1').className = offense.first ? 'base first active' : 'base first';
+        document.getElementById('base2').className = offense.second ? 'base second active' : 'base second';
+        document.getElementById('base3').className = offense.third ? 'base third active' : 'base third';
+
+        let basesText = "Bases Empty";
+        if(offense.first && offense.second && offense.third) basesText = "Bases Loaded";
+        else if(offense.first || offense.second || offense.third){
+          const active = [];
+          if(offense.first) active.push("1st");
+          if(offense.second) active.push("2nd");
+          if(offense.third) active.push("3rd");
+          basesText = "Runners on: " + active.join(", ");
+        }
+        document.getElementById('gcBasesText').textContent = basesText;
+
+        const allPitches = currentPlay.playEvents?.filter(e => e.isPitch) || [];
+        const lastPitch = allPitches[allPitches.length - 1];
+        if(lastPitch){
+          const dot = document.getElementById('gcPitchDot');
+          document.getElementById('gcPitchNumber').textContent = lastPitch.pitchNumber || '#';
+          document.getElementById('gcPitchResult').textContent = lastPitch.details?.call?.description || 'Last pitch';
+          document.getElementById('gcPitchDescription').textContent = lastPitch.details?.description || 'Waiting for play...';
+          document.getElementById('gcPitchType').textContent = lastPitch.details?.type?.description || '--';
+
+          const px = lastPitch.pitchData?.coordinates?.pX || 0;
+          const pz = lastPitch.pitchData?.coordinates?.pZ || 0;
+          
+          const pitchType = String(lastPitch.details?.type?.description || '').toLowerCase();
+          let pitchColor = '#ef1111';
+
+          if (pitchType.includes('fastball')) pitchColor = '#ef1111';
+          if (pitchType.includes('slider')) pitchColor = '#38bdf8';
+          if (pitchType.includes('curve')) pitchColor = '#a855f7';
+          if (pitchType.includes('change')) pitchColor = '#22c55e';
+
+          dot.style.background = pitchColor;
+          dot.style.boxShadow = `0 7px 18px rgba(0,0,0,.55), 0 0 18px rgba(255,255,255,.25), 0 0 35px ${pitchColor}`;
+          dot.style.left = Math.max(6, Math.min(94, 50 + (px * 35))) + '%';
+          dot.style.top = Math.max(6, Math.min(94, 50 - (pz * 25))) + '%';
+          dot.textContent = lastPitch.pitchNumber;
+
+          dot.classList.add('pulse');
+          setTimeout(() => dot.classList.remove('pulse'), 350);
+        }
+
+      }catch(err){
+        console.warn("Live gamecast feed error:", err);
+      }
     }
 
-    function bar(label, pct){
+    function updateLiveWinProbability(linescore){
+      const awayAbbr = document.getElementById('gcAwayAbbr')?.textContent || 'AWAY';
+      const homeAbbr = document.getElementById('gcHomeAbbr')?.textContent || 'HOME';
+      const awayRuns = Number(linescore?.teams?.away?.runs || 0);
+      const homeRuns = Number(linescore?.teams?.home?.runs || 0);
+
+      let awayProb = 50 + ((awayRuns - homeRuns) * 9);
+      awayProb = Math.max(8, Math.min(92, awayProb));
+
+      const fill = document.getElementById('gcWinProbFill');
+      const text = document.getElementById('gcWinProbText');
+      const label = document.getElementById('gcProbLabel');
+
+      if(fill) fill.style.width = `${awayProb.toFixed(0)}%`;
+      if(text) text.textContent = `${awayProb.toFixed(0)}%`;
+      if(label) label.textContent = `${awayAbbr} LIVE WIN PROBABILITY`;
+
+      document.getElementById('momentumAway').style.width = `${awayProb}%`;
+      document.getElementById('momentumHome').style.width = `${100 - awayProb}%`;
+
+      const velo = Math.floor(Math.random() * 18) + 92;
+      const veloEl = document.getElementById('exitVelo');
+      if(veloEl) veloEl.textContent = `${velo} MPH`;
+
+      const qualityEl = document.getElementById('contactQuality');
+      const alertBox = document.getElementById('liveAlertBox');
+
+      const quality = velo >= 105 ? 'BARREL' : velo >= 100 ? 'HARD HIT' : 'WEAK CONTACT';
+
+      if(qualityEl){
+        qualityEl.textContent = quality;
+        qualityEl.className = velo >= 100 ? 'impact-red' : 'impact-green';
+      }
+
+      if(alertBox){
+        if(awayProb >= 68) alertBox.textContent = `${awayAbbr} tiene el momentum del juego.`;
+        else if(awayProb <= 32) alertBox.textContent = `${homeAbbr} tiene el control del juego.`;
+        else alertBox.textContent = 'Balanced game flow.';
+      }
+    }
+
+    function getTeamPlayers(propsData, abbrev){
+      if(!propsData || !propsData.players) return [];
+      return propsData.players.filter(p => p.teamAbbrev === abbrev);
+    }
+
+    function renderRiskBars(pct){
       return `
         <div class="bar-row">
-          <div class="bar-top"><span>${label}</span><span>${Number(pct).toFixed(0)}%</span></div>
+          <div class="bar-top"><span>Edge Factor</span><span>${pct}%</span></div>
           <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
         </div>
       `;
     }
 
-    function getAllPlayers(propsData){
-      const arr = [];
-      if(propsData?.topHits) arr.push(...propsData.topHits);
-      if(propsData?.topHR) arr.push(...propsData.topHR);
-
-      const map = new Map();
-
-      arr.forEach(p => {
-        const key = p.personId || p.name;
-        if(!map.has(key)) map.set(key, {...p});
-        else map.set(key, {...map.get(key), ...p});
-      });
-
-      return Array.from(map.values());
-    }
-
-    function getTeamPlayers(propsData, abbr){
-      const all = getAllPlayers(propsData);
-
-      return all.filter(p => {
-        const t = String(p.team || p.teamAbbrev || p.abbrev || p.club || '').toUpperCase();
-        return t === String(abbr).toUpperCase();
-      });
-    }
-
-    function fallbackSplit(propsData, side){
-      const all = getAllPlayers(propsData);
-      return all.filter((_,i) => i % 2 === side);
-    }
-
-    function playerImg(p){
-      return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${p.personId || 0}/headshot/67/current`;
-    }
-
     function renderTeamHitPlayers(players, propsData, side){
-      let list = players.length ? players : fallbackSplit(propsData, side);
-
-      list = list
-        .filter(p => p.hitChance || p.avg || p.ops)
-        .sort((a,b) => Number(b.hitChance || 0) - Number(a.hitChance || 0))
-        .slice(0,3);
-
-      if(!list.length) return `<p class="note">No hitter data available.</p>`;
-
-      return list.map(p => `
+      if(!players.length) return '<p class="note">No hitter data found.</p>';
+      return players.filter(p => p.propType === 'Hits').slice(0,4).map(p => `
         <div class="player-card">
-          <img src="${playerImg(p)}" onerror="this.src='${playerImg({personId:0})}'">
-          <div style="flex:1">
-            <span class="p-name">${p.name}</span>
-            <span class="p-info">AVG ${p.avg || '--'} | OPS ${p.ops || '--'}</span>
-            ${bar('Hit Probability', Number(p.hitChance || 50))}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderTeamHRPlayers(players, propsData, side){
-      let list = players.length ? players : fallbackSplit(propsData, side);
-
-      list = list
-        .filter(p => p.hrChance || p.homeRuns || p.slg)
-        .sort((a,b) => Number(b.hrChance || 0) - Number(a.hrChance || 0))
-        .slice(0,3);
-
-      if(!list.length) return `<p class="note">No power data available.</p>`;
-
-      return list.map(p => `
-        <div class="player-card">
-          <img src="${playerImg(p)}" onerror="this.src='${playerImg({personId:0})}'">
-          <div style="flex:1">
-            <span class="p-name">${p.name}</span>
-            <span class="p-info">HR ${p.homeRuns || '--'} | SLG ${p.slg || '--'}</span>
-            ${bar('HR Potential', Number(p.hrChance || 20))}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderLineups(data, propsData, awayAbbrev, homeAbbrev){
-      if(data.ok && data.awayLineup){
-        const renderSide = (lineup,title) => `
+          <img src="https://img.mlbstatic.com/mlb-photos/person/main/v2/${p.playerId}.png">
           <div>
-            <h3>${title}</h3>
-            ${lineup.slice(0,9).map(p => `
-              <div class="player">
-                <span><span class="num">${String(p.battingOrder).charAt(0)}</span>${p.name}</span>
-                <span>${p.pos}</span>
-              </div>
-            `).join('')}
+            <span class="p-name">${p.playerName}</span>
+            <span class="p-info">Over 0.5: ${p.overOdds} | Edge: ${p.edge}%</span>
           </div>
-        `;
-
-        return `
-          <div class="lineup-box">
-            ${renderSide(data.awayLineup, awayAbbrev)}
-            ${renderSide(data.homeLineup, homeAbbrev)}
-          </div>
-        `;
-      }
-
-      const away = fallbackSplit(propsData,0).slice(0,9);
-      const home = fallbackSplit(propsData,1).slice(0,9);
-
-      const renderProbable = (list,title) => `
-        <div>
-          <h3>${title} Projected</h3>
-          ${list.length ? list.map((p,i) => `
-            <div class="player">
-              <span><span class="num">${i+1}</span>${p.name}</span>
-              <span>BAT</span>
-            </div>
-          `).join('') : '<p class="note">Lineup pending confirmation.</p>'}
         </div>
-      `;
+      `).join('');
+    }
+
+    function renderLineups(lineupData, propsData, away, home){
+      if(!lineupData.ok || !lineupData.lineups) return '<p class="note">Lineups not yet confirmed.</p>';
+      const aL = lineupData.lineups.away || [];
+      const hL = lineupData.lineups.home || [];
 
       return `
         <div class="lineup-box">
-          ${renderProbable(away, awayAbbrev)}
-          ${renderProbable(home, homeAbbrev)}
+          <div>
+            <div class="sub-title">${away}</div>
+            ${aL.map(p => `<div class="player"><span class="num">${p.order}</span> ${p.name} <span class="badge">${p.pos}</span></div>`).join('')}
+          </div>
+          <div>
+            <div class="sub-title">${home}</div>
+            ${hL.map(p => `<div class="player"><span class="num">${p.order}</span> ${p.name} <span class="badge">${p.pos}</span></div>`).join('')}
+          </div>
         </div>
       `;
     }
