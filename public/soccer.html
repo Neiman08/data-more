@@ -678,26 +678,26 @@ function renderLineups(lineupsObject, lineupsArray) {
   }
 
   return `
-    <div class="prop-title">Confirmed Lineups</div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:8px;">
 
       <div>
-        <div class="prop-title">Home</div>
-        ${homePlayers.slice(0, 11).map(p => `
+        ${homePlayers.slice(0, 11).map((p, i) => `
           <div class="stat-row">
-            <span>${escapeHtml(p.player || p.name || 'Player')}</span>
-            <b>${escapeHtml(p.position || p.pos || '')}</b>
+            <span>
+              <b style="color:var(--green); margin-right:6px;">${i + 1}</b>
+              ${escapeHtml(p.player || p.name || 'Player')}
+            </span>
           </div>
         `).join('')}
       </div>
 
       <div>
-        <div class="prop-title">Away</div>
-        ${awayPlayers.slice(0, 11).map(p => `
+        ${awayPlayers.slice(0, 11).map((p, i) => `
           <div class="stat-row">
-            <span>${escapeHtml(p.player || p.name || 'Player')}</span>
-            <b>${escapeHtml(p.position || p.pos || '')}</b>
+            <span>
+              <b style="color:var(--green); margin-right:6px;">${i + 1}</b>
+              ${escapeHtml(p.player || p.name || 'Player')}
+            </span>
           </div>
         `).join('')}
       </div>
