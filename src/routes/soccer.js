@@ -22,15 +22,13 @@ const LEAGUES = {
 const cache = {
   fixtures: {},
   lineups: {},
+  liveStats: {},
   TTL: 60 * 1000
 };
 
 function getHeaders() {
   const key = process.env.API_FOOTBALL_KEY || process.env.FOOTBALL_API_KEY;
-
-  return {
-    'x-apisports-key': key
-  };
+  return { 'x-apisports-key': key };
 }
 
 function getChicagoDate() {
@@ -51,10 +49,7 @@ function getSoccerSeason(date, leagueKey = '') {
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
 
-  if (['mls', 'brasil', 'argentina', 'ligamx'].includes(leagueKey)) {
-    return year;
-  }
-
+  if (['mls', 'brasil', 'argentina', 'ligamx'].includes(leagueKey)) return year;
   return month <= 7 ? year - 1 : year;
 }
 
@@ -87,10 +82,7 @@ function formatFixture(g, leagueKey = '') {
 }
 
 async function apiFootball(path) {
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: getHeaders()
-  });
-
+  const res = await fetch(`${API_URL}${path}`, { headers: getHeaders() });
   const data = await res.json();
 
   if (!res.ok) {
@@ -105,28 +97,102 @@ async function apiFootball(path) {
   return data;
 }
 
-async function getFixturesByLeague(leagueKey, date) {
-  const league = LEAGUES[leagueKey] || LEAGUES.epl;
-  const season = getSoccerSeason(date, leagueKey);
+function findStat(stats = [], names = []) {
+  const found = stats.find(s =>
+    names.some(name => String(s.type || '').toLowerCase() === name.toLowerCase())
+  );
 
-  const cacheKey = `${leagueKey}-${season}-${date}`;
-  const cached = cache.fixtures[cacheKey];
+  return found?.value ?? null;
+}
 
-  if (cached && Date.now() - cached.timestamp < cache.TTL) {
+function normalizePercent(v) {
+  if (v === null || v === undefined) return null;
+  return Number(String(v).replace('%', '').trim()) || null;
+}
+
+async function getLiveStats(fixtureId) {
+  const cacheKey = `live-${fixtureId}`;
+  const cached = cache.liveStats[cacheKey];
+
+  if (cached && Date.now() - cached.timestamp < 15000) {
     return cached.data;
   }
 
-  const data = await apiFootball(
-    `/fixtures?league=${league.id}&season=${season}&date=${date}`
-  );
+  const data = await apiFootball(`/fixtures/statistics?fixture=${fixtureId}`);
+  const response = data?.response || [];
 
-  const games = (data?.response || []).map(g => formatFixture(g, leagueKey));
+  if (!response.length) {
+    const empty = {
+      available: false,
+      homePossession: null,
+      awayPossession: null,
+      homeAttacks: null,
+      awayAttacks: null,
+      homeShots: null,
+      awayShots: null,
+      homeCorners: null,
+      awayCorners: null,
+      homeCards: null,
+      awayCards: null
+    };
 
-  cache.fixtures[cacheKey] = {
-    data: games,
-    timestamp: Date.now()
+    cache.liveStats[cacheKey] = { data: empty, timestamp: Date.now() };
+    return empty;
+  }
+
+  const homeStats = response[0]?.statistics || [];
+  const awayStats = response[1]?.statistics || [];
+
+  const liveStats = {
+    available: true,
+
+    homeTeam: response[0]?.team?.name || null,
+    awayTeam: response[1]?.team?.name || null,
+
+    homePossession: normalizePercent(findStat(homeStats, ['Ball Possession'])),
+    awayPossession: normalizePercent(findStat(awayStats, ['Ball Possession'])),
+
+    homeAttacks: findStat(homeStats, ['Total attacks', 'Attacks']),
+    awayAttacks: findStat(awayStats, ['Total attacks', 'Attacks']),
+
+    homeDangerousAttacks: findStat(homeStats, ['Dangerous Attacks']),
+    awayDangerousAttacks: findStat(awayStats, ['Dangerous Attacks']),
+
+    homeShots: findStat(homeStats, ['Total Shots']),
+    awayShots: findStat(awayStats, ['Total Shots']),
+
+    homeShotsOnGoal: findStat(homeStats, ['Shots on Goal']),
+    awayShotsOnGoal: findStat(awayStats, ['Shots on Goal']),
+
+    homeShotsOffGoal: findStat(homeStats, ['Shots off Goal']),
+    awayShotsOffGoal: findStat(awayStats, ['Shots off Goal']),
+
+    homeCorners: findStat(homeStats, ['Corner Kicks']),
+    awayCorners: findStat(awayStats, ['Corner Kicks']),
+
+    homeCards: findStat(homeStats, ['Yellow Cards']),
+    awayCards: findStat(awayStats, ['Yellow Cards']),
+
+    homeRedCards: findStat(homeStats, ['Red Cards']),
+    awayRedCards: findStat(awayStats, ['Red Cards'])
   };
 
+  cache.liveStats[cacheKey] = { data: liveStats, timestamp: Date.now() };
+  return liveStats;
+}
+
+async function getFixturesByLeague(leagueKey, date) {
+  const league = LEAGUES[leagueKey] || LEAGUES.epl;
+  const season = getSoccerSeason(date, leagueKey);
+  const cacheKey = `${leagueKey}-${season}-${date}`;
+  const cached = cache.fixtures[cacheKey];
+
+  if (cached && Date.now() - cached.timestamp < cache.TTL) return cached.data;
+
+  const data = await apiFootball(`/fixtures?league=${league.id}&season=${season}&date=${date}`);
+  const games = (data?.response || []).map(g => formatFixture(g, leagueKey));
+
+  cache.fixtures[cacheKey] = { data: games, timestamp: Date.now() };
   return games;
 }
 
@@ -145,18 +211,12 @@ async function getLineups(fixtureId) {
   const cacheKey = `lineups-${fixtureId}`;
   const cached = cache.lineups[cacheKey];
 
-  if (cached && Date.now() - cached.timestamp < cache.TTL) {
-    return cached.data;
-  }
+  if (cached && Date.now() - cached.timestamp < cache.TTL) return cached.data;
 
   const data = await apiFootball(`/fixtures/lineups?fixture=${fixtureId}`);
 
   if (!data?.response || data.response.length < 2) {
-    cache.lineups[cacheKey] = {
-      data: null,
-      timestamp: Date.now()
-    };
-
+    cache.lineups[cacheKey] = { data: null, timestamp: Date.now() };
     return null;
   }
 
@@ -177,11 +237,7 @@ async function getLineups(fixtureId) {
     }))
   }));
 
-  cache.lineups[cacheKey] = {
-    data: lineups,
-    timestamp: Date.now()
-  };
-
+  cache.lineups[cacheKey] = { data: lineups, timestamp: Date.now() };
   return lineups;
 }
 
@@ -238,9 +294,7 @@ function buildPlayerPropsFromLineups(lineups) {
     }
   }
 
-  return players
-    .sort((a, b) => b.goalChance - a.goalChance)
-    .slice(0, 10);
+  return players.sort((a, b) => b.goalChance - a.goalChance).slice(0, 10);
 }
 
 async function getLast5TeamMatches(teamId, date) {
@@ -276,7 +330,7 @@ function buildPublicLineups(lineups) {
   };
 }
 
-function buildPublicSoccerAnalysis(analysis, lineups = null, playerProps = []) {
+function buildPublicSoccerAnalysis(analysis, lineups = null, playerProps = [], liveStats = null) {
   return {
     pick: analysis.pick || null,
     probability: Number(analysis.probability || analysis.pickProbability || 0).toFixed(2),
@@ -284,8 +338,22 @@ function buildPublicSoccerAnalysis(analysis, lineups = null, playerProps = []) {
     oneX2: analysis.oneX2 || analysis.probabilities || null,
     over25: analysis.over25 || analysis.totalPick || null,
     btts: analysis.btts || analysis.bothTeamsToScore || null,
+
+    xgTotal: analysis.xgTotal || null,
+    projectedGoals: analysis.projectedGoals || null,
+    possessionEdge: analysis.possessionEdge || null,
+    shotsProjection: analysis.shotsProjection || null,
+    riskLevel: analysis.riskLevel || null,
+    gameTempo: analysis.gameTempo || null,
+
+    cornersOver: analysis.cornersOver || null,
+    cardsOver: analysis.cardsOver || null,
+    refereeRisk: analysis.refereeRisk || null,
+    gameIntensity: analysis.gameIntensity || null,
+
     lineups: buildPublicLineups(lineups),
-    playerProps
+    playerProps,
+    live: liveStats || {}
   };
 }
 
@@ -293,22 +361,11 @@ router.get('/games', async (req, res) => {
   try {
     const date = getDate(req);
     const leagueKey = String(req.query.league || 'epl').toLowerCase();
-
     const games = await getFixturesByLeague(leagueKey, date);
 
-    res.json({
-      ok: true,
-      selectedDate: date,
-      leagueKey,
-      count: games.length,
-      games
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: 'Unable to load soccer games.',
-      games: []
-    });
+    res.json({ ok: true, selectedDate: date, leagueKey, count: games.length, games });
+  } catch {
+    res.status(500).json({ ok: false, error: 'Unable to load soccer games.', games: [] });
   }
 });
 
@@ -317,18 +374,9 @@ router.get('/games-global', async (req, res) => {
     const date = getDate(req);
     const games = await getGlobalFixtures(date);
 
-    res.json({
-      ok: true,
-      selectedDate: date,
-      count: games.length,
-      games
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      error: 'Unable to load global soccer games.',
-      games: []
-    });
+    res.json({ ok: true, selectedDate: date, count: games.length, games });
+  } catch {
+    res.status(500).json({ ok: false, error: 'Unable to load global soccer games.', games: [] });
   }
 });
 
@@ -342,12 +390,8 @@ router.get('/lineups/:fixtureId', async (req, res) => {
       message: lineups ? 'Lineups available' : 'Lineups not published yet',
       lineups: lineups || []
     });
-  } catch (error) {
-    res.json({
-      ok: false,
-      error: 'Unable to load lineups.',
-      lineups: []
-    });
+  } catch {
+    res.json({ ok: false, error: 'Unable to load lineups.', lineups: [] });
   }
 });
 
@@ -365,18 +409,9 @@ router.get('/player-props/:fixtureId', async (req, res) => {
     }
 
     const props = buildPlayerPropsFromLineups(lineups);
-
-    res.json({
-      ok: true,
-      available: true,
-      props
-    });
-  } catch (error) {
-    res.json({
-      ok: false,
-      error: 'Unable to load player props.',
-      props: []
-    });
+    res.json({ ok: true, available: true, props });
+  } catch {
+    res.json({ ok: false, error: 'Unable to load player props.', props: [] });
   }
 });
 
@@ -389,16 +424,14 @@ router.get('/analyze/:id', async (req, res) => {
     const matchRaw = games.find(g => String(g.matchId) === String(req.params.id));
 
     if (!matchRaw) {
-      return res.status(404).json({
-        ok: false,
-        error: 'Match not found.'
-      });
+      return res.status(404).json({ ok: false, error: 'Match not found.' });
     }
 
-    const [homeRecentEvents, awayRecentEvents, lineups] = await Promise.all([
+    const [homeRecentEvents, awayRecentEvents, lineups, liveStats] = await Promise.all([
       getLast5TeamMatches(matchRaw.homeTeamId, date),
       getLast5TeamMatches(matchRaw.awayTeamId, date),
-      getLineups(matchRaw.fixtureId || matchRaw.matchId)
+      getLineups(matchRaw.fixtureId || matchRaw.matchId),
+      getLiveStats(matchRaw.fixtureId || matchRaw.matchId)
     ]);
 
     const playerProps = buildPlayerPropsFromLineups(lineups);
@@ -412,19 +445,26 @@ router.get('/analyze/:id', async (req, res) => {
         homeTeamId: matchRaw.homeTeamId,
         awayTeamId: matchRaw.awayTeamId,
         league: matchRaw.leagueName,
-        leagueKey: matchRaw.leagueKey || leagueKey
+        leagueKey: matchRaw.leagueKey || leagueKey,
+        homeScore: matchRaw.homeScore,
+        awayScore: matchRaw.awayScore,
+        status: matchRaw.status,
+        time: matchRaw.time
       },
       homeRecentEvents,
       awayRecentEvents,
       lineups,
-      playerProps
+      playerProps,
+      liveStats
     });
 
     res.json({
       ok: true,
-      analysis: buildPublicSoccerAnalysis(privateAnalysis, lineups, playerProps),
+      game: matchRaw,
+      analysis: buildPublicSoccerAnalysis(privateAnalysis, lineups, playerProps, liveStats),
       lineups: buildPublicLineups(lineups),
-      playerProps
+      playerProps,
+      live: liveStats
     });
 
   } catch (error) {
@@ -456,7 +496,7 @@ router.get('/ticket-global', async (req, res) => {
         note: 'Connected to major global soccer leagues.'
       }
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({
       ok: false,
       error: 'Unable to build global soccer ticket.',

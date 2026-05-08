@@ -263,6 +263,12 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
+      transition: background 0.2s;
+      border-radius: 8px;
+    }
+
+    .match-header:hover {
+      background: rgba(255,255,255,0.03);
     }
 
     .team-box {
@@ -556,7 +562,9 @@ async function loadGames() {
         html += `
           <div class="card">
 
-            <div class="match-header">
+            <div class="match-header" 
+                 onclick="openSoccerDetail('${g.matchId}', '${g.leagueKey}')"
+                 style="cursor:pointer;">
 
               <div class="team-box">
                 <img src="${g.homeLogo}" class="team-logo" onerror="this.src='/logo.png'">
@@ -884,6 +892,11 @@ async function analyze(btn, matchId, leagueKey) {
     resDiv.innerHTML = '<div style="color:red; font-size:10px;">Analysis error</div>';
     btn.disabled = false;
   }
+}
+
+function openSoccerDetail(matchId, leagueKey){
+  window.location.href =
+    `/soccer-detail.html?matchId=${matchId}&league=${leagueKey}`;
 }
 
 async function analyzeAll() {
