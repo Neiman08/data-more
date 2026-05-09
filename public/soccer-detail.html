@@ -209,9 +209,7 @@ body{
   color:#f4f7f5;
 }
 
-.commentary-text span{
-  color:var(--gold);
-}
+.commentary-text span{color:var(--gold);}
 
 .commentary-sub{
   margin-top:12px;
@@ -496,15 +494,25 @@ const params = new URLSearchParams(window.location.search);
 const matchId = params.get('matchId');
 const league = params.get('league');
 
+function paramClean(key){
+  const value = params.get(key);
+  if(!value || value === 'null' || value === 'undefined') return '';
+  try{
+    return decodeURIComponent(value);
+  }catch(e){
+    return value;
+  }
+}
+
 const urlGame = {
-  homeTeam: params.get('homeTeam'),
-  awayTeam: params.get('awayTeam'),
-  homeLogo: params.get('homeLogo'),
-  awayLogo: params.get('awayLogo'),
-  homeScore: params.get('homeScore'),
-  awayScore: params.get('awayScore'),
-  time: params.get('time'),
-  leagueName: params.get('leagueName')
+  homeTeam: paramClean('homeTeam'),
+  awayTeam: paramClean('awayTeam'),
+  homeLogo: paramClean('homeLogo'),
+  awayLogo: paramClean('awayLogo'),
+  homeScore: paramClean('homeScore'),
+  awayScore: paramClean('awayScore'),
+  time: paramClean('time'),
+  leagueName: paramClean('leagueName')
 };
 
 let isFirstLoad = true;
@@ -522,7 +530,9 @@ function pct(v){
 }
 
 function normalizeLogo(logo){
-  if(!logo || logo === '' || logo === 'null' || logo === 'undefined') return '/logo.png';
+  if(!logo || logo === '' || logo === 'null' || logo === 'undefined'){
+    return '/logos/DATA-MORE.png';
+  }
   return logo;
 }
 
@@ -541,21 +551,30 @@ function speakCommentary(text){
   if(!text || text === lastSpokenCommentary) return;
 
   lastSpokenCommentary = text;
-
   window.speechSynthesis.cancel();
 
   const speech = new SpeechSynthesisUtterance(text);
-  speech.lang = 'es-ES';
-  speech.rate = 1;
-  speech.pitch = 1;
+  speech.lang = 'es-US';
+  speech.rate = 0.92;
+  speech.pitch = 0.95;
   speech.volume = 1;
 
   const voices = window.speechSynthesis.getVoices();
 
+  const spanishVoices = voices.filter(v =>
+    String(v.lang).toLowerCase().startsWith('es') &&
+    !String(v.lang).toLowerCase().startsWith('pt') &&
+    !String(v.name).toLowerCase().includes('portugu')
+  );
+
   const preferred =
-    voices.find(v => v.name.toLowerCase().includes('jorge')) ||
-    voices.find(v => v.name.toLowerCase().includes('diego')) ||
-    voices.find(v => v.lang.toLowerCase().includes('es')) ||
+    spanishVoices.find(v => v.lang === 'es-US') ||
+    spanishVoices.find(v => v.lang === 'es-MX') ||
+    spanishVoices.find(v => v.name.toLowerCase().includes('paulina')) ||
+    spanishVoices.find(v => v.name.toLowerCase().includes('mónica')) ||
+    spanishVoices.find(v => v.name.toLowerCase().includes('monica')) ||
+    spanishVoices.find(v => v.name.toLowerCase().includes('jorge')) ||
+    spanishVoices[0] ||
     voices[0];
 
   if(preferred) speech.voice = preferred;
@@ -682,8 +701,6 @@ function buildPs5Commentary({
   }else if(awayWinning){
     scoreContext = `${awayTeam} está arriba ${awayScore}-${homeScore}; ${homeTeam} necesita arriesgar más para buscar la reacción.`;
   }
-
-  const fullCommentary = `${minute}: ${situation} ${scoreContext}`;
 
   return `
     <section class="commentary-card">
@@ -917,8 +934,11 @@ async function loadMatch(){
     const g = data.game || data.fixture || boardGame || {};
 
     const homeTeam =
-      urlGame.homeTeam ||
       boardGame.homeTeam ||
+      boardGame.home ||
+      boardGame.homeName ||
+      boardGame.teams?.home?.name ||
+      urlGame.homeTeam ||
       data.homeTeam ||
       a.homeTeam ||
       g.homeTeam ||
@@ -927,8 +947,11 @@ async function loadMatch(){
       'HOME';
 
     const awayTeam =
-      urlGame.awayTeam ||
       boardGame.awayTeam ||
+      boardGame.away ||
+      boardGame.awayName ||
+      boardGame.teams?.away?.name ||
+      urlGame.awayTeam ||
       data.awayTeam ||
       a.awayTeam ||
       g.awayTeam ||
@@ -937,8 +960,10 @@ async function loadMatch(){
       'AWAY';
 
     const homeLogo = normalizeLogo(
-      urlGame.homeLogo ||
       boardGame.homeLogo ||
+      boardGame.home_logo ||
+      boardGame.teams?.home?.logo ||
+      urlGame.homeLogo ||
       data.homeLogo ||
       a.homeLogo ||
       a.home_team_logo ||
@@ -948,8 +973,10 @@ async function loadMatch(){
     );
 
     const awayLogo = normalizeLogo(
-      urlGame.awayLogo ||
       boardGame.awayLogo ||
+      boardGame.away_logo ||
+      boardGame.teams?.away?.logo ||
+      urlGame.awayLogo ||
       data.awayLogo ||
       a.awayLogo ||
       a.away_team_logo ||
@@ -1030,7 +1057,7 @@ async function loadMatch(){
         <div class="matchup">
 
           <div class="team">
-            <img src="${homeLogo}" alt="${homeTeam}" onerror="this.onerror=null;this.src='/logo.png';">
+            <img src="${homeLogo}" alt="${homeTeam}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${homeTeam}</h2>
             <small>${safe(a.homeRecord,'Home Form Pending')}</small>
           </div>
@@ -1042,7 +1069,7 @@ async function loadMatch(){
           </div>
 
           <div class="team">
-            <img src="${awayLogo}" alt="${awayTeam}" onerror="this.onerror=null;this.src='/logo.png';">
+            <img src="${awayLogo}" alt="${awayTeam}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${awayTeam}</h2>
             <small>${safe(a.awayRecord,'Away Form Pending')}</small>
           </div>
