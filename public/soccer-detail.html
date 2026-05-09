@@ -156,6 +156,7 @@ body{
   align-items:center;
   gap:14px;
   margin-bottom:14px;
+  flex-wrap:wrap;
 }
 
 .commentary-title{
@@ -164,6 +165,13 @@ body{
   font-size:24px;
   letter-spacing:.8px;
   text-transform:uppercase;
+}
+
+.commentary-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
 }
 
 .commentary-badge{
@@ -175,6 +183,23 @@ body{
   font-weight:900;
   text-transform:uppercase;
   box-shadow:0 0 18px rgba(107,255,25,.45);
+}
+
+.ai-broadcast-btn{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(107,255,25,.35);
+  color:#fff;
+  padding:8px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:900;
+  transition:.25s;
+  text-transform:uppercase;
+}
+
+.ai-broadcast-btn:hover{
+  transform:scale(1.05);
 }
 
 .commentary-text{
@@ -483,6 +508,8 @@ const urlGame = {
 };
 
 let isFirstLoad = true;
+let commentaryVoiceEnabled = false;
+let lastSpokenCommentary = '';
 
 function safe(v, fallback='--'){
   if(v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') return fallback;
@@ -509,6 +536,66 @@ function getMinuteText(matchTime){
   if(!raw) return 'LIVE';
   return `Minuto ${raw}`;
 }
+
+function speakCommentary(text){
+  if(!text || text === lastSpokenCommentary) return;
+
+  lastSpokenCommentary = text;
+
+  window.speechSynthesis.cancel();
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = 'es-ES';
+  speech.rate = 1;
+  speech.pitch = 1;
+  speech.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+
+  const preferred =
+    voices.find(v => v.name.toLowerCase().includes('jorge')) ||
+    voices.find(v => v.name.toLowerCase().includes('diego')) ||
+    voices.find(v => v.lang.toLowerCase().includes('es')) ||
+    voices[0];
+
+  if(preferred) speech.voice = preferred;
+
+  window.speechSynthesis.speak(speech);
+}
+
+function processLiveCommentary(){
+  if(!commentaryVoiceEnabled) return;
+
+  const el = document.getElementById('data-more-commentary-text');
+  if(!el) return;
+
+  const text = el.innerText.trim();
+  speakCommentary(text);
+}
+
+document.addEventListener('click', (e)=>{
+  if(e.target.id === 'toggle-commentary-voice'){
+    commentaryVoiceEnabled = !commentaryVoiceEnabled;
+
+    e.target.innerText = commentaryVoiceEnabled
+      ? '🔊 AI COMMENTARY ON'
+      : '🔇 AI COMMENTARY OFF';
+
+    e.target.style.background = commentaryVoiceEnabled
+      ? '#6bff19'
+      : 'rgba(255,255,255,.08)';
+
+    e.target.style.color = commentaryVoiceEnabled
+      ? '#000'
+      : '#fff';
+
+    if(commentaryVoiceEnabled){
+      processLiveCommentary();
+    }else{
+      window.speechSynthesis.cancel();
+    }
+  }
+});
 
 function buildLiveReading({
   homeTeam, awayTeam, homePoss, awayPoss,
@@ -596,13 +683,20 @@ function buildPs5Commentary({
     scoreContext = `${awayTeam} está arriba ${awayScore}-${homeScore}; ${homeTeam} necesita arriesgar más para buscar la reacción.`;
   }
 
+  const fullCommentary = `${minute}: ${situation} ${scoreContext}`;
+
   return `
     <section class="commentary-card">
       <div class="commentary-head">
         <div class="commentary-title">🎙️ Data More Live Commentary</div>
-        <div class="commentary-badge">AI Broadcast</div>
+        <div class="commentary-actions">
+          <button id="toggle-commentary-voice" class="ai-broadcast-btn">
+            ${commentaryVoiceEnabled ? '🔊 AI COMMENTARY ON' : '🔇 AI COMMENTARY OFF'}
+          </button>
+          <div class="commentary-badge">AI Broadcast</div>
+        </div>
       </div>
-      <div class="commentary-text">
+      <div class="commentary-text" id="data-more-commentary-text">
         <span>${minute}:</span> ${situation} ${scoreContext}
       </div>
       <div class="commentary-sub">
@@ -1045,6 +1139,8 @@ async function loadMatch(){
         ${renderRiskAlerts(a)}
       </section>
     `;
+
+    setTimeout(processLiveCommentary, 400);
 
     isFirstLoad = false;
 
