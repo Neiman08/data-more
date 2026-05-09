@@ -519,6 +519,7 @@ let isFirstLoad = true;
 let commentaryVoiceEnabled = false;
 let lastSpokenCommentary = '';
 let currentCommentaryAudio = null;
+let isSpeaking = false; // BLOQUEO PARA EVITAR ECO
 
 // VARIABLES PARA EVITAR REPETICION
 let narrationTick = 0;
@@ -583,13 +584,10 @@ function generateNarrationText(){
 
 // FUNCION MEJORADA PARA NARRACIÓN CONTINUA
 async function speakCommentary(text){
-  if(!text) return;
+  if(!text || isSpeaking) return;
 
   try{
-    // Si ya hay un audio sonando y no ha terminado, no interrumpimos
-    if(currentCommentaryAudio && !currentCommentaryAudio.ended){
-      return;
-    }
+    isSpeaking = true; 
 
     const response = await fetch('/api/voice/commentary',{
       method:'POST',
@@ -600,42 +598,47 @@ async function speakCommentary(text){
     });
 
     if(!response.ok){
-      console.log('VOICE API ERROR');
+      isSpeaking = false;
       return;
     }
 
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
 
+    if(currentCommentaryAudio){
+        currentCommentaryAudio.pause();
+    }
+
     const audio = new Audio(audioUrl);
     audio.volume = 1;
-
     currentCommentaryAudio = audio;
 
-    // Al finalizar este audio, marcamos para permitir la siguiente frase
     audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
-        lastSpokenCommentary = text;
+        isSpeaking = false; 
     };
 
-    audio.play();
+    audio.onerror = () => {
+        isSpeaking = false;
+    };
+
+    // CAMBIO APLICADO: CATCH EN PLAY
+    audio.play().catch(err => {
+      console.log('AUDIO PLAY ERROR:', err);
+      isSpeaking = false;
+    });
 
   }catch(err){
     console.log('VOICE ERROR:',err);
+    isSpeaking = false;
   }
 }
 
 function processLiveCommentary(){
-  if(!commentaryVoiceEnabled) return;
+  if(!commentaryVoiceEnabled || isSpeaking) return;
 
-  const el = document.getElementById('data-more-commentary-text');
-  if(!el) return;
-
-  // CAMBIO SOLICITADO: USAR GENERATE NARRATION
   const text = generateNarrationText();
-  
-  // Solo disparamos si el locutor está libre
-  if(!currentCommentaryAudio || currentCommentaryAudio.ended) {
+  if(text) {
       speakCommentary(text);
   }
 }
@@ -659,11 +662,12 @@ document.addEventListener('click', (e)=>{
     if(commentaryVoiceEnabled){
       processLiveCommentary();
     }else{
+      // CAMBIO APLICADO: RESET DE BLOQUEO EN OFF
       if(currentCommentaryAudio){
         currentCommentaryAudio.pause();
-        currentCommentaryAudio.currentTime = 0;
-        currentCommentaryAudio = null;
       }
+      currentCommentaryAudio = null;
+      isSpeaking = false;
     }
   }
 });
@@ -1006,130 +1010,18 @@ async function loadMatch(){
     const a = data.analysis || data;
     const g = data.game || data.fixture || boardGame || {};
 
-    const homeTeam = firstValid(
-      boardGame.homeTeam,
-      boardGame.home,
-      boardGame.homeName,
-      boardGame.teams?.home?.name,
-      urlGame.homeTeam,
-      data.homeTeam,
-      a.homeTeam,
-      g.homeTeam,
-      g.home_name,
-      g.teams?.home?.name,
-      'HOME'
-    );
-
-    const awayTeam = firstValid(
-      boardGame.awayTeam,
-      boardGame.away,
-      boardGame.awayName,
-      boardGame.teams?.away?.name,
-      urlGame.awayTeam,
-      data.awayTeam,
-      a.awayTeam,
-      g.awayTeam,
-      g.away_name,
-      g.teams?.away?.name,
-      'AWAY'
-    );
-
-    const homeLogo = normalizeLogo(firstValid(
-      boardGame.homeLogo,
-      boardGame.home_logo,
-      boardGame.teams?.home?.logo,
-      urlGame.homeLogo,
-      data.homeLogo,
-      a.homeLogo,
-      a.home_team_logo,
-      g.homeLogo,
-      g.home_logo,
-      g.teams?.home?.logo
-    ));
-
-    const awayLogo = normalizeLogo(firstValid(
-      boardGame.awayLogo,
-      boardGame.away_logo,
-      boardGame.teams?.away?.logo,
-      urlGame.awayLogo,
-      data.awayLogo,
-      a.awayLogo,
-      a.away_team_logo,
-      g.awayLogo,
-      g.away_logo,
-      g.teams?.away?.logo
-    ));
-
-    const homeScore = firstValid(
-      boardGame.homeScore,
-      data.homeScore,
-      a.homeScore,
-      g.homeScore,
-      g.goals?.home,
-      urlGame.homeScore,
-      0
-    );
-
-    const awayScore = firstValid(
-      boardGame.awayScore,
-      data.awayScore,
-      a.awayScore,
-      g.awayScore,
-      g.goals?.away,
-      urlGame.awayScore,
-      0
-    );
-
-    const matchTime = firstValid(
-      boardGame.time,
-      data.time,
-      a.time,
-      g.time,
-      g.fixture?.status?.elapsed,
-      urlGame.time,
-      'LIVE'
-    );
-
-    const leagueName = firstValid(
-      urlGame.leagueName,
-      boardGame.leagueName,
-      data.leagueName,
-      a.leagueName,
-      g.leagueName,
-      g.league?.name,
-      league?.toUpperCase(),
-      'LEAGUE'
-    );
-
+    const homeTeam = firstValid(boardGame.homeTeam, boardGame.home, boardGame.homeName, boardGame.teams?.home?.name, urlGame.homeTeam, data.homeTeam, a.homeTeam, g.homeTeam, g.home_name, g.teams?.home?.name, 'HOME');
+    const awayTeam = firstValid(boardGame.awayTeam, boardGame.away, boardGame.awayName, boardGame.teams?.away?.name, urlGame.awayTeam, data.awayTeam, a.awayTeam, g.awayTeam, g.away_name, g.teams?.away?.name, 'AWAY');
+    const homeLogo = normalizeLogo(firstValid(boardGame.homeLogo, boardGame.home_logo, boardGame.teams?.home?.logo, urlGame.homeLogo, data.homeLogo, a.homeLogo, a.home_team_logo, g.homeLogo, g.home_logo, g.teams?.home?.logo));
+    const awayLogo = normalizeLogo(firstValid(boardGame.awayLogo, boardGame.away_logo, boardGame.teams?.away?.logo, urlGame.awayLogo, data.awayLogo, a.awayLogo, a.away_team_logo, g.awayLogo, g.away_logo, g.teams?.away?.logo));
+    const homeScore = firstValid(boardGame.homeScore, data.homeScore, a.homeScore, g.homeScore, g.goals?.home, urlGame.homeScore, 0);
+    const awayScore = firstValid(boardGame.awayScore, data.awayScore, a.awayScore, g.awayScore, g.goals?.away, urlGame.awayScore, 0);
+    const matchTime = firstValid(boardGame.time, data.time, a.time, g.time, g.fixture?.status?.elapsed, urlGame.time, 'LIVE');
+    const leagueName = firstValid(urlGame.leagueName, boardGame.leagueName, data.leagueName, a.leagueName, g.leagueName, g.league?.name, league?.toUpperCase(), 'LEAGUE');
     const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
-
-    const homeWin = firstValid(
-      oneX2.home,
-      oneX2.local,
-      oneX2.homeWin,
-      a.homeWinPct,
-      a.homeProbability,
-      50
-    );
-
-    const draw = firstValid(
-      oneX2.draw,
-      oneX2.empate,
-      oneX2.tie,
-      a.drawPct,
-      a.drawProbability,
-      0
-    );
-
-    const awayWin = firstValid(
-      oneX2.away,
-      oneX2.visitante,
-      oneX2.awayWin,
-      a.awayWinPct,
-      a.awayProbability,
-      50
-    );
-
+    const homeWin = firstValid(oneX2.home, oneX2.local, oneX2.homeWin, a.homeWinPct, a.homeProbability, 50);
+    const draw = firstValid(oneX2.draw, oneX2.empate, oneX2.tie, a.drawPct, a.drawProbability, 0);
+    const awayWin = firstValid(oneX2.away, oneX2.visitante, oneX2.awayWin, a.awayWinPct, a.awayProbability, 50);
     const liveHomePoss = numberSafe(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin, 50);
     const cleanHomePoss = Math.min(90, Math.max(10, liveHomePoss));
     const cleanAwayPoss = Math.max(0, 100 - cleanHomePoss);
@@ -1137,25 +1029,21 @@ async function loadMatch(){
     content.innerHTML = `
       <section class="hero">
         <div class="matchup">
-
           <div class="team">
             <img src="${homeLogo}" alt="${homeTeam}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${homeTeam}</h2>
             <small>${safe(a.homeRecord,'Home Form Pending')}</small>
           </div>
-
           <div class="score">
             <div class="score-main">${homeScore} - ${awayScore}</div>
             <div class="live">${matchTime}</div>
             <div class="league">${leagueName}</div>
           </div>
-
           <div class="team">
             <img src="${awayLogo}" alt="${awayTeam}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${awayTeam}</h2>
             <small>${safe(a.awayRecord,'Away Form Pending')}</small>
           </div>
-
         </div>
       </section>
 
@@ -1180,7 +1068,6 @@ async function loadMatch(){
       ${renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime)}
 
       <div class="grid">
-
         <section class="panel">
           <h3>AI Match Edge</h3>
           <div class="stat"><span>Main Pick</span><b>${safe(a.pick)}</b></div>
@@ -1190,7 +1077,6 @@ async function loadMatch(){
           <div class="stat"><span>BTTS</span><b>${safe(a.btts || a.bothTeamsToScore,'Pending')}</b></div>
           <div class="stat"><span>Projected Goals</span><b>${safe(a.projectedGoals,'Pending')}</b></div>
         </section>
-
         <section class="panel">
           <h3>1X2 Probability</h3>
           <div class="stat"><span>${homeTeam}</span><b>${pct(homeWin)}</b></div>
@@ -1198,7 +1084,6 @@ async function loadMatch(){
           <div class="stat"><span>${awayTeam}</span><b>${pct(awayWin)}</b></div>
           <div class="bar"><div class="fill" style="width:${Number(homeWin) || 50}%"></div></div>
         </section>
-
         <section class="panel">
           <h3>Advanced Match Variables</h3>
           <div class="stat"><span>xG Projection</span><b>${safe(a.xgTotal,'Pending')}</b></div>
@@ -1207,7 +1092,6 @@ async function loadMatch(){
           <div class="stat"><span>Danger Level</span><b>${safe(a.riskLevel,'Pending')}</b></div>
           <div class="stat"><span>Game Tempo</span><b>${safe(a.gameTempo,'Pending')}</b></div>
         </section>
-
         <section class="panel">
           <h3>Corners / Cards Market</h3>
           <div class="stat"><span>Corners Over</span><b>${safe(a.cornersOver,'Pending')}</b></div>
@@ -1215,27 +1099,22 @@ async function loadMatch(){
           <div class="stat"><span>Referee Risk</span><b>${safe(a.refereeRisk,'Pending')}</b></div>
           <div class="stat"><span>Intensity</span><b>${safe(a.gameIntensity,'Pending')}</b></div>
         </section>
-
         <section class="panel">
           <h3>Top Goal Scorer Props</h3>
           ${renderGoalProps(a)}
         </section>
-
         <section class="panel">
           <h3>Top Assist Props</h3>
           ${renderAssistProps(a)}
         </section>
-
         <section class="panel">
           <h3>Key Players</h3>
           ${renderKeyPlayers(a)}
         </section>
-
         <section class="panel">
           <h3>Injuries / Suspensions</h3>
           ${renderInjuries(a)}
         </section>
-
       </div>
 
       <section class="panel" style="margin-top:20px;">
@@ -1249,20 +1128,12 @@ async function loadMatch(){
       </section>
     `;
 
-    // Ejecutamos la narración tras renderizar el contenido
-    setTimeout(processLiveCommentary, 400);
-
     isFirstLoad = false;
 
   }catch(err){
     console.log(err);
-
     if(isFirstLoad){
-      content.innerHTML = `
-        <section class="panel">
-          Error loading match center.
-        </section>
-      `;
+      content.innerHTML = `<section class="panel">Error loading match center.</section>`;
     }
   }
 }
@@ -1275,9 +1146,9 @@ setInterval(() => {
   }
 }, 5000);
 
-// REVISIÓN CADA 6 SEGUNDOS PARA NARRACIÓN
+// REVISIÓN CADA 6 SEGUNDOS PARA NARRACIÓN CON BLOQUEO ANTI-ECO
 setInterval(() => {
-    if(commentaryVoiceEnabled && document.visibilityState === 'visible'){
+    if(commentaryVoiceEnabled && document.visibilityState === 'visible' && !isSpeaking){
         processLiveCommentary();
     }
 }, 6000);
