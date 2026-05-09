@@ -517,11 +517,8 @@ const urlGame = {
 
 let isFirstLoad = true;
 let commentaryVoiceEnabled = false;
-let lastSpokenCommentary = '';
 let currentCommentaryAudio = null;
-let isSpeaking = false; // BLOQUEO PARA EVITAR ECO
-
-// VARIABLES PARA EVITAR REPETICION
+let isSpeaking = false; 
 let narrationTick = 0;
 
 function safe(v, fallback='--'){
@@ -561,7 +558,6 @@ function getMinuteText(matchTime){
   return `Minuto ${raw}`;
 }
 
-// FUNCION NUEVA: GENERAR TEXTO CON VARIACION
 function generateNarrationText(){
   const el = document.getElementById('data-more-commentary-text');
   if(!el) return '';
@@ -582,18 +578,15 @@ function generateNarrationText(){
   return `${baseText} ${variations[narrationTick % variations.length]}`;
 }
 
-// FUNCION MEJORADA PARA NARRACIÓN CONTINUA
 async function speakCommentary(text){
   if(!text || isSpeaking) return;
 
   try{
-    isSpeaking = true; 
+    isSpeaking = true;
 
     const response = await fetch('/api/voice/commentary',{
       method:'POST',
-      headers:{
-        'Content-Type':'application/json'
-      },
+      headers:{ 'Content-Type':'application/json' },
       body:JSON.stringify({ text })
     });
 
@@ -606,40 +599,48 @@ async function speakCommentary(text){
     const audioUrl = URL.createObjectURL(audioBlob);
 
     if(currentCommentaryAudio){
-        currentCommentaryAudio.pause();
+      currentCommentaryAudio.pause();
+      currentCommentaryAudio = null;
     }
 
     const audio = new Audio(audioUrl);
     audio.volume = 1;
     currentCommentaryAudio = audio;
 
-    audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        isSpeaking = false; 
+    const releaseAndContinue = () => {
+      URL.revokeObjectURL(audioUrl);
+      isSpeaking = false;
+      currentCommentaryAudio = null;
+
+      if(commentaryVoiceEnabled && document.visibilityState === 'visible'){
+        setTimeout(processLiveCommentary, 1800);
+      }
     };
 
-    audio.onerror = () => {
-        isSpeaking = false;
-    };
+    audio.onended = releaseAndContinue;
+    audio.onerror = releaseAndContinue;
 
-    // CAMBIO APLICADO: CATCH EN PLAY
     audio.play().catch(err => {
       console.log('AUDIO PLAY ERROR:', err);
-      isSpeaking = false;
+      releaseAndContinue();
     });
 
   }catch(err){
     console.log('VOICE ERROR:',err);
     isSpeaking = false;
+    currentCommentaryAudio = null;
   }
 }
 
 function processLiveCommentary(){
-  if(!commentaryVoiceEnabled || isSpeaking) return;
+  if(!commentaryVoiceEnabled) return;
+  if(document.visibilityState !== 'visible') return;
+  if(isSpeaking) return;
 
   const text = generateNarrationText();
-  if(text) {
-      speakCommentary(text);
+
+  if(text){
+    speakCommentary(text);
   }
 }
 
@@ -662,13 +663,19 @@ document.addEventListener('click', (e)=>{
     if(commentaryVoiceEnabled){
       processLiveCommentary();
     }else{
-      // CAMBIO APLICADO: RESET DE BLOQUEO EN OFF
       if(currentCommentaryAudio){
         currentCommentaryAudio.pause();
       }
       currentCommentaryAudio = null;
       isSpeaking = false;
     }
+  }
+});
+
+// Despertador de visibilidad
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && commentaryVoiceEnabled && !isSpeaking) {
+    processLiveCommentary();
   }
 });
 
@@ -812,6 +819,7 @@ async function fetchGameFromBoard(){
   return {};
 }
 
+// FUNCIONES DE RENDERIZADO COMPLETAS
 function renderKeyPlayers(a){
   const players = a.keyPlayers || a.playerProps || a.players || [];
   if(!Array.isArray(players) || !players.length) return `<p class="note">Key player data pending.</p>`;
@@ -843,7 +851,7 @@ function renderAssistProps(a){
   return props.slice(0,5).map(p => `
     <div class="stat">
       <span>${p.player || p.name || 'Player'}</span>
-      <b>${safe(p.assistChance,'--')}%</b>
+      <b>${safe(p.assistChance || p.probability,'--')}%</b>
     </div>
   `).join('');
 }
@@ -1077,6 +1085,7 @@ async function loadMatch(){
           <div class="stat"><span>BTTS</span><b>${safe(a.btts || a.bothTeamsToScore,'Pending')}</b></div>
           <div class="stat"><span>Projected Goals</span><b>${safe(a.projectedGoals,'Pending')}</b></div>
         </section>
+
         <section class="panel">
           <h3>1X2 Probability</h3>
           <div class="stat"><span>${homeTeam}</span><b>${pct(homeWin)}</b></div>
@@ -1084,6 +1093,7 @@ async function loadMatch(){
           <div class="stat"><span>${awayTeam}</span><b>${pct(awayWin)}</b></div>
           <div class="bar"><div class="fill" style="width:${Number(homeWin) || 50}%"></div></div>
         </section>
+
         <section class="panel">
           <h3>Advanced Match Variables</h3>
           <div class="stat"><span>xG Projection</span><b>${safe(a.xgTotal,'Pending')}</b></div>
@@ -1092,6 +1102,7 @@ async function loadMatch(){
           <div class="stat"><span>Danger Level</span><b>${safe(a.riskLevel,'Pending')}</b></div>
           <div class="stat"><span>Game Tempo</span><b>${safe(a.gameTempo,'Pending')}</b></div>
         </section>
+
         <section class="panel">
           <h3>Corners / Cards Market</h3>
           <div class="stat"><span>Corners Over</span><b>${safe(a.cornersOver,'Pending')}</b></div>
@@ -1099,18 +1110,22 @@ async function loadMatch(){
           <div class="stat"><span>Referee Risk</span><b>${safe(a.refereeRisk,'Pending')}</b></div>
           <div class="stat"><span>Intensity</span><b>${safe(a.gameIntensity,'Pending')}</b></div>
         </section>
+
         <section class="panel">
           <h3>Top Goal Scorer Props</h3>
           ${renderGoalProps(a)}
         </section>
+
         <section class="panel">
           <h3>Top Assist Props</h3>
           ${renderAssistProps(a)}
         </section>
+
         <section class="panel">
           <h3>Key Players</h3>
           ${renderKeyPlayers(a)}
         </section>
+
         <section class="panel">
           <h3>Injuries / Suspensions</h3>
           ${renderInjuries(a)}
@@ -1146,12 +1161,12 @@ setInterval(() => {
   }
 }, 5000);
 
-// REVISIÓN CADA 6 SEGUNDOS PARA NARRACIÓN CON BLOQUEO ANTI-ECO
+// Revisión cada 8 segundos para narración con bloqueo anti-eco
 setInterval(() => {
-    if(commentaryVoiceEnabled && document.visibilityState === 'visible' && !isSpeaking){
-        processLiveCommentary();
-    }
-}, 6000);
+  if(commentaryVoiceEnabled && document.visibilityState === 'visible' && !isSpeaking){
+    processLiveCommentary();
+  }
+}, 8000);
 </script>
 
 </body>
