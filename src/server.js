@@ -22,6 +22,7 @@ import nbaRoutes from './routes/nba.js';
 import horseRoutes from './routes/horseRacing.js';
 import gameCenter from './routes/gameCenter.js';
 import aiRoutes from './routes/ai.js';
+import voiceRoutes from './routes/voice.js';
 
 const app = express();
 
@@ -350,6 +351,8 @@ app.use('/api/horse-racing', horseRoutes);
 app.use('/api/game-center', gameCenter);
 
 app.use('/api/ai', aiRoutes);
+
+app.use('/api/voice', voiceRoutes);
 
 // =========================
 // TOP PICKS WIDGET API

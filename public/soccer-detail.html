@@ -491,7 +491,7 @@ body{
 <script>
 const params = new URLSearchParams(window.location.search);
 
-const matchId = params.get('matchId');
+const matchId = params.get('matchId') || params.get('fixtureId') || params.get('id') || params.get('gameId');
 const league = params.get('league');
 
 function paramClean(key){
@@ -518,10 +518,20 @@ const urlGame = {
 let isFirstLoad = true;
 let commentaryVoiceEnabled = false;
 let lastSpokenCommentary = '';
+let currentCommentaryAudio = null;
 
 function safe(v, fallback='--'){
   if(v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') return fallback;
   return v;
+}
+
+function firstValid(){
+  for(const value of arguments){
+    if(value !== undefined && value !== null && value !== '' && value !== 'null' && value !== 'undefined'){
+      return value;
+    }
+  }
+  return '';
 }
 
 function pct(v){
@@ -547,39 +557,44 @@ function getMinuteText(matchTime){
   return `Minuto ${raw}`;
 }
 
-function speakCommentary(text){
+async function speakCommentary(text){
   if(!text || text === lastSpokenCommentary) return;
 
   lastSpokenCommentary = text;
-  window.speechSynthesis.cancel();
 
-  const speech = new SpeechSynthesisUtterance(text);
-  speech.lang = 'es-US';
-  speech.rate = 0.92;
-  speech.pitch = 0.95;
-  speech.volume = 1;
+  try{
+    if(currentCommentaryAudio){
+      currentCommentaryAudio.pause();
+      currentCommentaryAudio.currentTime = 0;
+      currentCommentaryAudio = null;
+    }
 
-  const voices = window.speechSynthesis.getVoices();
+    const response = await fetch('/api/voice/commentary',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({ text })
+    });
 
-  const spanishVoices = voices.filter(v =>
-    String(v.lang).toLowerCase().startsWith('es') &&
-    !String(v.lang).toLowerCase().startsWith('pt') &&
-    !String(v.name).toLowerCase().includes('portugu')
-  );
+    if(!response.ok){
+      console.log('VOICE API ERROR');
+      return;
+    }
 
-  const preferred =
-    spanishVoices.find(v => v.lang === 'es-US') ||
-    spanishVoices.find(v => v.lang === 'es-MX') ||
-    spanishVoices.find(v => v.name.toLowerCase().includes('paulina')) ||
-    spanishVoices.find(v => v.name.toLowerCase().includes('mónica')) ||
-    spanishVoices.find(v => v.name.toLowerCase().includes('monica')) ||
-    spanishVoices.find(v => v.name.toLowerCase().includes('jorge')) ||
-    spanishVoices[0] ||
-    voices[0];
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
 
-  if(preferred) speech.voice = preferred;
+    const audio = new Audio(audioUrl);
+    audio.volume = 1;
 
-  window.speechSynthesis.speak(speech);
+    currentCommentaryAudio = audio;
+
+    audio.play();
+
+  }catch(err){
+    console.log('VOICE ERROR:',err);
+  }
 }
 
 function processLiveCommentary(){
@@ -611,7 +626,11 @@ document.addEventListener('click', (e)=>{
     if(commentaryVoiceEnabled){
       processLiveCommentary();
     }else{
-      window.speechSynthesis.cancel();
+      if(currentCommentaryAudio){
+        currentCommentaryAudio.pause();
+        currentCommentaryAudio.currentTime = 0;
+        currentCommentaryAudio = null;
+      }
     }
   }
 });
@@ -724,15 +743,36 @@ function buildPs5Commentary({
 }
 
 async function fetchGameFromBoard(){
-  try{
-    const res = await fetch(`/api/soccer/games-global?t=${Date.now()}`);
-    const data = await res.json();
+  const endpoints = [
+    '/api/soccer/games-global',
+    '/api/soccer-games-global'
+  ];
 
-    if(!data.ok || !Array.isArray(data.games)) return {};
-    return data.games.find(g => String(g.matchId) === String(matchId)) || {};
-  }catch(e){
-    return {};
+  for(const endpoint of endpoints){
+    try{
+      const res = await fetch(`${endpoint}?t=${Date.now()}`);
+      const data = await res.json();
+
+      if(!data.ok || !Array.isArray(data.games)) continue;
+
+      const found = data.games.find(g => {
+        const ids = [
+          g.matchId,
+          g.fixtureId,
+          g.id,
+          g.gameId,
+          g.fixture?.id
+        ].map(x => String(x || ''));
+
+        return ids.includes(String(matchId || ''));
+      });
+
+      if(found) return found;
+
+    }catch(e){}
   }
+
+  return {};
 }
 
 function renderKeyPlayers(a){
@@ -933,120 +973,129 @@ async function loadMatch(){
     const a = data.analysis || data;
     const g = data.game || data.fixture || boardGame || {};
 
-    const homeTeam =
-      boardGame.homeTeam ||
-      boardGame.home ||
-      boardGame.homeName ||
-      boardGame.teams?.home?.name ||
-      urlGame.homeTeam ||
-      data.homeTeam ||
-      a.homeTeam ||
-      g.homeTeam ||
-      g.home_name ||
-      g.teams?.home?.name ||
-      'HOME';
+    const homeTeam = firstValid(
+      boardGame.homeTeam,
+      boardGame.home,
+      boardGame.homeName,
+      boardGame.teams?.home?.name,
+      urlGame.homeTeam,
+      data.homeTeam,
+      a.homeTeam,
+      g.homeTeam,
+      g.home_name,
+      g.teams?.home?.name,
+      'HOME'
+    );
 
-    const awayTeam =
-      boardGame.awayTeam ||
-      boardGame.away ||
-      boardGame.awayName ||
-      boardGame.teams?.away?.name ||
-      urlGame.awayTeam ||
-      data.awayTeam ||
-      a.awayTeam ||
-      g.awayTeam ||
-      g.away_name ||
-      g.teams?.away?.name ||
-      'AWAY';
+    const awayTeam = firstValid(
+      boardGame.awayTeam,
+      boardGame.away,
+      boardGame.awayName,
+      boardGame.teams?.away?.name,
+      urlGame.awayTeam,
+      data.awayTeam,
+      a.awayTeam,
+      g.awayTeam,
+      g.away_name,
+      g.teams?.away?.name,
+      'AWAY'
+    );
 
-    const homeLogo = normalizeLogo(
-      boardGame.homeLogo ||
-      boardGame.home_logo ||
-      boardGame.teams?.home?.logo ||
-      urlGame.homeLogo ||
-      data.homeLogo ||
-      a.homeLogo ||
-      a.home_team_logo ||
-      g.homeLogo ||
-      g.home_logo ||
+    const homeLogo = normalizeLogo(firstValid(
+      boardGame.homeLogo,
+      boardGame.home_logo,
+      boardGame.teams?.home?.logo,
+      urlGame.homeLogo,
+      data.homeLogo,
+      a.homeLogo,
+      a.home_team_logo,
+      g.homeLogo,
+      g.home_logo,
       g.teams?.home?.logo
-    );
+    ));
 
-    const awayLogo = normalizeLogo(
-      boardGame.awayLogo ||
-      boardGame.away_logo ||
-      boardGame.teams?.away?.logo ||
-      urlGame.awayLogo ||
-      data.awayLogo ||
-      a.awayLogo ||
-      a.away_team_logo ||
-      g.awayLogo ||
-      g.away_logo ||
+    const awayLogo = normalizeLogo(firstValid(
+      boardGame.awayLogo,
+      boardGame.away_logo,
+      boardGame.teams?.away?.logo,
+      urlGame.awayLogo,
+      data.awayLogo,
+      a.awayLogo,
+      a.away_team_logo,
+      g.awayLogo,
+      g.away_logo,
       g.teams?.away?.logo
+    ));
+
+    const homeScore = firstValid(
+      boardGame.homeScore,
+      data.homeScore,
+      a.homeScore,
+      g.homeScore,
+      g.goals?.home,
+      urlGame.homeScore,
+      0
     );
 
-    const homeScore =
-      boardGame.homeScore ??
-      data.homeScore ??
-      a.homeScore ??
-      g.homeScore ??
-      g.goals?.home ??
-      urlGame.homeScore ??
-      0;
+    const awayScore = firstValid(
+      boardGame.awayScore,
+      data.awayScore,
+      a.awayScore,
+      g.awayScore,
+      g.goals?.away,
+      urlGame.awayScore,
+      0
+    );
 
-    const awayScore =
-      boardGame.awayScore ??
-      data.awayScore ??
-      a.awayScore ??
-      g.awayScore ??
-      g.goals?.away ??
-      urlGame.awayScore ??
-      0;
+    const matchTime = firstValid(
+      boardGame.time,
+      data.time,
+      a.time,
+      g.time,
+      g.fixture?.status?.elapsed,
+      urlGame.time,
+      'LIVE'
+    );
 
-    const matchTime =
-      boardGame.time ||
-      data.time ||
-      a.time ||
-      g.time ||
-      g.fixture?.status?.elapsed ||
-      urlGame.time ||
-      'LIVE';
-
-    const leagueName =
-      urlGame.leagueName ||
-      boardGame.leagueName ||
-      data.leagueName ||
-      a.leagueName ||
-      g.leagueName ||
-      g.league?.name ||
-      league?.toUpperCase() ||
-      'LEAGUE';
+    const leagueName = firstValid(
+      urlGame.leagueName,
+      boardGame.leagueName,
+      data.leagueName,
+      a.leagueName,
+      g.leagueName,
+      g.league?.name,
+      league?.toUpperCase(),
+      'LEAGUE'
+    );
 
     const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
 
-    const homeWin =
-      oneX2.home ??
-      oneX2.local ??
-      oneX2.homeWin ??
-      a.homeWinPct ??
-      a.homeProbability ??
-      50;
+    const homeWin = firstValid(
+      oneX2.home,
+      oneX2.local,
+      oneX2.homeWin,
+      a.homeWinPct,
+      a.homeProbability,
+      50
+    );
 
-    const draw =
-      oneX2.draw ??
-      oneX2.empate ??
-      oneX2.tie ??
-      a.drawPct ??
-      a.drawProbability ??
-      0;
+    const draw = firstValid(
+      oneX2.draw,
+      oneX2.empate,
+      oneX2.tie,
+      a.drawPct,
+      a.drawProbability,
+      0
+    );
 
-    const awayWin =
-      oneX2.away ??
-      oneX2.visitante ??
-      oneX2.awayWin ??
-      a.awayWinPct ??
-      a.awayProbability ??
-      50;
+    const awayWin = firstValid(
+      oneX2.away,
+      oneX2.visitante,
+      oneX2.awayWin,
+      a.awayWinPct,
+      a.awayProbability,
+      50
+    );
 
     const liveHomePoss = numberSafe(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin, 50);
     const cleanHomePoss = Math.min(90, Math.max(10, liveHomePoss));
