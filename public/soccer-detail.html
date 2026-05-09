@@ -19,11 +19,7 @@
   --blue:#38bdf8;
 }
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
+*{margin:0;padding:0;box-sizing:border-box;}
 
 body{
   background:
@@ -36,11 +32,7 @@ body{
   font-family:'Inter',sans-serif;
 }
 
-.page{
-  max-width:1450px;
-  margin:auto;
-  padding:24px;
-}
+.page{max-width:1450px;margin:auto;padding:24px;}
 
 .top{
   display:flex;
@@ -55,9 +47,7 @@ body{
   letter-spacing:1px;
 }
 
-.logo span{
-  color:var(--green);
-}
+.logo span{color:var(--green);}
 
 .back{
   color:var(--green);
@@ -69,13 +59,19 @@ body{
   background:rgba(255,255,255,.04);
 }
 
-.hero{
+.hero,
+.commentary-card,
+.soccer-live,
+.panel{
   background:var(--card);
   border:1px solid var(--border);
+  backdrop-filter:blur(12px);
+}
+
+.hero{
   border-radius:24px;
   padding:30px;
   margin-bottom:22px;
-  backdrop-filter:blur(12px);
   box-shadow:0 20px 50px rgba(0,0,0,.45);
 }
 
@@ -86,9 +82,7 @@ body{
   gap:20px;
 }
 
-.team{
-  text-align:center;
-}
+.team{text-align:center;}
 
 .team img{
   width:95px;
@@ -112,9 +106,7 @@ body{
   font-weight:800;
 }
 
-.score{
-  text-align:center;
-}
+.score{text-align:center;}
 
 .score-main{
   font-size:72px;
@@ -137,13 +129,78 @@ body{
   font-weight:900;
 }
 
+.commentary-card{
+  border-radius:24px;
+  padding:24px;
+  margin-bottom:22px;
+  background:linear-gradient(135deg,rgba(5,10,8,.95),rgba(12,20,15,.86));
+  border:1px solid rgba(107,255,25,.25);
+  box-shadow:0 0 35px rgba(107,255,25,.08);
+  position:relative;
+  overflow:hidden;
+}
+
+.commentary-card:before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:3px;
+  background:linear-gradient(90deg,transparent,var(--green),transparent);
+}
+
+.commentary-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.commentary-title{
+  font-family:'Anton';
+  color:var(--green);
+  font-size:24px;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+
+.commentary-badge{
+  color:#000;
+  background:var(--green);
+  padding:7px 12px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  box-shadow:0 0 18px rgba(107,255,25,.45);
+}
+
+.commentary-text{
+  font-size:18px;
+  line-height:1.65;
+  font-weight:800;
+  color:#f4f7f5;
+}
+
+.commentary-text span{
+  color:var(--gold);
+}
+
+.commentary-sub{
+  margin-top:12px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
+
 .soccer-live{
   background:linear-gradient(180deg,rgba(18,22,27,.9),rgba(5,8,11,.95));
   border:1px solid rgba(107,255,25,.25);
   border-radius:24px;
   padding:24px;
   margin-bottom:22px;
-  backdrop-filter:blur(12px);
 }
 
 .live-title{
@@ -230,8 +287,7 @@ body{
   border-radius:50%;
 }
 
-.goal-left,
-.goal-right{
+.goal-left,.goal-right{
   position:absolute;
   top:50%;
   width:20px;
@@ -258,11 +314,16 @@ body{
   font-weight:900;
   box-shadow:0 0 22px rgba(107,255,25,.8);
   z-index:4;
+  transition:left 2.8s linear, top 2.8s linear, box-shadow .4s ease;
+  animation:ballPulse 1.2s infinite alternate;
 }
 
-.live-momentum{
-  margin-top:16px;
+@keyframes ballPulse{
+  from{box-shadow:0 0 14px rgba(107,255,25,.55);}
+  to{box-shadow:0 0 32px rgba(107,255,25,1);}
 }
+
+.live-momentum{margin-top:16px;}
 
 .momentum-label{
   display:flex;
@@ -284,11 +345,13 @@ body{
 .momentum-home{
   background:linear-gradient(90deg,var(--green),#d9ff43);
   width:50%;
+  transition:width 1.8s ease;
 }
 
 .momentum-away{
   background:linear-gradient(90deg,var(--red),#ff7b7b);
   width:50%;
+  transition:width 1.8s ease;
 }
 
 .timeline{
@@ -309,8 +372,6 @@ body{
 }
 
 .panel{
-  background:var(--card);
-  border:1px solid var(--border);
   border-radius:20px;
   padding:22px;
   backdrop-filter:blur(10px);
@@ -371,6 +432,7 @@ body{
 .fill{
   height:100%;
   background:linear-gradient(90deg,var(--green),#d9ff43);
+  transition:width 1.8s ease;
 }
 
 .alert{
@@ -384,20 +446,10 @@ body{
 }
 
 @media(max-width:900px){
-  .matchup,
-  .grid,
-  .lineups,
-  .live-grid{
-    grid-template-columns:1fr;
-  }
-
-  .score-main{
-    font-size:54px;
-  }
-
-  .team h2{
-    font-size:34px;
-  }
+  .matchup,.grid,.lineups,.live-grid{grid-template-columns:1fr;}
+  .score-main{font-size:54px;}
+  .team h2{font-size:34px;}
+  .commentary-text{font-size:15px;}
 }
 </style>
 </head>
@@ -405,14 +457,12 @@ body{
 <body>
 
 <div class="page">
-
   <div class="top">
     <a href="/soccer" class="back">← SOCCER</a>
     <div class="logo">DATA-<span>MORE</span></div>
   </div>
 
   <div id="content">Loading Match Center...</div>
-
 </div>
 
 <script>
@@ -432,6 +482,8 @@ const urlGame = {
   leagueName: params.get('leagueName')
 };
 
+let isFirstLoad = true;
+
 function safe(v, fallback='--'){
   if(v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') return fallback;
   return v;
@@ -443,19 +495,129 @@ function pct(v){
 }
 
 function normalizeLogo(logo){
-  if(!logo || logo === '' || logo === 'null' || logo === 'undefined'){
-    return '/logo.png';
-  }
+  if(!logo || logo === '' || logo === 'null' || logo === 'undefined') return '/logo.png';
   return logo;
+}
+
+function numberSafe(v, fallback = 0){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function getMinuteText(matchTime){
+  const raw = String(matchTime || '').replace(/[^\d]/g,'');
+  if(!raw) return 'LIVE';
+  return `Minuto ${raw}`;
+}
+
+function buildLiveReading({
+  homeTeam, awayTeam, homePoss, awayPoss,
+  homeAttacks, awayAttacks, homeShots, awayShots,
+  homeCorners, awayCorners, homeCards, awayCards
+}){
+  const hAtt = numberSafe(homeAttacks, 0);
+  const aAtt = numberSafe(awayAttacks, 0);
+  const hShots = numberSafe(homeShots, 0);
+  const aShots = numberSafe(awayShots, 0);
+  const hCorners = numberSafe(homeCorners, 0);
+  const aCorners = numberSafe(awayCorners, 0);
+  const hCards = numberSafe(homeCards, 0);
+  const aCards = numberSafe(awayCards, 0);
+
+  const homePressureScore = (homePoss * 0.25) + (hAtt * 0.25) + (hShots * 2.2) + (hCorners * 1.8) - (hCards * 1.5);
+  const awayPressureScore = (awayPoss * 0.25) + (aAtt * 0.25) + (aShots * 2.2) + (aCorners * 1.8) - (aCards * 1.5);
+
+  const leader = homePressureScore >= awayPressureScore ? homeTeam : awayTeam;
+  const other = homePressureScore >= awayPressureScore ? awayTeam : homeTeam;
+  const diff = Math.abs(homePressureScore - awayPressureScore);
+
+  if(diff >= 22){
+    return `${leader} is applying heavy pressure. The match flow is leaning strongly toward ${leader}, with better control, attacking volume and dangerous territory. ${other} is being forced to defend deeper.`;
+  }
+
+  if(diff >= 12){
+    return `${leader} has the clear momentum. Possession, attacks and shot activity suggest ${leader} is carrying more danger, while ${other} needs to slow the rhythm.`;
+  }
+
+  if(diff >= 6){
+    return `${leader} has a slight live edge, but the match is still open. The pressure indicators favor ${leader}, although ${other} is close enough to respond quickly.`;
+  }
+
+  return `The game is balanced right now. Neither side has full control, and the live indicators suggest a cautious phase where the next attack or corner could shift momentum.`;
+}
+
+function buildPs5Commentary({
+  homeTeam, awayTeam, homeScore, awayScore, matchTime,
+  homePoss, awayPoss, homeAttacks, awayAttacks,
+  homeShots, awayShots, homeCorners, awayCorners,
+  homeCards, awayCards
+}){
+  const minute = getMinuteText(matchTime);
+
+  const hAtt = numberSafe(homeAttacks, 0);
+  const aAtt = numberSafe(awayAttacks, 0);
+  const hShots = numberSafe(homeShots, 0);
+  const aShots = numberSafe(awayShots, 0);
+  const hCorners = numberSafe(homeCorners, 0);
+  const aCorners = numberSafe(awayCorners, 0);
+  const hCards = numberSafe(homeCards, 0);
+  const aCards = numberSafe(awayCards, 0);
+
+  const homePressure = (homePoss * 0.25) + (hAtt * 0.28) + (hShots * 2.6) + (hCorners * 2) - (hCards * 1.2);
+  const awayPressure = (awayPoss * 0.25) + (aAtt * 0.28) + (aShots * 2.6) + (aCorners * 2) - (aCards * 1.2);
+
+  const leader = homePressure >= awayPressure ? homeTeam : awayTeam;
+  const defender = homePressure >= awayPressure ? awayTeam : homeTeam;
+  const diff = Math.abs(homePressure - awayPressure);
+
+  const homeWinning = Number(homeScore) > Number(awayScore);
+  const awayWinning = Number(awayScore) > Number(homeScore);
+  const tied = Number(homeScore) === Number(awayScore);
+
+  let situation = '';
+
+  if(diff >= 24){
+    situation = `${leader} controla la pelota y acelera en campo rival. ${defender} se repliega, pero la presión empieza a sentirse. El modelo detecta momentum fuerte para ${leader}.`;
+  }else if(diff >= 13){
+    situation = `${leader} empieza a inclinar la cancha. Hay más presencia ofensiva, más intención y el partido está entrando en una fase peligrosa para ${defender}.`;
+  }else if(diff >= 6){
+    situation = `${leader} tiene una pequeña ventaja en el ritmo del juego, aunque ${defender} todavía está bien parado y puede responder en cualquier transición.`;
+  }else{
+    situation = `el partido está muy parejo. Ambos equipos se estudian, el ritmo es controlado y cualquier error puede cambiar completamente el momentum.`;
+  }
+
+  let scoreContext = '';
+
+  if(tied){
+    scoreContext = `Con el marcador empatado ${homeScore}-${awayScore}, cada ataque empieza a tener más peso.`;
+  }else if(homeWinning){
+    scoreContext = `${homeTeam} está arriba ${homeScore}-${awayScore}; ${awayTeam} necesita adelantar líneas si quiere meterse de nuevo en el partido.`;
+  }else if(awayWinning){
+    scoreContext = `${awayTeam} está arriba ${awayScore}-${homeScore}; ${homeTeam} necesita arriesgar más para buscar la reacción.`;
+  }
+
+  return `
+    <section class="commentary-card">
+      <div class="commentary-head">
+        <div class="commentary-title">🎙️ Data More Live Commentary</div>
+        <div class="commentary-badge">AI Broadcast</div>
+      </div>
+      <div class="commentary-text">
+        <span>${minute}:</span> ${situation} ${scoreContext}
+      </div>
+      <div class="commentary-sub">
+        Auto-generated commentary from live possession, attacks, shots, corners, cards, score and match clock.
+      </div>
+    </section>
+  `;
 }
 
 async function fetchGameFromBoard(){
   try{
-    const res = await fetch(`/api/soccer/games-global`);
+    const res = await fetch(`/api/soccer/games-global?t=${Date.now()}`);
     const data = await res.json();
 
     if(!data.ok || !Array.isArray(data.games)) return {};
-
     return data.games.find(g => String(g.matchId) === String(matchId)) || {};
   }catch(e){
     return {};
@@ -464,10 +626,7 @@ async function fetchGameFromBoard(){
 
 function renderKeyPlayers(a){
   const players = a.keyPlayers || a.playerProps || a.players || [];
-
-  if(!Array.isArray(players) || !players.length){
-    return `<p class="note">Key player data pending.</p>`;
-  }
+  if(!Array.isArray(players) || !players.length) return `<p class="note">Key player data pending.</p>`;
 
   return players.slice(0,8).map(p => `
     <div class="stat">
@@ -479,10 +638,7 @@ function renderKeyPlayers(a){
 
 function renderGoalProps(a){
   const props = a.goalProps || a.playerProps || [];
-
-  if(!Array.isArray(props) || !props.length){
-    return `<p class="note">Goal scorer props unavailable.</p>`;
-  }
+  if(!Array.isArray(props) || !props.length) return `<p class="note">Goal scorer props unavailable.</p>`;
 
   return props.slice(0,5).map(p => `
     <div class="stat">
@@ -494,10 +650,7 @@ function renderGoalProps(a){
 
 function renderAssistProps(a){
   const props = a.assistProps || a.playerProps || [];
-
-  if(!Array.isArray(props) || !props.length){
-    return `<p class="note">Assist props unavailable.</p>`;
-  }
+  if(!Array.isArray(props) || !props.length) return `<p class="note">Assist props unavailable.</p>`;
 
   return props.slice(0,5).map(p => `
     <div class="stat">
@@ -509,10 +662,7 @@ function renderAssistProps(a){
 
 function renderInjuries(a){
   const injuries = a.injuries || a.suspensions || [];
-
-  if(!Array.isArray(injuries) || !injuries.length){
-    return `<p class="note">No major injuries reported.</p>`;
-  }
+  if(!Array.isArray(injuries) || !injuries.length) return `<p class="note">No major injuries reported.</p>`;
 
   return injuries.slice(0,8).map(p => `
     <div class="stat">
@@ -527,33 +677,19 @@ function renderLineups(a){
   const home = lineups.home || lineups.local || [];
   const away = lineups.away || lineups.visitante || [];
 
-  if(!home.length && !away.length){
-    return `<p class="note">Lineups not available yet.</p>`;
-  }
+  if(!home.length && !away.length) return `<p class="note">Lineups not available yet.</p>`;
 
   return `
     <div class="lineups">
-      <div>
-        ${home.map((p,i)=>`
-          <div class="player">${i+1}. ${p.player || p.name || 'Player'}</div>
-        `).join('')}
-      </div>
-
-      <div>
-        ${away.map((p,i)=>`
-          <div class="player">${i+1}. ${p.player || p.name || 'Player'}</div>
-        `).join('')}
-      </div>
+      <div>${home.map((p,i)=>`<div class="player">${i+1}. ${p.player || p.name || 'Player'}</div>`).join('')}</div>
+      <div>${away.map((p,i)=>`<div class="player">${i+1}. ${p.player || p.name || 'Player'}</div>`).join('')}</div>
     </div>
   `;
 }
 
 function renderRiskAlerts(a){
   const alerts = a.riskAlerts || a.alerts || [];
-
-  if(!Array.isArray(alerts) || !alerts.length){
-    return `<div class="alert">No major betting risk alerts detected.</div>`;
-  }
+  if(!Array.isArray(alerts) || !alerts.length) return `<div class="alert">No major betting risk alerts detected.</div>`;
 
   return alerts.map(x=>`
     <div class="alert">⚠️ ${typeof x === 'string' ? x : x.message}</div>
@@ -561,8 +697,9 @@ function renderRiskAlerts(a){
 }
 
 function renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime){
-  const homePoss = Number(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin ?? 50);
-  const awayPoss = Math.max(0, 100 - homePoss);
+  const homePoss = numberSafe(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin, 50);
+  const cleanHomePoss = Math.min(90, Math.max(10, homePoss));
+  const awayPoss = Math.max(0, 100 - cleanHomePoss);
 
   const homeAttacks = safe(a.homeAttacks ?? a.live?.homeAttacks ?? a.attacks?.home, 'Pending');
   const awayAttacks = safe(a.awayAttacks ?? a.live?.awayAttacks ?? a.attacks?.away, 'Pending');
@@ -576,8 +713,39 @@ function renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime){
   const homeCards = safe(a.homeCards ?? a.live?.homeCards ?? a.cards?.home, 'Pending');
   const awayCards = safe(a.awayCards ?? a.live?.awayCards ?? a.cards?.away, 'Pending');
 
-  const ballLeft = Math.min(86, Math.max(14, Number(homePoss) || 50));
-  const ballTop = 50;
+  const hShots = numberSafe(homeShots, 0);
+  const aShots = numberSafe(awayShots, 0);
+  const hAttacks = numberSafe(homeAttacks, 0);
+  const aAttacks = numberSafe(awayAttacks, 0);
+
+  const baseLeft = Math.min(86, Math.max(14, cleanHomePoss));
+  const pressureMove =
+    hShots > aShots ? 7 :
+    aShots > hShots ? -7 :
+    hAttacks > aAttacks ? 4 :
+    aAttacks > hAttacks ? -4 :
+    0;
+
+  const randomMoveX = (Math.random() - 0.5) * 12;
+  const randomMoveY = (Math.random() - 0.5) * 36;
+
+  const ballLeft = Math.min(88, Math.max(12, baseLeft + pressureMove + randomMoveX));
+  const ballTop = Math.min(78, Math.max(22, 50 + randomMoveY));
+
+  const liveReading = a.liveSummary || a.matchFlow || buildLiveReading({
+    homeTeam,
+    awayTeam,
+    homePoss: cleanHomePoss,
+    awayPoss,
+    homeAttacks,
+    awayAttacks,
+    homeShots,
+    awayShots,
+    homeCorners,
+    awayCorners,
+    homeCards,
+    awayCards
+  });
 
   return `
     <section class="soccer-live">
@@ -590,7 +758,7 @@ function renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime){
 
         <div class="live-team-box">
           <h4>${homeTeam}</h4>
-          <div class="live-stat"><span>Possession</span><b>${Number(homePoss).toFixed(0)}%</b></div>
+          <div class="live-stat"><span>Possession</span><b>${Number(cleanHomePoss).toFixed(0)}%</b></div>
           <div class="live-stat"><span>Attacks</span><b>${homeAttacks}</b></div>
           <div class="live-stat"><span>Shots</span><b>${homeShots}</b></div>
           <div class="live-stat"><span>Corners</span><b>${homeCorners}</b></div>
@@ -610,14 +778,13 @@ function renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime){
               <span>${awayTeam}</span>
             </div>
             <div class="momentum-bar">
-              <div class="momentum-home" style="width:${Number(homePoss).toFixed(0)}%"></div>
+              <div class="momentum-home" style="width:${Number(cleanHomePoss).toFixed(0)}%"></div>
               <div class="momentum-away" style="width:${Number(awayPoss).toFixed(0)}%"></div>
             </div>
           </div>
 
           <div class="timeline">
-            <b>Live Reading:</b>
-            ${a.liveSummary || a.matchFlow || 'Live tactical data pending. Use possession, attacks, shots, corners and cards to read match pressure.'}
+            <b>Live Reading:</b> ${liveReading}
           </div>
         </div>
 
@@ -644,8 +811,10 @@ async function loadMatch(){
       return;
     }
 
+    if(isFirstLoad) content.innerHTML = `Loading Match Center...`;
+
     const [analysisRes, boardGame] = await Promise.all([
-      fetch(`/api/soccer/analyze/${matchId}?league=${league || ''}`).then(r => r.json()).catch(() => ({})),
+      fetch(`/api/soccer/analyze/${matchId}?league=${league || ''}&t=${Date.now()}`).then(r => r.json()).catch(() => ({})),
       fetchGameFromBoard()
     ]);
 
@@ -696,30 +865,30 @@ async function loadMatch(){
     );
 
     const homeScore =
-      urlGame.homeScore ??
       boardGame.homeScore ??
       data.homeScore ??
       a.homeScore ??
       g.homeScore ??
       g.goals?.home ??
+      urlGame.homeScore ??
       0;
 
     const awayScore =
-      urlGame.awayScore ??
       boardGame.awayScore ??
       data.awayScore ??
       a.awayScore ??
       g.awayScore ??
       g.goals?.away ??
+      urlGame.awayScore ??
       0;
 
     const matchTime =
-      urlGame.time ||
       boardGame.time ||
       data.time ||
       a.time ||
       g.time ||
       g.fixture?.status?.elapsed ||
+      urlGame.time ||
       'LIVE';
 
     const leagueName =
@@ -740,7 +909,7 @@ async function loadMatch(){
       oneX2.homeWin ??
       a.homeWinPct ??
       a.homeProbability ??
-      0;
+      50;
 
     const draw =
       oneX2.draw ??
@@ -756,7 +925,11 @@ async function loadMatch(){
       oneX2.awayWin ??
       a.awayWinPct ??
       a.awayProbability ??
-      0;
+      50;
+
+    const liveHomePoss = numberSafe(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin, 50);
+    const cleanHomePoss = Math.min(90, Math.max(10, liveHomePoss));
+    const cleanAwayPoss = Math.max(0, 100 - cleanHomePoss);
 
     content.innerHTML = `
       <section class="hero">
@@ -782,6 +955,24 @@ async function loadMatch(){
 
         </div>
       </section>
+
+      ${buildPs5Commentary({
+        homeTeam,
+        awayTeam,
+        homeScore,
+        awayScore,
+        matchTime,
+        homePoss: cleanHomePoss,
+        awayPoss: cleanAwayPoss,
+        homeAttacks: a.homeAttacks ?? a.live?.homeAttacks ?? a.attacks?.home,
+        awayAttacks: a.awayAttacks ?? a.live?.awayAttacks ?? a.attacks?.away,
+        homeShots: a.homeShots ?? a.live?.homeShots ?? a.shots?.home,
+        awayShots: a.awayShots ?? a.live?.awayShots ?? a.shots?.away,
+        homeCorners: a.homeCorners ?? a.live?.homeCorners ?? a.corners?.home,
+        awayCorners: a.awayCorners ?? a.live?.awayCorners ?? a.corners?.away,
+        homeCards: a.homeCards ?? a.live?.homeCards ?? a.cards?.home,
+        awayCards: a.awayCards ?? a.live?.awayCards ?? a.cards?.away
+      })}
 
       ${renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime)}
 
@@ -855,18 +1046,28 @@ async function loadMatch(){
       </section>
     `;
 
+    isFirstLoad = false;
+
   }catch(err){
     console.log(err);
 
-    content.innerHTML = `
-      <section class="panel">
-        Error loading match center.
-      </section>
-    `;
+    if(isFirstLoad){
+      content.innerHTML = `
+        <section class="panel">
+          Error loading match center.
+        </section>
+      `;
+    }
   }
 }
 
 loadMatch();
+
+setInterval(() => {
+  if(document.visibilityState === 'visible'){
+    loadMatch();
+  }
+}, 5000);
 </script>
 
 </body>
