@@ -519,8 +519,9 @@ let isFirstLoad = true;
 let commentaryVoiceEnabled = false;
 let lastSpokenCommentary = '';
 let currentCommentaryAudio = null;
-let commentaryCounter = 0;
-let lastCommentarySignature = '';
+
+// VARIABLES PARA EVITAR REPETICION
+let narrationTick = 0;
 
 function safe(v, fallback='--'){
   if(v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') return fallback;
@@ -559,24 +560,47 @@ function getMinuteText(matchTime){
   return `Minuto ${raw}`;
 }
 
+// FUNCION NUEVA: GENERAR TEXTO CON VARIACION
+function generateNarrationText(){
+  const el = document.getElementById('data-more-commentary-text');
+  if(!el) return '';
+
+  const baseText = el.innerText.trim();
+  if(!baseText) return '';
+
+  narrationTick++;
+
+  const variations = [
+    'La intensidad sigue viva y Data More vuelve a medir el momentum del partido.',
+    'El juego mantiene ritmo competitivo y cada posesión empieza a pesar más.',
+    'La lectura en vivo se actualiza con posesión, ataques, tiros y control territorial.',
+    'El modelo sigue detectando cambios en presión ofensiva y dominio de campo.',
+    'Atención porque el partido entra en una fase donde cualquier jugada puede cambiar el escenario.'
+  ];
+
+  return `${baseText} ${variations[narrationTick % variations.length]}`;
+}
+
+// FUNCION MEJORADA PARA NARRACIÓN CONTINUA
 async function speakCommentary(text){
   if(!text) return;
 
   try{
-    if(currentCommentaryAudio){
-      currentCommentaryAudio.pause();
-      currentCommentaryAudio.currentTime = 0;
-      currentCommentaryAudio = null;
+    // Si ya hay un audio sonando y no ha terminado, no interrumpimos
+    if(currentCommentaryAudio && !currentCommentaryAudio.ended){
+      return;
     }
 
     const response = await fetch('/api/voice/commentary',{
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
+      headers:{
+        'Content-Type':'application/json'
+      },
       body:JSON.stringify({ text })
     });
 
     if(!response.ok){
-      console.log('VOICE API ERROR:', await response.text());
+      console.log('VOICE API ERROR');
       return;
     }
 
@@ -588,7 +612,13 @@ async function speakCommentary(text){
 
     currentCommentaryAudio = audio;
 
-    await audio.play();
+    // Al finalizar este audio, marcamos para permitir la siguiente frase
+    audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        lastSpokenCommentary = text;
+    };
+
+    audio.play();
 
   }catch(err){
     console.log('VOICE ERROR:',err);
@@ -601,19 +631,13 @@ function processLiveCommentary(){
   const el = document.getElementById('data-more-commentary-text');
   if(!el) return;
 
-  const text = el.innerText.trim();
-
-  if(!text) return;
-
-  const signature = text;
-
-  if(signature === lastCommentarySignature){
-    return;
+  // CAMBIO SOLICITADO: USAR GENERATE NARRATION
+  const text = generateNarrationText();
+  
+  // Solo disparamos si el locutor está libre
+  if(!currentCommentaryAudio || currentCommentaryAudio.ended) {
+      speakCommentary(text);
   }
-
-  lastCommentarySignature = signature;
-  lastSpokenCommentary = text;
-  speakCommentary(text);
 }
 
 document.addEventListener('click', (e)=>{
@@ -633,7 +657,6 @@ document.addEventListener('click', (e)=>{
       : '#fff';
 
     if(commentaryVoiceEnabled){
-      lastCommentarySignature = '';
       processLiveCommentary();
     }else{
       if(currentCommentaryAudio){
@@ -689,9 +712,6 @@ function buildPs5Commentary({
 }){
   const minute = getMinuteText(matchTime);
 
-  commentaryCounter++;
-  const variation = commentaryCounter % 6;
-
   const hAtt = numberSafe(homeAttacks, 0);
   const aAtt = numberSafe(awayAttacks, 0);
   const hShots = numberSafe(homeShots, 0);
@@ -715,61 +735,13 @@ function buildPs5Commentary({
   let situation = '';
 
   if(diff >= 24){
-    if(variation === 0){
-      situation = `${leader} controla la pelota y acelera en campo rival. ${defender} se repliega, pero la presión empieza a sentirse. El modelo detecta momentum fuerte para ${leader}.`;
-    }else if(variation === 1){
-      situation = `${leader} está empujando con fuerza. Los datos live marcan superioridad territorial y ${defender} empieza a defender muy cerca de su arco.`;
-    }else if(variation === 2){
-      situation = `${leader} domina este tramo del partido. Hay más ataques, más intención y una sensación clara de peligro sobre el área de ${defender}.`;
-    }else if(variation === 3){
-      situation = `${leader} vuelve a instalarse en zona ofensiva. El ritmo del juego favorece claramente al equipo que más está presionando.`;
-    }else if(variation === 4){
-      situation = `${leader} está ganando metros y obligando a ${defender} a retroceder. La lectura de Data More marca presión alta.`;
-    }else{
-      situation = `${leader} sostiene el dominio y no deja respirar a ${defender}. El partido se está jugando con mucha carga ofensiva hacia un solo lado.`;
-    }
+    situation = `${leader} controla la pelota y acelera en campo rival. ${defender} se repliega, pero la presión empieza a sentirse. El modelo detecta momentum fuerte para ${leader}.`;
   }else if(diff >= 13){
-    if(variation === 0){
-      situation = `${leader} empieza a inclinar la cancha. Hay más presencia ofensiva, más intención y el partido está entrando en una fase peligrosa para ${defender}.`;
-    }else if(variation === 1){
-      situation = `${leader} toma un poco más de control. No es dominio total, pero sí hay una tendencia clara en ataques y posesión.`;
-    }else if(variation === 2){
-      situation = `${leader} encuentra espacios y empieza a mover el partido hacia campo contrario. ${defender} intenta resistir y ordenar líneas.`;
-    }else if(variation === 3){
-      situation = `${leader} está generando mejores señales ofensivas. El modelo detecta un momento favorable, aunque todavía no definitivo.`;
-    }else if(variation === 4){
-      situation = `${leader} mejora su lectura ofensiva. Los números de presión empiezan a separarse y el partido toma dirección.`;
-    }else{
-      situation = `${leader} empieza a sentirse más cómodo con la pelota. ${defender} necesita cortar el ritmo antes de que el peligro aumente.`;
-    }
+    situation = `${leader} empieza a inclinar la cancha. Hay más presencia ofensiva, más intención y el partido está entrando en una fase peligrosa para ${defender}.`;
   }else if(diff >= 6){
-    if(variation === 0){
-      situation = `${leader} tiene una pequeña ventaja en el ritmo del juego, aunque ${defender} todavía está bien parado y puede responder en cualquier transición.`;
-    }else if(variation === 1){
-      situation = `${leader} muestra una ligera superioridad en este pasaje. No hay dominio absoluto, pero sí mejor lectura de momentum.`;
-    }else if(variation === 2){
-      situation = `${leader} está un paso adelante en la presión, aunque ${defender} sigue dentro del partido y puede cambiar la historia rápido.`;
-    }else if(variation === 3){
-      situation = `${leader} gana una pequeña batalla táctica en este tramo. El partido sigue abierto y cualquier ataque puede pesar.`;
-    }else if(variation === 4){
-      situation = `${leader} tiene una leve inclinación en los datos live. ${defender} todavía no está sufriendo demasiado, pero debe estar atento.`;
-    }else{
-      situation = `${leader} aparece con una mínima ventaja de ritmo. El juego está vivo y todavía no hay un control completo.`;
-    }
+    situation = `${leader} tiene una pequeña ventaja en el ritmo del juego, aunque ${defender} todavía está bien parado y puede responder en cualquier transición.`;
   }else{
-    if(variation === 0){
-      situation = `el partido está muy parejo. Ambos equipos se estudian, el ritmo es controlado y cualquier error puede cambiar completamente el momentum.`;
-    }else if(variation === 1){
-      situation = `el juego se mantiene equilibrado. No hay un dueño claro del partido y la lectura live marca mucha cautela.`;
-    }else if(variation === 2){
-      situation = `la intensidad está pareja. Los dos equipos alternan posesión y todavía no aparece una señal dominante.`;
-    }else if(variation === 3){
-      situation = `el partido entra en una fase de análisis. Poca separación en los datos y mucho valor en el próximo ataque peligroso.`;
-    }else if(variation === 4){
-      situation = `ningún equipo logra romper el equilibrio. El modelo ve un partido cerrado, con detalles pequeños marcando la diferencia.`;
-    }else{
-      situation = `la lectura sigue pareja. La cancha no se inclina demasiado y ambos equipos esperan el momento correcto para acelerar.`;
-    }
+    situation = `el partido está muy parejo. Ambos equipos se estudian, el ritmo es controlado y cualquier error puede cambiar completamente el momentum.`;
   }
 
   let scoreContext = '';
@@ -781,24 +753,6 @@ function buildPs5Commentary({
   }else if(awayWinning){
     scoreContext = `${awayTeam} está arriba ${awayScore}-${homeScore}; ${homeTeam} necesita arriesgar más para buscar la reacción.`;
   }
-
-  let extraLivePhrase = '';
-
-  if(variation === 0){
-    extraLivePhrase = ' Data More sigue leyendo el ritmo del partido en tiempo real.';
-  }else if(variation === 1){
-    extraLivePhrase = ' La lectura táctica se mantiene activa con los datos live del encuentro.';
-  }else if(variation === 2){
-    extraLivePhrase = ' El modelo vuelve a medir posesión, ataques, tiros y momentum.';
-  }else if(variation === 3){
-    extraLivePhrase = ' La narración se actualiza según la presión y el desarrollo del juego.';
-  }else if(variation === 4){
-    extraLivePhrase = ' El sistema recalcula el contexto del partido con cada nueva señal.';
-  }else{
-    extraLivePhrase = ' Data More ajusta la lectura según el comportamiento del juego.';
-  }
-
-  scoreContext += extraLivePhrase;
 
   return `
     <section class="commentary-card">
@@ -1295,6 +1249,7 @@ async function loadMatch(){
       </section>
     `;
 
+    // Ejecutamos la narración tras renderizar el contenido
     setTimeout(processLiveCommentary, 400);
 
     isFirstLoad = false;
@@ -1319,6 +1274,13 @@ setInterval(() => {
     loadMatch();
   }
 }, 5000);
+
+// REVISIÓN CADA 6 SEGUNDOS PARA NARRACIÓN
+setInterval(() => {
+    if(commentaryVoiceEnabled && document.visibilityState === 'visible'){
+        processLiveCommentary();
+    }
+}, 6000);
 </script>
 
 </body>
