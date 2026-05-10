@@ -1,5 +1,3 @@
-Aquí tienes el HTML corregido completo. La superfecta ahora usa el número real del 4to caballo, no el fallback 1.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -381,6 +379,7 @@ document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit'
 }).format(new Date());
+
 const HORSE_COLORS = {
   1:  { bg:'#d90429', text:'#fff' },
   2:  { bg:'#ffffff', text:'#000' },
@@ -399,18 +398,23 @@ const HORSE_COLORS = {
   15: { bg:'#166534', text:'#fff' },
   16: { bg:'#d4af37', text:'#000' }
 };
+
 function getHorseColor(number) {
   return HORSE_COLORS[Number(number)] || { bg:'#111827', text:'#fff' };
 }
+
 function getHorseNumber(h, index = '') {
   return h?.number || h?.programNumber || h?.horseNumber || h?.post || h?.runnerNumber || index;
 }
+
 function normalizeHorseName(name) {
   return String(name || '').toLowerCase().replace(/[^a-z0-9]/gi, '').trim();
 }
+
 function normalizeRaceNumber(value) {
   return String(value || '').replace(/[^\d]/g, '') || value;
 }
+
 function mergeDuplicateRaces(races = []) {
   const merged = [];
   for (const race of races) {
@@ -434,6 +438,7 @@ function mergeDuplicateRaces(races = []) {
   }
   return merged.sort((a,b) => Number(a.raceNumber) - Number(b.raceNumber));
 }
+
 async function loadRaces() {
   const container = document.getElementById('races');
   container.innerHTML = '<div class="loading">⌛ Processing Big Data & Racing Forms...</div>';
@@ -472,6 +477,7 @@ async function loadRaces() {
     container.innerHTML = `<div class="card" style="grid-column:1/-1;">⚠️ Error: ${err.message}</div>`;
   }
 }
+
 function renderAnalysis(a, runners = []) {
   const badge = a.confidence === 'ALTA' ? '🔥' : a.confidence === 'MEDIA' ? '⚠️' : '';
   const findRunner = (name) => {
@@ -483,37 +489,32 @@ function renderAnalysis(a, runners = []) {
     const runner = findRunner(name);
     return runner ? getHorseNumber(runner, fallback) : fallback;
   };
+
   const pickRunner = findRunner(a.pick);
   const pickNumber = pickRunner ? getHorseNumber(pickRunner, '') : '';
   const pickColor = getHorseColor(pickNumber);
+
   const topList = (a.top3 || []).sort((x,y) => Number(y.probability || 0) - Number(x.probability || 0));
-  const top3 = topList.slice(0,3);
-  const top3WithNumbers = top3.map(h => ({
-    name: h.name,
-    probability: h.probability,
-    number: getHorseNumByName(h.name, '')
-  }));
-  let fourthHorse = null;
-  for (const runner of runners) {
-    const runnerName = runner.name || runner.horse || runner.runnerName || '';
-    const runnerNumber = getHorseNumber(runner, '');
-    const alreadyUsed = top3WithNumbers.some(h =>
-      normalizeHorseName(h.name) === normalizeHorseName(runnerName)
-    );
-    if (!alreadyUsed && runnerName && runnerNumber) {
-      fourthHorse = {
-        name: runnerName,
-        probability: 0,
-        number: runnerNumber
-      };
-      break;
-    }
-  }
-  const top4 = [...top3WithNumbers, fourthHorse].filter(Boolean).slice(0,4);
+
+  // APLICANDO CAMBIO 1: Lógica top4 simplificada
+  const top4 = Array.isArray(a.fullRanking) && a.fullRanking.length >= 4
+    ? a.fullRanking.slice(0, 4)
+    : topList.slice(0, 4);
+
   const winNumber = getHorseNumByName(a.pick, pickNumber);
-  const exactaNumbers = top3WithNumbers.slice(0,2).map(h => h.number).filter(Boolean).join('-');
-  const trifectaNumbers = top3WithNumbers.slice(0,3).map(h => h.number).filter(Boolean).join('-');
-  const superfectaNumbers = top4.map(h => h.number).filter(Boolean).join('-');
+  const exactaNumbers = top4.slice(0,2).map((h, i) => h.number || getHorseNumByName(h.name, i + 1)).join('-');
+  const trifectaNumbers = top4.slice(0,3).map((h, i) => h.number || getHorseNumByName(h.name, i + 1)).join('-');
+
+  // APLICANDO CAMBIO 2: Lógica superfectaNumbers solicitada
+  const superfectaNumbers =
+    top4
+      .slice(0, 4)
+      .map((h) =>
+        h.number || getHorseNumByName(h.name, '')
+      )
+      .filter(Boolean)
+      .join('-');
+
   return `
     <div class="section-title">Model Pick</div>
     <div class="pick-box">
@@ -532,15 +533,16 @@ function renderAnalysis(a, runners = []) {
       </div>
     </div>
     <div class="section-title">Top 3 Probabilities</div>
-    ${top3WithNumbers.map((h) => {
-      const horseColor = getHorseColor(h.number);
+    ${top4.slice(0,3).map((h) => {
+      const num = h.number || getHorseNumByName(h.name, '');
+      const horseColor = getHorseColor(num);
       return `
         <div class="rank-row">
           <span class="horse-name-wrap">
-            <span class="horse-number" style="background:${horseColor.bg}; color:${horseColor.text};">${h.number || '-'}</span>
+            <span class="horse-number" style="background:${horseColor.bg}; color:${horseColor.text};">${num || '-'}</span>
             <span class="horse-name">${h.name}</span>
           </span>
-          <b style="color:var(--green); font-size:13px;">${h.probability}%</b>
+          <b style="color:var(--green); font-size:13px;">${h.probability || 0}%</b>
         </div>
       `;
     }).join('')}
@@ -551,9 +553,11 @@ function renderAnalysis(a, runners = []) {
     <div class="bet">SUPERFECTA <b>${superfectaNumbers || '-'}</b></div>
   `;
 }
+
 function buildTicket() {
   alert('Smart Ticket Generated Successfully');
 }
+
 loadRaces();
 </script>
 </body>
