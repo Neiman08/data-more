@@ -418,11 +418,6 @@ function normalizeRaceNumber(value) {
   return String(value || '').replace(/[^\d]/g, '') || value;
 }
 
-function cleanBet(bet) {
-  if (!bet || bet === '-') return '-';
-  return String(bet).trim();
-}
-
 function mergeDuplicateRaces(races = []) {
   const merged = [];
   for (const race of races) {
@@ -503,7 +498,7 @@ function renderAnalysis(a, runners = []) {
 
   const topList = (a.top3 || []).sort((x, y) => Number(y.probability || 0) - Number(x.probability || 0));
   const top3 = topList.slice(0, 3);
-  const top4 = (a.top4 || topList).slice(0, 4);
+  const top4 = [...topList, ...(runners || []).map(r => ({ name: r.name, probability: 0 }))].slice(0, 4);
 
   // Conversión de Estrategias a Números
   const winNumber = getHorseNumByName(a.pick, pickNumber);
