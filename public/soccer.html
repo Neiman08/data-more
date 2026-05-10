@@ -302,13 +302,19 @@
 
     .team-name {
       display: block;
-      font-size: 18px;
+      font-size: 11px;
       font-weight: 900;
       color: #fff;
-      line-height: 1;
+      line-height: 1.05;
       text-transform: uppercase;
       font-family: 'Anton', sans-serif;
-      letter-spacing: .4px;
+      letter-spacing: .1px;
+      width: 100%;
+      max-width: 100%;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      word-break: normal;
     }
 
     .team-record {
@@ -354,12 +360,14 @@
     }
 
     .coach-name {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--gold);
       font-weight: 900;
       margin-top: 6px;
       display: block;
-      line-height: 1.15;
+      line-height: 1.1;
+      white-space: normal;
+      word-break: normal;
     }
 
     .score-center {
@@ -635,7 +643,7 @@
       }
 
       .team-name {
-        font-size: 16px;
+        font-size: 10px;
       }
 
       .team-logo {
@@ -715,15 +723,28 @@ function shortTeamName(name) {
   const clean = String(name || '').trim();
   if (!clean) return 'TEAM';
 
-  const parts = clean.split(/\s+/);
+  const map = {
+    'Nottingham Forest': 'N. Forest',
+    'Newcastle United': 'Newcastle',
+    'Crystal Palace': 'C. Palace',
+    'Aston Villa': 'A. Villa',
+    'Real Madrid': 'R. Madrid',
+    'Manchester United': 'Man United',
+    'Manchester City': 'Man City',
+    'Bayern Munich': 'Bayern',
+    'Borussia Dortmund': 'Dortmund'
+  };
 
-  if (clean.length <= 10) return clean.toUpperCase();
+  if (map[clean]) return map[clean].toUpperCase();
 
-  if (parts.length >= 2) {
-    return parts.map(p => p[0]).join('').slice(0, 4).toUpperCase();
-  }
+  if (clean.length <= 12) return clean.toUpperCase();
 
-  return clean.slice(0, 4).toUpperCase();
+  return clean
+    .replace('United', 'Utd')
+    .replace('City', 'City')
+    .replace('Club', '')
+    .slice(0, 12)
+    .toUpperCase();
 }
 
 function renderRealForm(formString = '') {
