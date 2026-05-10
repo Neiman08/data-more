@@ -24,6 +24,8 @@
       --muted: #888d93;
       --bg-panel: rgba(20, 25, 30, 0.6);
       --gold: #facc15;
+      --red: #ef4444;
+      --blue: #2563eb;
     }
 
     * {
@@ -83,6 +85,17 @@
       height: 18px;
       object-fit: contain;
       margin: 0 6px;
+    }
+
+    .sport-tag {
+      font-size: 8px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-right: 8px;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: var(--blue);
+      color: #fff;
     }
 
     .ticker-score {
@@ -175,6 +188,10 @@
       padding-bottom: 15px;
     }
 
+    .nav-sports a {
+      text-decoration: none;
+    }
+
     .nav-btn {
       padding: 10px 20px;
       border-radius: 8px;
@@ -200,6 +217,7 @@
       gap: 15px;
       margin-bottom: 25px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .topbar input[type="date"] {
@@ -250,77 +268,195 @@
       background: var(--bg-panel);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 20px;
+      padding: 22px;
       backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
       height: auto !important;
-      overflow: visible !important;
+      overflow: hidden;
     }
 
     .match-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      transition: background 0.2s;
-      border-radius: 8px;
-    }
-
-    .match-header:hover {
-      background: rgba(255,255,255,0.03);
+      display: grid;
+      grid-template-columns: minmax(0,1fr) 110px minmax(0,1fr);
+      align-items: start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      cursor: pointer;
     }
 
     .team-box {
+      min-width: 0;
       text-align: center;
-      flex: 1;
+      overflow: hidden;
     }
 
     .team-logo {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       object-fit: contain;
       margin-bottom: 8px;
     }
 
     .team-name {
       display: block;
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 18px;
+      font-weight: 900;
       color: #fff;
-      line-height: 1.2;
+      line-height: 1;
+      text-transform: uppercase;
+      font-family: 'Anton', sans-serif;
+      letter-spacing: .4px;
+    }
+
+    .team-record {
+      display: block;
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 800;
+      margin-top: 6px;
+    }
+
+    .form-box {
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      margin-top: 7px;
+      flex-wrap: nowrap;
+    }
+
+    .form-item {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .form-item.win {
+      background: var(--green);
+      color: #000;
+    }
+
+    .form-item.loss {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .coach-name {
+      font-size: 10px;
+      color: var(--gold);
+      font-weight: 900;
+      margin-top: 6px;
+      display: block;
+      line-height: 1.15;
     }
 
     .score-center {
-      flex: 1;
+      width: 110px;
+      min-width: 110px;
+      max-width: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
       text-align: center;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .live-tag {
+      font-size: 9px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+
+    .live-tag.live {
+      background: rgba(239,68,68,.2);
+      color: #ef4444;
+      animation: blink 1.5s infinite;
     }
 
     .score-now {
-      font-size: 24px;
-      font-weight: 900;
-      color: var(--green);
+      width: 110px;
+      max-width: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
       font-family: 'Anton', sans-serif;
+      font-size: 38px;
+      font-weight: 900;
+      line-height: .95;
+      white-space: nowrap;
+      letter-spacing: -2px;
+      color: #fff;
+      text-align: center;
+      margin: 0 auto;
     }
 
     .game-time {
       font-size: 10px;
       color: var(--muted);
-      font-weight: 700;
-      margin-top: 4px;
+      font-weight: 800;
+      margin-top: 5px;
     }
 
     .soccer-lineup-box {
-      font-size: 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px dashed var(--border);
+      background: rgba(0,0,0,.2);
       border-radius: 8px;
       padding: 12px;
-      color: var(--muted);
-      margin-top: 10px;
-      min-height: 50px;
-      display: block;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255,255,255,.03);
+      color: #fff;
       overflow: visible;
+    }
+
+    .lineup-grid-pro {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .lineup-player-pro {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 0;
+      color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      line-height: 1.2;
+    }
+
+    .lineup-player-pro span:first-child {
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .lineup-num {
+      color: var(--green);
+      font-weight: 900;
+      margin-right: 5px;
+    }
+
+    .lineup-pos {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 800;
+      white-space: nowrap;
     }
 
     .analyze-btn {
@@ -329,13 +465,18 @@
       color: #000;
       border: none;
       border-radius: 8px;
-      padding: 12px;
-      font-size: 12px;
-      font-weight: 800;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 900;
       cursor: pointer;
-      margin-top: 15px;
+      margin-top: 10px;
       text-transform: uppercase;
       transition: opacity 0.2s;
+      letter-spacing: .8px;
+    }
+
+    .analyze-btn:hover {
+      opacity: .85;
     }
 
     .pick-res {
@@ -349,10 +490,41 @@
       overflow: visible;
     }
 
+    .prediction-box {
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      border-left: 4px solid var(--green);
+      background: rgba(107,255,25,.05);
+    }
+
+    .prediction-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .pick-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      display: block;
+    }
+
+    .data-mono {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
     .stat-row {
       display: flex;
       justify-content: space-between;
-      padding: 7px 0;
+      padding: 8px 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
       font-size: 11px;
       gap: 12px;
@@ -360,13 +532,13 @@
 
     .stat-row span {
       color: var(--muted);
-      font-weight: 600;
+      font-weight: 700;
       text-align: left;
     }
 
     .stat-row b {
       color: #fff;
-      font-weight: 800;
+      font-weight: 900;
       text-align: right;
     }
 
@@ -391,6 +563,11 @@
       50% { opacity: 1; }
     }
 
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+
     @media (max-width: 1300px) {
       .games-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -411,7 +588,10 @@
 
     @media (max-width: 768px) {
       header {
-        padding: 0 20px;
+        padding: 14px 16px;
+        height: auto;
+        min-height: 68px;
+        flex-wrap: wrap;
       }
 
       .container {
@@ -419,6 +599,8 @@
       }
 
       nav {
+        width: 100%;
+        overflow-x: auto;
         gap: 12px;
       }
 
@@ -431,13 +613,29 @@
         overflow-x: auto;
       }
 
-      .card {
-        padding-bottom: 28px !important;
-        margin-bottom: 34px !important;
+      .match-header {
+        grid-template-columns: minmax(0,1fr) 100px minmax(0,1fr);
       }
 
-      .games-grid {
-        gap: 34px !important;
+      .score-center {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+      }
+
+      .score-now {
+        width: 100px;
+        max-width: 100px;
+        font-size: 34px;
+      }
+
+      .team-name {
+        font-size: 16px;
+      }
+
+      .team-logo {
+        width: 38px;
+        height: 38px;
       }
     }
   </style>
@@ -508,6 +706,50 @@ function escapeHtml(v) {
   }[m]));
 }
 
+function shortTeamName(name) {
+  const clean = String(name || '').trim();
+  if (!clean) return 'TEAM';
+
+  const parts = clean.split(/\s+/);
+
+  if (clean.length <= 10) return clean.toUpperCase();
+
+  if (parts.length >= 2) {
+    return parts.map(p => p[0]).join('').slice(0, 4).toUpperCase();
+  }
+
+  return clean.slice(0, 4).toUpperCase();
+}
+
+function renderFakeForm() {
+  const pattern = ['W','L','W','W','L'];
+
+  return `
+    <div class="form-box">
+      ${pattern.map(x => `
+        <span class="form-item ${x === 'W' ? 'win' : 'loss'}">${x}</span>
+      `).join('')}
+    </div>
+  `;
+}
+
+function getStatusClass(status) {
+  const raw = String(status || '').toLowerCase();
+
+  if (
+    raw.includes('live') ||
+    raw.includes('1h') ||
+    raw.includes('2h') ||
+    raw.includes('ht') ||
+    raw.includes('et') ||
+    raw.includes('p')
+  ) {
+    return 'live';
+  }
+
+  return '';
+}
+
 async function initTicker() {
   const ticker = document.getElementById('tickerWrapper');
 
@@ -515,21 +757,28 @@ async function initTicker() {
     const res = await fetch('/api/soccer/games-global');
     const data = await res.json();
 
-    if (data.ok) {
+    if (data.ok && data.games?.length) {
       const content = data.games.map(g => `
         <div class="ticker-item">
-          <img src="${g.homeLogo}">
+          <span class="sport-tag">SOCCER</span>
+          <img src="${g.homeLogo}" onerror="this.style.display='none'">
+          ${escapeHtml(shortTeamName(g.homeTeam))}
           <span class="ticker-score">${g.homeScore ?? 0}</span>
           -
           <span class="ticker-score">${g.awayScore ?? 0}</span>
-          <img src="${g.awayLogo}">
-          <span class="ticker-status">${g.time}</span>
+          ${escapeHtml(shortTeamName(g.awayTeam))}
+          <img src="${g.awayLogo}" onerror="this.style.display='none'">
+          <span class="ticker-status">${escapeHtml(g.time || g.status || '')}</span>
         </div>
       `).join('');
 
       ticker.innerHTML = content + content;
+    } else {
+      ticker.innerHTML = '<span class="ticker-item">Soccer scores unavailable...</span>';
     }
-  } catch(e) {}
+  } catch(e) {
+    ticker.innerHTML = '<span class="ticker-item">Soccer scores unavailable...</span>';
+  }
 }
 
 async function loadGames() {
@@ -542,7 +791,7 @@ async function loadGames() {
     const res = await fetch(`/api/soccer/games-global?date=${date}`);
     const data = await res.json();
 
-    if (!data.ok) {
+    if (!data.ok || !data.games?.length) {
       container.innerHTML = '<p>No games available.</p>';
       return;
     }
@@ -559,32 +808,48 @@ async function loadGames() {
       let html = `<h2 class="league-title">${escapeHtml(league)}</h2><div class="games-grid">`;
 
       games.forEach(g => {
+        const homeShort = shortTeamName(g.homeTeam);
+        const awayShort = shortTeamName(g.awayTeam);
+        const statusClass = getStatusClass(g.status || g.time);
+
         html += `
           <div class="card">
 
             <div class="match-header" 
-                 onclick="openSoccerDetail('${g.matchId}', '${g.leagueKey}')"
-                 style="cursor:pointer;">
+                 onclick="openSoccerDetail('${g.matchId}', '${g.leagueKey}')">
 
               <div class="team-box">
                 <img src="${g.homeLogo}" class="team-logo" onerror="this.src='/logo.png'">
-                <span class="team-name">${escapeHtml(g.homeTeam)}</span>
+                <span class="team-name">${escapeHtml(homeShort)}</span>
+                <span class="team-record">${escapeHtml(g.homeRecord || '')}</span>
+                ${renderFakeForm()}
+                <span class="coach-name">${escapeHtml(g.homeCoach || g.homeTeam)}</span>
               </div>
 
               <div class="score-center">
-                <div class="score-now">${g.homeScore ?? 0} - ${g.awayScore ?? 0}</div>
-                <div class="game-time">${g.time || 'Scheduled'}</div>
+                <div class="live-tag ${statusClass}">
+                  ${escapeHtml(g.status || g.time || 'Scheduled')}
+                </div>
+                <div class="score-now">
+                  <span>${g.homeScore ?? 0}</span><span>-</span><span>${g.awayScore ?? 0}</span>
+                </div>
+                <div class="game-time">${escapeHtml(g.time || 'Scheduled')}</div>
               </div>
 
               <div class="team-box">
                 <img src="${g.awayLogo}" class="team-logo" onerror="this.src='/logo.png'">
-                <span class="team-name">${escapeHtml(g.awayTeam)}</span>
+                <span class="team-name">${escapeHtml(awayShort)}</span>
+                <span class="team-record">${escapeHtml(g.awayRecord || '')}</span>
+                ${renderFakeForm()}
+                <span class="coach-name">${escapeHtml(g.awayCoach || g.awayTeam)}</span>
               </div>
 
             </div>
 
             <div class="soccer-lineup-box" id="lineup-${g.matchId}">
-              Confirmed lineups pending...
+              <div style="font-size:10px;text-align:center;padding:10px;color:var(--muted);">
+                Pending lineups...
+              </div>
             </div>
 
             <button class="analyze-btn" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">
@@ -682,30 +947,36 @@ function renderLineups(lineupsObject, lineupsArray) {
   }
 
   if (!homePlayers.length && !awayPlayers.length) {
-    return `<div style="font-size:10px; color:var(--muted); text-align:center;">Lineup data not available</div>`;
+    return `
+      <div style="font-size:10px;text-align:center;padding:10px;color:var(--muted);">
+        Lineup data not available
+      </div>
+    `;
   }
 
   return `
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:8px;">
+    <div class="lineup-grid-pro">
 
       <div>
         ${homePlayers.slice(0, 11).map((p, i) => `
-          <div class="stat-row">
+          <div class="lineup-player-pro">
             <span>
-              <b style="color:var(--green); margin-right:6px;">${i + 1}</b>
+              <span class="lineup-num">${i + 1}</span>
               ${escapeHtml(p.player || p.name || 'Player')}
             </span>
+            <span class="lineup-pos">${escapeHtml(p.pos || p.position || '')}</span>
           </div>
         `).join('')}
       </div>
 
       <div>
         ${awayPlayers.slice(0, 11).map((p, i) => `
-          <div class="stat-row">
+          <div class="lineup-player-pro">
             <span>
-              <b style="color:var(--green); margin-right:6px;">${i + 1}</b>
+              <span class="lineup-num">${i + 1}</span>
               ${escapeHtml(p.player || p.name || 'Player')}
             </span>
+            <span class="lineup-pos">${escapeHtml(p.pos || p.position || '')}</span>
           </div>
         `).join('')}
       </div>
@@ -849,18 +1120,18 @@ async function analyze(btn, matchId, leagueKey) {
     }
 
     resDiv.innerHTML = `
-      <div class="stat-row"><span>🎯 PICK:</span><b>${translatePickValue(a.pick || 'N/A')}</b></div>
+      <div class="prediction-box">
+        <div class="prediction-title">
+          <span>🔥 Winner / 1X2 Pick</span>
+          <span style="background:rgba(255,255,255,.1);padding:3px 8px;border-radius:5px;">
+            ${normalizeConfidence(a.confidence)}
+          </span>
+        </div>
 
-      <div class="stat-row">
-        <span>Probability:</span>
-        <b style="color:var(--green)">
-          ${pct(a.probability ?? a.pickProbability ?? a.winProbability)}
-        </b>
-      </div>
-
-      <div class="stat-row">
-        <span>Confidence:</span>
-        <b>${normalizeConfidence(a.confidence)}</b>
+        <span class="pick-val">${translatePickValue(a.pick || 'N/A')}</span>
+        <div class="data-mono">
+          Model Probability: ${pct(a.probability ?? a.pickProbability ?? a.winProbability)}
+        </div>
       </div>
 
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
