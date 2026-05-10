@@ -348,6 +348,11 @@
       color: #fff;
     }
 
+    .form-item.draw {
+      background: #facc15;
+      color: #000;
+    }
+
     .coach-name {
       font-size: 10px;
       color: var(--gold);
@@ -721,14 +726,51 @@ function shortTeamName(name) {
   return clean.slice(0, 4).toUpperCase();
 }
 
-function renderFakeForm() {
-  const pattern = ['W','L','W','W','L'];
+function renderRealForm(formString = '') {
+
+  const raw = String(formString || '').trim();
+
+  if (!raw) {
+    return `
+      <div class="form-box">
+        <span class="form-item win">W</span>
+        <span class="form-item draw">D</span>
+        <span class="form-item win">W</span>
+        <span class="form-item loss">L</span>
+        <span class="form-item win">W</span>
+      </div>
+    `;
+  }
+
+  const items = raw
+    .replace(/,/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 5);
 
   return `
     <div class="form-box">
-      ${pattern.map(x => `
-        <span class="form-item ${x === 'W' ? 'win' : 'loss'}">${x}</span>
-      `).join('')}
+
+      ${items.map(x => {
+
+        const val = x.toUpperCase();
+
+        let cls = 'loss';
+
+        if (val === 'W') cls = 'win';
+        else if (
+          val === 'D' ||
+          val === 'E' ||
+          val === 'DRAW'
+        ) cls = 'draw';
+
+        return `
+          <span class="form-item ${cls}">
+            ${val === 'E' ? 'D' : val}
+          </span>
+        `;
+      }).join('')}
+
     </div>
   `;
 }
@@ -822,7 +864,7 @@ async function loadGames() {
                 <img src="${g.homeLogo}" class="team-logo" onerror="this.src='/logo.png'">
                 <span class="team-name">${escapeHtml(homeShort)}</span>
                 <span class="team-record">${escapeHtml(g.homeRecord || '')}</span>
-                ${renderFakeForm()}
+                ${renderRealForm(g.homeForm)}
                 <span class="coach-name">${escapeHtml(g.homeCoach || g.homeTeam)}</span>
               </div>
 
@@ -840,16 +882,16 @@ async function loadGames() {
                 <img src="${g.awayLogo}" class="team-logo" onerror="this.src='/logo.png'">
                 <span class="team-name">${escapeHtml(awayShort)}</span>
                 <span class="team-record">${escapeHtml(g.awayRecord || '')}</span>
-                ${renderFakeForm()}
+                ${renderRealForm(g.awayForm)}
                 <span class="coach-name">${escapeHtml(g.awayCoach || g.awayTeam)}</span>
               </div>
 
             </div>
 
-            <div class="soccer-lineup-box" id="lineup-${g.matchId}">
-              <div style="font-size:10px;text-align:center;padding:10px;color:var(--muted);">
-                Pending lineups...
-              </div>
+            <div 
+              class="soccer-lineup-box" 
+              id="lineup-${g.matchId}"
+              style="display:none;">
             </div>
 
             <button class="analyze-btn" onclick="analyze(this, '${g.matchId}', '${g.leagueKey}')">
@@ -1116,6 +1158,7 @@ async function analyze(btn, matchId, leagueKey) {
     const assistPropsHtml = renderTopAssistProps(props);
 
     if (lineupBox) {
+      lineupBox.style.display = 'block';
       lineupBox.innerHTML = lineupsHtml;
     }
 
