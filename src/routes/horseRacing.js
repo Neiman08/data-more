@@ -6,8 +6,11 @@ const router = express.Router();
 
 console.log('✅ Router de Hípica (Versión Pro: Parser Semi-Inteligente Blindado) cargado');
 
+const PDFJS_OPTIONS = {
+  standardFontDataUrl: 'https://unpkg.com/pdfjs-dist@4.0.379/standard_fonts/'
+};
+
 const TRACKS = [
-  // HOY ACTIVOS (ya confirmados)
   { name: 'Louisiana Downs', code: 'lad' },
   { name: 'Mountaineer', code: 'mnr' },
   { name: 'Parx Racing', code: 'prx' },
@@ -16,7 +19,6 @@ const TRACKS = [
   { name: 'Horseshoe Indianapolis', code: 'ind' },
   { name: 'Penn National', code: 'pen' },
 
-  // PRINCIPALES USA
   { name: 'Gulfstream Park', code: 'gp' },
   { name: 'Churchill Downs', code: 'cd' },
   { name: 'Santa Anita Park', code: 'sa' },
@@ -26,7 +28,6 @@ const TRACKS = [
   { name: 'Saratoga', code: 'sar' },
   { name: 'Del Mar', code: 'dmr' },
 
-  // SECUNDARIOS / REGIONALES
   { name: 'Tampa Bay Downs', code: 'tam' },
   { name: 'Fair Grounds', code: 'fg' },
   { name: 'Oaklawn Park', code: 'op' },
@@ -45,7 +46,6 @@ const TRACKS = [
   { name: 'Canterbury Park', code: 'cbt' },
   { name: 'Will Rogers Downs', code: 'wr' },
 
-  // HARNESS / MIXTOS
   { name: 'Meadowlands', code: 'med' },
   { name: 'Yonkers Raceway', code: 'yon' },
   { name: 'Hoosier Park', code: 'hoo' }
@@ -60,6 +60,90 @@ async function pdfExists(date, code) {
   } catch {
     return false;
   }
+}
+
+function normalizeHorseKey(value = '') {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+function getRunnerNumber(runner) {
+  return Number(
+    runner?.number ||
+    runner?.programNumber ||
+    runner?.horseNumber ||
+    runner?.post ||
+    runner?.runnerNumber ||
+    0
+  );
+}
+
+function mergeContinuationPages(races = []) {
+  const merged = [];
+
+  for (const race of races) {
+    const runners = race.runners || [];
+    const previous = merged[merged.length - 1];
+
+    const currentNumbers = runners
+      .map(getRunnerNumber)
+      .filter(n => n > 0);
+
+    const previousNumbers = previous
+      ? (previous.runners || []).map(getRunnerNumber).filter(n => n > 0)
+      : [];
+
+    const firstCurrentNumber = Math.min(...currentNumbers);
+    const lastPreviousNumber = Math.max(...previousNumbers);
+
+    const hasHorseOne = currentNumbers.includes(1);
+
+    const looksLikeContinuation =
+      previous &&
+      runners.length > 0 &&
+      !hasHorseOne &&
+      firstCurrentNumber > lastPreviousNumber &&
+      lastPreviousNumber >= 8;
+
+    if (looksLikeContinuation) {
+      const combined = [
+        ...(previous.runners || []),
+        ...runners
+      ];
+
+      const unique = [];
+      const seen = new Set();
+
+      for (const runner of combined) {
+        const key = normalizeHorseKey(
+          runner.name ||
+          runner.horse ||
+          runner.runnerName ||
+          `num-${getRunnerNumber(runner)}`
+        );
+
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          unique.push(runner);
+        }
+      }
+
+      previous.runners = unique;
+      continue;
+    }
+
+    merged.push({
+      ...race,
+      runners
+    });
+  }
+
+  return merged.map((race, index) => ({
+    ...race,
+    raceNumber: index + 1
+  }));
 }
 
 router.get('/tracks', async (req, res) => {
@@ -99,9 +183,6 @@ router.get('/tracks', async (req, res) => {
   }
 });
 
-/* =========================================================
-   📄 ENDPOINT: PROXY PDF (VISUALIZACIÓN)
-========================================================= */
 router.get('/pdf', async (req, res) => {
   try {
     const { date, track } = req.query;
@@ -130,30 +211,27 @@ router.get('/pdf', async (req, res) => {
   }
 });
 
-/* =========================================================
-   🛠️ ENDPOINT: DIAGNÓSTICO DE COORDENADAS
-========================================================= */
 router.get('/debug-coordinates', async (req, res) => {
   try {
     const { date, track, page = 1 } = req.query;
 
     if (!date || !track) {
-      throw new Error("Parámetros track y date obligatorios.");
+      throw new Error('Parámetros track y date obligatorios.');
     }
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
-
     const response = await fetch(url);
 
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
 
-    const pdf = await pdfjs.getDocument({ data }).promise;
+    const pdf = await pdfjs.getDocument({
+      data,
+      ...PDFJS_OPTIONS
+    }).promise;
 
     const pageNum = parseInt(page);
-
     const pdfPage = await pdf.getPage(pageNum);
-
     const textContent = await pdfPage.getTextContent();
 
     const tokens = textContent.items.map(item => ({
@@ -161,7 +239,7 @@ router.get('/debug-coordinates', async (req, res) => {
       x: parseFloat(item.transform[4].toFixed(2)),
       y: parseFloat(item.transform[5].toFixed(2))
     }))
-    .filter(item => item.text.trim() !== "");
+    .filter(item => item.text.trim() !== '');
 
     tokens.sort((a, b) => b.y - a.y || a.x - b.x);
 
@@ -178,19 +256,15 @@ router.get('/debug-coordinates', async (req, res) => {
   }
 });
 
-/* =========================================================
-   🚀 ENDPOINT: IMPORTACIÓN ESTRUCTURADA + IA
-========================================================= */
 router.get('/import-structured', async (req, res) => {
   try {
     const { date, track } = req.query;
 
     if (!date || !track) {
-      throw new Error("Parámetros track y date obligatorios.");
+      throw new Error('Parámetros track y date obligatorios.');
     }
 
     const url = `http://eloasiss.com/descargas/revista/download/${date}/${track}.pdf`;
-
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -200,14 +274,15 @@ router.get('/import-structured', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const data = new Uint8Array(arrayBuffer);
 
-    const pdf = await pdfjs.getDocument({ data }).promise;
+    const pdf = await pdfjs.getDocument({
+      data,
+      ...PDFJS_OPTIONS
+    }).promise;
 
     const allRaces = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {
-
       const page = await pdf.getPage(i);
-
       const textContent = await page.getTextContent();
 
       const tokens = textContent.items.map(item => ({
@@ -215,12 +290,11 @@ router.get('/import-structured', async (req, res) => {
         x: item.transform[4],
         y: item.transform[5]
       }))
-      .filter(t => t.text !== "");
+      .filter(t => t.text !== '');
 
       const rows = [];
 
       tokens.forEach(token => {
-
         let row = rows.find(r => Math.abs(r.y - token.y) < 4);
 
         if (!row) {
@@ -236,15 +310,11 @@ router.get('/import-structured', async (req, res) => {
       });
 
       rows.sort((a, b) => b.y - a.y);
-
-      rows.forEach(r =>
-        r.items.sort((a, b) => a.x - b.x)
-      );
+      rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
 
       const runners = [];
 
       rows.forEach((row, rowIndex) => {
-
         const numberToken = row.items.find(it =>
           /^\d{1,2}$/.test(it.text) &&
           it.x > 5 &&
@@ -273,11 +343,7 @@ router.get('/import-structured', async (req, res) => {
 
         const horseName = nameTokens.join(' ').trim();
 
-        if (
-          !numberToken ||
-          !horseName ||
-          horseName.length < 3
-        ) {
+        if (!numberToken || !horseName || horseName.length < 3) {
           return;
         }
 
@@ -350,62 +416,6 @@ router.get('/import-structured', async (req, res) => {
       }
     }
 
-    function mergeContinuationPages(races = []) {
-      const merged = [];
-    
-      for (const race of races) {
-        const runners = race.runners || [];
-    
-        const currentNumbers = runners
-          .map(r => Number(r.number || r.programNumber || r.horseNumber || r.post || 0))
-          .filter(n => n > 0);
-    
-        const hasHorseOne = currentNumbers.includes(1);
-    
-        const previous = merged[merged.length - 1];
-    
-        const isContinuation =
-          previous &&
-          runners.length > 0 &&
-          !hasHorseOne;
-    
-        if (isContinuation) {
-          const combined = [
-            ...(previous.runners || []),
-            ...runners
-          ];
-    
-          const unique = [];
-          const seen = new Set();
-    
-          combined.forEach(r => {
-            const key = String(r.name || r.horse || r.runnerName || '')
-              .toLowerCase()
-              .replace(/[^a-z0-9]/g, '')
-              .trim();
-    
-            if (key && !seen.has(key)) {
-              seen.add(key);
-              unique.push(r);
-            }
-          });
-    
-          previous.runners = unique;
-          continue;
-        }
-    
-        merged.push({
-          ...race,
-          runners
-        });
-      }
-    
-      return merged.map((race, index) => ({
-        ...race,
-        raceNumber: index + 1
-      }));
-    }
-
     const mergedRaces = mergeContinuationPages(allRaces);
 
     const racesWithAnalysis = mergedRaces.map(race => ({
@@ -421,7 +431,6 @@ router.get('/import-structured', async (req, res) => {
     });
 
   } catch (error) {
-
     console.error('❌ Error Crítico en el Parser:', error);
 
     res.status(500).json({
