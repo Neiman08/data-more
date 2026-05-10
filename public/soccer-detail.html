@@ -4,21 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Soccer Match Center | Data More</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
 :root{
   --green:#6bff19;
-  --border:rgba(255,255,255,.08);
-  --card:rgba(20,25,30,.65);
-  --muted:#8b949e;
+  --border:rgba(255,255,255,.09);
+  --card:rgba(8,12,16,.82);
+  --panel:rgba(13,18,24,.78);
+  --muted:#9aa3ad;
   --gold:#facc15;
   --red:#ef4444;
   --blue:#38bdf8;
 }
+
 *{margin:0;padding:0;box-sizing:border-box;}
+
 body{
   background:
-    linear-gradient(rgba(0,0,0,.88),rgba(0,0,0,.94)),
+    linear-gradient(rgba(0,0,0,.84),rgba(0,0,0,.95)),
     url('/logos/IMG_0579.JPG');
   background-size:cover;
   background-position:center;
@@ -26,194 +31,331 @@ body{
   color:#fff;
   font-family:'Inter',sans-serif;
 }
-.page{max-width:1450px;margin:auto;padding:24px;}
+
+.page{
+  max-width:1450px;
+  margin:auto;
+  padding:24px;
+}
+
 .top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:24px;
+  margin-bottom:22px;
 }
+
 .logo{
   font-family:'Anton';
   font-size:28px;
   letter-spacing:1px;
 }
+
 .logo span{color:var(--green);}
+
 .back{
   color:var(--green);
   text-decoration:none;
-  font-weight:800;
-  border:1px solid rgba(107,255,25,.25);
-  padding:10px 14px;
-  border-radius:10px;
-  background:rgba(255,255,255,.04);
-}
-.hero,
-.commentary-card,
-.soccer-live,
-.panel{
-  background:var(--card);
-  border:1px solid var(--border);
-  backdrop-filter:blur(12px);
-}
-.hero{
-  border-radius:24px;
-  padding:30px;
-  margin-bottom:22px;
-  box-shadow:0 20px 50px rgba(0,0,0,.45);
-}
-.matchup{
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:center;
-  gap:20px;
-}
-.team{text-align:center;}
-.team img{
-  width:95px;
-  height:95px;
-  object-fit:contain;
-  filter:drop-shadow(0 10px 20px rgba(0,0,0,.45));
-}
-.team h2{
-  font-family:'Anton';
-  font-size:44px;
-  margin-top:12px;
-  letter-spacing:1px;
-}
-.team small{
-  display:block;
-  margin-top:6px;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:800;
-}
-.score{text-align:center;}
-.score-main{
-  font-size:72px;
   font-weight:900;
-  color:var(--green);
+  border:1px solid rgba(107,255,25,.28);
+  padding:10px 15px;
+  border-radius:12px;
+  background:rgba(0,0,0,.35);
+}
+
+/* HERO PRO */
+.hero-pro{
+  background:linear-gradient(135deg,rgba(7,12,16,.94),rgba(12,18,22,.82));
+  border:1px solid rgba(107,255,25,.20);
+  border-radius:26px;
+  padding:24px;
+  margin-bottom:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.55);
+}
+
+.hero-grid{
+  display:grid;
+  grid-template-columns:1fr 360px 1fr;
+  gap:22px;
+  align-items:center;
+}
+
+.team-hero{
+  text-align:center;
+  min-width:0;
+}
+
+.team-hero img{
+  width:76px;
+  height:76px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.6));
+}
+
+.team-hero h2{
   font-family:'Anton';
-}
-.live{
+  font-size:36px;
+  line-height:.95;
   margin-top:10px;
-  color:#fff;
-  font-size:12px;
-  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
+
+.team-hero small{
+  display:block;
+  color:var(--gold);
+  font-weight:900;
+  font-size:12px;
+  margin-top:8px;
+}
+
+.score-box{
+  text-align:center;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:24px;
+  padding:18px;
+}
+
+.status-pill{
+  display:inline-block;
+  padding:5px 12px;
+  border-radius:999px;
+  background:rgba(107,255,25,.10);
+  border:1px solid rgba(107,255,25,.30);
+  color:var(--green);
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.score-main{
+  font-family:'Anton';
+  color:var(--green);
+  font-size:70px;
+  line-height:.9;
+  letter-spacing:-2px;
+}
+
 .league{
   color:var(--gold);
-  margin-top:6px;
   font-size:12px;
   font-weight:900;
-}
-.commentary-card{
-  border-radius:24px;
-  padding:24px;
-  margin-bottom:22px;
-  background:linear-gradient(135deg,rgba(5,10,8,.95),rgba(12,20,15,.86));
-  border:1px solid rgba(107,255,25,.25);
-  box-shadow:0 0 35px rgba(107,255,25,.08);
-  position:relative;
-  overflow:hidden;
-}
-.commentary-card:before{
-  content:"";
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:3px;
-  background:linear-gradient(90deg,transparent,var(--green),transparent);
-}
-.commentary-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:14px;
-  margin-bottom:14px;
-  flex-wrap:wrap;
-}
-.commentary-title{
-  font-family:'Anton';
-  color:var(--green);
-  font-size:24px;
-  letter-spacing:.8px;
+  margin-top:8px;
   text-transform:uppercase;
 }
-.commentary-actions{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
+
+/* MAIN LAYOUT */
+.pro-layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  margin-bottom:20px;
 }
-.commentary-badge{
-  color:#000;
-  background:var(--green);
-  padding:7px 12px;
-  border-radius:999px;
-  font-size:10px;
-  font-weight:900;
-  text-transform:uppercase;
-  box-shadow:0 0 18px rgba(107,255,25,.45);
-}
-.commentary-text{
-  font-size:18px;
-  line-height:1.65;
-  font-weight:800;
-  color:#f4f7f5;
-}
-.commentary-text span{color:var(--gold);}
-.commentary-sub{
-  margin-top:12px;
-  color:var(--muted);
-  font-size:12px;
-  font-weight:700;
-}
-.soccer-live{
-  background:linear-gradient(180deg,rgba(18,22,27,.9),rgba(5,8,11,.95));
-  border:1px solid rgba(107,255,25,.25);
+
+.pro-card{
+  background:var(--card);
+  border:1px solid var(--border);
   border-radius:24px;
-  padding:24px;
-  margin-bottom:22px;
+  padding:22px;
+  backdrop-filter:blur(12px);
+  box-shadow:0 16px 40px rgba(0,0,0,.35);
 }
-.live-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:18px;
-}
-.live-title h3{
+
+.pro-card h3{
   color:var(--green);
   font-size:15px;
+  margin-bottom:16px;
   text-transform:uppercase;
+  font-weight:900;
 }
-.live-badge{
-  color:var(--green);
-  border:1px solid rgba(107,255,25,.35);
-  background:rgba(107,255,25,.08);
-  border-radius:999px;
-  padding:7px 12px;
+
+/* PREDICTOR */
+.predictor{
+  display:grid;
+  grid-template-columns:1fr 230px 1fr;
+  gap:18px;
+  align-items:center;
+}
+
+.predictor-team{
+  text-align:center;
+}
+
+.predictor-team img{
+  width:74px;
+  height:74px;
+  object-fit:contain;
+  margin-bottom:10px;
+}
+
+.predictor-team h4{
+  font-family:'Anton';
+  font-size:34px;
+  line-height:1;
+}
+
+.predictor-team span{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+  margin-top:6px;
+}
+
+.donut-wrap{
+  display:grid;
+  place-items:center;
+}
+
+.donut{
+  width:210px;
+  height:210px;
+  border-radius:50%;
+  background:conic-gradient(var(--green) 0 var(--homePct), var(--gold) var(--homePct) var(--drawPct), var(--red) var(--drawPct) 100%);
+  display:grid;
+  place-items:center;
+  box-shadow:0 0 35px rgba(107,255,25,.10);
+}
+
+.donut-inner{
+  width:126px;
+  height:126px;
+  background:#090d11;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.donut-inner b{
+  font-family:'Anton';
+  font-size:20px;
+}
+
+.donut-inner span{
+  color:var(--muted);
   font-size:11px;
   font-weight:900;
 }
+
+.prob-row{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+.prob-box{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px;
+  text-align:center;
+}
+
+.prob-box span{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:900;
+}
+
+.prob-box b{
+  display:block;
+  font-size:20px;
+  margin-top:5px;
+}
+
+/* STAT PANELS */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:18px;
+  backdrop-filter:blur(10px);
+}
+
+.panel h3{
+  color:var(--green);
+  margin-bottom:14px;
+  font-size:14px;
+  text-transform:uppercase;
+}
+
+.stat{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.stat span{
+  color:#cbd5df;
+  font-size:12px;
+  font-weight:700;
+}
+
+.stat b{
+  color:#fff;
+  font-size:12px;
+  text-align:right;
+  font-weight:900;
+}
+
+.mini-bar{
+  width:100%;
+  height:8px;
+  background:rgba(255,255,255,.08);
+  border-radius:999px;
+  overflow:hidden;
+  margin-top:8px;
+}
+
+.mini-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--green),#dcff45);
+  border-radius:999px;
+}
+
+/* LIVE CARD */
+.live-card{
+  background:linear-gradient(180deg,rgba(12,18,24,.92),rgba(5,8,11,.95));
+  border:1px solid rgba(107,255,25,.20);
+  border-radius:24px;
+  padding:20px;
+  margin-bottom:20px;
+}
+
 .live-grid{
   display:grid;
-  grid-template-columns:1fr 1.1fr 1fr;
-  gap:20px;
+  grid-template-columns:1fr 1.4fr 1fr;
+  gap:18px;
   align-items:center;
 }
+
 .live-team-box{
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.07);
   border-radius:18px;
-  padding:16px;
+  padding:15px;
 }
+
 .live-team-box h4{
   color:var(--green);
   font-size:13px;
   margin-bottom:10px;
 }
+
 .live-stat{
   display:flex;
   justify-content:space-between;
@@ -221,163 +363,136 @@ body{
   border-bottom:1px solid rgba(255,255,255,.06);
   font-size:12px;
 }
-.live-field{
+
+.pitch{
   position:relative;
-  min-height:260px;
+  height:210px;
   border-radius:22px;
-  border:2px solid rgba(255,255,255,.18);
   overflow:hidden;
+  border:2px solid rgba(255,255,255,.16);
   background:
-    linear-gradient(90deg,rgba(107,255,25,.06) 0 50%,rgba(255,255,255,.03) 50% 100%),
-    radial-gradient(circle at center,rgba(107,255,25,.18),rgba(0,0,0,.35));
+    linear-gradient(90deg,rgba(107,255,25,.07) 0 50%,rgba(255,255,255,.035) 50% 100%),
+    radial-gradient(circle at center,rgba(107,255,25,.16),rgba(0,0,0,.35));
 }
-.live-field:before{
+
+.pitch:before{
   content:"";
   position:absolute;
-  left:50%;
   top:0;
+  left:50%;
   width:2px;
   height:100%;
-  background:rgba(255,255,255,.2);
+  background:rgba(255,255,255,.18);
 }
-.live-field:after{
+
+.pitch:after{
   content:"";
   position:absolute;
   left:50%;
   top:50%;
-  width:90px;
-  height:90px;
-  transform:translate(-50%,-50%);
-  border:2px solid rgba(255,255,255,.2);
+  width:78px;
+  height:78px;
+  border:2px solid rgba(255,255,255,.18);
   border-radius:50%;
+  transform:translate(-50%,-50%);
 }
-.goal-left,.goal-right{
-  position:absolute;
-  top:50%;
-  width:20px;
-  height:75px;
-  transform:translateY(-50%);
-  border:2px solid rgba(255,255,255,.22);
-}
-.goal-left{left:8px;}
-.goal-right{right:8px;}
+
 .ball-dot{
   position:absolute;
-  left:50%;
-  top:50%;
-  width:30px;
-  height:30px;
-  transform:translate(-50%,-50%);
+  width:28px;
+  height:28px;
   border-radius:50%;
   background:var(--green);
   color:#000;
   display:grid;
   place-items:center;
   font-weight:900;
-  box-shadow:0 0 22px rgba(107,255,25,.8);
-  z-index:4;
-  transition:left 2.8s linear, top 2.8s linear, box-shadow .4s ease;
-  animation:ballPulse 1.2s infinite alternate;
+  z-index:3;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 25px rgba(107,255,25,.8);
 }
-@keyframes ballPulse{
-  from{box-shadow:0 0 14px rgba(107,255,25,.55);}
-  to{box-shadow:0 0 32px rgba(107,255,25,1);}
-}
-.live-momentum{margin-top:16px;}
-.momentum-label{
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  font-weight:900;
-  color:#fff;
-  margin-bottom:8px;
-}
-.momentum-bar{
-  height:14px;
-  background:rgba(255,255,255,.08);
-  border-radius:999px;
-  display:flex;
-  overflow:hidden;
-}
-.momentum-home{
-  background:linear-gradient(90deg,var(--green),#d9ff43);
-  width:50%;
-  transition:width 1.8s ease;
-}
-.momentum-away{
-  background:linear-gradient(90deg,var(--red),#ff7b7b);
-  width:50%;
-  transition:width 1.8s ease;
-}
+
 .timeline{
-  margin-top:16px;
+  margin-top:12px;
+  padding:12px;
   background:rgba(255,255,255,.035);
   border:1px solid rgba(255,255,255,.07);
   border-radius:14px;
-  padding:12px;
   font-size:12px;
+  line-height:1.55;
   color:#dbe2ea;
-  line-height:1.6;
 }
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+
+/* COMMENTARY */
+.commentary-card{
+  border-radius:24px;
+  padding:20px;
+  margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(5,10,8,.95),rgba(12,20,15,.86));
+  border:1px solid rgba(107,255,25,.22);
 }
-.panel{
-  border-radius:20px;
-  padding:22px;
-  backdrop-filter:blur(10px);
-}
-.panel h3{
+
+.commentary-title{
+  font-family:'Anton';
   color:var(--green);
-  margin-bottom:18px;
-  font-size:15px;
-  text-transform:uppercase;
+  font-size:22px;
+  margin-bottom:10px;
 }
-.stat{
-  display:flex;
-  justify-content:space-between;
-  gap:14px;
-  padding:10px 0;
-  border-bottom:1px solid rgba(255,255,255,.06);
+
+.commentary-text{
+  font-size:16px;
+  line-height:1.55;
+  font-weight:800;
 }
-.stat span{
-  color:#c9d1d9;
-  font-size:13px;
+
+.commentary-text span{color:var(--gold);}
+
+.commentary-sub{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
 }
-.stat b{
-  color:#fff;
-  font-size:13px;
-  text-align:right;
-}
+
+/* LINEUPS */
 .lineups{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:20px;
+  gap:18px;
 }
+
+.lineup-side{
+  background:rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:16px;
+  padding:14px;
+}
+
+.lineup-side h4{
+  color:var(--green);
+  margin-bottom:10px;
+  font-size:12px;
+  text-transform:uppercase;
+}
+
 .player{
-  padding:7px 0;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:6px 0;
   border-bottom:1px solid rgba(255,255,255,.05);
-  font-size:13px;
+  font-size:12px;
 }
+
+.player b{
+  color:var(--green);
+}
+
 .note{
   color:var(--muted);
   font-size:12px;
 }
-.bar{
-  width:100%;
-  height:10px;
-  background:rgba(255,255,255,.08);
-  border-radius:999px;
-  overflow:hidden;
-  margin-top:10px;
-}
-.fill{
-  height:100%;
-  background:linear-gradient(90deg,var(--green),#d9ff43);
-  transition:width 1.8s ease;
-}
+
 .alert{
   padding:12px;
   border-radius:12px;
@@ -387,327 +502,197 @@ body{
   font-size:12px;
   line-height:1.5;
 }
-@media(max-width:900px){
-  .matchup,.grid,.lineups,.live-grid{grid-template-columns:1fr;}
+
+@media(max-width:1100px){
+  .hero-grid,.pro-layout,.live-grid,.predictor{grid-template-columns:1fr;}
+  .grid{grid-template-columns:1fr 1fr;}
+}
+
+@media(max-width:700px){
+  .page{padding:16px;}
+  .grid,.lineups,.prob-row{grid-template-columns:1fr;}
   .score-main{font-size:54px;}
-  .team h2{font-size:34px;}
-  .commentary-text{font-size:15px;}
+  .team-hero h2{font-size:28px;}
 }
 </style>
 </head>
+
 <body>
 <div class="page">
   <div class="top">
     <a href="/soccer" class="back">← SOCCER</a>
     <div class="logo">DATA-<span>MORE</span></div>
   </div>
+
   <div id="content">Loading Match Center...</div>
 </div>
+
 <script>
 const params = new URLSearchParams(window.location.search);
 const matchId = params.get('matchId') || params.get('fixtureId') || params.get('id') || params.get('gameId');
 const league = params.get('league');
+
 function paramClean(key){
   const value = params.get(key);
   if(!value || value === 'null' || value === 'undefined') return '';
-  try{
-    return decodeURIComponent(value);
-  }catch(e){
-    return value;
-  }
+  try{return decodeURIComponent(value);}catch(e){return value;}
 }
+
 const urlGame = {
-  homeTeam: paramClean('homeTeam'),
-  awayTeam: paramClean('awayTeam'),
-  homeLogo: paramClean('homeLogo'),
-  awayLogo: paramClean('awayLogo'),
-  homeScore: paramClean('homeScore'),
-  awayScore: paramClean('awayScore'),
-  time: paramClean('time'),
-  leagueName: paramClean('leagueName')
+  homeTeam:paramClean('homeTeam'),
+  awayTeam:paramClean('awayTeam'),
+  homeLogo:paramClean('homeLogo'),
+  awayLogo:paramClean('awayLogo'),
+  homeScore:paramClean('homeScore'),
+  awayScore:paramClean('awayScore'),
+  time:paramClean('time'),
+  leagueName:paramClean('leagueName')
 };
+
 let isFirstLoad = true;
-function safe(v, fallback='--'){
-  if(v === undefined || v === null || v === '' || v === 'null' || v === 'undefined') return fallback;
+
+function safe(v,fallback='--'){
+  if(v===undefined||v===null||v===''||v==='null'||v==='undefined') return fallback;
   return v;
 }
+
 function firstValid(){
   for(const value of arguments){
-    if(value !== undefined && value !== null && value !== '' && value !== 'null' && value !== 'undefined'){
-      return value;
-    }
+    if(value!==undefined&&value!==null&&value!==''&&value!=='null'&&value!=='undefined') return value;
   }
   return '';
 }
+
 function pct(v){
-  if(v === undefined || v === null || v === '' || v === 'N/A' || isNaN(Number(v))) return '--';
+  if(v===undefined||v===null||v===''||v==='N/A'||isNaN(Number(v))) return '--';
   return `${Number(v).toFixed(2)}%`;
 }
+
+function num(v,fallback=0){
+  const n=Number(v);
+  return Number.isFinite(n)?n:fallback;
+}
+
 function normalizeLogo(logo){
-  if(!logo || logo === '' || logo === 'null' || logo === 'undefined'){
-    return '/logos/DATA-MORE.png';
-  }
+  if(!logo||logo===''||logo==='null'||logo==='undefined') return '/logos/DATA-MORE.png';
   return logo;
 }
-function numberSafe(v, fallback = 0){
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
+
+function shortName(name){
+  const clean=String(name||'TEAM').trim();
+  if(clean.length<=14) return clean;
+  return clean.split(' ').map(x=>x[0]).join('').slice(0,4).toUpperCase();
 }
+
 function getMinuteText(matchTime){
-  const raw = String(matchTime || '').replace(/[^\d]/g,'');
+  const raw=String(matchTime||'').replace(/[^\d]/g,'');
   if(!raw) return 'LIVE';
   return `Minuto ${raw}`;
 }
-function buildLiveReading({
-  homeTeam, awayTeam, homePoss, awayPoss,
-  homeAttacks, awayAttacks, homeShots, awayShots,
-  homeCorners, awayCorners, homeCards, awayCards
-}){
-  const hAtt = numberSafe(homeAttacks, 0);
-  const aAtt = numberSafe(awayAttacks, 0);
-  const hShots = numberSafe(homeShots, 0);
-  const aShots = numberSafe(awayShots, 0);
-  const hCorners = numberSafe(homeCorners, 0);
-  const aCorners = numberSafe(awayCorners, 0);
-  const hCards = numberSafe(homeCards, 0);
-  const aCards = numberSafe(awayCards, 0);
-  const homePressureScore = (homePoss * 0.25) + (hAtt * 0.25) + (hShots * 2.2) + (hCorners * 1.8) - (hCards * 1.5);
-  const awayPressureScore = (awayPoss * 0.25) + (aAtt * 0.25) + (aShots * 2.2) + (aCorners * 1.8) - (aCards * 1.5);
-  const leader = homePressureScore >= awayPressureScore ? homeTeam : awayTeam;
-  const other = homePressureScore >= awayPressureScore ? awayTeam : homeTeam;
-  const diff = Math.abs(homePressureScore - awayPressureScore);
-  if(diff >= 22){
-    return `${leader} is applying heavy pressure. The match flow is leaning strongly toward ${leader}, with better control, attacking volume and dangerous territory. ${other} is being forced to defend deeper.`;
-  }
-  if(diff >= 12){
-    return `${leader} has the clear momentum. Possession, attacks and shot activity suggest ${leader} is carrying more danger, while ${other} needs to slow the rhythm.`;
-  }
-  if(diff >= 6){
-    return `${leader} has a slight live edge, but the match is still open. The pressure indicators favor ${leader}, although ${other} is close enough to respond quickly.`;
-  }
-  return `The game is balanced right now. Neither side has full control, and the live indicators suggest a cautious phase where the next attack or corner could shift momentum.`;
-}
-function buildPs5Commentary({
-  homeTeam, awayTeam, homeScore, awayScore, matchTime,
-  homePoss, awayPoss, homeAttacks, awayAttacks,
-  homeShots, awayShots, homeCorners, awayCorners,
-  homeCards, awayCards
-}){
-  const minute = getMinuteText(matchTime);
-  const hAtt = numberSafe(homeAttacks, 0);
-  const aAtt = numberSafe(awayAttacks, 0);
-  const hShots = numberSafe(homeShots, 0);
-  const aShots = numberSafe(awayShots, 0);
-  const hCorners = numberSafe(homeCorners, 0);
-  const aCorners = numberSafe(awayCorners, 0);
-  const hCards = numberSafe(homeCards, 0);
-  const aCards = numberSafe(awayCards, 0);
-  const homePressure = (homePoss * 0.25) + (hAtt * 0.28) + (hShots * 2.6) + (hCorners * 2) - (hCards * 1.2);
-  const awayPressure = (awayPoss * 0.25) + (aAtt * 0.28) + (aShots * 2.6) + (aCorners * 2) - (aCards * 1.2);
-  const leader = homePressure >= awayPressure ? homeTeam : awayTeam;
-  const defender = homePressure >= awayPressure ? awayTeam : homeTeam;
-  const diff = Math.abs(homePressure - awayPressure);
-  const homeWinning = Number(homeScore) > Number(awayScore);
-  const awayWinning = Number(awayScore) > Number(homeScore);
-  const tied = Number(homeScore) === Number(awayScore);
-  let situation = '';
-  if(diff >= 24){
-    situation = `${leader} controla la pelota y acelera en campo rival. ${defender} se repliega, pero la presión empieza a sentirse. El modelo detecta momentum fuerte para ${leader}.`;
-  }else if(diff >= 13){
-    situation = `${leader} empieza a inclinar la cancha. Hay más presencia ofensiva, más intención y el partido está entrando en una fase peligrosa para ${defender}.`;
-  }else if(diff >= 6){
-    situation = `${leader} tiene una pequeña ventaja en el ritmo del juego, aunque ${defender} todavía está bien parado y puede responder en cualquier transición.`;
-  }else{
-    situation = `el partido está muy parejo. Ambos equipos se estudian, el ritmo es controlado y cualquier error puede cambiar completamente el momentum.`;
-  }
-  let scoreContext = '';
-  if(tied){
-    scoreContext = `Con el marcador empatado ${homeScore}-${awayScore}, cada ataque empieza a tener más peso.`;
-  }else if(homeWinning){
-    scoreContext = `${homeTeam} está arriba ${homeScore}-${awayScore}; ${awayTeam} necesita adelantar líneas si quiere meterse de nuevo en el partido.`;
-  }else if(awayWinning){
-    scoreContext = `${awayTeam} está arriba ${awayScore}-${homeScore}; ${homeTeam} necesita arriesgar más para buscar la reacción.`;
-  }
-  return `
-    <section class="commentary-card">
-      <div class="commentary-head">
-        <div class="commentary-title">🎙️ Data More Live Commentary</div>
-        <div class="commentary-actions">
-          <div class="commentary-badge">Live AI Match Analysis</div>
-        </div>
-      </div>
-      <div class="commentary-text" id="data-more-commentary-text">
-        <span>${minute}:</span> ${situation} ${scoreContext}
-      </div>
-      <div class="commentary-sub">
-        Auto-generated commentary from live possession, attacks, shots, corners, cards, score and match clock. Voice broadcast disabled to save API usage.
-      </div>
-    </section>
-  `;
-}
+
 async function fetchGameFromBoard(){
-  const endpoints = [
-    '/api/soccer/games-global',
-    '/api/soccer-games-global'
-  ];
+  const endpoints=['/api/soccer/games-global','/api/soccer-games-global'];
   for(const endpoint of endpoints){
     try{
-      const res = await fetch(`${endpoint}?t=${Date.now()}`);
-      const data = await res.json();
-      if(!data.ok || !Array.isArray(data.games)) continue;
-      const found = data.games.find(g => {
-        const ids = [
-          g.matchId,
-          g.fixtureId,
-          g.id,
-          g.gameId,
-          g.fixture?.id
-        ].map(x => String(x || ''));
-        return ids.includes(String(matchId || ''));
+      const res=await fetch(`${endpoint}?t=${Date.now()}`);
+      const data=await res.json();
+      if(!data.ok||!Array.isArray(data.games)) continue;
+      const found=data.games.find(g=>{
+        const ids=[g.matchId,g.fixtureId,g.id,g.gameId,g.fixture?.id].map(x=>String(x||''));
+        return ids.includes(String(matchId||''));
       });
       if(found) return found;
     }catch(e){}
   }
   return {};
 }
-function renderKeyPlayers(a){
-  const players = a.keyPlayers || a.playerProps || a.players || [];
-  if(!Array.isArray(players) || !players.length) return `<p class="note">Key player data pending.</p>`;
-  return players.slice(0,8).map(p => `
-    <div class="stat">
-      <span>${p.name || p.player || 'Player'}</span>
-      <b>${p.goalChance || p.probability || p.market || 'Watch'}</b>
-    </div>
-  `).join('');
+
+function buildLiveReading({homeTeam,awayTeam,homePoss,awayPoss,homeAttacks,awayAttacks,homeShots,awayShots,homeCorners,awayCorners,homeCards,awayCards}){
+  const h=(num(homePoss)*.25)+(num(homeAttacks)*.25)+(num(homeShots)*2.2)+(num(homeCorners)*1.8)-(num(homeCards)*1.5);
+  const a=(num(awayPoss)*.25)+(num(awayAttacks)*.25)+(num(awayShots)*2.2)+(num(awayCorners)*1.8)-(num(awayCards)*1.5);
+  const leader=h>=a?homeTeam:awayTeam;
+  const other=h>=a?awayTeam:homeTeam;
+  const diff=Math.abs(h-a);
+
+  if(diff>=22) return `${leader} is applying heavy pressure. The match flow is leaning strongly toward ${leader}. ${other} is being forced to defend deeper.`;
+  if(diff>=12) return `${leader} has the clear momentum. Possession, attacks and shot activity suggest ${leader} is carrying more danger.`;
+  if(diff>=6) return `${leader} has a slight live edge, but the match is still open.`;
+  return `The game is balanced right now. Neither side has full control, and the next attack could shift momentum.`;
 }
-function renderGoalProps(a){
-  const props = a.goalProps || a.playerProps || [];
-  if(!Array.isArray(props) || !props.length) return `<p class="note">Goal scorer props unavailable.</p>`;
-  return props.slice(0,5).map(p => `
-    <div class="stat">
-      <span>${p.player || p.name || 'Player'}</span>
-      <b>${safe(p.goalChance || p.probability,'--')}%</b>
-    </div>
-  `).join('');
-}
-function renderAssistProps(a){
-  const props = a.assistProps || a.playerProps || [];
-  if(!Array.isArray(props) || !props.length) return `<p class="note">Assist props unavailable.</p>`;
-  return props.slice(0,5).map(p => `
-    <div class="stat">
-      <span>${p.player || p.name || 'Player'}</span>
-      <b>${safe(p.assistChance,'--')}%</b>
-    </div>
-  `).join('');
-}
-function renderInjuries(a){
-  const injuries = a.injuries || a.suspensions || [];
-  if(!Array.isArray(injuries) || !injuries.length) return `<p class="note">No major injuries reported.</p>`;
-  return injuries.slice(0,8).map(p => `
-    <div class="stat">
-      <span>${p.name || p.player || 'Player'}</span>
-      <b>${p.reason || p.status || 'OUT'}</b>
-    </div>
-  `).join('');
-}
-function renderLineups(a){
-  const lineups = a.lineups || {};
-  const home = lineups.home || lineups.local || [];
-  const away = lineups.away || lineups.visitante || [];
-  if(!home.length && !away.length) return `<p class="note">Lineups not available yet.</p>`;
+
+function buildCommentary(data){
+  const {homeTeam,awayTeam,homeScore,awayScore,matchTime,homePoss,awayPoss,homeAttacks,awayAttacks,homeShots,awayShots,homeCorners,awayCorners,homeCards,awayCards}=data;
+  const minute=getMinuteText(matchTime);
+
+  const h=(num(homePoss)*.25)+(num(homeAttacks)*.28)+(num(homeShots)*2.6)+(num(homeCorners)*2)-(num(homeCards)*1.2);
+  const a=(num(awayPoss)*.25)+(num(awayAttacks)*.28)+(num(awayShots)*2.6)+(num(awayCorners)*2)-(num(awayCards)*1.2);
+  const leader=h>=a?homeTeam:awayTeam;
+  const defender=h>=a?awayTeam:homeTeam;
+  const diff=Math.abs(h-a);
+
+  let situation='';
+  if(diff>=24) situation=`${leader} controla la pelota y acelera en campo rival. ${defender} se repliega y el modelo detecta momentum fuerte.`;
+  else if(diff>=13) situation=`${leader} empieza a inclinar la cancha con más intención ofensiva.`;
+  else if(diff>=6) situation=`${leader} tiene una pequeña ventaja en el ritmo del juego, aunque ${defender} todavía puede responder.`;
+  else situation=`el partido está muy parejo. Ambos equipos se estudian y cualquier error puede cambiar el momentum.`;
+
+  let scoreContext='';
+  if(Number(homeScore)===Number(awayScore)) scoreContext=`Con el marcador empatado ${homeScore}-${awayScore}, cada ataque empieza a tener más peso.`;
+  else if(Number(homeScore)>Number(awayScore)) scoreContext=`${homeTeam} está arriba ${homeScore}-${awayScore}; ${awayTeam} necesita adelantar líneas.`;
+  else scoreContext=`${awayTeam} está arriba ${awayScore}-${homeScore}; ${homeTeam} necesita arriesgar más.`;
+
   return `
-    <div class="lineups">
-      <div>${home.map((p,i)=>`<div class="player">${i+1}. ${p.player || p.name || 'Player'}</div>`).join('')}</div>
-      <div>${away.map((p,i)=>`<div class="player">${i+1}. ${p.player || p.name || 'Player'}</div>`).join('')}</div>
-    </div>
+    <section class="commentary-card">
+      <div class="commentary-title">🎙️ Data More Live Commentary</div>
+      <div class="commentary-text"><span>${minute}:</span> ${situation} ${scoreContext}</div>
+      <div class="commentary-sub">Auto-generated commentary from possession, attacks, shots, corners, cards, score and clock.</div>
+    </section>
   `;
 }
-function renderRiskAlerts(a){
-  const alerts = a.riskAlerts || a.alerts || [];
-  if(!Array.isArray(alerts) || !alerts.length) return `<div class="alert">No major betting risk alerts detected.</div>`;
-  return alerts.map(x=>`
-    <div class="alert">⚠️ ${typeof x === 'string' ? x : x.message}</div>
-  `).join('');
-}
-function renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime){
-  const homePoss = numberSafe(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin, 50);
-  const cleanHomePoss = Math.min(90, Math.max(10, homePoss));
-  const awayPoss = Math.max(0, 100 - cleanHomePoss);
-  const homeAttacks = safe(a.homeAttacks ?? a.live?.homeAttacks ?? a.attacks?.home, 'Pending');
-  const awayAttacks = safe(a.awayAttacks ?? a.live?.awayAttacks ?? a.attacks?.away, 'Pending');
-  const homeShots = safe(a.homeShots ?? a.live?.homeShots ?? a.shots?.home, 'Pending');
-  const awayShots = safe(a.awayShots ?? a.live?.awayShots ?? a.shots?.away, 'Pending');
-  const homeCorners = safe(a.homeCorners ?? a.live?.homeCorners ?? a.corners?.home, 'Pending');
-  const awayCorners = safe(a.awayCorners ?? a.live?.awayCorners ?? a.corners?.away, 'Pending');
-  const homeCards = safe(a.homeCards ?? a.live?.homeCards ?? a.cards?.home, 'Pending');
-  const awayCards = safe(a.awayCards ?? a.live?.awayCards ?? a.cards?.away, 'Pending');
-  const hShots = numberSafe(homeShots, 0);
-  const aShots = numberSafe(awayShots, 0);
-  const hAttacks = numberSafe(homeAttacks, 0);
-  const aAttacks = numberSafe(awayAttacks, 0);
-  const baseLeft = Math.min(86, Math.max(14, cleanHomePoss));
-  const pressureMove =
-    hShots > aShots ? 7 :
-    aShots > hShots ? -7 :
-    hAttacks > aAttacks ? 4 :
-    aAttacks > hAttacks ? -4 :
-    0;
-  const randomMoveX = (Math.random() - 0.5) * 12;
-  const randomMoveY = (Math.random() - 0.5) * 36;
-  const ballLeft = Math.min(88, Math.max(12, baseLeft + pressureMove + randomMoveX));
-  const ballTop = Math.min(78, Math.max(22, 50 + randomMoveY));
-  const liveReading = a.liveSummary || a.matchFlow || buildLiveReading({
-    homeTeam,
-    awayTeam,
-    homePoss: cleanHomePoss,
-    awayPoss,
-    homeAttacks,
-    awayAttacks,
-    homeShots,
-    awayShots,
-    homeCorners,
-    awayCorners,
-    homeCards,
-    awayCards
+
+function renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime){
+  const homePoss=num(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin,50);
+  const cleanHomePoss=Math.min(90,Math.max(10,homePoss));
+  const awayPoss=Math.max(0,100-cleanHomePoss);
+
+  const homeAttacks=safe(a.homeAttacks ?? a.live?.homeAttacks ?? a.attacks?.home,'--');
+  const awayAttacks=safe(a.awayAttacks ?? a.live?.awayAttacks ?? a.attacks?.away,'--');
+  const homeShots=safe(a.homeShots ?? a.live?.homeShots ?? a.shots?.home,'--');
+  const awayShots=safe(a.awayShots ?? a.live?.awayShots ?? a.shots?.away,'--');
+  const homeCorners=safe(a.homeCorners ?? a.live?.homeCorners ?? a.corners?.home,'--');
+  const awayCorners=safe(a.awayCorners ?? a.live?.awayCorners ?? a.corners?.away,'--');
+  const homeCards=safe(a.homeCards ?? a.live?.homeCards ?? a.cards?.home,'--');
+  const awayCards=safe(a.awayCards ?? a.live?.awayCards ?? a.cards?.away,'--');
+
+  const ballLeft=Math.min(88,Math.max(12,cleanHomePoss+(Math.random()-.5)*16));
+  const ballTop=Math.min(78,Math.max(22,50+(Math.random()-.5)*38));
+
+  const liveReading=a.liveSummary||a.matchFlow||buildLiveReading({
+    homeTeam,awayTeam,homePoss:cleanHomePoss,awayPoss,homeAttacks,awayAttacks,homeShots,awayShots,homeCorners,awayCorners,homeCards,awayCards
   });
+
   return `
-    <section class="soccer-live">
-      <div class="live-title">
-        <h3>Data More Soccer Live</h3>
-        <div class="live-badge">${matchTime}</div>
-      </div>
+    <section class="live-card">
       <div class="live-grid">
         <div class="live-team-box">
           <h4>${homeTeam}</h4>
-          <div class="live-stat"><span>Possession</span><b>${Number(cleanHomePoss).toFixed(0)}%</b></div>
+          <div class="live-stat"><span>Possession</span><b>${cleanHomePoss.toFixed(0)}%</b></div>
           <div class="live-stat"><span>Attacks</span><b>${homeAttacks}</b></div>
           <div class="live-stat"><span>Shots</span><b>${homeShots}</b></div>
           <div class="live-stat"><span>Corners</span><b>${homeCorners}</b></div>
           <div class="live-stat"><span>Cards</span><b>${homeCards}</b></div>
         </div>
+
         <div>
-          <div class="live-field">
-            <div class="goal-left"></div>
-            <div class="goal-right"></div>
-            <div class="ball-dot" style="left:${ballLeft}%; top:${ballTop}%;">⚽</div>
+          <div class="pitch">
+            <div class="ball-dot" style="left:${ballLeft}%;top:${ballTop}%;">⚽</div>
           </div>
-          <div class="live-momentum">
-            <div class="momentum-label">
-              <span>${homeTeam}</span>
-              <span>${awayTeam}</span>
-            </div>
-            <div class="momentum-bar">
-              <div class="momentum-home" style="width:${Number(cleanHomePoss).toFixed(0)}%"></div>
-              <div class="momentum-away" style="width:${Number(awayPoss).toFixed(0)}%"></div>
-            </div>
-          </div>
-          <div class="timeline">
-            <b>Live Reading:</b> ${liveReading}
-          </div>
+          <div class="timeline"><b>Live Reading:</b> ${liveReading}</div>
         </div>
+
         <div class="live-team-box">
           <h4>${awayTeam}</h4>
-          <div class="live-stat"><span>Possession</span><b>${Number(awayPoss).toFixed(0)}%</b></div>
+          <div class="live-stat"><span>Possession</span><b>${awayPoss.toFixed(0)}%</b></div>
           <div class="live-stat"><span>Attacks</span><b>${awayAttacks}</b></div>
           <div class="live-stat"><span>Shots</span><b>${awayShots}</b></div>
           <div class="live-stat"><span>Corners</span><b>${awayCorners}</b></div>
@@ -717,146 +702,258 @@ function renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime){
     </section>
   `;
 }
+
+function renderGoalProps(a){
+  const props=a.goalProps||a.playerProps||[];
+  if(!Array.isArray(props)||!props.length) return `<p class="note">Goal scorer props unavailable.</p>`;
+  return props.slice(0,5).map(p=>`
+    <div class="stat"><span>${p.player||p.name||'Player'}</span><b>${safe(p.goalChance||p.probability,'--')}%</b></div>
+  `).join('');
+}
+
+function renderAssistProps(a){
+  const props=a.assistProps||a.playerProps||[];
+  if(!Array.isArray(props)||!props.length) return `<p class="note">Assist props unavailable.</p>`;
+  return props
+    .filter(p=>p.assistChance!==undefined&&p.assistChance!==null)
+    .sort((x,y)=>num(y.assistChance)-num(x.assistChance))
+    .slice(0,5)
+    .map(p=>`<div class="stat"><span>${p.player||p.name||'Player'}</span><b>${safe(p.assistChance,'--')}%</b></div>`)
+    .join('') || `<p class="note">Assist props unavailable.</p>`;
+}
+
+function renderKeyPlayers(a){
+  const players=a.keyPlayers||a.playerProps||a.players||[];
+  if(!Array.isArray(players)||!players.length) return `<p class="note">Key player data pending.</p>`;
+  return players.slice(0,8).map(p=>`
+    <div class="stat"><span>${p.name||p.player||'Player'}</span><b>${p.goalChance||p.probability||p.market||'Watch'}</b></div>
+  `).join('');
+}
+
+function renderLineups(a,homeTeam,awayTeam){
+  const lineups=a.lineups||{};
+  const home=lineups.home||lineups.local||[];
+  const away=lineups.away||lineups.visitante||[];
+
+  if(!home.length&&!away.length) return `<p class="note">Lineups not available yet.</p>`;
+
+  return `
+    <div class="lineups">
+      <div class="lineup-side">
+        <h4>${homeTeam}</h4>
+        ${home.map((p,i)=>`
+          <div class="player"><span><b>${i+1}</b> ${p.player||p.name||'Player'}</span><span>${p.pos||p.position||''}</span></div>
+        `).join('')}
+      </div>
+      <div class="lineup-side">
+        <h4>${awayTeam}</h4>
+        ${away.map((p,i)=>`
+          <div class="player"><span><b>${i+1}</b> ${p.player||p.name||'Player'}</span><span>${p.pos||p.position||''}</span></div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderRiskAlerts(a){
+  const alerts=a.riskAlerts||a.alerts||[];
+  if(!Array.isArray(alerts)||!alerts.length) return `<div class="alert">No major betting risk alerts detected.</div>`;
+  return alerts.map(x=>`<div class="alert">⚠️ ${typeof x==='string'?x:x.message}</div>`).join('');
+}
+
 async function loadMatch(){
-  const content = document.getElementById('content');
+  const content=document.getElementById('content');
+
   try{
     if(!matchId){
-      content.innerHTML = `<section class="panel">Missing matchId.</section>`;
+      content.innerHTML=`<section class="pro-card">Missing matchId.</section>`;
       return;
     }
-    if(isFirstLoad) content.innerHTML = `Loading Match Center...`;
-    const [analysisRes, boardGame] = await Promise.all([
-      fetch(`/api/soccer/analyze/${matchId}?league=${league || ''}&t=${Date.now()}`).then(r => r.json()).catch(() => ({})),
+
+    if(isFirstLoad) content.innerHTML=`Loading Match Center...`;
+
+    const [analysisRes,boardGame]=await Promise.all([
+      fetch(`/api/soccer/analyze/${matchId}?league=${league||''}&t=${Date.now()}`).then(r=>r.json()).catch(()=>({})),
       fetchGameFromBoard()
     ]);
-    const data = analysisRes || {};
-    const a = data.analysis || data;
-    const g = data.game || data.fixture || boardGame || {};
-    const homeTeam = firstValid(boardGame.homeTeam, boardGame.home, boardGame.homeName, boardGame.teams?.home?.name, urlGame.homeTeam, data.homeTeam, a.homeTeam, g.homeTeam, g.home_name, g.teams?.home?.name, 'HOME');
-    const awayTeam = firstValid(boardGame.awayTeam, boardGame.away, boardGame.awayName, boardGame.teams?.away?.name, urlGame.awayTeam, data.awayTeam, a.awayTeam, g.awayTeam, g.away_name, g.teams?.away?.name, 'AWAY');
-    const homeLogo = normalizeLogo(firstValid(boardGame.homeLogo, boardGame.home_logo, boardGame.teams?.home?.logo, urlGame.homeLogo, data.homeLogo, a.homeLogo, a.home_team_logo, g.homeLogo, g.home_logo, g.teams?.home?.logo));
-    const awayLogo = normalizeLogo(firstValid(boardGame.awayLogo, boardGame.away_logo, boardGame.teams?.away?.logo, urlGame.awayLogo, data.awayLogo, a.awayLogo, a.away_team_logo, g.awayLogo, g.away_logo, g.teams?.away?.logo));
-    const homeScore = firstValid(boardGame.homeScore, data.homeScore, a.homeScore, g.homeScore, g.goals?.home, urlGame.homeScore, 0);
-    const awayScore = firstValid(boardGame.awayScore, data.awayScore, a.awayScore, g.awayScore, g.goals?.away, urlGame.awayScore, 0);
-    const matchTime = firstValid(boardGame.time, data.time, a.time, g.time, g.fixture?.status?.elapsed, urlGame.time, 'LIVE');
-    const leagueName = firstValid(urlGame.leagueName, boardGame.leagueName, data.leagueName, a.leagueName, g.leagueName, g.league?.name, league?.toUpperCase(), 'LEAGUE');
-    const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
-    const homeWin = firstValid(oneX2.home, oneX2.local, oneX2.homeWin, a.homeWinPct, a.homeProbability, 50);
-    const draw = firstValid(oneX2.draw, oneX2.empate, oneX2.tie, a.drawPct, a.drawProbability, 0);
-    const awayWin = firstValid(oneX2.away, oneX2.visitante, oneX2.awayWin, a.awayWinPct, a.awayProbability, 50);
-    const liveHomePoss = numberSafe(a.homePossession ?? a.possession?.home ?? a.live?.homePossession ?? homeWin, 50);
-    const cleanHomePoss = Math.min(90, Math.max(10, liveHomePoss));
-    const cleanAwayPoss = Math.max(0, 100 - cleanHomePoss);
-    content.innerHTML = `
-      <section class="hero">
-        <div class="matchup">
-          <div class="team">
-            <img src="${homeLogo}" alt="${homeTeam}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
+
+    const data=analysisRes||{};
+    const a=data.analysis||data;
+    const g=data.game||data.fixture||boardGame||{};
+
+    const homeTeam=firstValid(boardGame.homeTeam,boardGame.home,boardGame.homeName,boardGame.teams?.home?.name,urlGame.homeTeam,data.homeTeam,a.homeTeam,g.homeTeam,g.home_name,g.teams?.home?.name,'HOME');
+    const awayTeam=firstValid(boardGame.awayTeam,boardGame.away,boardGame.awayName,boardGame.teams?.away?.name,urlGame.awayTeam,data.awayTeam,a.awayTeam,g.awayTeam,g.away_name,g.teams?.away?.name,'AWAY');
+    const homeLogo=normalizeLogo(firstValid(boardGame.homeLogo,boardGame.home_logo,boardGame.teams?.home?.logo,urlGame.homeLogo,data.homeLogo,a.homeLogo,g.homeLogo,g.home_logo,g.teams?.home?.logo));
+    const awayLogo=normalizeLogo(firstValid(boardGame.awayLogo,boardGame.away_logo,boardGame.teams?.away?.logo,urlGame.awayLogo,data.awayLogo,a.awayLogo,g.awayLogo,g.away_logo,g.teams?.away?.logo));
+    const homeScore=firstValid(boardGame.homeScore,data.homeScore,a.homeScore,g.homeScore,g.goals?.home,urlGame.homeScore,0);
+    const awayScore=firstValid(boardGame.awayScore,data.awayScore,a.awayScore,g.awayScore,g.goals?.away,urlGame.awayScore,0);
+    const matchTime=firstValid(boardGame.time,data.time,a.time,g.time,g.fixture?.status?.elapsed,urlGame.time,'LIVE');
+    const leagueName=firstValid(urlGame.leagueName,boardGame.leagueName,data.leagueName,a.leagueName,g.leagueName,g.league?.name,league?.toUpperCase(),'LEAGUE');
+
+    const oneX2=a.oneX2||a.probabilities||a.market1x2||{};
+    const homeWin=num(firstValid(oneX2.home,oneX2.local,oneX2.homeWin,a.homeWinPct,a.homeProbability,50),50);
+    const draw=num(firstValid(oneX2.draw,oneX2.empate,oneX2.tie,a.drawPct,a.drawProbability,0),0);
+    const awayWin=num(firstValid(oneX2.away,oneX2.visitante,oneX2.awayWin,a.awayWinPct,a.awayProbability,50),50);
+
+    const homePoss=num(a.homePossession??a.possession?.home??a.live?.homePossession??homeWin,50);
+    const cleanHomePoss=Math.min(90,Math.max(10,homePoss));
+    const cleanAwayPoss=Math.max(0,100-cleanHomePoss);
+
+    const homeEnd=Math.min(100,homeWin);
+    const drawEnd=Math.min(100,homeWin+draw);
+
+    content.innerHTML=`
+      <section class="hero-pro">
+        <div class="hero-grid">
+          <div class="team-hero">
+            <img src="${homeLogo}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${homeTeam}</h2>
             <small>${safe(a.homeRecord,'Home Form Pending')}</small>
           </div>
-          <div class="score">
+
+          <div class="score-box">
+            <div class="status-pill">${matchTime}</div>
             <div class="score-main">${homeScore} - ${awayScore}</div>
-            <div class="live">${matchTime}</div>
             <div class="league">${leagueName}</div>
           </div>
-          <div class="team">
-            <img src="${awayLogo}" alt="${awayTeam}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
+
+          <div class="team-hero">
+            <img src="${awayLogo}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${awayTeam}</h2>
             <small>${safe(a.awayRecord,'Away Form Pending')}</small>
           </div>
         </div>
       </section>
-      ${buildPs5Commentary({
-        homeTeam,
-        awayTeam,
-        homeScore,
-        awayScore,
-        matchTime,
-        homePoss: cleanHomePoss,
-        awayPoss: cleanAwayPoss,
-        homeAttacks: a.homeAttacks ?? a.live?.homeAttacks ?? a.attacks?.home,
-        awayAttacks: a.awayAttacks ?? a.live?.awayAttacks ?? a.attacks?.away,
-        homeShots: a.homeShots ?? a.live?.homeShots ?? a.shots?.home,
-        awayShots: a.awayShots ?? a.live?.awayShots ?? a.shots?.away,
-        homeCorners: a.homeCorners ?? a.live?.homeCorners ?? a.corners?.home,
-        awayCorners: a.awayCorners ?? a.live?.awayCorners ?? a.corners?.away,
-        homeCards: a.homeCards ?? a.live?.homeCards ?? a.cards?.home,
-        awayCards: a.awayCards ?? a.live?.awayCards ?? a.cards?.away
-      })}
-      ${renderSoccerLive(a, homeTeam, awayTeam, homeWin, awayWin, matchTime)}
-      <div class="grid">
-        <section class="panel">
+
+      <div class="pro-layout">
+        <section class="pro-card">
+          <h3>Matchup Predictor</h3>
+          <div class="predictor">
+            <div class="predictor-team">
+              <img src="${homeLogo}">
+              <h4>${shortName(homeTeam)}</h4>
+              <span>${pct(homeWin)}</span>
+            </div>
+
+            <div class="donut-wrap">
+              <div class="donut" style="--homePct:${homeEnd}%;--drawPct:${drawEnd}%;">
+                <div class="donut-inner">
+                  <div>
+                    <b>${shortName(homeTeam)}</b>
+                    <span>vs</span>
+                    <b>${shortName(awayTeam)}</b>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="predictor-team">
+              <img src="${awayLogo}">
+              <h4>${shortName(awayTeam)}</h4>
+              <span>${pct(awayWin)}</span>
+            </div>
+          </div>
+
+          <div class="prob-row">
+            <div class="prob-box"><span>${shortName(homeTeam)}</span><b>${pct(homeWin)}</b></div>
+            <div class="prob-box"><span>Draw</span><b>${pct(draw)}</b></div>
+            <div class="prob-box"><span>${shortName(awayTeam)}</span><b>${pct(awayWin)}</b></div>
+          </div>
+        </section>
+
+        <section class="pro-card">
           <h3>AI Match Edge</h3>
           <div class="stat"><span>Main Pick</span><b>${safe(a.pick)}</b></div>
           <div class="stat"><span>Confidence</span><b>${safe(a.confidence)}</b></div>
-          <div class="stat"><span>Probability</span><b>${pct(a.probability ?? a.pickProbability)}</b></div>
-          <div class="stat"><span>Over 2.5</span><b>${safe(a.over25 || a.totalGoalsPick,'Pending')}</b></div>
-          <div class="stat"><span>BTTS</span><b>${safe(a.btts || a.bothTeamsToScore,'Pending')}</b></div>
+          <div class="stat"><span>Probability</span><b>${pct(a.probability??a.pickProbability)}</b></div>
+          <div class="stat"><span>Over 2.5</span><b>${safe(a.over25||a.totalGoalsPick,'Pending')}</b></div>
+          <div class="stat"><span>BTTS</span><b>${safe(a.btts||a.bothTeamsToScore,'Pending')}</b></div>
           <div class="stat"><span>Projected Goals</span><b>${safe(a.projectedGoals,'Pending')}</b></div>
         </section>
+      </div>
+
+      ${buildCommentary({
+        homeTeam,awayTeam,homeScore,awayScore,matchTime,
+        homePoss:cleanHomePoss,awayPoss:cleanAwayPoss,
+        homeAttacks:a.homeAttacks??a.live?.homeAttacks??a.attacks?.home,
+        awayAttacks:a.awayAttacks??a.live?.awayAttacks??a.attacks?.away,
+        homeShots:a.homeShots??a.live?.homeShots??a.shots?.home,
+        awayShots:a.awayShots??a.live?.awayShots??a.shots?.away,
+        homeCorners:a.homeCorners??a.live?.homeCorners??a.corners?.home,
+        awayCorners:a.awayCorners??a.live?.awayCorners??a.corners?.away,
+        homeCards:a.homeCards??a.live?.homeCards??a.cards?.home,
+        awayCards:a.awayCards??a.live?.awayCards??a.cards?.away
+      })}
+
+      ${renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime)}
+
+      <div class="grid">
         <section class="panel">
-          <h3>1X2 Probability</h3>
-          <div class="stat"><span>${homeTeam}</span><b>${pct(homeWin)}</b></div>
-          <div class="stat"><span>Draw</span><b>${pct(draw)}</b></div>
-          <div class="stat"><span>${awayTeam}</span><b>${pct(awayWin)}</b></div>
-          <div class="bar"><div class="fill" style="width:${Number(homeWin) || 50}%"></div></div>
-        </section>
-        <section class="panel">
-          <h3>Advanced Match Variables</h3>
+          <h3>Advanced Variables</h3>
           <div class="stat"><span>xG Projection</span><b>${safe(a.xgTotal,'Pending')}</b></div>
           <div class="stat"><span>Possession Edge</span><b>${safe(a.possessionEdge,'Pending')}</b></div>
           <div class="stat"><span>Shots Projection</span><b>${safe(a.shotsProjection,'Pending')}</b></div>
           <div class="stat"><span>Danger Level</span><b>${safe(a.riskLevel,'Pending')}</b></div>
           <div class="stat"><span>Game Tempo</span><b>${safe(a.gameTempo,'Pending')}</b></div>
         </section>
+
         <section class="panel">
-          <h3>Corners / Cards Market</h3>
+          <h3>Corners / Cards</h3>
           <div class="stat"><span>Corners Over</span><b>${safe(a.cornersOver,'Pending')}</b></div>
           <div class="stat"><span>Cards Over</span><b>${safe(a.cardsOver,'Pending')}</b></div>
           <div class="stat"><span>Referee Risk</span><b>${safe(a.refereeRisk,'Pending')}</b></div>
           <div class="stat"><span>Intensity</span><b>${safe(a.gameIntensity,'Pending')}</b></div>
         </section>
+
         <section class="panel">
-          <h3>Top Goal Scorer Props</h3>
+          <h3>Top Goal Props</h3>
           ${renderGoalProps(a)}
         </section>
+
         <section class="panel">
           <h3>Top Assist Props</h3>
           ${renderAssistProps(a)}
         </section>
+
         <section class="panel">
           <h3>Key Players</h3>
           ${renderKeyPlayers(a)}
         </section>
+
         <section class="panel">
-          <h3>Injuries / Suspensions</h3>
-          ${renderInjuries(a)}
+          <h3>Live Possession</h3>
+          <div class="stat"><span>${homeTeam}</span><b>${cleanHomePoss.toFixed(0)}%</b></div>
+          <div class="mini-bar"><div class="mini-fill" style="width:${cleanHomePoss}%"></div></div>
+          <div class="stat"><span>${awayTeam}</span><b>${cleanAwayPoss.toFixed(0)}%</b></div>
         </section>
       </div>
+
       <section class="panel" style="margin-top:20px;">
         <h3>Confirmed / Projected Lineups</h3>
-        ${renderLineups(a)}
+        ${renderLineups(a,homeTeam,awayTeam)}
       </section>
+
       <section class="panel" style="margin-top:20px;">
         <h3>Betting Risk Alerts</h3>
         ${renderRiskAlerts(a)}
       </section>
     `;
-    isFirstLoad = false;
+
+    isFirstLoad=false;
+
   }catch(err){
     console.log(err);
     if(isFirstLoad){
-      content.innerHTML = `<section class="panel">Error loading match center.</section>`;
+      content.innerHTML=`<section class="pro-card">Error loading match center.</section>`;
     }
   }
 }
+
 loadMatch();
-setInterval(() => {
-  if(document.visibilityState === 'visible'){
-    loadMatch();
-  }
-}, 60000);
+
+setInterval(()=>{
+  if(document.visibilityState==='visible') loadMatch();
+},60000);
 </script>
 </body>
 </html>
