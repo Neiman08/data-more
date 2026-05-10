@@ -351,80 +351,59 @@ router.get('/import-structured', async (req, res) => {
     }
 
     function mergeContinuationPages(races = []) {
-
       const merged = [];
-
+    
       for (const race of races) {
-
         const runners = race.runners || [];
-
+    
+        const currentNumbers = runners
+          .map(r => Number(r.number || r.programNumber || r.horseNumber || r.post || 0))
+          .filter(n => n > 0);
+    
+        const hasHorseOne = currentNumbers.includes(1);
+    
         const previous = merged[merged.length - 1];
-
-        if (!previous) {
-          merged.push(race);
-          continue;
-        }
-
-        const previousRunners = previous.runners || [];
-
-        const firstCurrentNumber = Number(
-          runners[0]?.number ||
-          runners[0]?.programNumber ||
-          runners[0]?.horseNumber ||
-          runners[0]?.post ||
-          0
-        );
-
-        const lastPreviousNumber = Number(
-          previousRunners[previousRunners.length - 1]?.number ||
-          previousRunners[previousRunners.length - 1]?.programNumber ||
-          previousRunners[previousRunners.length - 1]?.horseNumber ||
-          previousRunners[previousRunners.length - 1]?.post ||
-          0
-        );
-
-        const looksLikeContinuation =
-          previousRunners.length >= 10 &&
-          runners.length <= 6 &&
-          firstCurrentNumber >= 11 &&
-          firstCurrentNumber > lastPreviousNumber;
-
-        if (looksLikeContinuation) {
-
+    
+        const isContinuation =
+          previous &&
+          runners.length > 0 &&
+          !hasHorseOne;
+    
+        if (isContinuation) {
           const combined = [
-            ...previousRunners,
+            ...(previous.runners || []),
             ...runners
           ];
-
+    
           const unique = [];
           const seen = new Set();
-
+    
           combined.forEach(r => {
-
-            const key = String(
-              r.name ||
-              r.horse ||
-              r.runnerName ||
-              ''
-            )
-            .toLowerCase()
-            .trim();
-
-            if (!seen.has(key)) {
+            const key = String(r.name || r.horse || r.runnerName || '')
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '')
+              .trim();
+    
+            if (key && !seen.has(key)) {
               seen.add(key);
               unique.push(r);
             }
           });
-
+    
           previous.runners = unique;
-
           continue;
         }
-
-        merged.push(race);
+    
+        merged.push({
+          ...race,
+          runners
+        });
       }
-
-      return merged;
+    
+      return merged.map((race, index) => ({
+        ...race,
+        raceNumber: index + 1
+      }));
     }
 
     const mergedRaces = mergeContinuationPages(allRaces);
