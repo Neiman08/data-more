@@ -1,3 +1,5 @@
+Aquí tienes el horse.html completo corregido para copiar y pegar:
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,14 +9,11 @@
       window.location.href = '/pago-manual'; 
     }
   </script>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Data More | Horse Racing Analytics Pro</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-
   <style>
     :root {
       --green: #6bff19;
@@ -23,16 +22,15 @@
       --text: #ffffff;
       --muted: #888d93;
       --bg-panel: rgba(20, 25, 30, 0.6);
+      --gold: #facc15;
+      --red: #ef4444;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       background: #000;
       color: var(--text);
       font-family: 'Inter', sans-serif;
     }
-
     main.page {
       max-width: 1440px;
       margin: 0 auto;
@@ -41,7 +39,6 @@
       padding-bottom: 40px;
       min-height: 100vh;
     }
-
     header {
       height: 70px;
       padding: 0 50px;
@@ -55,16 +52,30 @@
       top: 0;
       z-index: 1000;
     }
-
-    .logo { font-weight: 900; font-size: 22px; letter-spacing: -1px; font-family: 'Anton', sans-serif; text-transform: uppercase; }
+    .logo {
+      font-weight: 900;
+      font-size: 22px;
+      letter-spacing: -1px;
+      font-family: 'Anton', sans-serif;
+      text-transform: uppercase;
+    }
     .logo span { color: var(--horse-purple); }
-
     nav { display: flex; gap: 20px; }
-    nav a { color: #fff; text-decoration: none; font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
-    nav a.active { opacity: 1; border-bottom: 2px solid var(--horse-purple); padding-bottom: 25px; margin-bottom: -25px; }
-
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.7;
+      text-transform: uppercase;
+    }
+    nav a.active {
+      opacity: 1;
+      border-bottom: 2px solid var(--horse-purple);
+      padding-bottom: 25px;
+      margin-bottom: -25px;
+    }
     .container { padding: 30px 50px; }
-
     h1.page-title {
       font-family: 'Anton';
       font-size: 32px;
@@ -73,107 +84,260 @@
       margin-bottom: 25px;
       letter-spacing: -1px;
     }
-
     h1.page-title span { color: var(--horse-purple); }
-
-    .nav-sports { display: flex; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+    .nav-sports {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+      overflow-x: auto;
+    }
+    .nav-sports a {
+      text-decoration: none;
+    }
     .nav-btn {
-      padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border);
-      color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer;
-      background: rgba(255,255,255,0.03); transition: all 0.2s; text-transform: uppercase;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.03);
+      transition: all 0.2s;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
-    .nav-btn.active { background: var(--horse-purple); color: #fff; border-color: var(--horse-purple); font-weight: 800; }
-
-    .topbar { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; flex-wrap: wrap; }
-    .topbar input, .topbar select {
-      background: #111; border: 1px solid var(--border); padding: 12px; border-radius: 8px;
-      color: #fff; font-family: 'Inter', sans-serif; font-weight: 600; outline: none;
+    .nav-btn.active {
+      background: var(--horse-purple);
+      color: #fff;
+      border-color: var(--horse-purple);
+      font-weight: 800;
     }
-
+    .topbar {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .topbar input,
+    .topbar select {
+      background: #111;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      outline: none;
+    }
     .btn-action {
-      background: var(--horse-purple); color: #fff; padding: 12px 24px; border-radius: 8px;
-      font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; font-size: 13px;
+      background: var(--horse-purple);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-size: 13px;
     }
-
-    .btn-sec { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
-
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-
-    @media (max-width: 1300px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } }
-
+    .btn-sec {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
     .card {
-      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
-      padding: 20px; backdrop-filter: blur(10px); transition: 0.3s;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      transition: 0.3s;
       border-left: 4px solid var(--horse-purple);
     }
-
-    .card:hover { border-color: var(--horse-purple); transform: translateY(-5px); }
+    .card:hover {
+      border-color: var(--horse-purple);
+      transform: translateY(-5px);
+    }
     .card.alta { border-left-color: var(--green); }
     .card.media { border-left-color: #facc15; }
     .card.baja { border-left-color: #ef4444; }
-
-    .race-title { font-family: 'Anton'; font-size: 20px; color: var(--horse-purple); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .meta { color: var(--muted); font-size: 10px; font-weight: 700; margin-bottom: 15px; text-transform: uppercase; }
-    .section-title { color: #38bdf8; font-size: 10px; font-weight: 900; margin: 15px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
-
-    .pick-box { 
-      background: rgba(107, 255, 25, 0.05); border: 1px solid rgba(107, 255, 25, 0.1); 
-      border-radius: 10px; padding: 12px; margin-bottom: 10px;
+    .race-title {
+      font-family: 'Anton';
+      font-size: 20px;
+      color: var(--horse-purple);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-
-    .rank-row, .bet { display: flex; justify-content: space-between; align-items:center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; }
-    .bet { background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px; border-bottom: none; margin-top: 4px; }
-    .bet b { color: var(--horse-purple); }
-
+    .meta {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+    }
+    .section-title {
+      color: #38bdf8;
+      font-size: 10px;
+      font-weight: 900;
+      margin: 15px 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .pick-box {
+      background: linear-gradient(135deg, rgba(168,85,247,.12), rgba(107,255,25,.06));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .rank-row,
+    .bet {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 11px;
+      gap: 10px;
+    }
+    .rank-row {
+      transition: .2s;
+    }
+    .rank-row:hover {
+      background: rgba(255,255,255,.03);
+      border-radius: 8px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+    .bet {
+      background: linear-gradient(135deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.06);
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .bet b {
+      color: var(--green);
+      font-size: 12px;
+      text-align: right;
+    }
     .horse-number {
-      min-width: 28px;
-      height: 28px;
-      border-radius: 7px;
-      background: linear-gradient(180deg, #facc15, #b45309);
-      color: #000;
+      min-width: 30px;
+      height: 30px;
+      border-radius: 8px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
       font-size: 14px;
-      margin-right: 9px;
-      border: 1px solid rgba(255,255,255,.22);
-      box-shadow: 0 0 12px rgba(250,204,21,.25);
+      margin-right: 10px;
+      border: 2px solid rgba(255,255,255,.20);
+      box-shadow: 0 0 12px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18);
+      position: relative;
+      overflow: hidden;
     }
-
+    .horse-number::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,.18), transparent 45%);
+      pointer-events: none;
+    }
     .horse-name-wrap {
-      display:flex;
-      align-items:center;
-      gap:2px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      min-width: 0;
     }
-
+    .horse-name {
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
     .pdf-full {
-      grid-column: 1 / -1; margin-top: 30px; background: var(--bg-panel);
-      border: 1px solid var(--border); border-radius: 16px; padding: 25px; backdrop-filter: blur(10px);
+      grid-column: 1 / -1;
+      margin-top: 30px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+      backdrop-filter: blur(10px);
     }
-
     .btn-pdf {
-      display: block; text-align: center; background: var(--horse-purple); color: white;
-      padding: 14px; border-radius: 10px; font-weight: 900; margin-bottom: 20px;
-      text-decoration: none; text-transform: uppercase; font-size: 12px;
+      display: block;
+      text-align: center;
+      background: var(--horse-purple);
+      color: white;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: 900;
+      margin-bottom: 20px;
+      text-decoration: none;
+      text-transform: uppercase;
+      font-size: 12px;
     }
-
     .pdf-wrapper {
-      width: 100%; height: 800px; border-radius: 12px; overflow: hidden; background: #000;
+      width: 100%;
+      height: 800px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
       border: 1px solid var(--border);
     }
-
-    .pdf-wrapper iframe { width: 100%; height: 100%; border: none; }
-
-    .loading { animation: pulse 1s infinite; color: var(--horse-purple); font-size: 12px; text-align: center; padding: 20px; grid-column: 1/-1; }
-    @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    .pdf-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .loading {
+      animation: pulse 1s infinite;
+      color: var(--horse-purple);
+      font-size: 12px;
+      text-align: center;
+      padding: 20px;
+      grid-column: 1 / -1;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    @media (max-width: 1300px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 1000px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 650px) {
+      .grid { grid-template-columns: 1fr; }
+      header {
+        padding: 14px 16px;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .container {
+        padding: 24px 18px;
+      }
+      nav {
+        width: 100%;
+        overflow-x: auto;
+      }
+    }
   </style>
 </head>
-
 <body>
-
 <main class="page">
   <header>
     <div class="logo">DATA-<span>MORE</span></div>
@@ -187,20 +351,16 @@
       <span style="font-size:12px; color:#fff; font-weight:700;">👤 HORSE PRO</span>
     </div>
   </header>
-
   <div class="container">
     <h1 class="page-title">HORSE RACING <span>ANALYTICS PRO</span></h1>
-
     <div class="nav-sports">
       <a href="/"><button class="nav-btn">⚾ MLB</button></a>
       <a href="/soccer"><button class="nav-btn">⚽ Fútbol</button></a>
       <a href="/nba"><button class="nav-btn">🏀 NBA</button></a>
       <a href="/horse"><button class="nav-btn active">🏇 Hipismo</button></a>
     </div>
-
     <div class="topbar">
       <input type="date" id="dateInput">
-
       <select id="trackSelect">
         <option value="lad">Louisiana Downs</option>
         <option value="mnr">Mountaineer</option>
@@ -228,16 +388,13 @@
         <option value="evd">Evangeline Downs</option>
         <option value="fl">Finger Lakes</option>
       </select>
-
       <button class="btn-action" onclick="loadRaces()">Cargar Pizarra</button>
-      <button class="btn-sec btn-action" onclick="alert('Analizando base de datos...')">⚡ Analizar Todos</button>
-      <button class="btn-sec btn-action" onclick="alert('Generando ticket inteligente...')">🎟 Ticket</button>
+      <button class="btn-sec btn-action" onclick="loadRaces()">⚡ Analizar Todos</button>
+      <button class="btn-sec btn-action" onclick="buildTicket()">🎟 Ticket</button>
     </div>
-
     <div id="races" class="grid"></div>
   </div>
 </main>
-
 <script>
 document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Chicago',
@@ -245,42 +402,123 @@ document.getElementById('dateInput').value = new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit'
 }).format(new Date());
-
+const HORSE_COLORS = {
+  1:  { bg:'#d90429', text:'#fff' },
+  2:  { bg:'#ffffff', text:'#000' },
+  3:  { bg:'#2563eb', text:'#fff' },
+  4:  { bg:'#facc15', text:'#000' },
+  5:  { bg:'#16a34a', text:'#fff' },
+  6:  { bg:'#000000', text:'#fff' },
+  7:  { bg:'#f97316', text:'#fff' },
+  8:  { bg:'#ec4899', text:'#fff' },
+  9:  { bg:'#06b6d4', text:'#fff' },
+  10: { bg:'#7c3aed', text:'#fff' },
+  11: { bg:'#6b7280', text:'#fff' },
+  12: { bg:'#84cc16', text:'#000' },
+  13: { bg:'#92400e', text:'#fff' },
+  14: { bg:'#1e3a8a', text:'#fff' },
+  15: { bg:'#166534', text:'#fff' },
+  16: { bg:'#d4af37', text:'#000' }
+};
+function getHorseColor(number) {
+  return HORSE_COLORS[Number(number)] || { bg:'#111827', text:'#fff' };
+}
 function getHorseNumber(h, index) {
   return h?.number || h?.programNumber || h?.horseNumber || h?.post || h?.runnerNumber || index + 1;
 }
-
+function normalizeHorseName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/gi, '')
+    .trim();
+}
+function normalizeRaceNumber(value) {
+  const raw = String(value || '').replace(/[^\d]/g, '');
+  return raw || value;
+}
+function cleanBet(bet) {
+  if (!bet || bet === '-') return '-';
+  return String(bet)
+    .replace(/\s+/g, ' ')
+    .replace(/,+/g, ', ')
+    .replace(/\//g, ' / ')
+    .replace(/\s-\s/g, '-')
+    .trim();
+}
+function mergeDuplicateRaces(races = []) {
+  const merged = [];
+  for (const race of races) {
+    const raceNumber = normalizeRaceNumber(race.raceNumber);
+    const existing = merged.find(r =>
+      normalizeRaceNumber(r.raceNumber) === raceNumber
+    );
+    if (existing) {
+      const combinedRunners = [
+        ...(existing.runners || []),
+        ...(race.runners || [])
+      ];
+      const uniqueRunners = [];
+      const seen = new Set();
+      combinedRunners.forEach((runner, idx) => {
+        const key = normalizeHorseName(runner.name || runner.horse || runner.runnerName || `runner-${idx}`);
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueRunners.push(runner);
+        }
+      });
+      existing.runners = uniqueRunners;
+      if (race.analysis && !existing.analysis) {
+        existing.analysis = race.analysis;
+      }
+      if (
+        race.analysis &&
+        existing.analysis &&
+        (race.analysis.top3 || []).length > (existing.analysis.top3 || []).length
+      ) {
+        existing.analysis = race.analysis;
+      }
+    } else {
+      merged.push({
+        ...race,
+        raceNumber
+      });
+    }
+  }
+  return merged.sort((a, b) => Number(a.raceNumber) - Number(b.raceNumber));
+}
 async function loadRaces() {
   const container = document.getElementById('races');
   container.innerHTML = '<div class="loading">⌛ Procesando Big Data y Retrospectos...</div>';
-
   const track = document.getElementById('trackSelect').value;
   const date = document.getElementById('dateInput').value;
-
   try {
     const res = await fetch(`/api/horse-racing/import-structured?track=${track}&date=${date}`);
     const data = await res.json();
-
-    if (!data.ok || !data.races.length) {
-      container.innerHTML = `<div class="card" style="grid-column:1/-1; border-left-color: #ef4444;">No hay datos disponibles para esta fecha o hipódromo.</div>`;
+    if (!data.ok || !data.races || !data.races.length) {
+      container.innerHTML = `
+        <div class="card" style="grid-column:1/-1; border-left-color:#ef4444;">
+          No hay datos disponibles para esta fecha o hipódromo.
+        </div>
+      `;
       return;
     }
-
+    const mergedRaces = mergeDuplicateRaces(data.races);
     container.innerHTML = '';
-
-    data.races.forEach((race) => {
+    mergedRaces.forEach((race) => {
       const a = race.analysis;
-      const confClass = a ? a.confidence.toLowerCase() : '';
-
+      const confClass = a && a.confidence ? a.confidence.toLowerCase() : '';
       container.innerHTML += `
         <div class="card ${confClass}">
           <div class="race-title">Carrera ${race.raceNumber}</div>
-          <div class="meta">${race.track.toUpperCase()} • ${race.date}</div>
-          ${a ? renderAnalysis(a, race.runners || []) : '<div class="loading" style="font-size:10px;">Análisis en proceso...</div>'}
+          <div class="meta">${String(race.track || track).toUpperCase()} • ${race.date || date}</div>
+          ${
+            a
+              ? renderAnalysis(a, race.runners || [])
+              : '<div class="loading" style="font-size:10px;">Análisis en proceso...</div>'
+          }
         </div>
       `;
     });
-
     container.innerHTML += `
       <div class="pdf-full">
         <div class="section-title" style="margin-top:0">Retrospecto Oficial</div>
@@ -292,59 +530,82 @@ async function loadRaces() {
         </div>
       </div>
     `;
-
   } catch (err) {
-    container.innerHTML = `<div class="card" style="grid-column:1/-1; border-left-color: #ef4444;">⚠️ Error de conexión: ${err.message}</div>`;
+    container.innerHTML = `
+      <div class="card" style="grid-column:1/-1; border-left-color:#ef4444;">
+        ⚠️ Error de conexión: ${err.message}
+      </div>
+    `;
   }
 }
-
 function renderAnalysis(a, runners = []) {
   const badge = a.confidence === 'ALTA' ? '🔥' : a.confidence === 'MEDIA' ? '⚠️' : '';
-
   const findRunner = (name) => {
-    return runners.find(r => String(r.name || '').toLowerCase() === String(name || '').toLowerCase());
+    return runners.find(r =>
+      normalizeHorseName(r.name || r.horse || r.runnerName) === normalizeHorseName(name)
+    );
   };
-
   const pickRunner = findRunner(a.pick);
   const pickNumber = pickRunner ? getHorseNumber(pickRunner, 0) : '';
-
+  const pickColor = getHorseColor(pickNumber || 1);
+  const top3 = (a.top3 || [])
+    .sort((x, y) => Number(y.probability || 0) - Number(x.probability || 0))
+    .slice(0, 3);
   return `
     <div class="section-title">Pick del Modelo</div>
     <div class="pick-box">
       <div class="horse-name-wrap">
-        <span class="horse-number">${pickNumber || '1'}</span>
+        <span 
+          class="horse-number"
+          style="background:${pickColor.bg}; color:${pickColor.text};"
+        >
+          ${pickNumber || '1'}
+        </span>
         <div>
-          <span style="color:var(--green); font-size:16px; font-weight:800;">${a.pick}</span> ${badge}<br>
-          <span style="font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase;">Confianza ${a.confidence}</span>
+          <span style="color:var(--green); font-size:18px; font-weight:900; line-height:1.1;">
+            ${a.pick || 'Pendiente'}
+          </span>
+          ${badge}
+          <br>
+          <span style="font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase;">
+            Confianza ${a.confidence || 'MEDIA'}
+          </span>
         </div>
       </div>
     </div>
-
     <div class="section-title">Top 3 Probabilidades</div>
-    ${(a.top3 || []).map((h, i) => {
+    ${top3.map((h, i) => {
       const runner = findRunner(h.name);
       const horseNum = runner ? getHorseNumber(runner, i) : getHorseNumber(h, i);
-
+      const horseColor = getHorseColor(horseNum);
       return `
         <div class="rank-row">
           <span class="horse-name-wrap">
-            <span class="horse-number">${horseNum}</span>
-            <span>${h.name}</span>
+            <span 
+              class="horse-number"
+              style="background:${horseColor.bg}; color:${horseColor.text};"
+            >
+              ${horseNum}
+            </span>
+            <span class="horse-name">${h.name}</span>
           </span>
-          <b style="color:#fff;">${h.probability}%</b>
+          <b style="color:var(--green); font-size:13px;">
+            ${h.probability}%
+          </b>
         </div>
       `;
     }).join('')}
-
     <div class="section-title">Estrategia Sugerida</div>
-    <div class="bet">WIN <b>${a.bets?.win || '-'}</b></div>
-    <div class="bet">EXA <b>${a.bets?.exacta || '-'}</b></div>
-    <div class="bet">TRI <b>${a.bets?.trifecta || '-'}</b></div>
+    <div class="bet">WIN <b>${cleanBet(a.bets?.win)}</b></div>
+    <div class="bet">EXACTA <b>${cleanBet(a.bets?.exacta)}</b></div>
+    <div class="bet">TRIFECTA <b>${cleanBet(a.bets?.trifecta)}</b></div>
+    <div class="bet">SUPERFECTA <b>${cleanBet(a.bets?.superfecta || '-')}</b></div>
   `;
 }
-
+function buildTicket() {
+  alert('Ticket inteligente listo para conectar con el análisis completo.');
+}
 loadRaces();
 </script>
-
 </body>
 </html>
