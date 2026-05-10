@@ -1,4 +1,3 @@
-```javascript
 import express from 'express';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { analyzeRace } from '../utils/horseModel.js';
