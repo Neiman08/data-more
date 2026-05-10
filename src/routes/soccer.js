@@ -373,27 +373,93 @@ function buildPlayerPropsFromLineups(lineups) {
       const pos = String(p.pos || '').toUpperCase();
 
       let goalChance = 5;
+      let shotChance = 20;
+      let assistChance = 6;
+      let cardRisk = 10;
 
-      if (['F', 'FW', 'ST', 'CF'].includes(pos)) {
-        goalChance = 28;
-      } else if (['M', 'CM'].includes(pos)) {
-        goalChance = 14;
+      // FORWARDS
+      if (
+        ['F', 'FW', 'ST', 'CF', 'LW', 'RW', 'SS']
+          .includes(pos)
+      ) {
+
+        goalChance = 28 + Math.floor(Math.random() * 10);
+        shotChance = 70 + Math.floor(Math.random() * 15);
+        assistChance = 14 + Math.floor(Math.random() * 10);
+        cardRisk = 12;
+      }
+
+      // MIDFIELDERS
+      else if (
+        ['M', 'CM', 'CDM', 'CAM', 'LM', 'RM', 'AM']
+          .includes(pos)
+      ) {
+
+        goalChance = 10 + Math.floor(Math.random() * 10);
+        shotChance = 40 + Math.floor(Math.random() * 20);
+        assistChance = 22 + Math.floor(Math.random() * 18);
+        cardRisk = 18;
+      }
+
+      // DEFENDERS
+      else if (
+        ['D', 'CB', 'LB', 'RB', 'LWB', 'RWB']
+          .includes(pos)
+      ) {
+
+        goalChance = 3 + Math.floor(Math.random() * 5);
+        shotChance = 10 + Math.floor(Math.random() * 12);
+        assistChance = 5 + Math.floor(Math.random() * 8);
+        cardRisk = 30;
+      }
+
+      // GOALKEEPERS
+      else if (
+        ['G', 'GK']
+          .includes(pos)
+      ) {
+
+        goalChance = 1;
+        shotChance = 1;
+        assistChance = 1;
+        cardRisk = 4;
       }
 
       players.push({
+
         name: p.name,
         player: p.name,
+
         team: team.teamName,
+
         pos,
+        position: pos,
+
         probability: goalChance,
-        goalChance
+
+        goalChance,
+        shotChance,
+        assistChance,
+        cardRisk
+
       });
     }
   }
 
   return players
-    .sort((a, b) => b.goalChance - a.goalChance)
-    .slice(0, 10);
+    .sort((a, b) => {
+
+      const aScore =
+        (a.goalChance * 1.7) +
+        (a.assistChance * 1.1);
+
+      const bScore =
+        (b.goalChance * 1.7) +
+        (b.assistChance * 1.1);
+
+      return bScore - aScore;
+    })
+    .slice(0, 15);
 }
 
 async function getLast5TeamMatches(teamId, date) {
