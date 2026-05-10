@@ -1,115 +1,210 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro | Data More Analytics</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <title>Register | Data More Analytics</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg-body: #030612;
-      --bg-card: #0b1224;
-      --primary-blue: #3b82f6;
-      --accent-green: #22c55e;
-      --text-main: #ffffff;
-      --text-subtle: #94a3b8;
-      --border-dark: #1e293b;
+      --green: #6bff19;
+      --bg: #020509;
+      --card: rgba(12, 18, 28, 0.88);
+      --border: rgba(255,255,255,.10);
+      --muted: #9ca3af;
+      --text: #ffffff;
     }
 
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-body);
-      color: var(--text-main);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
     }
 
-    .register-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-dark);
-      border-radius: 20px;
-      padding: 40px 30px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-      text-align: center;
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(107,255,25,.16), transparent 35%),
+        radial-gradient(circle at 80% 80%, rgba(59,130,246,.14), transparent 35%),
+        linear-gradient(180deg,#030712,#020509);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:24px;
+      font-family:'Inter',sans-serif;
+      color:#fff;
     }
 
-    .logo-area img { width: 60px; margin-bottom: 15px; }
-    h2 { margin: 0 0 10px 0; font-size: 24px; color: #7dd3fc; }
-    p { color: var(--text-subtle); font-size: 14px; margin-bottom: 30px; }
-
-    .form-group { text-align: left; margin-bottom: 20px; }
-    label { display: block; font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-bottom: 8px; text-transform: uppercase; }
-    
-    input {
-      width: 100%;
-      background: #161e2e;
-      border: 1px solid var(--border-dark);
-      padding: 12px;
-      border-radius: 8px;
-      color: white;
-      font-size: 14px;
-      box-sizing: border-box;
-      transition: 0.3s;
+    .register-card{
+      width:100%;
+      max-width:430px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:26px;
+      padding:38px 30px;
+      box-shadow:0 25px 70px rgba(0,0,0,.65);
+      backdrop-filter:blur(14px);
     }
 
-    input:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
-
-    .btn-submit {
-      width: 100%;
-      background: var(--accent-green);
-      color: #000;
-      border: none;
-      padding: 14px;
-      border-radius: 10px;
-      font-weight: 900;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-      margin-top: 10px;
+    .logo-text{
+      font-family:'Anton',sans-serif;
+      text-align:center;
+      font-size:40px;
+      letter-spacing:.5px;
+      margin-bottom:12px;
     }
 
-    .btn-submit:hover { transform: translateY(-2px); filter: brightness(1.1); }
+    .logo-text span{
+      color:var(--green);
+    }
 
-    .footer-links { margin-top: 25px; font-size: 13px; color: var(--text-subtle); }
-    .footer-links a { color: var(--primary-blue); text-decoration: none; font-weight: bold; }
+    h2{
+      text-align:center;
+      font-size:28px;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+
+    p{
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:600;
+      margin-bottom:28px;
+    }
+
+    .form-group{
+      margin-bottom:17px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:8px;
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.6px;
+      color:var(--green);
+    }
+
+    input{
+      width:100%;
+      padding:15px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-size:14px;
+      font-weight:700;
+      outline:none;
+      transition:.25s;
+    }
+
+    input::placeholder{
+      color:rgba(255,255,255,.42);
+    }
+
+    input:focus{
+      border-color:var(--green);
+      box-shadow:0 0 0 3px rgba(107,255,25,.12);
+    }
+
+    .btn-submit{
+      width:100%;
+      border:none;
+      background:var(--green);
+      color:#000;
+      padding:16px;
+      border-radius:14px;
+      font-size:14px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      cursor:pointer;
+      transition:.25s;
+      margin-top:8px;
+    }
+
+    .btn-submit:hover{
+      transform:translateY(-2px);
+      filter:brightness(1.08);
+    }
+
+    .footer-links{
+      margin-top:24px;
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .footer-links a{
+      color:var(--green);
+      text-decoration:none;
+      font-weight:900;
+    }
+
+    @media(max-width:480px){
+
+      .register-card{
+        padding:32px 22px;
+      }
+
+      .logo-text{
+        font-size:34px;
+      }
+
+    }
   </style>
 </head>
+
 <body>
 
   <div class="register-card">
-    <div class="logo-area">
-      <img src="/logo.png" alt="Data More Logo" onerror="this.style.display='none'">
+
+    <div class="logo-text">
+      DATA-<span>MORE</span>
     </div>
-    <h2>Data More Pro</h2>
-    <p>Crea tu cuenta para acceder a los análisis</p>
+
+    <h2>Create Account</h2>
+
+    <p>Create your account to access premium sports analytics</p>
 
     <form action="/api/auth/register" method="POST">
+
       <div class="form-group">
-        <label>Nombre Completo</label>
-        <input type="text" name="nombre" placeholder="Juan Pérez" required>
+        <label>Full Name</label>
+        <input type="text" name="nombre" placeholder="John Smith" required>
       </div>
 
       <div class="form-group">
-        <label>Correo Electrónico</label>
-        <input type="email" name="email" placeholder="tu@correo.com" required>
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="you@email.com" required>
       </div>
 
       <div class="form-group">
-        <label>Contraseña</label>
+        <label>Phone Number</label>
+        <input type="tel" name="telefono" placeholder="+1 224 000 0000" required>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
         <input type="password" name="password" placeholder="••••••••" required>
       </div>
 
-      <button type="submit" class="btn-submit">REGISTRARSE AHORA</button>
+      <button type="submit" class="btn-submit">
+        Create Account
+      </button>
+
     </form>
 
     <div class="footer-links">
-      ¿Ya tienes cuenta? <a href="/login">Inicia Sesión</a>
+      Already have an account?
+      <a href="/login">Sign In</a>
     </div>
+
   </div>
 
 </body>
