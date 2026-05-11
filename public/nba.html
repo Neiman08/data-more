@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <script>
     const user = JSON.parse(localStorage.getItem('user') || 'null');
+
     if (!user || !user.proActivo) {
       window.location.href = '/pago-manual';
     }
@@ -10,338 +11,913 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Data More | NBA Analytics Pro</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  
+
   <link rel="stylesheet" href="styles.css">
 
   <style>
-    /* --- SISTEMA DE DISEÑO UNIFICADO --- */
-    :root {
-      --green: #6bff19;
-      --nba-orange: #f97316;
-      --border: rgba(255, 255, 255, 0.08);
-      --text: #ffffff;
-      --muted: #888d93;
-      --bg-panel: rgba(20, 25, 30, 0.6);
+
+    :root{
+      --green:#6bff19;
+      --nba-orange:#f97316;
+      --border:rgba(255,255,255,.08);
+      --text:#ffffff;
+      --muted:#888d93;
+      --bg-panel:rgba(20,25,30,.6);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: #000;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
     }
 
-    main.page {
-      max-width: 1440px;
-      margin: 0 auto;
-      background: radial-gradient(circle at 30% 30%, #1a120a 0%, #020509 60%);
-      position: relative;
-      padding-bottom: 40px;
-      min-height: 100vh;
+    html,
+    body{
+      width:100%;
+      overflow-x:hidden;
     }
 
-    /* --- TICKER --- */
-    .espn-ticker-container {
-      width: 100%;
-      background: #000;
-      border-bottom: 1px solid var(--border);
-      height: 40px;
-      display: flex;
-      align-items: center;
-      overflow: hidden;
-      position: sticky;
-      top: 0;
-      z-index: 10000;
+    body{
+      background:#000;
+      color:var(--text);
+      font-family:'Inter',sans-serif;
     }
 
-    .ticker-wrapper {
-      display: flex;
-      white-space: nowrap;
-      animation: ticker-scroll 150s linear infinite;
+    main.page{
+      max-width:1440px;
+      margin:0 auto;
+      background:radial-gradient(circle at 30% 30%, #1a120a 0%, #020509 60%);
+      position:relative;
+      padding-bottom:40px;
+      min-height:100vh;
+      overflow-x:hidden;
     }
 
-    .ticker-item {
-      display: flex;
-      align-items: center;
-      padding: 0 30px;
-      border-right: 1px solid var(--border);
-      height: 40px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
+    /* TICKER */
+
+    .espn-ticker-container{
+      width:100%;
+      background:#000;
+      border-bottom:1px solid var(--border);
+      height:40px;
+      display:flex;
+      align-items:center;
+      overflow:hidden;
+      position:sticky;
+      top:0;
+      z-index:10000;
     }
 
-    .ticker-item img { width: 18px; height: 18px; object-fit: contain; margin: 0 6px; }
-    .ticker-score { color: #fff; margin: 0 2px; font-weight: 800; }
-    .ticker-status { margin-left: 10px; color: var(--nba-orange); font-size: 9px; font-weight: bold; }
-
-    @keyframes ticker-scroll {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-100%); }
+    .ticker-wrapper{
+      display:flex;
+      white-space:nowrap;
+      animation:ticker-scroll 150s linear infinite;
     }
 
-    /* --- NAVEGACIÓN --- */
-    header {
-      height: 70px;
-      padding: 0 50px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(5px);
-      position: sticky;
-      top: 40px;
-      z-index: 1000;
+    .ticker-item{
+      display:flex;
+      align-items:center;
+      padding:0 30px;
+      border-right:1px solid var(--border);
+      height:40px;
+      font-size:11px;
+      font-weight:600;
+      color:var(--muted);
     }
 
-    .logo { font-weight: 900; font-size: 22px; letter-spacing: -1px; font-family: 'Anton', sans-serif; text-transform: uppercase; }
-    .logo span { color: var(--nba-orange); }
-
-    nav { display: flex; gap: 20px; }
-    nav a { color: #fff; text-decoration: none; font-size: 11px; font-weight: 700; opacity: 0.7; text-transform: uppercase; }
-    nav a.active { opacity: 1; border-bottom: 2px solid var(--nba-orange); padding-bottom: 25px; margin-bottom: -25px; }
-
-    /* --- CONTENEDOR --- */
-    .container { padding: 30px 50px; }
-
-    h1.page-title {
-      font-family: 'Anton';
-      font-size: 32px;
-      line-height: 1;
-      text-transform: uppercase;
-      margin-bottom: 25px;
-      letter-spacing: -1px;
-    }
-    h1.page-title span { color: var(--nba-orange); }
-
-    .nav-sports { display: flex; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-    .nav-btn {
-      padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border);
-      color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer;
-      background: rgba(255,255,255,0.03); transition: all 0.2s; text-transform: uppercase;
-    }
-    .nav-btn.active { background: var(--nba-orange); color: #000; border-color: var(--nba-orange); font-weight: 800; }
-
-    /* --- CONTROLES --- */
-    .topbar { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; }
-    .topbar input[type="date"] {
-      background: #111; border: 1px solid var(--border); padding: 12px; border-radius: 8px;
-      color: #fff; font-family: 'Inter', sans-serif; font-weight: 600;
-    }
-    .btn-action {
-      background: var(--nba-orange); color: #000; padding: 12px 24px; border-radius: 8px;
-      font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; font-size: 13px;
-    }
-    .btn-sec { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; }
-
-    /* --- GRID DE 4 COLUMNAS --- */
-    .games-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
-    }
-    @media (max-width: 1300px) { .games-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 1000px) { .games-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 650px) { .games-grid { grid-template-columns: 1fr; } }
-
-    .card {
-      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 16px;
-      padding: 20px; backdrop-filter: blur(10px); display: flex; flex-direction: column;
+    .ticker-item img{
+      width:18px;
+      height:18px;
+      object-fit:contain;
+      margin:0 6px;
     }
 
-    /* --- ELEMENTOS TARJETA --- */
-    .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .team-box { text-align: center; flex: 1; }
-    .team-logo { width: 45px; height: 45px; object-fit: contain; margin-bottom: 8px; }
-    .team-name { display: block; font-size: 11px; font-weight: 800; color: #fff; line-height: 1.2; text-transform: uppercase;}
-
-    .score-center { flex: 1; text-align: center; }
-    .score-now { font-size: 26px; font-weight: 900; color: #fff; font-family: 'Anton', sans-serif; letter-spacing: 1px;}
-    .game-time { font-size: 10px; color: var(--muted); font-weight: 700; margin-top: 4px; }
-
-    .btn-analyze-game {
-      width: 100%; background: var(--nba-orange); color: #000; border: none; border-radius: 8px;
-      padding: 12px; font-size: 12px; font-weight: 800; cursor: pointer; margin-top: 15px;
-      text-transform: uppercase;
+    .ticker-score{
+      color:#fff;
+      margin:0 2px;
+      font-weight:800;
     }
 
-    /* --- RESULTADOS --- */
-    .pick-res { 
-      margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); 
-      border-radius: 10px; border-left: 4px solid var(--nba-orange); display: none;
+    .ticker-status{
+      margin-left:10px;
+      color:var(--nba-orange);
+      font-size:9px;
+      font-weight:bold;
     }
-    .res-header { font-family: 'Anton'; color: var(--nba-orange); font-size: 16px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;}
-    .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 11px; }
-    .stat-row span { color: var(--muted); }
-    .stat-row b { color: #fff; }
 
-    .props-section { margin-top: 12px; }
-    .props-title { font-size: 10px; font-weight: 900; color: #facc15; text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .prop-item { display: flex; justify-content: space-between; font-size: 10px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text); }
+    @keyframes ticker-scroll{
+      0%{transform:translateX(0%)}
+      100%{transform:translateX(-100%)}
+    }
 
-    .bet-btn { text-align: center; font-weight: 900; margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 11px; text-transform: uppercase; }
-    .bet-no { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
-    .bet-strong { background: var(--green); color: #000; }
+    /* HEADER */
 
-    .loading { animation: pulse 1s infinite; color: var(--nba-orange); font-size: 12px; text-align: center; padding: 10px; }
-    @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    header{
+      height:70px;
+      padding:0 50px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid var(--border);
+      background:rgba(0,0,0,.5);
+      backdrop-filter:blur(5px);
+      position:sticky;
+      top:40px;
+      z-index:1000;
+    }
+
+    .logo{
+      font-weight:900;
+      font-size:22px;
+      letter-spacing:-1px;
+      font-family:'Anton',sans-serif;
+      text-transform:uppercase;
+    }
+
+    .logo span{
+      color:var(--nba-orange);
+    }
+
+    nav{
+      display:flex;
+      gap:20px;
+    }
+
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      font-size:11px;
+      font-weight:700;
+      opacity:.7;
+      text-transform:uppercase;
+    }
+
+    nav a.active{
+      opacity:1;
+      border-bottom:2px solid var(--nba-orange);
+      padding-bottom:25px;
+      margin-bottom:-25px;
+    }
+
+    /* CONTAINER */
+
+    .container{
+      padding:30px 50px;
+    }
+
+    h1.page-title{
+      font-family:'Anton';
+      font-size:32px;
+      line-height:1;
+      text-transform:uppercase;
+      margin-bottom:25px;
+      letter-spacing:-1px;
+    }
+
+    h1.page-title span{
+      color:var(--nba-orange);
+    }
+
+    /* SPORTS NAV */
+
+    .nav-sports{
+      display:flex;
+      gap:12px;
+      margin-bottom:25px;
+      border-bottom:1px solid var(--border);
+      padding-bottom:15px;
+      overflow-x:auto;
+    }
+
+    .nav-sports::-webkit-scrollbar{
+      display:none;
+    }
+
+    .nav-btn{
+      padding:10px 20px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-weight:700;
+      font-size:12px;
+      cursor:pointer;
+      background:rgba(255,255,255,.03);
+      transition:all .2s;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .nav-btn.active{
+      background:var(--nba-orange);
+      color:#000;
+      border-color:var(--nba-orange);
+      font-weight:800;
+    }
+
+    /* TOPBAR */
+
+    .topbar{
+      display:flex;
+      gap:15px;
+      margin-bottom:25px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .topbar input[type="date"]{
+      background:#111;
+      border:1px solid var(--border);
+      padding:12px;
+      border-radius:8px;
+      color:#fff;
+      font-family:'Inter',sans-serif;
+      font-weight:600;
+    }
+
+    .btn-action{
+      background:var(--nba-orange);
+      color:#000;
+      padding:12px 24px;
+      border-radius:8px;
+      font-weight:800;
+      border:none;
+      cursor:pointer;
+      text-transform:uppercase;
+      font-size:13px;
+    }
+
+    .btn-sec{
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.2);
+      color:#fff;
+    }
+
+    /* GRID */
+
+    .games-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:20px;
+    }
+
+    @media(max-width:1300px){
+      .games-grid{
+        grid-template-columns:repeat(3,1fr);
+      }
+    }
+
+    @media(max-width:1000px){
+      .games-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media(max-width:768px){
+      .games-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    /* CARD */
+
+    .card{
+      background:var(--bg-panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:20px;
+      backdrop-filter:blur(10px);
+      display:flex;
+      flex-direction:column;
+      width:100%;
+    }
+
+    .match-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:15px;
+      gap:8px;
+    }
+
+    .team-box{
+      text-align:center;
+      flex:1;
+      min-width:0;
+    }
+
+    .team-logo{
+      width:45px;
+      height:45px;
+      object-fit:contain;
+      margin-bottom:8px;
+    }
+
+    .team-name{
+      display:block;
+      font-size:11px;
+      font-weight:800;
+      color:#fff;
+      line-height:1.2;
+      text-transform:uppercase;
+      word-break:break-word;
+    }
+
+    .score-center{
+      flex:0 0 auto;
+      text-align:center;
+      padding:0 6px;
+    }
+
+    .score-now{
+      font-size:26px;
+      font-weight:900;
+      color:#fff;
+      font-family:'Anton',sans-serif;
+      letter-spacing:1px;
+      line-height:1;
+    }
+
+    .game-time{
+      font-size:10px;
+      color:var(--muted);
+      font-weight:700;
+      margin-top:4px;
+    }
+
+    .btn-analyze-game{
+      width:100%;
+      background:var(--nba-orange);
+      color:#000;
+      border:none;
+      border-radius:8px;
+      padding:12px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      margin-top:15px;
+      text-transform:uppercase;
+    }
+
+    /* RESULTS */
+
+    .pick-res{
+      margin-top:15px;
+      padding:15px;
+      background:rgba(0,0,0,.3);
+      border-radius:10px;
+      border-left:4px solid var(--nba-orange);
+      display:none;
+    }
+
+    .res-header{
+      font-family:'Anton';
+      color:var(--nba-orange);
+      font-size:16px;
+      margin-bottom:10px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      line-height:1.1;
+    }
+
+    .stat-row{
+      display:flex;
+      justify-content:space-between;
+      padding:6px 0;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      font-size:11px;
+      gap:10px;
+    }
+
+    .stat-row span{
+      color:var(--muted);
+    }
+
+    .stat-row b{
+      color:#fff;
+    }
+
+    .props-section{
+      margin-top:12px;
+    }
+
+    .props-title{
+      font-size:10px;
+      font-weight:900;
+      color:#facc15;
+      text-transform:uppercase;
+      margin-bottom:8px;
+      display:block;
+    }
+
+    .prop-item{
+      display:flex;
+      justify-content:space-between;
+      font-size:10px;
+      padding:4px 0;
+      border-bottom:1px solid rgba(255,255,255,.03);
+      color:var(--text);
+      gap:10px;
+    }
+
+    .bet-btn{
+      text-align:center;
+      font-weight:900;
+      margin-top:15px;
+      padding:10px;
+      border-radius:8px;
+      font-size:11px;
+      text-transform:uppercase;
+    }
+
+    .bet-no{
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      border:1px solid var(--border);
+    }
+
+    .bet-strong{
+      background:var(--green);
+      color:#000;
+    }
+
+    .loading{
+      animation:pulse 1s infinite;
+      color:var(--nba-orange);
+      font-size:12px;
+      text-align:center;
+      padding:10px;
+    }
+
+    @keyframes pulse{
+      0%,100%{opacity:.6}
+      50%{opacity:1}
+    }
+
+    /* MOBILE */
+
+    @media(max-width:768px){
+
+      header{
+        height:auto;
+        min-height:72px;
+        padding:14px 16px;
+        flex-wrap:wrap;
+        gap:12px;
+      }
+
+      .logo{
+        font-size:20px;
+      }
+
+      nav{
+        width:100%;
+        overflow-x:auto;
+        gap:14px;
+        padding-bottom:8px;
+      }
+
+      nav::-webkit-scrollbar{
+        display:none;
+      }
+
+      nav a{
+        white-space:nowrap;
+        flex:0 0 auto;
+        font-size:10px;
+      }
+
+      nav a.active{
+        padding-bottom:8px;
+        margin-bottom:0;
+      }
+
+      .container{
+        padding:18px 14px;
+      }
+
+      h1.page-title{
+        font-size:36px;
+        line-height:.95;
+      }
+
+      .topbar{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .topbar input[type="date"]{
+        width:100%;
+      }
+
+      .btn-action{
+        width:100%;
+        padding:14px;
+        font-size:12px;
+      }
+
+      .card{
+        padding:16px;
+      }
+
+      .team-logo{
+        width:38px;
+        height:38px;
+      }
+
+      .team-name{
+        font-size:10px;
+      }
+
+      .score-now{
+        font-size:22px;
+      }
+
+      .game-time{
+        font-size:9px;
+      }
+
+      .btn-analyze-game{
+        padding:13px;
+        font-size:11px;
+      }
+
+      .pick-res{
+        padding:12px;
+      }
+
+      .res-header{
+        font-size:14px;
+      }
+
+      .stat-row{
+        font-size:10px;
+      }
+
+      .prop-item{
+        font-size:9px;
+      }
+
+      .bet-btn{
+        font-size:10px;
+      }
+
+      .ticker-item{
+        padding:0 18px;
+        font-size:10px;
+      }
+
+      .ticker-item img{
+        width:14px;
+        height:14px;
+      }
+
+      .ticker-status{
+        font-size:8px;
+      }
+
+    }
+
   </style>
 </head>
 
 <body>
 
 <main class="page">
+
   <div class="espn-ticker-container">
     <div class="ticker-wrapper" id="tickerWrapper">
-      <span class="ticker-item">Cargando marcadores en vivo...</span>
+      <span class="ticker-item">Loading live NBA scores...</span>
     </div>
   </div>
 
   <header>
-    <div class="logo">DATA-<span>MORE</span></div>
-    <nav>
-      <a href="/">Inicio</a>
-      <a class="active" href="/nba">Picks</a>
-      <a href="/precios">Precios</a>
-      <a href="/estadisticas">Estadísticas</a>
-    </nav>
-    <div class="header-actions">
-      <span style="font-size:12px; color:#fff; font-weight:700;">👤 NBA PRO</span>
+
+    <div class="logo">
+      DATA-<span>MORE</span>
     </div>
+
+    <nav>
+      <a href="/">Home</a>
+      <a class="active" href="/nba">Picks</a>
+      <a href="/precios">Pricing</a>
+      <a href="/estadisticas">Stats</a>
+    </nav>
+
+    <div class="header-actions">
+      <span style="font-size:12px;color:#fff;font-weight:700;">
+        👤 NBA PRO
+      </span>
+    </div>
+
   </header>
 
   <div class="container">
-    <h1 class="page-title">NBA <span>ANALYTICS PRO</span></h1>
+
+    <h1 class="page-title">
+      NBA <span>ANALYTICS PRO</span>
+    </h1>
 
     <div class="nav-sports">
       <a href="/"><button type="button" class="nav-btn">⚾ MLB</button></a>
-      <a href="/soccer"><button type="button" class="nav-btn">⚽ Fútbol</button></a>
+      <a href="/soccer"><button type="button" class="nav-btn">⚽ Soccer</button></a>
       <a href="/nba"><button type="button" class="nav-btn active">🏀 NBA</button></a>
-      <a href="/horse.html"><button type="button" class="nav-btn">🏇 Hipismo</button></a>
+      <a href="/horse.html"><button type="button" class="nav-btn">🏇 Horse Racing</button></a>
     </div>
 
     <div class="topbar">
+
       <input type="date" id="dateSelect" onchange="loadGames()">
-      <button class="btn-action" onclick="loadGames()">Cargar Pizarra</button>
-      <button class="btn-action btn-sec" id="analyzeAllBtn" onclick="analyzeAll()">⚡ Analizar Todos</button>
-      <button class="btn-action btn-sec" onclick="alert('Ticket NBA próximamente.')">🎟 Ticket</button>
+
+      <button class="btn-action" onclick="loadGames()">
+        Load Board
+      </button>
+
+      <button class="btn-action btn-sec" id="analyzeAllBtn" onclick="analyzeAll()">
+        ⚡ Analyze All
+      </button>
+
+      <button class="btn-action btn-sec" onclick="alert('NBA ticket coming soon.')">
+        🎟 Ticket
+      </button>
+
     </div>
 
     <div id="gamesList"></div>
+
   </div>
+
 </main>
 
 <script>
-// --- LÓGICA FUNCIONAL PRESERVADA ---
-function escapeHtml(v) { return String(v ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
-function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function initTicker() {
+function escapeHtml(v){
+  return String(v ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function wait(ms){
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function initTicker(){
+
   const ticker = document.getElementById('tickerWrapper');
-  async function fetchScores() {
-    try {
+
+  async function fetchScores(){
+
+    try{
+
       const nbaRes = await fetch(`/api/nba-games?t=${Date.now()}`).catch(() => null);
-      if (nbaRes) {
+
+      if(nbaRes){
+
         const data = await nbaRes.json();
-        if (data.ok) {
-            const html = data.games.map(g => `
-                <div class="ticker-item">
-                    <img src="${g.awayLogo || '/logo.png'}">${g.awayTeam} 
-                    <span class="ticker-score">${g.awayScore ?? 0}</span> @ 
-                    <span class="ticker-score">${g.homeScore ?? 0}</span> ${g.homeTeam}
-                    <img src="${g.homeLogo || '/logo.png'}">
-                    <span class="ticker-status">${g.status || 'LIVE'}</span>
-                </div>`).join('');
-            ticker.innerHTML = html + html;
+
+        if(data.ok){
+
+          const html = data.games.map(g => `
+            <div class="ticker-item">
+
+              <img src="${g.awayLogo || '/logo.png'}">
+
+              ${g.awayTeam}
+
+              <span class="ticker-score">
+                ${g.awayScore ?? 0}
+              </span>
+
+              @
+
+              <span class="ticker-score">
+                ${g.homeScore ?? 0}
+              </span>
+
+              ${g.homeTeam}
+
+              <img src="${g.homeLogo || '/logo.png'}">
+
+              <span class="ticker-status">
+                ${g.status || 'LIVE'}
+              </span>
+
+            </div>
+          `).join('');
+
+          ticker.innerHTML = html + html;
         }
       }
-    } catch (err) {}
+
+    }catch(err){}
+
   }
+
   fetchScores();
+
   setInterval(fetchScores, 60000);
 }
 
-async function loadGames() {
-  const date = document.getElementById('dateSelect').value;
-  const container = document.getElementById('gamesList');
-  container.innerHTML = '<div class="loading">Cargando cartelera NBA...</div>';
+async function loadGames(){
 
-  try {
+  const date = document.getElementById('dateSelect').value;
+
+  const container = document.getElementById('gamesList');
+
+  container.innerHTML = `
+    <div class="loading">
+      Loading NBA board...
+    </div>
+  `;
+
+  try{
+
     const res = await fetch(`/api/nba-games?date=${encodeURIComponent(date)}&t=${Date.now()}`);
+
     const data = await res.json();
-    if (!data.ok || !data.games.length) {
-      container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">No hay partidos programados.</div>';
+
+    if(!data.ok || !data.games.length){
+
+      container.innerHTML = `
+        <div style="text-align:center;padding:20px;color:var(--muted);">
+          No games scheduled.
+        </div>
+      `;
+
       return;
     }
-    let gridHtml = '<div class="games-grid">';
+
+    let gridHtml = `<div class="games-grid">`;
+
     data.games.forEach(game => {
+
       gridHtml += `
         <div class="card">
+
           <div class="match-header">
+
             <div class="team-box">
               <img src="${game.homeLogo || '/logo.png'}" class="team-logo">
               <span class="team-name">${game.homeTeam}</span>
             </div>
+
             <div class="score-center">
-              <div class="score-now">${game.homeScore ?? 0} - ${game.awayScore ?? 0}</div>
-              <div class="game-time">${game.time}</div>
+
+              <div class="score-now">
+                ${game.homeScore ?? 0} - ${game.awayScore ?? 0}
+              </div>
+
+              <div class="game-time">
+                ${game.time}
+              </div>
+
             </div>
+
             <div class="team-box">
               <img src="${game.awayLogo || '/logo.png'}" class="team-logo">
               <span class="team-name">${game.awayTeam}</span>
             </div>
+
           </div>
-          <button class="btn-analyze-game btn-single" onclick="analyze(this, '${game.gameId}')">ANALIZAR CON IA</button>
+
+          <button
+            class="btn-analyze-game btn-single"
+            onclick="analyze(this, '${game.gameId}')">
+
+            ANALYZE WITH AI
+
+          </button>
+
           <div id="res-${game.gameId}" class="pick-res"></div>
-        </div>`;
+
+        </div>
+      `;
     });
-    container.innerHTML = gridHtml + '</div>';
-  } catch (err) { container.innerHTML = '<p>Error al cargar.</p>'; }
-}
 
-async function analyze(btn, gameId) {
-  const resDiv = document.getElementById(`res-${gameId}`);
-  resDiv.style.display = 'block';
-  resDiv.innerHTML = '<div class="loading">Consultando IA...</div>';
-  btn.disabled = true;
+    container.innerHTML = gridHtml + `</div>`;
 
-  try {
-    const date = document.getElementById('dateSelect').value;
-    const res = await fetch(`/api/nba-analyze/${gameId}?date=${encodeURIComponent(date)}&t=${Date.now()}`);
-    const data = await res.json();
-    const { analysis } = data;
-    
-    btn.innerText = 'RE-ANALIZAR'; 
-    btn.disabled = false;
-    
-    const prob = parseFloat(analysis.probability) || 0;
-    const isStrong = analysis.confidence === 'ALTA';
+  }catch(err){
 
-    resDiv.innerHTML = `
-      <div class="res-header">PICK: ${escapeHtml(analysis.pick)}</div>
-      <div class="stat-row"><span>Probabilidad:</span><b style="color:var(--nba-orange)">${prob}%</b></div>
-      <div class="stat-row"><span>Confianza:</span><b>${analysis.confidence}</b></div>
-      <div class="props-section">
-        <span class="props-title">Player Props (IA)</span>
-        ${(analysis.playerProps || []).map(p => `<div class="prop-item"><span>${p.name}</span><b>${p.chance}%</b></div>`).join('')}
-      </div>
-      <div class="bet-btn ${isStrong ? 'bet-strong' : 'bet-no'}">${isStrong ? '💰 SI (RECOMENDADO)' : '🚫 NO RECOMENDADO'}</div>`;
-  } catch (err) { 
-    resDiv.innerHTML = '<div style="color:red; font-size:10px;">Error de análisis</div>';
-    btn.disabled = false; 
+    container.innerHTML = `
+      <p>Error loading games.</p>
+    `;
   }
 }
 
-async function analyzeAll() {
-  const buttons = Array.from(document.querySelectorAll('.btn-single'));
-  for (let btn of buttons) { btn.click(); await wait(1200); }
+async function analyze(btn, gameId){
+
+  const resDiv = document.getElementById(`res-${gameId}`);
+
+  resDiv.style.display = 'block';
+
+  resDiv.innerHTML = `
+    <div class="loading">
+      Consulting AI...
+    </div>
+  `;
+
+  btn.disabled = true;
+
+  try{
+
+    const date = document.getElementById('dateSelect').value;
+
+    const res = await fetch(`/api/nba-analyze/${gameId}?date=${encodeURIComponent(date)}&t=${Date.now()}`);
+
+    const data = await res.json();
+
+    const { analysis } = data;
+
+    btn.innerText = 'RE-ANALYZE';
+
+    btn.disabled = false;
+
+    const prob = parseFloat(analysis.probability) || 0;
+
+    const isStrong = analysis.confidence === 'ALTA';
+
+    resDiv.innerHTML = `
+
+      <div class="res-header">
+        PICK: ${escapeHtml(analysis.pick)}
+      </div>
+
+      <div class="stat-row">
+        <span>Probability:</span>
+        <b style="color:var(--nba-orange)">
+          ${prob}%
+        </b>
+      </div>
+
+      <div class="stat-row">
+        <span>Confidence:</span>
+        <b>${analysis.confidence}</b>
+      </div>
+
+      <div class="props-section">
+
+        <span class="props-title">
+          Player Props (AI)
+        </span>
+
+        ${(analysis.playerProps || []).map(p => `
+          <div class="prop-item">
+
+            <span>${p.name}</span>
+
+            <b>${p.chance}%</b>
+
+          </div>
+        `).join('')}
+
+      </div>
+
+      <div class="bet-btn ${isStrong ? 'bet-strong' : 'bet-no'}">
+
+        ${isStrong ? '💰 YES (RECOMMENDED)' : '🚫 NOT RECOMMENDED'}
+
+      </div>
+
+    `;
+
+  }catch(err){
+
+    resDiv.innerHTML = `
+      <div style="color:red;font-size:10px;">
+        Analysis error
+      </div>
+    `;
+
+    btn.disabled = false;
+  }
 }
 
-document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
+async function analyzeAll(){
+
+  const buttons = Array.from(document.querySelectorAll('.btn-single'));
+
+  for(let btn of buttons){
+
+    btn.click();
+
+    await wait(1200);
+  }
+}
+
+document.getElementById('dateSelect').value =
+  new Date().toISOString().split('T')[0];
+
 loadGames();
+
 initTicker();
+
 </script>
+
 </body>
 </html>
