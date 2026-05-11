@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <script>
+    // Immediate auth check
     const user = JSON.parse(localStorage.getItem('user') || 'null');
     if (!user) window.location.href = 'login.html';
   </script>
@@ -12,8 +13,7 @@
   <title>Data More | UFC Prediction Engine</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-
+  
   <style>
     :root{
       --green:#6bff19;
@@ -279,7 +279,6 @@
       text-transform:uppercase;
     }
 
-    /* --- ESTILOS DE FOTOS Y SILUETAS --- */
     .fighters-wrap{
       display:flex;
       align-items:center;
@@ -490,7 +489,7 @@
     @media(max-width:768px){
       header{padding:14px 16px;height:auto;min-height:68px;flex-wrap:wrap;top:40px;}
       .container{padding:24px}
-      nav{width:100%;overflow-x:auto;}
+      nav{width:100%;overflow-x:auto;padding-bottom:10px;}
       h1.page-title{font-size:42px;}
       .nav-btn{font-size:12px;padding:10px 18px;}
       .fighter-photo{width:120px;height:160px;}
@@ -556,7 +555,7 @@
       </div>
     </div>
 
-    <div id="status" style="margin-bottom:15px;font-size:12px;color:var(--muted);">
+    <div id="status" style="margin-bottom:15px;font-size:12px;color:var(--muted);background:rgba(255,255,255,0.05);padding:10px;border-radius:5px;">
       System ready. Load UFC board.
     </div>
 
@@ -587,43 +586,50 @@ document.getElementById('dateBox').textContent = getChicagoDate();
 
 async function initTicker(){
   const ticker = document.getElementById('tickerWrapper');
-  ticker.innerHTML = `
-    <div class="ticker-item"><span class="sport-tag">UFC</span> Data More UFC Analytics Active</div>
-    <div class="ticker-item"><span class="sport-tag">AI</span> Fight simulations ready</div>
-    <div class="ticker-item"><span class="sport-tag">EDGE</span> Best plays loaded from model</div>
-  `;
-  ticker.innerHTML += ticker.innerHTML;
+  const items = [
+    '<span class="sport-tag">UFC</span> Data More UFC Analytics Active',
+    '<span class="sport-tag">AI</span> Fight simulations ready',
+    '<span class="sport-tag">EDGE</span> Best plays loaded from model'
+  ];
+  ticker.innerHTML = items.map(item => `<div class="ticker-item">${item}</div>`).join('');
+  ticker.innerHTML += ticker.innerHTML; // Double for seamless loop
 }
 
 async function loadFights(){
   fightsGrid.innerHTML = '<div class="loading">Loading UFC board...</div>';
   bestPlaysGrid.innerHTML = '';
   smartParlayGrid.innerHTML = '';
+  statusBox.textContent = 'Fetching data...';
 
   try{
     const res = await fetch('/api/ufc/fights');
     const data = await res.json();
 
+    // ENHANCED ERROR HANDLING
     if(!data.ok){
-      statusBox.textContent = 'Unable to load UFC fights.';
+      statusBox.style.color = 'var(--red)';
+      statusBox.textContent = `Error: ${data.error || 'Unable to load UFC fights from server.'}`;
+      fightsGrid.innerHTML = '';
       return;
     }
 
+    statusBox.style.color = 'var(--green)';
     renderBestPlays(data.bestPlays || []);
     renderSmartParlay(data.smartParlay || []);
     renderFights(data.fights || []);
 
-    statusBox.textContent = `${data.count || data.fights.length} fights available.`;
+    statusBox.textContent = `${data.count || data.fights.length} fights available. Mode: ${data.mode || 'Production'}`;
 
   }catch(error){
-    console.error(error);
-    statusBox.textContent = 'Error loading UFC board.';
+    console.error('Fetch Error:', error);
+    statusBox.style.color = 'var(--red)';
+    statusBox.textContent = `Critical Error: Could not connect to API. (${error.message})`;
     fightsGrid.innerHTML = '';
   }
 }
 
 function renderBestPlays(bestPlays){
-  if(!bestPlays.length) return;
+  if(!bestPlays || !bestPlays.length) return;
   bestPlaysGrid.innerHTML = `
     <div class="card wide-card" id="bestPlays">
       <div class="section-header">
@@ -643,7 +649,7 @@ function renderBestPlays(bestPlays){
 }
 
 function renderSmartParlay(parlay){
-  if(!parlay.length) return;
+  if(!parlay || !parlay.length) return;
   smartParlayGrid.innerHTML = `
     <div class="card wide-card" style="border-color:var(--blue);">
       <div class="section-header">
@@ -664,15 +670,18 @@ function renderSmartParlay(parlay){
 
 function renderFights(fights){
   fightsGrid.innerHTML = '';
+  if(!fights.length) {
+    fightsGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px;">No upcoming fights found for this date.</div>';
+    return;
+  }
 
   fights.forEach(fight => {
     const card = document.createElement('div');
     card.className = 'card';
 
     card.innerHTML = `
-      <div class="fight-status">● ${fight.cardPosition}</div>
+      <div class="fight-status">● ${fight.cardPosition || 'Main Card'}</div>
 
-      <!-- SECCIÓN DINÁMICA DE FOTOS / SILUETAS / VS LIMPITO -->
       ${fight.fighterAImage || fight.fighterBImage ? `
         <div class="fighters-wrap">
           ${fight.fighterAImage ? `<img src="${fight.fighterAImage}" class="fighter-photo">` : `<div class="fighter-silhouette">${fight.fighterA.name}</div>`}
@@ -690,22 +699,22 @@ function renderFights(fights){
       <div class="fighters-info">
         <div class="fighter">
           <div class="fighter-name">${fight.fighterA.name}</div>
-          <div class="fighter-record">${fight.fighterA.record}</div>
+          <div class="fighter-record">${fight.fighterA.record || '0-0-0'}</div>
         </div>
         <div></div>
         <div class="fighter">
           <div class="fighter-name">${fight.fighterB.name}</div>
-          <div class="fighter-record">${fight.fighterB.record}</div>
+          <div class="fighter-record">${fight.fighterB.record || '0-0-0'}</div>
         </div>
       </div>
 
       <div class="prediction-box">
         <div class="section-header">
           <span>🔥 Model Pick</span>
-          <span class="sport-tag">${fight.prediction.confidence}</span>
+          <span class="sport-tag">${fight.prediction?.confidence || 'MED'}</span>
         </div>
-        <span class="pick-val">${fight.prediction.winner}</span>
-        <div class="data-mono">Win Probability: ${fight.prediction.probability}%</div>
+        <span class="pick-val">${fight.prediction?.winner || 'TBD'}</span>
+        <div class="data-mono">Win Probability: ${fight.prediction?.probability || 0}%</div>
       </div>
 
       <div class="section">
@@ -713,22 +722,22 @@ function renderFights(fights){
         <div class="stats-grid">
           <div class="stat-box">
             <div class="stat-title">Method</div>
-            <div class="stat-value">${fight.prediction.method}</div>
+            <div class="stat-value">${fight.prediction?.method || 'N/A'}</div>
           </div>
           <div class="stat-box">
             <div class="stat-title">Round</div>
-            <div class="stat-value">${fight.prediction.round}</div>
+            <div class="stat-value">${fight.prediction?.round || 'N/A'}</div>
           </div>
-          <div class="stat-box"><div class="stat-title">KO %</div><div class="stat-value">${fight.prediction.koProbability}%</div></div>
-          <div class="stat-box"><div class="stat-title">SUB %</div><div class="stat-value">${fight.prediction.submissionProbability}%</div></div>
-          <div class="stat-box"><div class="stat-title">DEC %</div><div class="stat-value">${fight.prediction.decisionProbability}%</div></div>
-          <div class="stat-box"><div class="stat-title">Best Bet</div><div class="stat-value">${fight.prediction.bestBet}</div></div>
+          <div class="stat-box"><div class="stat-title">KO %</div><div class="stat-value">${fight.prediction?.koProbability || 0}%</div></div>
+          <div class="stat-box"><div class="stat-title">SUB %</div><div class="stat-value">${fight.prediction?.submissionProbability || 0}%</div></div>
+          <div class="stat-box"><div class="stat-title">DEC %</div><div class="stat-value">${fight.prediction?.decisionProbability || 0}%</div></div>
+          <div class="stat-box"><div class="stat-title">Best Bet</div><div class="stat-value">${fight.prediction?.bestBet || 'N/A'}</div></div>
         </div>
       </div>
 
       <div class="analysis">
         <div class="analysis-title">AI Fight Analysis</div>
-        <p>${fight.analysis}</p>
+        <p>${fight.analysis || 'Analysis pending simulation...'}</p>
       </div>
 
       <button class="analyze-btn" onclick="runSimulation(${fight.id}, this)">
@@ -744,13 +753,16 @@ function renderFights(fights){
 
 async function runSimulation(id, button){
   try{
+    const originalText = button.innerHTML;
     button.innerHTML = 'Running 10,000 simulations...';
     button.disabled = true;
+    
     const res = await fetch(`/api/ufc/simulate/${id}`);
     const sim = await res.json();
+    
     const box = document.getElementById(`simulation-${id}`);
     box.innerHTML = `
-      <div class="analysis" style="border-color:var(--green);">
+      <div class="analysis" style="border-color:var(--green); animation: pulse 0.5s ease-out;">
         <div class="analysis-title">🧠 Simulation Results</div>
         <div class="stats-grid">
           <div class="stat-box"><div class="stat-title">Projected</div><div class="stat-value">${sim.projectedWinner}</div></div>
@@ -773,14 +785,20 @@ async function runSimulation(id, button){
 async function runAllSimulations(){
   const buttons = document.querySelectorAll('.analyze-btn');
   for(const btn of buttons){
-    btn.click();
-    await new Promise(r => setTimeout(r,700));
+    if(!btn.disabled) {
+      btn.click();
+      await new Promise(r => setTimeout(r, 700));
+    }
   }
 }
 
 function scrollToBestPlays(){
   const el = document.getElementById('bestPlays');
-  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  if(el) {
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+  } else {
+    alert("Best Plays haven't loaded yet. Try clicking 'Load Board' first.");
+  }
 }
 
 function renderHeaderActions(){
@@ -791,7 +809,7 @@ function renderHeaderActions(){
   }else{
     const planTag = user.proActivo ? '<span style="color:var(--green);">[PRO]</span>' : '<span style="color:#facc15;">[FREE]</span>';
     container.innerHTML = `
-      <span style="font-size:12px;color:#fff;">👤 ${user.nombre || user.email.split('@')[0]} ${planTag}</span>
+      <span style="font-size:12px;color:#fff;font-weight:700;">👤 ${user.nombre || 'User'} ${planTag}</span>
       <button class="btn-logout" onclick="logout()">LOG OUT</button>
     `;
   }
@@ -802,9 +820,12 @@ function logout(){
   window.location.href = 'index.html';
 }
 
-initTicker();
-renderHeaderActions();
-loadFights();
+// Entry point
+window.onload = () => {
+  initTicker();
+  renderHeaderActions();
+  loadFights();
+};
 </script>
 
 </body>

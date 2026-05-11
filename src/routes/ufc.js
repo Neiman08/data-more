@@ -24,7 +24,10 @@ console.log('ODDS KEY UFC:', process.env.ODDS_API_KEY ? 'LOADED' : 'MISSING');
    🥊 DATA MORE UFC ANALYTICS PRO
 ========================================================= */
 
-const ODDS_API_KEY = process.env.ODDS_API_KEY;
+function getOddsApiKey() {
+  return process.env.ODDS_API_KEY;
+}
+
 const ODDS_REGION = process.env.ODDS_REGION || 'us';
 const ODDS_FORMAT = process.env.ODDS_FORMAT || 'american';
 
@@ -68,6 +71,8 @@ function generateStats(seedString = '') {
 
 router.get('/fights', async (req, res) => {
   try {
+    const ODDS_API_KEY = getOddsApiKey();
+
     if (!ODDS_API_KEY) {
       return res.status(500).json({
         ok: false,
