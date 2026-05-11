@@ -3,143 +3,265 @@
 <head>
   <script>
     const user = JSON.parse(localStorage.getItem('user') || 'null');
-
-    if (!user) {
-      window.location.href = '/login';
-    }
+    if (!user) window.location.href = 'login.html';
   </script>
 
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Data More | UFC Analytics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Data More | UFC Prediction Engine</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 
   <style>
     :root{
       --green:#6bff19;
-      --red:#ef4444;
-      --gold:#facc15;
-      --blue:#38bdf8;
-      --bg:#020617;
-      --card:rgba(15,23,42,.78);
       --border:rgba(255,255,255,.08);
-      --muted:#94a3b8;
+      --text:#fff;
+      --muted:#888d93;
+      --bg-panel:rgba(20,25,30,.6);
+      --gold:#facc15;
+      --red:#ef4444;
+      --blue:#38bdf8;
     }
 
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
 
     body{
+      background:#000;
+      color:var(--text);
       font-family:'Inter',sans-serif;
-      background:
-        linear-gradient(rgba(0,0,0,.82),rgba(0,0,0,.92)),
-        url('https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?q=80&w=2070&auto=format&fit=crop');
-      background-size:cover;
-      background-position:center;
-      background-attachment:fixed;
-      color:white;
+      overflow-x:hidden;
+    }
+
+    main.page{
+      max-width:1440px;
+      margin:0 auto;
+      background:radial-gradient(circle at 30% 30%,#0a1a0a 0%,#020509 60%);
+      position:relative;
+      padding-bottom:40px;
       min-height:100vh;
     }
 
     header{
-      width:100%;
-      padding:22px 28px;
+      height:70px;
+      padding:0 50px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
+      justify-content:space-between;
       border-bottom:1px solid var(--border);
-      backdrop-filter:blur(14px);
-      background:rgba(2,6,23,.72);
+      background:rgba(0,0,0,.5);
+      backdrop-filter:blur(5px);
       position:sticky;
-      top:0;
-      z-index:999;
+      top:40px;
+      z-index:1000;
     }
 
     .logo{
+      font-weight:900;
+      font-size:22px;
+      letter-spacing:-1px;
       font-family:'Anton',sans-serif;
-      font-size:34px;
-      letter-spacing:2px;
-      color:var(--green);
+      text-transform:uppercase;
     }
 
-    nav{
-      display:flex;
-      gap:18px;
-      flex-wrap:wrap;
-    }
+    .logo span{color:var(--green)}
+
+    nav{display:flex;gap:20px}
 
     nav a{
       color:#fff;
       text-decoration:none;
-      font-size:14px;
+      font-size:11px;
       font-weight:700;
-      opacity:.9;
-      transition:.25s;
+      opacity:.7;
+      text-transform:uppercase;
     }
 
-    nav a:hover{
-      color:var(--green);
+    nav a.active{
+      opacity:1;
+      border-bottom:2px solid var(--green);
+      padding-bottom:25px;
+      margin-bottom:-25px;
     }
 
-    .hero{
+    .header-actions{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .btn-logout{
+      background:#ef4444;
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      padding:8px 18px;
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .espn-ticker-container{
       width:100%;
-      padding:70px 20px 40px;
-      text-align:center;
-    }
-
-    .hero h1{
-      font-family:'Anton',sans-serif;
-      font-size:72px;
-      line-height:1;
-      letter-spacing:2px;
-      margin-bottom:18px;
-    }
-
-    .hero h1 span{
-      color:var(--green);
-    }
-
-    .hero p{
-      max-width:900px;
-      margin:auto;
-      color:var(--muted);
-      font-size:18px;
-      line-height:1.6;
-    }
-
-    .ufc-container{
-      width:100%;
-      max-width:1500px;
-      margin:auto;
-      padding:20px;
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(380px,1fr));
-      gap:24px;
-    }
-
-    .fight-card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:24px;
-      overflow:hidden;
-      backdrop-filter:blur(14px);
-      transition:.3s;
-      position:relative;
-    }
-
-    .fight-card:hover{
-      transform:translateY(-6px);
-      border-color:rgba(107,255,25,.4);
-      box-shadow:0 0 25px rgba(107,255,25,.12);
-    }
-
-    .fight-top{
-      padding:24px;
+      background:#000;
       border-bottom:1px solid var(--border);
+      height:40px;
+      display:flex;
+      align-items:center;
+      overflow:hidden;
+      position:sticky;
+      top:0;
+      z-index:10000;
+    }
+
+    .ticker-wrapper{
+      display:flex;
+      white-space:nowrap;
+      animation:ticker-scroll 150s linear infinite;
+    }
+
+    .ticker-item{
+      display:flex;
+      align-items:center;
+      padding:0 30px;
+      border-right:1px solid var(--border);
+      height:40px;
+      font-size:11px;
+      font-weight:600;
+      color:var(--muted);
+    }
+
+    .sport-tag{
+      font-size:8px;
+      padding:2px 5px;
+      border-radius:4px;
+      margin-right:8px;
+      font-weight:900;
+      text-transform:uppercase;
+      background:#16a34a;
+      color:#000;
+    }
+
+    @keyframes ticker-scroll{
+      0%{transform:translateX(0)}
+      100%{transform:translateX(-100%)}
+    }
+
+    .container{padding:30px 50px}
+
+    h1.page-title{
+      font-family:'Anton';
+      font-size:56px;
+      line-height:1;
+      text-transform:uppercase;
+      margin-bottom:10px;
+      letter-spacing:-1px;
+    }
+
+    h1.page-title span{color:var(--green)}
+
+    .nav-sports{
+      display:flex;
+      gap:12px;
+      margin:25px 0;
+      border-bottom:1px solid var(--border);
+      padding-bottom:15px;
+      flex-wrap:wrap;
+    }
+
+    .nav-sports a{text-decoration:none}
+
+    .nav-btn{
+      padding:14px 28px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+      background:rgba(255,255,255,.03);
+      transition:all .2s;
+      text-transform:uppercase;
+    }
+
+    .nav-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+    .nav-btn.active{background:var(--green);color:#000;border-color:var(--green)}
+
+    .topbar{
+      display:flex;
+      gap:15px;
+      margin-bottom:25px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .date-box{
+      background:#111;
+      border:1px solid var(--border);
+      padding:12px 18px;
+      border-radius:8px;
+      color:#fff;
+      font-weight:800;
+      font-size:13px;
+    }
+
+    .action-buttons{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn-action{
+      background:var(--green);
+      color:#000;
+      padding:12px 24px;
+      border-radius:8px;
+      font-weight:900;
+      text-decoration:none;
+      font-size:13px;
+      border:none;
+      cursor:pointer;
+      text-transform:uppercase;
+      transition:all .2s;
+    }
+
+    .btn-sec{
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.2);
+      color:#fff;
+    }
+
+    .ai-btn{
+      background:linear-gradient(135deg,#6bff19,#39d900)!important;
+      color:#000!important;
+      font-weight:900!important;
+      letter-spacing:.5px;
+    }
+
+    .ai-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 0 22px rgba(107,255,25,.45);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:20px;
+    }
+
+    @media(max-width:1200px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}}
+
+    .card{
+      background:var(--bg-panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:22px;
+      backdrop-filter:blur(10px);
+      overflow:hidden;
     }
 
     .fight-status{
@@ -151,329 +273,539 @@
       border:1px solid rgba(107,255,25,.25);
       padding:6px 12px;
       border-radius:999px;
-      font-size:12px;
-      font-weight:800;
+      font-size:10px;
+      font-weight:900;
+      margin-bottom:18px;
+      text-transform:uppercase;
+    }
+
+    /* --- ESTILOS DE FOTOS Y SILUETAS --- */
+    .fighters-wrap{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:24px;
+      margin:20px 0;
+    }
+
+    .fighter-photo{
+      width:160px;
+      height:220px;
+      object-fit:contain;
+      filter:drop-shadow(0 0 20px rgba(107,255,25,.35));
+    }
+
+    .vs-text{
+      font-size:42px;
+      font-weight:900;
+      color:#6bff19;
+      font-family:'Anton',sans-serif;
+    }
+
+    .fight-vs-clean{
+      display:grid;
+      grid-template-columns:1fr 60px 1fr;
+      align-items:center;
+      gap:14px;
+      margin:22px 0;
+      padding:22px 16px;
+      border-radius:18px;
+      background:linear-gradient(135deg,rgba(107,255,25,.12),rgba(255,255,255,.03));
+      border:1px solid rgba(107,255,25,.18);
+      text-align:center;
+      font-family:'Anton',sans-serif;
+      font-size:24px;
+      text-transform:uppercase;
+    }
+
+    .fight-vs-clean span{
+      color:var(--green);
+      font-size:30px;
+    }
+
+    .fighter-silhouette{
+      flex:1;
+      height:180px;
+      border-radius:16px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding:16px;
+      text-align:center;
+      font-family:'Anton',sans-serif;
+      font-size:20px;
+      text-transform:uppercase;
+      color:#fff;
+      background:
+        radial-gradient(circle at 50% 25%, rgba(107,255,25,.35), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.55));
+      border:1px solid rgba(107,255,25,.18);
+    }
+
+    .fighters-info{
+      display:grid;
+      grid-template-columns:1fr 50px 1fr;
+      align-items:start;
+      gap:12px;
+      padding-bottom:18px;
+      border-bottom:1px solid rgba(255,255,255,.05);
       margin-bottom:18px;
     }
 
-    .fighters{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:18px;
-    }
-
-    .fighter{
-      flex:1;
-      text-align:center;
-    }
-
-    .fighter img{
-      width:92px;
-      height:92px;
-      border-radius:50%;
-      object-fit:cover;
-      border:3px solid rgba(255,255,255,.08);
-      margin-bottom:10px;
-    }
+    .fighter{text-align:center}
 
     .fighter-name{
-      font-size:20px;
+      font-size:16px;
       font-weight:900;
-      line-height:1.2;
+      line-height:1.15;
+      text-transform:uppercase;
     }
 
     .fighter-record{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .vs{
-      font-family:'Anton',sans-serif;
-      font-size:34px;
+      margin-top:5px;
       color:var(--green);
+      font-size:11px;
+      font-weight:800;
     }
 
-    .fight-body{
-      padding:24px;
+    .prediction-box{
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:15px;
+      border-left:4px solid var(--green);
+      background:rgba(107,255,25,.05);
     }
 
-    .prediction{
+    .section{
+      border-top:1px solid rgba(255,255,255,.05);
+      padding:12px 0;
+    }
+
+    .section-header{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      margin-bottom:20px;
-      gap:14px;
-    }
-
-    .pick-box{
-      flex:1;
-      background:rgba(107,255,25,.08);
-      border:1px solid rgba(107,255,25,.18);
-      border-radius:18px;
-      padding:16px;
-    }
-
-    .pick-label{
-      font-size:12px;
-      color:var(--muted);
       margin-bottom:8px;
-      font-weight:700;
+      font-size:12px;
+      font-weight:800;
+      text-transform:uppercase;
     }
 
-    .pick-value{
-      font-size:24px;
+    .pick-val{
+      font-size:18px;
       font-weight:900;
-      color:var(--green);
+      color:#fff;
     }
 
-    .confidence{
-      width:110px;
-      text-align:center;
-      padding:14px;
-      border-radius:18px;
-      background:rgba(250,204,21,.08);
-      border:1px solid rgba(250,204,21,.18);
-    }
-
-    .confidence span{
-      display:block;
+    .data-mono{
+      font-family:monospace;
       font-size:11px;
       color:var(--muted);
-      margin-bottom:5px;
-      font-weight:700;
-    }
-
-    .confidence strong{
-      color:var(--gold);
-      font-size:20px;
+      margin-top:4px;
     }
 
     .stats-grid{
       display:grid;
       grid-template-columns:repeat(2,1fr);
-      gap:14px;
-      margin-top:16px;
+      gap:10px;
+      margin-top:12px;
     }
 
     .stat-box{
       background:rgba(255,255,255,.03);
       border:1px solid var(--border);
-      border-radius:16px;
-      padding:16px;
+      border-radius:10px;
+      padding:12px;
     }
 
     .stat-title{
-      font-size:11px;
+      font-size:10px;
       color:var(--muted);
-      margin-bottom:8px;
+      margin-bottom:6px;
       text-transform:uppercase;
-      font-weight:700;
+      font-weight:800;
     }
 
     .stat-value{
-      font-size:20px;
+      font-size:15px;
       font-weight:900;
+      color:#fff;
     }
 
     .analysis{
-      margin-top:22px;
+      margin-top:14px;
       background:rgba(255,255,255,.03);
       border:1px solid var(--border);
-      border-radius:18px;
-      padding:18px;
+      border-radius:12px;
+      padding:14px;
     }
 
     .analysis-title{
-      font-size:13px;
+      font-size:11px;
       color:var(--green);
       font-weight:900;
-      margin-bottom:10px;
-      letter-spacing:.5px;
+      margin-bottom:8px;
+      text-transform:uppercase;
     }
 
     .analysis p{
       color:#dbe4ee;
-      line-height:1.7;
-      font-size:14px;
+      line-height:1.6;
+      font-size:12px;
+      white-space:pre-line;
     }
 
-    .btn-analyze{
+    .analyze-btn{
       width:100%;
-      margin-top:20px;
-      border:none;
-      cursor:pointer;
-      background:linear-gradient(90deg,var(--green),#98ff66);
+      background:var(--green);
       color:#000;
+      border:none;
+      border-radius:8px;
+      padding:14px;
+      font-size:13px;
       font-weight:900;
-      font-size:15px;
-      padding:15px;
-      border-radius:16px;
-      transition:.25s;
+      cursor:pointer;
+      margin-top:12px;
+      text-transform:uppercase;
     }
 
-    .btn-analyze:hover{
-      transform:scale(1.02);
-      filter:brightness(1.05);
+    .analyze-btn:hover{opacity:.85}
+
+    .wide-card{
+      grid-column:1/-1;
+      border-color:var(--green);
     }
+
+    .loading{
+      animation:pulse 1s infinite;
+      color:var(--green);
+      font-size:12px;
+      text-align:center;
+      padding:20px;
+      grid-column:1/-1;
+    }
+
+    @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
 
     @media(max-width:768px){
-
-      .hero h1{
-        font-size:48px;
-      }
-
-      .fighters{
-        flex-direction:column;
-      }
-
-      .vs{
-        font-size:28px;
-      }
-
-      .prediction{
-        flex-direction:column;
-      }
-
-      .confidence{
-        width:100%;
-      }
-
-      .stats-grid{
-        grid-template-columns:1fr;
-      }
-
-      header{
-        flex-direction:column;
-        gap:16px;
-      }
-
-      nav{
-        justify-content:center;
-      }
+      header{padding:14px 16px;height:auto;min-height:68px;flex-wrap:wrap;top:40px;}
+      .container{padding:24px}
+      nav{width:100%;overflow-x:auto;}
+      h1.page-title{font-size:42px;}
+      .nav-btn{font-size:12px;padding:10px 18px;}
+      .fighter-photo{width:120px;height:160px;}
+      .vs-text{font-size:32px;}
+      .fight-vs-clean{font-size:18px; padding:15px;}
     }
   </style>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">DATA MORE UFC</div>
+<main class="page">
 
-  <nav>
-    <a href="/mlb.html">MLB</a>
-    <a href="/nba.html">NBA</a>
-    <a href="/soccer.html">SOCCER</a>
-    <a href="/horse.html">HORSE</a>
-    <a href="/ufc.html">UFC</a>
-  </nav>
-</header>
+  <div class="espn-ticker-container">
+    <div class="ticker-wrapper" id="tickerWrapper">
+      <span class="ticker-item">Syncing UFC board...</span>
+    </div>
+  </div>
 
-<section class="hero">
-  <h1>AI UFC <span>PREDICTIONS</span></h1>
+  <header>
+    <div class="logo">DATA-<span>MORE</span></div>
 
-  <p>
-    Advanced fight analytics powered by Data More AI.
-    Predicting winners, KO probability, submissions,
-    decisions, and betting value with elite-level fight modeling.
-  </p>
-</section>
+    <nav>
+      <a href="index.html">Home</a>
+      <a class="active" href="picks.html">Picks</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="resultados.html">Results</a>
+      <a href="estadisticas.html">Stats</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
 
-<section class="ufc-container">
+    <div class="header-actions" id="headerActions"></div>
+  </header>
 
-  <div class="fight-card">
+  <div class="container">
 
-    <div class="fight-top">
+    <h1 class="page-title">UFC <span>AI PREDICTION ENGINE</span></h1>
 
-      <div class="fight-status">
-        ● MAIN EVENT
-      </div>
+    <p style="color:var(--green);font-size:11px;font-weight:800;margin-bottom:10px;">
+      ELITE FIGHT EDGE ANALYSIS
+    </p>
 
-      <div class="fighters">
+    <p style="color:var(--muted);font-size:12px;margin-bottom:20px;">
+      Real-time UFC predictions powered by advanced AI, betting models and fight simulations
+    </p>
 
-        <div class="fighter">
-          <img src="https://i.pravatar.cc/200?img=12">
-          <div class="fighter-name">Islam Makhachev</div>
-          <div class="fighter-record">27-1-0</div>
-        </div>
-
-        <div class="vs">VS</div>
-
-        <div class="fighter">
-          <img src="https://i.pravatar.cc/200?img=14">
-          <div class="fighter-name">Leon Edwards</div>
-          <div class="fighter-record">22-4-0</div>
-        </div>
-
-      </div>
-
+    <div class="nav-sports">
+      <a href="mlb.html"><button type="button" class="nav-btn">⚾ MLB</button></a>
+      <a href="soccer.html"><button type="button" class="nav-btn">⚽ Soccer</button></a>
+      <a href="nba.html"><button type="button" class="nav-btn">🏀 NBA</button></a>
+      <a href="horse.html"><button type="button" class="nav-btn">🏇 Horse Racing</button></a>
+      <a href="ufc.html"><button type="button" class="nav-btn active">🥊 UFC</button></a>
     </div>
 
-    <div class="fight-body">
+    <div class="topbar">
+      <div class="date-box" id="dateBox"></div>
 
-      <div class="prediction">
+      <button class="btn-action" onclick="loadFights()">Load Board</button>
 
-        <div class="pick-box">
-          <div class="pick-label">MODEL PICK</div>
-          <div class="pick-value">Makhachev</div>
-        </div>
-
-        <div class="confidence">
-          <span>CONFIDENCE</span>
-          <strong>HIGH</strong>
-        </div>
-
+      <div class="action-buttons">
+        <button class="btn-action btn-sec" onclick="runAllSimulations()">⚡ RUN FULL ANALYSIS</button>
+        <button class="btn-action ai-btn" onclick="scrollToBestPlays()">🤖 AI BETTING SELECTOR</button>
       </div>
-
-      <div class="stats-grid">
-
-        <div class="stat-box">
-          <div class="stat-title">WIN PROBABILITY</div>
-          <div class="stat-value">68%</div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-title">METHOD</div>
-          <div class="stat-value">Submission</div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-title">RISK LEVEL</div>
-          <div class="stat-value">LOW</div>
-        </div>
-
-        <div class="stat-box">
-          <div class="stat-title">BEST BET</div>
-          <div class="stat-value">Moneyline</div>
-        </div>
-
-      </div>
-
-      <div class="analysis">
-
-        <div class="analysis-title">
-          AI FIGHT ANALYSIS
-        </div>
-
-        <p>
-          Data More AI projects a strong grappling advantage for Islam Makhachev.
-          The model detects high control potential on the ground combined with
-          superior pressure metrics and takedown efficiency. Leon Edwards may
-          have striking moments early, but over extended rounds the probability
-          shifts heavily toward Makhachev by submission or dominant decision.
-        </p>
-
-      </div>
-
-      <button class="btn-analyze">
-        ANALYZE WITH AI
-      </button>
-
     </div>
+
+    <div id="status" style="margin-bottom:15px;font-size:12px;color:var(--muted);">
+      System ready. Load UFC board.
+    </div>
+
+    <div id="bestPlaysGrid" class="grid"></div>
+    <div id="smartParlayGrid" class="grid"></div>
+    <div id="fightsGrid" class="grid"></div>
 
   </div>
 
-</section>
+</main>
+
+<script>
+const fightsGrid = document.getElementById('fightsGrid');
+const bestPlaysGrid = document.getElementById('bestPlaysGrid');
+const smartParlayGrid = document.getElementById('smartParlayGrid');
+const statusBox = document.getElementById('status');
+
+function getChicagoDate(){
+  return new Intl.DateTimeFormat('en-CA',{
+    timeZone:'America/Chicago',
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).format(new Date());
+}
+
+document.getElementById('dateBox').textContent = getChicagoDate();
+
+async function initTicker(){
+  const ticker = document.getElementById('tickerWrapper');
+  ticker.innerHTML = `
+    <div class="ticker-item"><span class="sport-tag">UFC</span> Data More UFC Analytics Active</div>
+    <div class="ticker-item"><span class="sport-tag">AI</span> Fight simulations ready</div>
+    <div class="ticker-item"><span class="sport-tag">EDGE</span> Best plays loaded from model</div>
+  `;
+  ticker.innerHTML += ticker.innerHTML;
+}
+
+async function loadFights(){
+  fightsGrid.innerHTML = '<div class="loading">Loading UFC board...</div>';
+  bestPlaysGrid.innerHTML = '';
+  smartParlayGrid.innerHTML = '';
+
+  try{
+    const res = await fetch('/api/ufc/fights');
+    const data = await res.json();
+
+    if(!data.ok){
+      statusBox.textContent = 'Unable to load UFC fights.';
+      return;
+    }
+
+    renderBestPlays(data.bestPlays || []);
+    renderSmartParlay(data.smartParlay || []);
+    renderFights(data.fights || []);
+
+    statusBox.textContent = `${data.count || data.fights.length} fights available.`;
+
+  }catch(error){
+    console.error(error);
+    statusBox.textContent = 'Error loading UFC board.';
+    fightsGrid.innerHTML = '';
+  }
+}
+
+function renderBestPlays(bestPlays){
+  if(!bestPlays.length) return;
+  bestPlaysGrid.innerHTML = `
+    <div class="card wide-card" id="bestPlays">
+      <div class="section-header">
+        <span style="color:var(--gold)">🏆 Best UFC Plays</span>
+      </div>
+      <div class="stats-grid">
+        ${bestPlays.map(play => `
+          <div class="stat-box">
+            <div class="stat-title">${play.market}</div>
+            <div class="stat-value">${play.pick}</div>
+            <div class="data-mono">Conf: ${play.confidence} | Edge: ${play.edge}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSmartParlay(parlay){
+  if(!parlay.length) return;
+  smartParlayGrid.innerHTML = `
+    <div class="card wide-card" style="border-color:var(--blue);">
+      <div class="section-header">
+        <span style="color:var(--blue)">🔗 Smart Parlay</span>
+      </div>
+      <div class="stats-grid">
+        ${parlay.map(leg => `
+          <div class="stat-box">
+            <div class="stat-title">Leg ${leg.leg}</div>
+            <div class="stat-value">${leg.pick}</div>
+            <div class="data-mono">Confidence: ${leg.confidence}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderFights(fights){
+  fightsGrid.innerHTML = '';
+
+  fights.forEach(fight => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    card.innerHTML = `
+      <div class="fight-status">● ${fight.cardPosition}</div>
+
+      <!-- SECCIÓN DINÁMICA DE FOTOS / SILUETAS / VS LIMPITO -->
+      ${fight.fighterAImage || fight.fighterBImage ? `
+        <div class="fighters-wrap">
+          ${fight.fighterAImage ? `<img src="${fight.fighterAImage}" class="fighter-photo">` : `<div class="fighter-silhouette">${fight.fighterA.name}</div>`}
+          <div class="vs-text">VS</div>
+          ${fight.fighterBImage ? `<img src="${fight.fighterBImage}" class="fighter-photo">` : `<div class="fighter-silhouette">${fight.fighterB.name}</div>`}
+        </div>
+      ` : `
+        <div class="fight-vs-clean">
+          <div>${fight.fighterA.name}</div>
+          <span>VS</span>
+          <div>${fight.fighterB.name}</div>
+        </div>
+      `}
+
+      <div class="fighters-info">
+        <div class="fighter">
+          <div class="fighter-name">${fight.fighterA.name}</div>
+          <div class="fighter-record">${fight.fighterA.record}</div>
+        </div>
+        <div></div>
+        <div class="fighter">
+          <div class="fighter-name">${fight.fighterB.name}</div>
+          <div class="fighter-record">${fight.fighterB.record}</div>
+        </div>
+      </div>
+
+      <div class="prediction-box">
+        <div class="section-header">
+          <span>🔥 Model Pick</span>
+          <span class="sport-tag">${fight.prediction.confidence}</span>
+        </div>
+        <span class="pick-val">${fight.prediction.winner}</span>
+        <div class="data-mono">Win Probability: ${fight.prediction.probability}%</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header"><span style="color:var(--blue)">📊 Fight Projection</span></div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-title">Method</div>
+            <div class="stat-value">${fight.prediction.method}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">Round</div>
+            <div class="stat-value">${fight.prediction.round}</div>
+          </div>
+          <div class="stat-box"><div class="stat-title">KO %</div><div class="stat-value">${fight.prediction.koProbability}%</div></div>
+          <div class="stat-box"><div class="stat-title">SUB %</div><div class="stat-value">${fight.prediction.submissionProbability}%</div></div>
+          <div class="stat-box"><div class="stat-title">DEC %</div><div class="stat-value">${fight.prediction.decisionProbability}%</div></div>
+          <div class="stat-box"><div class="stat-title">Best Bet</div><div class="stat-value">${fight.prediction.bestBet}</div></div>
+        </div>
+      </div>
+
+      <div class="analysis">
+        <div class="analysis-title">AI Fight Analysis</div>
+        <p>${fight.analysis}</p>
+      </div>
+
+      <button class="analyze-btn" onclick="runSimulation(${fight.id}, this)">
+        Run AI Simulation
+      </button>
+
+      <div id="simulation-${fight.id}"></div>
+    `;
+
+    fightsGrid.appendChild(card);
+  });
+}
+
+async function runSimulation(id, button){
+  try{
+    button.innerHTML = 'Running 10,000 simulations...';
+    button.disabled = true;
+    const res = await fetch(`/api/ufc/simulate/${id}`);
+    const sim = await res.json();
+    const box = document.getElementById(`simulation-${id}`);
+    box.innerHTML = `
+      <div class="analysis" style="border-color:var(--green);">
+        <div class="analysis-title">🧠 Simulation Results</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-title">Projected</div><div class="stat-value">${sim.projectedWinner}</div></div>
+          <div class="stat-box"><div class="stat-title">Round</div><div class="stat-value">${sim.projectedRound}</div></div>
+          <div class="stat-box"><div class="stat-title">KO %</div><div class="stat-value">${sim.koPct}%</div></div>
+          <div class="stat-box"><div class="stat-title">SUB %</div><div class="stat-value">${sim.submissionPct}%</div></div>
+          <div class="stat-box"><div class="stat-title">DEC %</div><div class="stat-value">${sim.decisionPct}%</div></div>
+          <div class="stat-box"><div class="stat-title">Best Angle</div><div class="stat-value">${sim.bestAngle}</div></div>
+        </div>
+      </div>
+    `;
+    button.innerHTML = 'Simulation Completed';
+  }catch(error){
+    console.error(error);
+    button.innerHTML = 'Simulation Error';
+    button.disabled = false;
+  }
+}
+
+async function runAllSimulations(){
+  const buttons = document.querySelectorAll('.analyze-btn');
+  for(const btn of buttons){
+    btn.click();
+    await new Promise(r => setTimeout(r,700));
+  }
+}
+
+function scrollToBestPlays(){
+  const el = document.getElementById('bestPlays');
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderHeaderActions(){
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const container = document.getElementById('headerActions');
+  if(!user){
+    container.innerHTML = '';
+  }else{
+    const planTag = user.proActivo ? '<span style="color:var(--green);">[PRO]</span>' : '<span style="color:#facc15;">[FREE]</span>';
+    container.innerHTML = `
+      <span style="font-size:12px;color:#fff;">👤 ${user.nombre || user.email.split('@')[0]} ${planTag}</span>
+      <button class="btn-logout" onclick="logout()">LOG OUT</button>
+    `;
+  }
+}
+
+function logout(){
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+}
+
+initTicker();
+renderHeaderActions();
+loadFights();
+</script>
 
 </body>
 </html>

@@ -23,8 +23,11 @@ import horseRoutes from './routes/horseRacing.js';
 import gameCenter from './routes/gameCenter.js';
 import aiRoutes from './routes/ai.js';
 import voiceRoutes from './routes/voice.js';
+import ufcRoutes from './routes/ufc.js';
 
 const app = express();
+
+console.log('✅ UFC routes imported');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,11 +43,7 @@ if (!process.env.MONGO_URI) {
 }
 
 if (!process.env.MONGO_URI) {
-
-  console.error(
-    '❌ ERROR: MONGO_URI is not defined.'
-  );
-
+  console.error('❌ ERROR: MONGO_URI is not defined.');
   process.exit(1);
 }
 
@@ -53,18 +52,11 @@ if (!process.env.MONGO_URI) {
 // =========================
 
 mongoose.connect(process.env.MONGO_URI)
-
   .then(() => {
-    console.log(
-      '🚀 Connected to MongoDB Atlas (Data More PRO)'
-    );
+    console.log('🚀 Connected to MongoDB Atlas (Data More PRO)');
   })
-
   .catch(err => {
-    console.error(
-      '❌ MongoDB connection error:',
-      err
-    );
+    console.error('❌ MongoDB connection error:', err);
   });
 
 // =========================
@@ -88,15 +80,10 @@ app.use(
 // =========================
 
 const apiLimiter = rateLimit({
-
   windowMs: 60 * 1000,
-
   max: 180,
-
   standardHeaders: true,
-
   legacyHeaders: false,
-
   message: {
     ok: false,
     error: 'Too many requests. Please try again later.'
@@ -110,12 +97,11 @@ app.use('/api', apiLimiter);
 // =========================
 
 app.post('/api/auth/register', async (req, res) => {
-
   try {
-
     const {
       nombre,
       email,
+      telefono,
       password
     } = req.body;
 
@@ -124,7 +110,6 @@ app.post('/api/auth/register', async (req, res) => {
     });
 
     if (userExists) {
-
       return res.status(400).send(`
         <h1>Error</h1>
         <p>This email is already registered.</p>
@@ -137,13 +122,13 @@ app.post('/api/auth/register', async (req, res) => {
     await new User({
       nombre,
       email,
+      telefono,
       password: hashedPassword
     }).save();
 
     res.redirect('/login');
 
   } catch (err) {
-
     console.error(err);
 
     res.status(500).send(
@@ -153,9 +138,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-
   try {
-
     const {
       email,
       password
@@ -165,7 +148,6 @@ app.post('/api/auth/login', async (req, res) => {
       await User.findOne({ email });
 
     if (!user) {
-
       return res.json({
         ok: false,
         message: 'Invalid credentials'
@@ -179,7 +161,6 @@ app.post('/api/auth/login', async (req, res) => {
       );
 
     if (!validPassword) {
-
       return res.json({
         ok: false,
         message: 'Invalid credentials'
@@ -187,20 +168,18 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     res.json({
-
       ok: true,
-
       user: {
         id: user._id,
         nombre: user.nombre,
         email: user.email,
+        telefono: user.telefono || '',
         plan: user.plan || 'free',
         proActivo: user.proActivo || false
       }
     });
 
   } catch (err) {
-
     console.error(err);
 
     res.json({
@@ -215,9 +194,7 @@ app.post('/api/auth/login', async (req, res) => {
 // =========================
 
 app.post('/api/payment-request', async (req, res) => {
-
   try {
-
     const {
       nombre,
       email,
@@ -237,19 +214,13 @@ app.post('/api/payment-request', async (req, res) => {
     });
 
   } catch (err) {
-
     console.error(err);
-
-    res.json({
-      ok: false
-    });
+    res.json({ ok: false });
   }
 });
 
 app.get('/api/payment-requests', async (req, res) => {
-
   try {
-
     const requests =
       await PaymentRequest
         .find()
@@ -261,7 +232,6 @@ app.get('/api/payment-requests', async (req, res) => {
     });
 
   } catch (err) {
-
     console.error(err);
 
     res.json({
@@ -272,9 +242,7 @@ app.get('/api/payment-requests', async (req, res) => {
 });
 
 app.post('/api/activate-pro', async (req, res) => {
-
   try {
-
     const {
       email,
       requestId
@@ -289,7 +257,6 @@ app.post('/api/activate-pro', async (req, res) => {
     );
 
     if (requestId) {
-
       await PaymentRequest.findByIdAndUpdate(
         requestId,
         { status: 'approved' }
@@ -299,9 +266,7 @@ app.post('/api/activate-pro', async (req, res) => {
     res.json({ ok: true });
 
   } catch (err) {
-
     console.error(err);
-
     res.json({ ok: false });
   }
 });
@@ -311,9 +276,7 @@ app.post('/api/activate-pro', async (req, res) => {
 // =========================
 
 app.post('/api/picks/save', async (req, res) => {
-
   try {
-
     const picks = Array.isArray(req.body)
       ? req.body
       : [req.body];
@@ -327,9 +290,7 @@ app.post('/api/picks/save', async (req, res) => {
     res.json({ ok: true });
 
   } catch (err) {
-
     console.error(err);
-
     res.json({ ok: false });
   }
 });
@@ -354,14 +315,16 @@ app.use('/api/ai', aiRoutes);
 
 app.use('/api/voice', voiceRoutes);
 
+app.use('/api/ufc', ufcRoutes);
+
+console.log('✅ UFC API mounted at /api/ufc/fights');
+
 // =========================
 // TOP PICKS WIDGET API
 // =========================
 
 app.get('/api/top-picks', async (req, res) => {
-
   try {
-
     const today = new Date()
       .toISOString()
       .split('T')[0];
@@ -373,7 +336,6 @@ app.get('/api/top-picks', async (req, res) => {
     const data = await response.json();
 
     if (!data.ok || !data.games?.length) {
-
       return res.json({
         ok: false,
         picks: []
@@ -381,9 +343,7 @@ app.get('/api/top-picks', async (req, res) => {
     }
 
     const picks = data.games
-
       .map(game => {
-
         const awayPct = Number(
           game.awayWinPct ||
           game.awayProbability ||
@@ -407,21 +367,15 @@ app.get('/api/top-picks', async (req, res) => {
             : game.awayAbbrev;
 
         return {
-
           icon: '⚾',
-
           label: `${favorite} Moneyline`,
-
           market: `${bestPct.toFixed(1)}%`,
-
           confidence: bestPct
         };
       })
-
       .sort((a, b) =>
         b.confidence - a.confidence
       )
-
       .slice(0, 3);
 
     res.json({
@@ -430,7 +384,6 @@ app.get('/api/top-picks', async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(
       'TOP PICKS API ERROR:',
       error
@@ -448,9 +401,7 @@ app.get('/api/top-picks', async (req, res) => {
 // =========================
 
 app.get('/api/stats/daily-performance', async (req, res) => {
-
   try {
-
     const yesterday = new Date();
 
     yesterday.setDate(
@@ -465,7 +416,6 @@ app.get('/api/stats/daily-performance', async (req, res) => {
       await Pick.find({ date });
 
     const calc = (arr) => {
-
       const graded = arr.filter(
         p =>
           p.result === 'win' ||
@@ -484,39 +434,29 @@ app.get('/api/stats/daily-performance', async (req, res) => {
     };
 
     const hitWinners = picks
-
       .filter(p =>
         p.market === 'HIT' &&
         p.result === 'win'
       )
-
       .map(p => p.playerName)
-
       .filter(Boolean);
 
     const hrWinners = picks
-
       .filter(p =>
         p.market === 'HR' &&
         p.result === 'win'
       )
-
       .map(p => p.playerName)
-
       .filter(Boolean);
 
     res.json({
-
       ok: true,
-
       date,
-
       mlSuccess: calc(
         picks.filter(
           p => p.market === 'ML'
         )
       ),
-
       propsSuccess: calc(
         picks.filter(p =>
           ['HIT', 'HR'].includes(
@@ -524,27 +464,20 @@ app.get('/api/stats/daily-performance', async (req, res) => {
           )
         )
       ),
-
       totalWins:
         picks.filter(
           p => p.result === 'win'
         ).length,
 
       topPlayers:
-
         hrWinners.length
-
           ? `HR: ${hrWinners.join(', ')} ✅`
-
           : hitWinners.length
-
             ? `Hits: ${hitWinners.join(', ')} ✅`
-
             : 'Pending'
     });
 
   } catch (err) {
-
     console.error(
       'Stats error:',
       err
@@ -610,6 +543,24 @@ app.get('/horse', (req, res) => {
     path.join(
       __dirname,
       '../public/horse.html'
+    )
+  );
+});
+
+app.get('/ufc', (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      '../public/ufc.html'
+    )
+  );
+});
+
+app.get('/ufc.html', (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      '../public/ufc.html'
     )
   );
 });
@@ -711,7 +662,6 @@ app.get('/admin-payments', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-
   console.log(`
 🚀 Data More Server Running
 🌐 http://localhost:${PORT}
