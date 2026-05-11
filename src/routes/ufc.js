@@ -341,7 +341,7 @@ router.get('/simulate/:id', async (req, res) => {
 
     const fightsResponse =
       await fetch(
-        `http://localhost:${process.env.PORT || 3000}/api/ufc/fights`
+        (`${req.protocol}://${req.get('host')}/api/ufc/fights`)
       );
 
     const fightsData = await fightsResponse.json();
