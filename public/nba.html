@@ -659,6 +659,7 @@
       <a href="/soccer"><button type="button" class="nav-btn">⚽ Soccer</button></a>
       <a href="/nba"><button type="button" class="nav-btn active">🏀 NBA</button></a>
       <a href="/horse.html"><button type="button" class="nav-btn">🏇 Horse Racing</button></a>
+      <a href="/ufc.html"><button type="button" class="nav-btn">🥊 UFC</button></a>
     </div>
 
     <div class="topbar">
@@ -863,9 +864,15 @@ async function analyze(btn, gameId){
 
     const res = await fetch(`/api/nba-analyze/${gameId}?date=${encodeURIComponent(date)}&t=${Date.now()}`);
 
+    // --- CAMBIO SOLICITADO AQUÍ ---
     const data = await res.json();
 
+    if (!data.ok || !data.analysis) {
+      throw new Error('No analysis returned');
+    }
+
     const { analysis } = data;
+    // -----------------------------
 
     btn.innerText = 'RE-ANALYZE';
 
@@ -923,7 +930,7 @@ async function analyze(btn, gameId){
 
     resDiv.innerHTML = `
       <div style="color:red;font-size:10px;">
-        Analysis error
+        Error: ${err.message}
       </div>
     `;
 
