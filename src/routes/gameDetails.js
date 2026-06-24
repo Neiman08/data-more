@@ -8,59 +8,36 @@ router.get('/:gamePk', async (req, res) => {
     const { date } = req.query;
 
     if (!gamePk || !date) {
-      return res.status(400).json({ ok:false, error:'Faltan parámetros' });
+      return res.status(400).json({ ok: false, error: 'Faltan parámetros: gamePk y date son requeridos' });
     }
 
-    // 🔥 LLAMADAS EN PARALELO
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
     const [
       gamesRes,
       lineupRes,
       propsRes,
-      analysisRes
+      analysisRes,
+      gameCenterRes
     ] = await Promise.all([
-      fetch(`http://localhost:3000/api/baseball/games?date=${date}`),
-      fetch(`http://localhost:3000/api/baseball/lineup/${gamePk}`).catch(()=>null),
-      fetch(`http://localhost:3000/api/baseball/player-props/${gamePk}`).catch(()=>null),
-      fetch(`http://localhost:3000/api/analyze/${gamePk}?date=${date}`).catch(()=>null)
+      fetch(`${baseUrl}/api/baseball/games?date=${date}`),
+      fetch(`${baseUrl}/api/baseball/lineup/${gamePk}`).catch(() => null),
+      fetch(`${baseUrl}/api/baseball/player-props/${gamePk}`).catch(() => null),
+      fetch(`${baseUrl}/api/analyze/${gamePk}?date=${date}`).catch(() => null),
+      fetch(`${baseUrl}/api/baseball/game-center/${gamePk}?date=${date}`).catch(() => null)
     ]);
 
     const gamesData = await gamesRes.json();
-    const lineupData = lineupRes ? await lineupRes.json() : { ok:false };
-    const propsData = propsRes ? await propsRes.json() : { ok:false };
-    const analysisData = analysisRes ? await analysisRes.json() : { ok:false };
+    const lineupData = lineupRes ? await lineupRes.json() : { ok: false };
+    const propsData = propsRes ? await propsRes.json() : { ok: false };
+    const analysisData = analysisRes ? await analysisRes.json() : { ok: false };
+    const gameCenterData = gameCenterRes ? await gameCenterRes.json() : { ok: false };
 
-    const game = gamesData.games.find(g => String(g.gamePk) === String(gamePk));
+    const game = gamesData.games?.find(g => String(g.gamePk) === String(gamePk));
 
     if (!game) {
-      return res.json({ ok:false, error:'Juego no encontrado' });
+      return res.json({ ok: false, error: 'Juego no encontrado' });
     }
-
-    // 🔥 SIMULACIÓN PRO (luego lo hacemos real)
-    const headToHead = {
-      totalGames: 4,
-      awayWins: 3,
-      homeWins: 1,
-      lastResults: ['W','W','L','W']
-    };
-
-    const pitcherStats = {
-      away: {
-        name: game.awayPitcher,
-        wins: 2,
-        losses: 2,
-        ERA: 3.45,
-        WHIP: 1.22,
-        K: 45
-      },
-      home: {
-        name: game.homePitcher,
-        wins: 3,
-        losses: 1,
-        ERA: 2.90,
-        WHIP: 1.10,
-        K: 52
-      }
-    };
 
     res.json({
       ok: true,
@@ -68,13 +45,14 @@ router.get('/:gamePk', async (req, res) => {
       lineup: lineupData,
       props: propsData,
       analysis: analysisData?.analysis || null,
-      headToHead,
-      pitcherStats
+      headToHead: gameCenterData?.headToHead || null,
+      pitcherStats: gameCenterData?.pitcherStats || null,
+      teamStats: gameCenterData?.teamStats || null
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ ok:false, error:error.message });
+    console.error('gameDetails error:', error);
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 

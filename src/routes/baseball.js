@@ -702,11 +702,4 @@ router.get('/live-scores', async (req, res) => {
   }
 });
 
-router.get('/analyze/:gamePk', async (req, res) => {
-  res.json({
-    ok: false,
-    error: 'Secure MLB analysis engine is not connected in baseball.js. Connect this route to your private scoring engine.'
-  });
-});
-
 export default router;
