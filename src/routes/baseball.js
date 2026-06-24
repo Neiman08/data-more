@@ -192,6 +192,7 @@ async function getTeamStats(teamId, season) {
     return {
       AVG: hitting.avg || null,
       runs: safeNumber(hitting.runs),
+      gamesPlayed: safeNumber(hitting.gamesPlayed),
       hits: safeNumber(hitting.hits),
       HR: safeNumber(hitting.homeRuns),
       OBP: hitting.obp || null,
@@ -307,8 +308,12 @@ function buildPublicGameCenter({
   homeTeamStats,
   headToHead
 }) {
-  const awayRunsPerGame = awayTeamStats?.runs ? awayTeamStats.runs / 35 : 4.2;
-  const homeRunsPerGame = homeTeamStats?.runs ? homeTeamStats.runs / 35 : 4.2;
+  const awayRunsPerGame = awayTeamStats?.runs
+    ? awayTeamStats.runs / Math.max(awayTeamStats.gamesPlayed || 35, 1)
+    : 4.2;
+  const homeRunsPerGame = homeTeamStats?.runs
+    ? homeTeamStats.runs / Math.max(homeTeamStats.gamesPlayed || 35, 1)
+    : 4.2;
 
   const awayPitcherERA = Number(awayPitcherStats?.ERA || awayTeamStats?.ERA || 4.20);
   const homePitcherERA = Number(homePitcherStats?.ERA || homeTeamStats?.ERA || 4.20);

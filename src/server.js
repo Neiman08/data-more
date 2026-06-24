@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
@@ -26,6 +27,8 @@ import voiceRoutes from './routes/voice.js';
 import ufcRoutes from './routes/ufc.js';
 
 const app = express();
+
+app.use(cors());
 
 console.log('✅ UFC routes imported');
 
@@ -190,6 +193,19 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // =========================
+// ADMIN MIDDLEWARE
+// =========================
+
+function requireAdmin(req, res, next) {
+  const key = req.headers['x-admin-key'] || req.query.adminKey;
+  const adminKey = process.env.ADMIN_KEY;
+  if (!adminKey || key !== adminKey) {
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
+  next();
+}
+
+// =========================
 // PAYMENTS
 // =========================
 
@@ -219,7 +235,7 @@ app.post('/api/payment-request', async (req, res) => {
   }
 });
 
-app.get('/api/payment-requests', async (req, res) => {
+app.get('/api/payment-requests', requireAdmin, async (req, res) => {
   try {
     const requests =
       await PaymentRequest
@@ -241,7 +257,7 @@ app.get('/api/payment-requests', async (req, res) => {
   }
 });
 
-app.post('/api/activate-pro', async (req, res) => {
+app.post('/api/activate-pro', requireAdmin, async (req, res) => {
   try {
     const {
       email,
@@ -325,46 +341,34 @@ console.log('✅ UFC API mounted at /api/ufc/fights');
 
 app.get('/api/top-picks', async (req, res) => {
   try {
-    const today = new Date()
-      .toISOString()
-      .split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
 
-    const response = await fetch(
-      `http://localhost:${process.env.PORT || 3000}/api/baseball/games?date=${today}`
+    // Direct MLB Stats API call — no internal localhost dependency
+    const mlbRes = await fetch(
+      `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&hydrate=team`
     );
+    const mlbData = await mlbRes.json();
+    const rawGames = mlbData.dates?.[0]?.games || [];
 
-    const data = await response.json();
-
-    if (!data.ok || !data.games?.length) {
-      return res.json({
-        ok: false,
-        picks: []
-      });
+    if (!rawGames.length) {
+      return res.json({ ok: false, picks: [] });
     }
 
-    const picks = data.games
+    const picks = rawGames
       .map(game => {
-        const awayPct = Number(
-          game.awayWinPct ||
-          game.awayProbability ||
-          50
-        );
+        const awayRecord = game.teams?.away?.leagueRecord;
+        const homeRecord = game.teams?.home?.leagueRecord;
+        const awayAbbrev = game.teams?.away?.team?.abbreviation || '';
+        const homeAbbrev = game.teams?.home?.team?.abbreviation || '';
 
-        const homePct = Number(
-          game.homeWinPct ||
-          game.homeProbability ||
-          50
-        );
+        const awayG = (awayRecord?.wins || 0) + (awayRecord?.losses || 0);
+        const homeG = (homeRecord?.wins || 0) + (homeRecord?.losses || 0);
 
-        const bestPct = Math.max(
-          awayPct,
-          homePct
-        );
+        const awayPct = awayG > 0 ? ((awayRecord.wins / awayG) * 100) : 50;
+        const homePct = homeG > 0 ? ((homeRecord.wins / homeG) * 100) : 50;
 
-        const favorite =
-          homePct >= awayPct
-            ? game.homeAbbrev
-            : game.awayAbbrev;
+        const bestPct = Math.max(awayPct, homePct);
+        const favorite = homePct >= awayPct ? homeAbbrev : awayAbbrev;
 
         return {
           icon: '⚾',
@@ -373,26 +377,14 @@ app.get('/api/top-picks', async (req, res) => {
           confidence: bestPct
         };
       })
-      .sort((a, b) =>
-        b.confidence - a.confidence
-      )
+      .sort((a, b) => b.confidence - a.confidence)
       .slice(0, 3);
 
-    res.json({
-      ok: true,
-      picks
-    });
+    res.json({ ok: true, picks });
 
   } catch (error) {
-    console.error(
-      'TOP PICKS API ERROR:',
-      error
-    );
-
-    res.status(500).json({
-      ok: false,
-      picks: []
-    });
+    console.error('TOP PICKS API ERROR:', error);
+    res.status(500).json({ ok: false, picks: [] });
   }
 });
 

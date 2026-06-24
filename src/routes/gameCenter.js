@@ -23,9 +23,13 @@ router.get('/:gamePk', async (req, res) => {
       return res.json({ ok: false, error: 'Juego no encontrado' });
     }
 
-    // --- NUEVA LÓGICA DE PROYECCIÓN DE CARRERAS ---
-    const awayRunsPerGame = Number(game.awayRunsPerGame || 4.3);
-    const homeRunsPerGame = Number(game.homeRunsPerGame || 4.3);
+    // Use projected runs from scoring model when available
+    const awayRunsPerGame = Number(
+      analysisData?.analysis?.teamTotals?.away?.projectedRuns || 4.3
+    );
+    const homeRunsPerGame = Number(
+      analysisData?.analysis?.teamTotals?.home?.projectedRuns || 4.3
+    );
 
     const projectedAway = Number(awayRunsPerGame.toFixed(1));
     const projectedHome = Number(homeRunsPerGame.toFixed(1));
