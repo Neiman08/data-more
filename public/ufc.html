@@ -13,7 +13,9 @@
   <title>Data More | UFC Prediction Engine</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sport-switcher.css">
   <script src="auth-header.js" defer></script>
+  <script src="sport-switcher.js" defer></script>
   
   <style>
     :root{
@@ -503,13 +505,7 @@
       Real-time UFC predictions powered by advanced AI, betting models and fight simulations
     </p>
 
-    <div class="nav-sports">
-      <a href="mlb.html"><button type="button" class="nav-btn">⚾ MLB</button></a>
-      <a href="soccer.html"><button type="button" class="nav-btn">⚽ Soccer</button></a>
-      <a href="nba.html"><button type="button" class="nav-btn">🏀 NBA</button></a>
-      <a href="horse.html"><button type="button" class="nav-btn">🏇 Horse Racing</button></a>
-      <a href="ufc.html"><button type="button" class="nav-btn active">🥊 UFC</button></a>
-    </div>
+    <div class="sport-switcher" data-active="ufc"></div>
 
     <div class="topbar">
       <div class="date-box" id="dateBox"></div>

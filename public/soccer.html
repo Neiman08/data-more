@@ -15,7 +15,9 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="sport-switcher.css">
   <script src="auth-header.js" defer></script>
+  <script src="sport-switcher.js" defer></script>
 
   <style>
     :root {
@@ -635,12 +637,7 @@
       Real-time soccer predictions powered by AI, market data and statistical models
     </p>
 
-    <div class="nav-sports">
-      <a href="/"><button class="nav-btn">⚾ MLB</button></a>
-      <a href="/soccer"><button class="nav-btn active">⚽ Soccer</button></a>
-      <a href="/nba"><button class="nav-btn">🏀 NBA</button></a>
-      <a href="/horse.html"><button class="nav-btn">🏇 Horse Racing</button></a>
-    </div>
+    <div class="sport-switcher" data-active="soccer"></div>
 
     <div class="topbar">
       <input type="date" id="dateSelect">

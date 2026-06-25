@@ -11,7 +11,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Data More | Horse Racing Analytics Pro</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sport-switcher.css">
   <script src="auth-header.js" defer></script>
+  <script src="sport-switcher.js" defer></script>
   <style>
     :root {
       --green: #6bff19;
@@ -329,12 +331,7 @@
 </header>
 <div class="container">
   <h1 class="page-title">HORSE RACING <span>ANALYTICS PRO</span></h1>
-  <div class="nav-sports">
-    <a href="/"><button class="nav-btn">⚾ MLB</button></a>
-    <a href="/soccer"><button class="nav-btn">⚽ SOCCER</button></a>
-    <a href="/nba"><button class="nav-btn">🏀 NBA</button></a>
-    <a href="/horse"><button class="nav-btn active">🏇 HORSE RACING</button></a>
-  </div>
+  <div class="sport-switcher" data-active="horse"></div>
   <div class="topbar">
     <input type="date" id="dateInput">
     <select id="trackSelect">

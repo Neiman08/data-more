@@ -12,6 +12,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Data More | MLB Analytics Pro</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sport-switcher.css">
+  <script src="sport-switcher.js" defer></script>
   <style>
     :root {
       --bg-body: #030612;
@@ -283,20 +285,7 @@
       <h1>Data More Picks</h1>
     </div>
 
-    <div class="nav-sports">
-      <a href="/">
-        <button type="button" class="nav-btn nav-mlb">⚾ MLB</button>
-      </a>
-      <a href="/soccer">
-        <button type="button" class="nav-btn nav-soccer">⚽ Soccer</button>
-      </a>
-      <a href="/nba">
-        <button type="button" class="nav-btn nav-nba">🏀 NBA</button>
-      </a>
-      <a href="/horse.html">
-        <button type="button" class="nav-btn nav-horse">🏇 Hipismo</button>
-      </a>
-    </div>
+    <div class="sport-switcher" data-active="mlb"></div>
 
     <div class="promo-banner" id="promoBanner">
       <div class="promo-content">
