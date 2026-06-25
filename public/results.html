@@ -699,7 +699,17 @@
       const total = results.length;
       const wins = results.filter(r => r.pickResult === 'WIN').length;
       const losses = results.filter(r => r.pickResult === 'LOSS').length;
+      const pushes = results.filter(r => r.pickResult === 'PUSH').length;
       const pending = results.filter(r => r.pickResult === 'PENDING').length;
+      const graded = wins + losses;
+      const settled = wins + losses + pushes;
+      const profit = results.reduce((sum, result) => {
+        const raw = String(result.profit || '').replace(/[+u]/g, '');
+        const value = Number(raw);
+        return sum + (Number.isFinite(value) ? value : 0);
+      }, 0);
+      const winRate = graded ? ((wins / graded) * 100).toFixed(1) : '0.0';
+      const roi = settled ? ((profit / settled) * 100).toFixed(1) : '0.0';
 
       document.getElementById('summaryGrid').innerHTML = `
         <article class="summary-card">
@@ -708,19 +718,19 @@
           <small>Selected day</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">${total}</strong>
-          <span>Tracked Picks</span>
-          <small>Saved Data More picks</small>
+          <strong class="positive">${winRate}%</strong>
+          <span>Win Rate</span>
+          <small>${wins}W - ${losses}L - ${pushes}P</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">${wins}</strong>
-          <span>Wins</span>
-          <small>Graded WIN</small>
+          <strong class="${profit >= 0 ? 'positive' : 'negative'}">${formatProfit(profit)}</strong>
+          <span>Profit</span>
+          <small>Flat stake units</small>
         </article>
         <article class="summary-card">
-          <strong class="negative">${losses}</strong>
-          <span>Losses</span>
-          <small>Graded LOSS</small>
+          <strong class="${Number(roi) >= 0 ? 'positive' : 'negative'}">${roi}%</strong>
+          <span>ROI</span>
+          <small>Settled picks only</small>
         </article>
         <article class="summary-card">
           <strong>${pending}</strong>

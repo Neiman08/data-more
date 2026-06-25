@@ -643,6 +643,37 @@ function localISODate() {
   }).format(new Date());
 }
 
+function formatPercentNumber(value) {
+  return Number.isFinite(value) ? Number(value.toFixed(1)) : 0;
+}
+
+function summarizePicks(picks = []) {
+  const total = picks.length;
+  const wins = picks.filter(p => p.result === 'win').length;
+  const losses = picks.filter(p => p.result === 'loss').length;
+  const pushes = picks.filter(p => p.result === 'push').length;
+  const pending = picks.filter(p => p.result === 'pending').length;
+  const settled = wins + losses + pushes;
+  const graded = wins + losses;
+  const profit = picks.reduce((sum, pick) => sum + (Number(pick.profit) || 0), 0);
+  const stake = picks
+    .filter(pick => ['win', 'loss', 'push'].includes(pick.result))
+    .reduce((sum, pick) => sum + (Number(pick.stake) || 1), 0);
+
+  return {
+    total,
+    settled,
+    pending,
+    wins,
+    losses,
+    pushes,
+    profit: Number(profit.toFixed(2)),
+    stake: Number(stake.toFixed(2)),
+    winRate: graded ? formatPercentNumber((wins / graded) * 100) : 0,
+    roi: stake ? formatPercentNumber((profit / stake) * 100) : 0
+  };
+}
+
 async function gradeRecentPendingPicks() {
   const today = localISODate();
   const dates = Array.from({ length: 8 }, (_, index) => shiftISODate(today, -index));
@@ -664,6 +695,57 @@ async function gradeRecentPendingPicks() {
     }
   }
 }
+
+app.get('/api/performance/summary', async (req, res) => {
+  try {
+    const days = Math.max(1, Math.min(365, Number(req.query.days) || 30));
+    const endDate = localISODate();
+    const startDate = shiftISODate(endDate, -(days - 1));
+    const sport = String(req.query.sport || 'all');
+    const query = {
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    };
+
+    if (sport.toLowerCase() !== 'all') {
+      query.sport = new RegExp(`^${sport}$`, 'i');
+    }
+
+    const picks = await Pick.find(query).lean();
+    const normalized = picks.map(pick => ({
+      ...pick,
+      sport: pick.sport || 'MLB',
+      result: pick.result || 'pending'
+    }));
+    const overall = summarizePicks(normalized);
+    const sports = ['MLB', 'Soccer', 'Horse Racing', 'UFC'].map(name => ({
+      sport: name,
+      ...summarizePicks(
+        normalized.filter(pick =>
+          String(pick.sport || 'MLB').toLowerCase() === name.toLowerCase()
+        )
+      )
+    }));
+    const bestSport = [...sports]
+      .filter(item => item.settled > 0)
+      .sort((a, b) => b.roi - a.roi || b.winRate - a.winRate)[0]?.sport || 'N/A';
+
+    res.json({
+      ok: true,
+      days,
+      startDate,
+      endDate,
+      overall,
+      sports,
+      bestSport
+    });
+  } catch (err) {
+    console.error('Performance summary error:', err);
+    res.status(500).json({ ok: false, error: 'Unable to load performance summary.' });
+  }
+});
 
 app.get('/api/picks', async (req, res) => {
   try {

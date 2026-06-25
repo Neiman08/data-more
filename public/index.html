@@ -111,10 +111,10 @@
          Current asset: /images/IMG-FONDO-INDEX.png
       */
       background-image:
-        linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.65)),
+        linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.48)),
         url('/images/IMG-FONDO-INDEX.png');
       background-size: cover;
-      background-position: center center;
+      background-position: 60% center;
       background-repeat: no-repeat;
       border-radius: 12px;
       margin: 20px 0;
@@ -668,7 +668,7 @@
             WIN RATE
           </p>
 
-          <div class="circle-ui">78%</div>
+          <div class="circle-ui" id="homeWinRate">Loading</div>
         </div>
 
         <div style="text-align:right;">
@@ -676,8 +676,9 @@
             YIELD
           </p>
 
-          <p style="color:var(--green);font-weight:900;font-size:24px;">
-            +24.6%
+          <p id="homeYield"
+             style="color:var(--green);font-weight:900;font-size:24px;">
+            Loading
           </p>
 
           <div style="
@@ -733,12 +734,13 @@
     <div class="icon-circle">🏆</div>
 
     <div>
-      <p style="font-weight:900;font-size:20px;">
-        +78%
+      <p id="homeAccuracy"
+         style="font-weight:900;font-size:20px;">
+        Loading
       </p>
 
       <p style="font-size:10px;color:var(--muted);">
-        HORSE RACING / MLB ACCURACY
+        REAL PICK WIN RATE
       </p>
     </div>
   </div>
@@ -747,12 +749,13 @@
     <div class="icon-circle">📊</div>
 
     <div>
-      <p style="font-weight:900;font-size:20px;">
-        +65%
+      <p id="homeTrackedPicks"
+         style="font-weight:900;font-size:20px;">
+        Loading
       </p>
 
       <p style="font-size:10px;color:var(--muted);">
-        PLAYER PROPS PERFORMANCE
+        TRACKED PICKS
       </p>
     </div>
   </div>
@@ -859,21 +862,21 @@
 <section class="metrics-strip">
 
   <div class="metric-card">
-    <strong>78%</strong>
+    <strong id="stripWinRate">Loading</strong>
     <span>WIN RATE</span>
     <small>Last 30 Days</small>
   </div>
 
   <div class="metric-card">
-    <strong>+24.6%</strong>
+    <strong id="stripYield">Loading</strong>
     <span>YIELD</span>
     <small>Last 30 Days</small>
   </div>
 
   <div class="metric-card">
-    <strong>2,500+</strong>
-    <span>WINNING MEMBERS</span>
-    <small>And Growing</small>
+    <strong id="stripTrackedPicks">Loading</strong>
+    <span>TRACKED PICKS</span>
+    <small>Last 30 Days</small>
   </div>
 
   <div class="metric-card">
@@ -961,7 +964,40 @@ async function loadTodayTopPicks() {
   }
 }
 
+function signedPercent(value) {
+  const n = Number(value) || 0;
+  return `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
+}
+
+async function loadHomePerformance() {
+  try {
+    const res = await fetch('/api/performance/summary?days=30');
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(data.error || 'Unable to load performance');
+
+    const winRate = `${data.overall.winRate.toFixed(1)}%`;
+    const roi = signedPercent(data.overall.roi);
+    const tracked = data.overall.total;
+
+    document.getElementById('homeWinRate').textContent = winRate;
+    document.getElementById('homeYield').textContent = roi;
+    document.getElementById('homeAccuracy').textContent = winRate;
+    document.getElementById('homeTrackedPicks').textContent = tracked;
+    document.getElementById('stripWinRate').textContent = winRate;
+    document.getElementById('stripYield').textContent = roi;
+    document.getElementById('stripTrackedPicks').textContent = tracked;
+  } catch (error) {
+    ['homeWinRate', 'homeYield', 'homeAccuracy', 'homeTrackedPicks', 'stripWinRate', 'stripYield', 'stripTrackedPicks']
+      .forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = 'N/A';
+      });
+  }
+}
+
 loadTodayTopPicks();
+loadHomePerformance();
 
 </script>
 

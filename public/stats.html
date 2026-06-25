@@ -326,22 +326,22 @@
 
       <div class="kpi-grid">
         <article class="kpi-card">
-          <strong class="positive">68.3%</strong>
+          <strong class="positive" id="overallWinRate">Loading</strong>
           <span>Overall Win Rate</span>
           <small>Settled picks, last 30 days</small>
         </article>
         <article class="kpi-card">
-          <strong class="positive">+18.7%</strong>
-          <span>Monthly Yield</span>
+          <strong class="positive" id="overallRoi">Loading</strong>
+          <span>Monthly ROI</span>
           <small>Flat stake performance model</small>
         </article>
         <article class="kpi-card">
-          <strong>2,914</strong>
+          <strong id="overallPicks">Loading</strong>
           <span>Picks Analyzed</span>
           <small>Across live and historical boards</small>
         </article>
         <article class="kpi-card">
-          <strong class="info">MLB</strong>
+          <strong class="info" id="bestSport">Loading</strong>
           <span>Best Performing Sport</span>
           <small>Highest combined ROI and hit rate</small>
         </article>
@@ -349,63 +349,10 @@
 
       <div class="section-title">
         <h2>Sport Performance</h2>
-        <span>Mock analytics until live performance API is connected</span>
+        <span>Live analytics from tracked Data More picks</span>
       </div>
 
-      <!-- TODO: Replace mock stats with /api/stats or a consolidated analytics feed when available. -->
-      <div class="sport-grid">
-        <article class="sport-card">
-          <div class="sport-head">
-            <div class="sport-icon">⚾</div>
-            <div class="trend">+12.4% Trend</div>
-          </div>
-          <h3>MLB</h3>
-          <div class="bar"><div class="bar-fill" style="width: 72%"></div></div>
-          <div class="metric-row"><span>Win Rate</span><strong class="positive">72%</strong></div>
-          <div class="metric-row"><span>Picks</span><strong>412</strong></div>
-          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+22.1%</strong></div>
-          <div class="metric-row"><span>Accuracy Trend</span><strong class="positive">Rising</strong></div>
-        </article>
-
-        <article class="sport-card">
-          <div class="sport-head">
-            <div class="sport-icon">⚽</div>
-            <div class="trend">+8.8% Trend</div>
-          </div>
-          <h3>Soccer</h3>
-          <div class="bar"><div class="bar-fill" style="width: 66%"></div></div>
-          <div class="metric-row"><span>Win Rate</span><strong class="positive">66%</strong></div>
-          <div class="metric-row"><span>Picks</span><strong>305</strong></div>
-          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+15.9%</strong></div>
-          <div class="metric-row"><span>Accuracy Trend</span><strong class="positive">Stable</strong></div>
-        </article>
-
-        <article class="sport-card">
-          <div class="sport-head">
-            <div class="sport-icon">🏇</div>
-            <div class="trend">+6.2% Trend</div>
-          </div>
-          <h3>Horse</h3>
-          <div class="bar"><div class="bar-fill" style="width: 61%"></div></div>
-          <div class="metric-row"><span>Win Rate</span><strong class="positive">61%</strong></div>
-          <div class="metric-row"><span>Picks</span><strong>198</strong></div>
-          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+13.4%</strong></div>
-          <div class="metric-row"><span>Accuracy Trend</span><strong class="warning">Volatile</strong></div>
-        </article>
-
-        <article class="sport-card">
-          <div class="sport-head">
-            <div class="sport-icon">🥊</div>
-            <div class="trend">+5.7% Trend</div>
-          </div>
-          <h3>UFC</h3>
-          <div class="bar"><div class="bar-fill" style="width: 64%"></div></div>
-          <div class="metric-row"><span>Win Rate</span><strong class="positive">64%</strong></div>
-          <div class="metric-row"><span>Picks</span><strong>74</strong></div>
-          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+11.2%</strong></div>
-          <div class="metric-row"><span>Accuracy Trend</span><strong class="positive">Rising</strong></div>
-        </article>
-      </div>
+      <div class="sport-grid" id="sportPerformanceGrid"></div>
 
       <div class="section-title">
         <h2>Model Insights</h2>
@@ -414,31 +361,84 @@
 
       <div class="insight-grid">
         <article class="insight-card">
-          <strong class="positive">74%</strong>
+          <strong class="info">Pending</strong>
           <span>High Confidence Accuracy</span>
-          <small>Picks graded at 80% confidence or higher.</small>
-          <div class="bar"><div class="bar-fill" style="width: 74%"></div></div>
+          <small>Requires confidence to be stored with each pick.</small>
+          <div class="bar"><div class="bar-fill" style="width: 0%"></div></div>
         </article>
         <article class="insight-card">
-          <strong class="positive">63%</strong>
+          <strong class="info">Pending</strong>
           <span>Medium Confidence Accuracy</span>
-          <small>Picks graded between 60% and 79% confidence.</small>
-          <div class="bar"><div class="bar-fill" style="width: 63%"></div></div>
+          <small>Requires confidence to be stored with each pick.</small>
+          <div class="bar"><div class="bar-fill" style="width: 0%"></div></div>
         </article>
         <article class="insight-card">
-          <strong class="warning">52%</strong>
+          <strong class="info">Pending</strong>
           <span>Low Confidence Accuracy</span>
-          <small>Picks below 60% confidence, used for signal discovery.</small>
-          <div class="bar"><div class="bar-fill" style="width: 52%"></div></div>
+          <small>Requires confidence to be stored with each pick.</small>
+          <div class="bar"><div class="bar-fill" style="width: 0%"></div></div>
         </article>
         <article class="insight-card">
-          <strong class="info">6.8%</strong>
+          <strong class="info">Real Data</strong>
           <span>Average Edge</span>
-          <small>Projected market edge across qualifying picks.</small>
-          <div class="bar"><div class="bar-fill" style="width: 68%"></div></div>
+          <small>Will populate after edge is persisted on tracked picks.</small>
+          <div class="bar"><div class="bar-fill" style="width: 0%"></div></div>
         </article>
       </div>
     </section>
   </main>
+  <script>
+    const sportIcons = {
+      MLB: '⚾',
+      Soccer: '⚽',
+      'Horse Racing': '🏇',
+      UFC: '🥊'
+    };
+
+    function signedPercent(value) {
+      const n = Number(value) || 0;
+      return `${n > 0 ? '+' : ''}${n.toFixed(1)}%`;
+    }
+
+    function signedUnits(value) {
+      const n = Number(value) || 0;
+      return `${n > 0 ? '+' : ''}${n.toFixed(2)}u`;
+    }
+
+    async function loadPerformanceStats() {
+      const grid = document.getElementById('sportPerformanceGrid');
+
+      try {
+        const res = await fetch('/api/performance/summary?days=30');
+        const data = await res.json();
+
+        if (!data.ok) throw new Error(data.error || 'Unable to load performance');
+
+        document.getElementById('overallWinRate').textContent = `${data.overall.winRate.toFixed(1)}%`;
+        document.getElementById('overallRoi').textContent = signedPercent(data.overall.roi);
+        document.getElementById('overallPicks').textContent = data.overall.total;
+        document.getElementById('bestSport').textContent = data.bestSport;
+
+        grid.innerHTML = data.sports.map(sport => `
+          <article class="sport-card">
+            <div class="sport-head">
+              <div class="sport-icon">${sportIcons[sport.sport] || '📊'}</div>
+              <div class="trend">${signedUnits(sport.profit)}</div>
+            </div>
+            <h3>${sport.sport}</h3>
+            <div class="bar"><div class="bar-fill" style="width: ${Math.min(100, Math.max(0, sport.winRate))}%"></div></div>
+            <div class="metric-row"><span>Win Rate</span><strong class="${sport.winRate > 0 ? 'positive' : ''}">${sport.winRate.toFixed(1)}%</strong></div>
+            <div class="metric-row"><span>Picks</span><strong>${sport.total}</strong></div>
+            <div class="metric-row"><span>ROI</span><strong class="${sport.roi >= 0 ? 'positive' : 'warning'}">${signedPercent(sport.roi)}</strong></div>
+            <div class="metric-row"><span>Record</span><strong>${sport.wins}W-${sport.losses}L-${sport.pushes}P</strong></div>
+          </article>
+        `).join('');
+      } catch (error) {
+        grid.innerHTML = '<article class="sport-card"><h3>Performance unavailable</h3><div class="metric-row"><span>Reason</span><strong>Unable to load real tracked picks</strong></div></article>';
+      }
+    }
+
+    loadPerformanceStats();
+  </script>
 </body>
 </html>
