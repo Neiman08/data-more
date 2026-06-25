@@ -142,6 +142,11 @@
 
     .sport-select { appearance: none; min-width: 150px; }
 
+    .date-filter {
+      min-width: 170px;
+      color-scheme: dark;
+    }
+
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -215,7 +220,28 @@
 
     .results-list {
       display: grid;
+      gap: 22px;
+    }
+
+    .sport-group {
+      display: grid;
       gap: 12px;
+    }
+
+    .sport-group-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .sport-group-title span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
     }
 
     .result-card {
@@ -262,6 +288,16 @@
     .status-loss { color: #fff; background: var(--red); }
     .status-push { color: #000; background: var(--yellow); }
     .status-pending { color: #111827; background: var(--gray); }
+    .empty-state {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      padding: 22px;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+    }
 
     @media (max-width: 1120px) {
       .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -310,105 +346,202 @@
       <div class="sport-switcher"></div>
 
       <div class="filters" aria-label="Result filters">
-        <button class="filter-btn active" type="button">Today</button>
-        <button class="filter-btn" type="button">Last 7 Days</button>
-        <button class="filter-btn" type="button">Last 30 Days</button>
-        <button class="filter-btn" type="button">All Time</button>
-        <select class="sport-select" aria-label="Sport filter">
-          <option>All Sports</option>
-          <option>MLB</option>
-          <option>Soccer</option>
-          <option>Horse Racing</option>
-          <option>UFC</option>
+        <input class="filter-btn date-filter" id="dateFilter" type="date" aria-label="Date filter">
+        <select class="sport-select" id="sportFilter" aria-label="Sport filter">
+          <option value="all">All Sports</option>
+          <option value="MLB">MLB</option>
+          <option value="Soccer">Soccer</option>
+          <option value="Horse Racing">Horse Racing</option>
+          <option value="UFC">UFC</option>
         </select>
       </div>
 
-      <div class="summary-grid">
+      <div class="summary-grid" id="summaryGrid">
         <article class="summary-card">
-          <strong>128</strong>
+          <strong>0</strong>
           <span>Total Picks</span>
-          <small>Tracked this month</small>
+          <small>Selected day</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">84</strong>
+          <strong class="positive">0</strong>
           <span>Wins</span>
           <small>Settled winners</small>
         </article>
         <article class="summary-card">
-          <strong class="negative">39</strong>
+          <strong class="negative">0</strong>
           <span>Losses</span>
           <small>Settled losses</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">68.3%</strong>
+          <strong class="positive">0%</strong>
           <span>Win Rate</span>
           <small>Excludes push/pending</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">+18.7%</strong>
+          <strong class="positive">0.00u</strong>
           <span>Yield</span>
-          <small>Flat stake model</small>
+          <small>Flat stake P/L</small>
         </article>
       </div>
 
       <div class="section-title">
         <h2>Recent Results</h2>
-        <span>Mock board until live result API is connected</span>
+        <span id="resultCountLabel">Loading results...</span>
       </div>
 
-      <!-- TODO: Replace mock results with /api/results or sport-specific settled-picks feed when available. -->
-      <div class="results-list">
-        <article class="result-card">
-          <div><span class="label">Date</span><span class="value">Jun 24, 2026</span></div>
-          <div><span class="label">Sport</span><span class="sport-pill">MLB</span></div>
-          <div><span class="label">Event</span><span class="value">Yankees vs Red Sox</span></div>
-          <div><span class="label">Pick</span><span class="value">Yankees ML -135</span></div>
-          <div><span class="label">Final Result</span><span class="value">NYY 5, BOS 3</span></div>
-          <div><span class="label">Status</span><span class="status-pill status-win">Win</span></div>
-          <div><span class="label">P/L</span><span class="value positive">+0.74u</span></div>
-        </article>
-
-        <article class="result-card">
-          <div><span class="label">Date</span><span class="value">Jun 24, 2026</span></div>
-          <div><span class="label">Sport</span><span class="sport-pill">Soccer</span></div>
-          <div><span class="label">Event</span><span class="value">Czechia vs Mexico</span></div>
-          <div><span class="label">Pick</span><span class="value">Under 2.5 Goals</span></div>
-          <div><span class="label">Final Result</span><span class="value">Pending</span></div>
-          <div><span class="label">Status</span><span class="status-pill status-pending">Pending</span></div>
-          <div><span class="label">P/L</span><span class="value">0.00u</span></div>
-        </article>
-
-        <article class="result-card">
-          <div><span class="label">Date</span><span class="value">Jun 23, 2026</span></div>
-          <div><span class="label">Sport</span><span class="sport-pill">Horse</span></div>
-          <div><span class="label">Event</span><span class="value">Belmont Race 7</span></div>
-          <div><span class="label">Pick</span><span class="value">Midnight Circuit</span></div>
-          <div><span class="label">Final Result</span><span class="value">Placed 1st</span></div>
-          <div><span class="label">Status</span><span class="status-pill status-win">Win</span></div>
-          <div><span class="label">P/L</span><span class="value positive">+1.62u</span></div>
-        </article>
-
-        <article class="result-card">
-          <div><span class="label">Date</span><span class="value">Jun 22, 2026</span></div>
-          <div><span class="label">Sport</span><span class="sport-pill">UFC</span></div>
-          <div><span class="label">Event</span><span class="value">Torres vs Allen</span></div>
-          <div><span class="label">Pick</span><span class="value">Torres Decision +180</span></div>
-          <div><span class="label">Final Result</span><span class="value">Allen KO R2</span></div>
-          <div><span class="label">Status</span><span class="status-pill status-loss">Loss</span></div>
-          <div><span class="label">P/L</span><span class="value negative">-1.00u</span></div>
-        </article>
-
-        <article class="result-card">
-          <div><span class="label">Date</span><span class="value">Jun 21, 2026</span></div>
-          <div><span class="label">Sport</span><span class="sport-pill">MLB</span></div>
-          <div><span class="label">Event</span><span class="value">Dodgers vs Giants</span></div>
-          <div><span class="label">Pick</span><span class="value">Over 8.5 Runs</span></div>
-          <div><span class="label">Final Result</span><span class="value">LAD 4, SF 4</span></div>
-          <div><span class="label">Status</span><span class="status-pill status-push">Push</span></div>
-          <div><span class="label">P/L</span><span class="value neutral">0.00u</span></div>
-        </article>
-      </div>
+      <div class="results-list" id="resultsList"></div>
     </section>
   </main>
+
+  <script>
+    const mockResults = [
+      { date: '2026-06-25', sport: 'MLB', event: 'Yankees vs Red Sox', pick: 'Yankees ML -135', finalResult: 'NYY 5, BOS 3', status: 'Win', profit: 0.74 },
+      { date: '2026-06-25', sport: 'MLB', event: 'Dodgers vs Giants', pick: 'Over 8.5 Runs', finalResult: 'LAD 6, SF 4', status: 'Win', profit: 0.91 },
+      { date: '2026-06-25', sport: 'MLB', event: 'Mets vs Phillies', pick: 'Phillies -1.5 +125', finalResult: 'PHI 7, NYM 2', status: 'Win', profit: 1.25 },
+      { date: '2026-06-25', sport: 'MLB', event: 'Astros vs Rangers', pick: 'Astros Team Total Over 4.5', finalResult: 'HOU 3, TEX 5', status: 'Loss', profit: -1.00 },
+      { date: '2026-06-25', sport: 'Soccer', event: 'South Africa vs South Korea', pick: 'Under 2.5 Goals', finalResult: 'RSA 0, KOR 0', status: 'Push', profit: 0.00 },
+      { date: '2026-06-25', sport: 'Soccer', event: 'Czechia vs Mexico', pick: 'Mexico Draw No Bet', finalResult: 'CZE 1, MEX 2', status: 'Win', profit: 0.82 },
+      { date: '2026-06-25', sport: 'Soccer', event: 'Croatia vs Morocco', pick: 'Both Teams To Score', finalResult: 'CRO 2, MAR 1', status: 'Win', profit: 0.88 },
+      { date: '2026-06-25', sport: 'Horse Racing', event: 'Belmont Race 4', pick: 'Harbor Signal', finalResult: 'Placed 2nd', status: 'Loss', profit: -1.00 },
+      { date: '2026-06-25', sport: 'Horse Racing', event: 'Saratoga Race 7', pick: 'Midnight Circuit', finalResult: 'Placed 1st', status: 'Win', profit: 1.62 },
+      { date: '2026-06-25', sport: 'Horse Racing', event: 'Gulfstream Race 9', pick: 'Exacta 3-6', finalResult: '3-6 Paid', status: 'Win', profit: 2.40 },
+      { date: '2026-06-25', sport: 'UFC', event: 'Torres vs Allen', pick: 'Torres Decision +180', finalResult: 'Allen KO R2', status: 'Loss', profit: -1.00 },
+      { date: '2026-06-25', sport: 'UFC', event: 'Nguyen vs Price', pick: 'Nguyen ML -120', finalResult: 'Nguyen Sub R3', status: 'Win', profit: 0.83 },
+      { date: '2026-06-24', sport: 'MLB', event: 'Cubs vs Cardinals', pick: 'Cubs ML -110', finalResult: 'CHC 4, STL 2', status: 'Win', profit: 0.91 },
+      { date: '2026-06-24', sport: 'MLB', event: 'Mariners vs Angels', pick: 'Under 7.5 Runs', finalResult: 'SEA 2, LAA 3', status: 'Win', profit: 0.87 },
+      { date: '2026-06-24', sport: 'Soccer', event: 'Argentina vs Japan', pick: 'Argentina ML', finalResult: 'ARG 3, JPN 1', status: 'Win', profit: 0.58 },
+      { date: '2026-06-24', sport: 'Soccer', event: 'USA vs Ghana', pick: 'Over 2.5 Goals', finalResult: 'USA 1, GHA 1', status: 'Loss', profit: -1.00 },
+      { date: '2026-06-24', sport: 'Horse Racing', event: 'Churchill Race 5', pick: 'Blue Ledger', finalResult: 'Placed 1st', status: 'Win', profit: 1.35 },
+      { date: '2026-06-24', sport: 'UFC', event: 'Silva vs Brooks', pick: 'Fight Goes Distance', finalResult: 'Decision', status: 'Win', profit: 0.95 }
+    ];
+
+    const sportOrder = ['MLB', 'Soccer', 'Horse Racing', 'UFC'];
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[char]));
+    }
+
+    function formatDate(date) {
+      const [year, month, day] = String(date).split('-').map(Number);
+
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+      }).format(new Date(year, month - 1, day, 12));
+    }
+
+    function formatProfit(value) {
+      if (value === 0) return '0.00u';
+      return `${value > 0 ? '+' : ''}${value.toFixed(2)}u`;
+    }
+
+    function statusClass(status) {
+      return `status-${String(status).toLowerCase()}`;
+    }
+
+    function renderSummary(results) {
+      const total = results.length;
+      const wins = results.filter(r => r.status === 'Win').length;
+      const losses = results.filter(r => r.status === 'Loss').length;
+      const graded = wins + losses;
+      const winRate = graded ? `${((wins / graded) * 100).toFixed(1)}%` : '0%';
+      const profit = results.reduce((sum, r) => sum + r.profit, 0);
+
+      document.getElementById('summaryGrid').innerHTML = `
+        <article class="summary-card">
+          <strong>${total}</strong>
+          <span>Total Picks</span>
+          <small>Selected day</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">${wins}</strong>
+          <span>Wins</span>
+          <small>Settled winners</small>
+        </article>
+        <article class="summary-card">
+          <strong class="negative">${losses}</strong>
+          <span>Losses</span>
+          <small>Settled losses</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">${winRate}</strong>
+          <span>Win Rate</span>
+          <small>Excludes push/pending</small>
+        </article>
+        <article class="summary-card">
+          <strong class="${profit < 0 ? 'negative' : 'positive'}">${formatProfit(profit)}</strong>
+          <span>Yield</span>
+          <small>Flat stake P/L</small>
+        </article>
+      `;
+    }
+
+    function resultCard(result) {
+      return `
+        <article class="result-card">
+          <div><span class="label">Date</span><span class="value">${formatDate(result.date)}</span></div>
+          <div><span class="label">Sport</span><span class="sport-pill">${escapeHtml(result.sport)}</span></div>
+          <div><span class="label">Event</span><span class="value">${escapeHtml(result.event)}</span></div>
+          <div><span class="label">Pick</span><span class="value">${escapeHtml(result.pick)}</span></div>
+          <div><span class="label">Final Result</span><span class="value">${escapeHtml(result.finalResult)}</span></div>
+          <div><span class="label">Status</span><span class="status-pill ${statusClass(result.status)}">${escapeHtml(result.status)}</span></div>
+          <div><span class="label">P/L</span><span class="value ${result.profit < 0 ? 'negative' : result.profit > 0 ? 'positive' : 'neutral'}">${formatProfit(result.profit)}</span></div>
+        </article>
+      `;
+    }
+
+    function renderResults() {
+      const selectedDate = document.getElementById('dateFilter').value;
+      const selectedSport = document.getElementById('sportFilter').value;
+      const results = mockResults.filter(result =>
+        result.date === selectedDate &&
+        (selectedSport === 'all' || result.sport === selectedSport)
+      );
+      const list = document.getElementById('resultsList');
+      const countLabel = document.getElementById('resultCountLabel');
+
+      renderSummary(results);
+      countLabel.textContent = `${results.length} results loaded`;
+
+      if (!results.length) {
+        list.innerHTML = '<div class="empty-state">No results found for this date and sport filter.</div>';
+        return;
+      }
+
+      list.innerHTML = sportOrder
+        .map(sport => {
+          const group = results.filter(result => result.sport === sport);
+
+          if (!group.length) return '';
+
+          return `
+            <section class="sport-group">
+              <div class="sport-group-title">${sport} <span>${group.length} results</span></div>
+              ${group.map(resultCard).join('')}
+            </section>
+          `;
+        })
+        .join('');
+    }
+
+    // TODO: Replace mockResults with a real results endpoint when the platform exposes one.
+    const dateFilter = document.getElementById('dateFilter');
+    const availableDates = mockResults
+      .map(result => result.date)
+      .sort();
+    const latestDate = availableDates[availableDates.length - 1];
+
+    dateFilter.value = latestDate;
+    dateFilter.addEventListener('change', renderResults);
+    document.getElementById('sportFilter').addEventListener('change', renderResults);
+    renderResults();
+  </script>
 </body>
 </html>
