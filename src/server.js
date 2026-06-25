@@ -291,6 +291,206 @@ app.post('/api/activate-pro', requireAdmin, async (req, res) => {
 // PICKS
 // =========================
 
+const FINAL_BASEBALL_STATES = new Set([
+  'final',
+  'game over',
+  'completed early',
+  'completed'
+]);
+
+function normalizePickPayload(raw) {
+  const result = String(raw.result || 'pending').toLowerCase();
+  const allowedResults = ['pending', 'win', 'loss', 'push'];
+
+  return {
+    date: raw.date,
+    sport: raw.sport || 'MLB',
+    event: raw.event,
+    homeTeam: raw.homeTeam,
+    awayTeam: raw.awayTeam,
+    market: raw.market,
+    pick: raw.pick,
+    odds: raw.odds,
+    line: raw.line,
+    stake: raw.stake ?? 1,
+    result: allowedResults.includes(result) ? result : 'pending',
+    finalScore: raw.finalScore,
+    profit: raw.profit,
+    gamePk: raw.gamePk ? String(raw.gamePk) : undefined,
+    fixtureId: raw.fixtureId ? String(raw.fixtureId) : undefined,
+    playerName: raw.playerName,
+    team: raw.team,
+    source: raw.source || 'Data More',
+    updatedAt: new Date()
+  };
+}
+
+function pickQueryFor(payload) {
+  const key = {
+    date: payload.date,
+    sport: payload.sport || 'MLB',
+    market: payload.market,
+    pick: payload.pick
+  };
+
+  if (payload.gamePk) return { ...key, gamePk: String(payload.gamePk) };
+  if (payload.fixtureId) return { ...key, fixtureId: String(payload.fixtureId) };
+
+  return {
+    ...key,
+    event: payload.event || '',
+    playerName: payload.playerName || ''
+  };
+}
+
+function normalizeTeamName(value = '') {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function calculateProfit(result, odds, stake = 1) {
+  if (result === 'pending') return null;
+  if (result === 'loss') return -Math.abs(Number(stake) || 1);
+  if (result === 'push') return 0;
+
+  const numericOdds = Number(odds);
+  const units = Number(stake) || 1;
+
+  if (!Number.isFinite(numericOdds)) return 0.91 * units;
+  if (numericOdds > 0) return (numericOdds / 100) * units;
+  if (numericOdds < 0) return (100 / Math.abs(numericOdds)) * units;
+
+  return 0.91 * units;
+}
+
+async function loadMlbGamesForDate(date) {
+  const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${encodeURIComponent(date)}&hydrate=linescore,team`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`MLB Stats API returned HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.dates?.[0]?.games || [];
+}
+
+function normalizeMlbGradeGame(game) {
+  const away = game.teams?.away;
+  const home = game.teams?.home;
+  const status = String(game.status?.detailedState || game.status?.abstractGameState || '').toLowerCase();
+  const awayScore = away?.score;
+  const homeScore = home?.score;
+  const isFinal = FINAL_BASEBALL_STATES.has(status) || status.includes('final');
+
+  return {
+    gamePk: String(game.gamePk),
+    isFinal,
+    awayTeam: away?.team?.name || '',
+    homeTeam: home?.team?.name || '',
+    awayScore,
+    homeScore,
+    finalScore: `${away?.team?.name || 'Away'} ${awayScore ?? 0} - ${home?.team?.name || 'Home'} ${homeScore ?? 0}`,
+    winner: Number(awayScore) > Number(homeScore)
+      ? away?.team?.name || ''
+      : Number(homeScore) > Number(awayScore)
+        ? home?.team?.name || ''
+        : ''
+  };
+}
+
+function gradeMlbPick(pick, game) {
+  if (!game || !game.isFinal) return { result: 'pending', profit: null };
+
+  const market = String(pick.market || '').toUpperCase();
+  const pickText = normalizeTeamName(pick.team || pick.pick);
+  const winner = normalizeTeamName(game.winner);
+  const away = normalizeTeamName(game.awayTeam);
+  const home = normalizeTeamName(game.homeTeam);
+
+  if (market === 'ML') {
+    if (!winner || !pickText) return { result: 'pending', profit: null };
+
+    const pickedWinner = pickText.includes(winner) || winner.includes(pickText);
+    const result = pickedWinner ? 'win' : 'loss';
+
+    return {
+      result,
+      profit: calculateProfit(result, pick.odds, pick.stake)
+    };
+  }
+
+  if (market === 'RL') {
+    const rawLine = Number(
+      pick.line ??
+      String(pick.pick || '').match(/([+-]\d+(?:\.\d+)?)/)?.[1]
+    );
+
+    const pickedAway = pickText.includes(away) || away.includes(pickText);
+    const pickedHome = pickText.includes(home) || home.includes(pickText);
+
+    if (!Number.isFinite(rawLine) || (!pickedAway && !pickedHome)) {
+      return { result: 'pending', profit: null };
+    }
+
+    const margin = pickedAway
+      ? Number(game.awayScore) - Number(game.homeScore)
+      : Number(game.homeScore) - Number(game.awayScore);
+    const adjusted = margin + rawLine;
+    const result = adjusted > 0 ? 'win' : adjusted < 0 ? 'loss' : 'push';
+
+    return {
+      result,
+      profit: calculateProfit(result, pick.odds, pick.stake)
+    };
+  }
+
+  return { result: 'pending', profit: null };
+}
+
+app.get('/api/picks', async (req, res) => {
+  try {
+    const date = req.query.date;
+    const sport = String(req.query.sport || 'all');
+
+    if (!date) {
+      return res.status(400).json({ ok: false, error: 'date is required' });
+    }
+
+    const query = { date };
+
+    if (sport.toLowerCase() !== 'all') {
+      const sportRegex = new RegExp(`^${sport}$`, 'i');
+
+      if (sport.toLowerCase() === 'mlb') {
+        query.$or = [
+          { sport: sportRegex },
+          { sport: { $exists: false } },
+          { sport: '' }
+        ];
+      } else {
+        query.sport = sportRegex;
+      }
+    }
+
+    const picks = await Pick.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      ok: true,
+      date,
+      sport,
+      count: picks.length,
+      picks
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: 'Unable to load picks.' });
+  }
+});
+
 app.post('/api/picks/save', async (req, res) => {
   try {
     const picks = Array.isArray(req.body)
@@ -298,16 +498,98 @@ app.post('/api/picks/save', async (req, res) => {
       : [req.body];
 
     const clean = picks.filter(
-      p => p.market && p.pick
+      p => p.date && p.market && p.pick
     );
 
-    await Pick.insertMany(clean);
+    const saved = [];
 
-    res.json({ ok: true });
+    for (const pick of clean) {
+      const payload = normalizePickPayload(pick);
+
+      const doc = await Pick.findOneAndUpdate(
+        pickQueryFor(payload),
+        {
+          $set: payload,
+          $setOnInsert: { createdAt: new Date() }
+        },
+        {
+          new: true,
+          upsert: true
+        }
+      );
+
+      saved.push(doc);
+    }
+
+    res.json({ ok: true, count: saved.length, picks: saved });
 
   } catch (err) {
     console.error(err);
-    res.json({ ok: false });
+    res.status(500).json({ ok: false, error: 'Unable to save picks.' });
+  }
+});
+
+app.post('/api/picks/grade', async (req, res) => {
+  try {
+    const date = req.query.date || req.body?.date;
+
+    if (!date) {
+      return res.status(400).json({ ok: false, error: 'date is required' });
+    }
+
+    const picks = await Pick.find({
+      date,
+      $or: [
+        { sport: /^MLB$/i },
+        { sport: { $exists: false } },
+        { sport: '' }
+      ]
+    });
+
+    const rawGames = await loadMlbGamesForDate(date);
+    const gamesByPk = new Map(
+      rawGames
+        .map(normalizeMlbGradeGame)
+        .map(game => [game.gamePk, game])
+    );
+
+    const graded = [];
+
+    for (const pick of picks) {
+      const game = gamesByPk.get(String(pick.gamePk || ''));
+      const grade = gradeMlbPick(pick, game);
+
+      pick.result = grade.result;
+      pick.profit = grade.profit;
+      pick.finalScore = game?.finalScore || pick.finalScore;
+      pick.homeTeam = pick.homeTeam || game?.homeTeam;
+      pick.awayTeam = pick.awayTeam || game?.awayTeam;
+      pick.event = pick.event || (game ? `${game.awayTeam} @ ${game.homeTeam}` : pick.event);
+      pick.updatedAt = new Date();
+
+      await pick.save();
+
+      graded.push({
+        id: pick._id,
+        gamePk: pick.gamePk,
+        market: pick.market,
+        pick: pick.pick,
+        result: pick.result,
+        finalScore: pick.finalScore,
+        profit: pick.profit
+      });
+    }
+
+    res.json({
+      ok: true,
+      date,
+      sport: 'MLB',
+      count: graded.length,
+      graded
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: 'Unable to grade picks.' });
   }
 });
 

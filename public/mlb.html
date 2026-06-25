@@ -788,6 +788,63 @@ function renderPlayerList(title,players,type){
   `;
 }
 
+function canTrackPickForStatus(gameStatus){
+  const raw = String(gameStatus || '').toLowerCase();
+  return raw.includes('scheduled') ||
+    raw.includes('pre') ||
+    raw.includes('preview') ||
+    raw.includes('warmup');
+}
+
+async function saveTrackedMlbPicks({ gamePk, date, awayTeam, homeTeam, analysis, modelProbability, isPro }){
+  if(!analysis?.pick) return;
+
+  const event = `${awayTeam} @ ${homeTeam}`;
+  const picks = [{
+    date,
+    sport: 'MLB',
+    event,
+    awayTeam,
+    homeTeam,
+    gamePk: String(gamePk),
+    market: 'ML',
+    pick: analysis.pick,
+    team: analysis.pick,
+    stake: 1,
+    source: 'MLB AI Analysis',
+    modelProbability
+  }];
+
+  if(isPro && analysis.runLine?.pick && analysis.runLine.pick !== 'N/A'){
+    const lineMatch = String(analysis.runLine.pick).match(/([+-]\d+(?:\.\d+)?)/);
+
+    picks.push({
+      date,
+      sport: 'MLB',
+      event,
+      awayTeam,
+      homeTeam,
+      gamePk: String(gamePk),
+      market: 'RL',
+      pick: analysis.runLine.pick,
+      line: lineMatch ? Number(lineMatch[1]) : undefined,
+      stake: 1,
+      source: 'MLB AI Analysis',
+      modelProbability: analysis.runLine.coverProb
+    });
+  }
+
+  try{
+    await fetch('/api/picks/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(picks)
+    });
+  }catch(e){
+    console.warn('Unable to save tracked MLB picks', e);
+  }
+}
+
 async function analyzeGame(gamePk,awayAbbrev,homeAbbrev,gameStatus){
   const container = document.getElementById(`results-${gamePk}`);
   container.innerHTML = `<div class="loading">Running AI analysis...</div>`;
@@ -868,6 +925,18 @@ async function analyzeGame(gamePk,awayAbbrev,homeAbbrev,gameStatus){
 
     window.fullAnalysisData = window.fullAnalysisData.filter(g => String(g.gamePk) !== String(gamePk));
     window.fullAnalysisData.push(analyzedGame);
+
+    if(canTrackPickForStatus(gameStatus)){
+      saveTrackedMlbPicks({
+        gamePk,
+        date: dateInput.value,
+        awayTeam: awayAbbrev,
+        homeTeam: homeAbbrev,
+        analysis: a,
+        modelProbability: Number(winPct).toFixed(2),
+        isPro
+      });
+    }
 
     if(!isPro){
       html += `
