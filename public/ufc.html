@@ -561,6 +561,41 @@ async function initTicker(){
   ticker.innerHTML += ticker.innerHTML; // Double for seamless loop
 }
 
+async function saveTrackedUfcPicks(fights = []) {
+  const picks = fights
+    .filter(fight => fight.prediction?.winner)
+    .map(fight => {
+      const date = fight.date || new Date().toISOString().split('T')[0];
+      const event = `${fight.fighterA?.name || 'Fighter A'} vs ${fight.fighterB?.name || 'Fighter B'}`;
+
+      return {
+        date,
+        sport: 'UFC',
+        event,
+        homeTeam: fight.fighterA?.name,
+        awayTeam: fight.fighterB?.name,
+        fixtureId: `ufc-${date}-${event.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        market: 'ML',
+        pick: fight.prediction.winner,
+        team: fight.prediction.winner,
+        stake: 1,
+        source: 'UFC AI Analysis'
+      };
+    });
+
+  if (!picks.length) return;
+
+  try {
+    await fetch('/api/picks/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(picks)
+    });
+  } catch (error) {
+    console.warn('Unable to save tracked UFC picks', error);
+  }
+}
+
 async function loadFights(){
   fightsGrid.innerHTML = '<div class="loading">Loading UFC board...</div>';
   bestPlaysGrid.innerHTML = '';
@@ -582,6 +617,7 @@ async function loadFights(){
     renderBestPlays(data.bestPlays || []);
     renderSmartParlay(data.smartParlay || []);
     renderFights(data.fights || []);
+    saveTrackedUfcPicks(data.fights || []);
 
     statusBox.textContent = `${data.count || data.fights.length} fights available. Mode: ${data.mode || 'Production'}`;
 

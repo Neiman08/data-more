@@ -149,6 +149,10 @@ router.get('/fights', async (req, res) => {
 
       return {
         id: index + 1,
+        commenceTime: fight.commence_time || null,
+        date: fight.commence_time
+          ? fight.commence_time.split('T')[0]
+          : new Date().toISOString().split('T')[0],
 
         event:
           fight.sport_title ||

@@ -435,6 +435,34 @@ function mergeDuplicateRaces(races = []) {
   return merged.sort((a,b) => Number(a.raceNumber) - Number(b.raceNumber));
 }
 
+async function saveTrackedHorsePicks({ date, track, races }) {
+  const picks = races
+    .filter(race => race.analysis?.pick)
+    .map(race => ({
+      date,
+      sport: 'Horse Racing',
+      event: `${track.toUpperCase()} Race ${race.raceNumber}`,
+      fixtureId: `${track}-${date}-race-${race.raceNumber}`,
+      market: 'WIN',
+      pick: race.analysis.pick,
+      team: race.analysis.pick,
+      stake: 1,
+      source: 'Horse Racing AI Analysis'
+    }));
+
+  if (!picks.length) return;
+
+  try {
+    await fetch('/api/picks/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(picks)
+    });
+  } catch (error) {
+    console.warn('Unable to save tracked Horse Racing picks', error);
+  }
+}
+
 async function loadRaces() {
   const container = document.getElementById('races');
   container.innerHTML = '<div class="loading">⌛ Processing Big Data & Racing Forms...</div>';
@@ -448,6 +476,7 @@ async function loadRaces() {
       return;
     }
     const mergedRaces = mergeDuplicateRaces(data.races);
+    saveTrackedHorsePicks({ date, track, races: mergedRaces });
     container.innerHTML = '';
     mergedRaces.forEach((race) => {
       const a = race.analysis;
