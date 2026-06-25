@@ -15,6 +15,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="auth-header.js" defer></script>
 
   <style>
     :root {
@@ -314,59 +315,6 @@
       white-space: normal;
       overflow: visible;
       text-overflow: unset;
-      word-break: normal;
-    }
-
-    .team-record {
-      display: block;
-      font-size: 11px;
-      color: var(--green);
-      font-weight: 800;
-      margin-top: 6px;
-    }
-
-    .form-box {
-      display: flex;
-      justify-content: center;
-      gap: 3px;
-      margin-top: 7px;
-      flex-wrap: nowrap;
-    }
-
-    .form-item {
-      width: 16px;
-      height: 16px;
-      border-radius: 3px;
-      font-size: 10px;
-      font-weight: 900;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .form-item.win {
-      background: var(--green);
-      color: #000;
-    }
-
-    .form-item.loss {
-      background: #ef4444;
-      color: #fff;
-    }
-
-    .form-item.draw {
-      background: #facc15;
-      color: #000;
-    }
-
-    .coach-name {
-      font-size: 9px;
-      color: var(--gold);
-      font-weight: 900;
-      margin-top: 6px;
-      display: block;
-      line-height: 1.1;
-      white-space: normal;
       word-break: normal;
     }
 
@@ -672,9 +620,7 @@
       <a href="/estadisticas.html">Stats</a>
     </nav>
 
-    <div class="header-actions">
-      <span style="font-size:12px; color:#fff; font-weight:700;">👤 PRO ACTIVE</span>
-    </div>
+    <div class="header-actions" id="headerActions"></div>
   </header>
 
   <div class="container">
@@ -701,6 +647,7 @@
       <button class="btn-action" onclick="loadGames()">LOAD BOARD</button>
       <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ RUN FULL ANALYSIS</button>
     </div>
+    <div id="boardDateLabel" style="color:var(--muted);font-size:11px;font-weight:800;margin:-10px 0 18px;text-transform:uppercase;"></div>
 
     <div id="gamesList"></div>
 
@@ -813,11 +760,84 @@ function getStatusClass(status) {
   return '';
 }
 
+function isLiveMatchStatus(status) {
+  return ['1H', '2H', 'HT', 'ET', 'LIVE'].includes(
+    String(status || '').toUpperCase()
+  );
+}
+
+function getMatchStatusText(g, displayTime) {
+  const status = String(g.status || '').toUpperCase();
+
+  if (isLiveMatchStatus(status)) {
+    return g.liveClock || status;
+  }
+
+  if (status === 'NS') {
+    return displayTime || 'Scheduled';
+  }
+
+  if (status === 'FT') return 'FT';
+
+  return status || displayTime || 'Scheduled';
+}
+
+function getBrowserTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+}
+
+function getDateInTimezone(timezone) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
+}
+
+function getRelativeDateLabel(date, timezone) {
+  const today = getDateInTimezone(timezone);
+  const selectedNoon = new Date(`${date}T12:00:00`);
+  const todayNoon = new Date(`${today}T12:00:00`);
+  const diffDays = Math.round((selectedNoon - todayNoon) / 86400000);
+
+  if (diffDays === -1) return 'Yesterday';
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+
+  return '';
+}
+
+function formatVisibleDate(date) {
+  const [year, month, day] = String(date || '').split('-').map(Number);
+
+  if (!year || !month || !day) return date || '';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric'
+  }).format(new Date(year, month - 1, day, 12));
+}
+
+function setBoardDateLabel(date, timezone) {
+  const label = document.getElementById('boardDateLabel');
+  if (!label) return;
+
+  const relative = getRelativeDateLabel(date, timezone);
+  const visibleDate = formatVisibleDate(date);
+
+  label.textContent = `${relative ? `${relative} · ` : ''}${visibleDate} · ${timezone}`;
+}
+
 async function initTicker() {
   const ticker = document.getElementById('tickerWrapper');
+  const timezone = getBrowserTimezone();
 
   try {
-    const res = await fetch('/api/soccer/games-global');
+    const res = await fetch(
+      `/api/soccer/games-global?timezone=${encodeURIComponent(timezone)}`
+    );
     const data = await res.json();
 
     if (data.ok && data.games?.length) {
@@ -831,7 +851,7 @@ async function initTicker() {
           <span class="ticker-score">${g.awayScore ?? 0}</span>
           ${escapeHtml(shortTeamName(g.awayTeam))}
           <img src="${g.awayLogo}" onerror="this.style.display='none'">
-          <span class="ticker-status">${escapeHtml(g.time || g.status || '')}</span>
+          <span class="ticker-status">${escapeHtml(getMatchStatusText(g, g.localTime || g.time))}</span>
         </div>
       `).join('');
 
@@ -845,35 +865,59 @@ async function initTicker() {
 }
 
 async function loadGames() {
-  const date = document.getElementById('dateSelect').value;
+  const dateInput = document.getElementById('dateSelect');
   const container = document.getElementById('gamesList');
+
+  if (!dateInput || !container) return;
+
+  const date = dateInput.value;
+  const timezone = getBrowserTimezone();
+
+  setBoardDateLabel(date, timezone);
 
   container.innerHTML = '<div class="loading">Syncing global leagues...</div>';
 
   try {
-    const res = await fetch(`/api/soccer/games-global?date=${date}`);
+    const res = await fetch(
+      `/api/soccer/games-global?date=${date}&timezone=${encodeURIComponent(timezone)}`
+    );
     const data = await res.json();
+    const games = Array.isArray(data.games) ? data.games : [];
+    const boardGames = games.filter(g => g.localDate === date);
 
-    if (!data.ok || !data.games?.length) {
+    if (!data.ok) {
+      container.innerHTML = `<p>${escapeHtml(data.error || 'Error loading soccer board.')}</p>`;
+      return;
+    }
+
+    if (!boardGames.length && !Number(data.count || 0)) {
       container.innerHTML = '<p>No games available.</p>';
+      return;
+    }
+
+    if (!boardGames.length) {
+      container.innerHTML = '<p>Games received but no renderable matches were returned.</p>';
       return;
     }
 
     const grouped = {};
 
-    data.games.forEach(g => {
-      (grouped[g.leagueName] = grouped[g.leagueName] || []).push(g);
+    boardGames.forEach(g => {
+      const leagueName = g.leagueName || g.league || 'Soccer';
+      (grouped[leagueName] = grouped[leagueName] || []).push(g);
     });
 
-    container.innerHTML = '';
+    let boardHtml = '';
 
-    for (const [league, games] of Object.entries(grouped)) {
+    for (const [league, leagueGames] of Object.entries(grouped)) {
       let html = `<h2 class="league-title">${escapeHtml(league)}</h2><div class="games-grid">`;
 
-      games.forEach(g => {
+      leagueGames.forEach(g => {
         const homeShort = shortTeamName(g.homeTeam);
         const awayShort = shortTeamName(g.awayTeam);
-        const statusClass = getStatusClass(g.status || g.time);
+        const displayTime = g.localTime || g.time;
+        const statusText = getMatchStatusText(g, displayTime);
+        const statusClass = getStatusClass(g.status || statusText);
 
         html += `
           <div class="card">
@@ -884,27 +928,21 @@ async function loadGames() {
               <div class="team-box">
                 <img src="${g.homeLogo}" class="team-logo" onerror="this.src='/logo.png'">
                 <span class="team-name">${escapeHtml(homeShort)}</span>
-                <span class="team-record">${escapeHtml(g.homeRecord || '')}</span>
-                ${renderRealForm(g.homeForm)}
-                <span class="coach-name">${escapeHtml(g.homeCoach || g.homeTeam)}</span>
               </div>
 
               <div class="score-center">
                 <div class="live-tag ${statusClass}">
-                  ${escapeHtml(g.status || g.time || 'Scheduled')}
+                  ${escapeHtml(statusText)}
                 </div>
                 <div class="score-now">
                   <span>${g.homeScore ?? 0}</span><span>-</span><span>${g.awayScore ?? 0}</span>
                 </div>
-                <div class="game-time">${escapeHtml(g.time || 'Scheduled')}</div>
+                <div class="game-time">${escapeHtml(displayTime || 'Scheduled')}</div>
               </div>
 
               <div class="team-box">
                 <img src="${g.awayLogo}" class="team-logo" onerror="this.src='/logo.png'">
                 <span class="team-name">${escapeHtml(awayShort)}</span>
-                <span class="team-record">${escapeHtml(g.awayRecord || '')}</span>
-                ${renderRealForm(g.awayForm)}
-                <span class="coach-name">${escapeHtml(g.awayCoach || g.awayTeam)}</span>
               </div>
 
             </div>
@@ -926,8 +964,10 @@ async function loadGames() {
       });
 
       html += `</div>`;
-      container.innerHTML += html;
+      boardHtml += html;
     }
+
+    container.innerHTML = boardHtml;
 
   } catch(e) {
     container.innerHTML = '<p>Error loading board.</p>';
@@ -1087,13 +1127,17 @@ function renderTopAssistProps(props) {
 async function analyze(btn, matchId, leagueKey) {
   const resDiv = document.getElementById(`res-${matchId}`);
   const lineupBox = document.getElementById(`lineup-${matchId}`);
+  const date = document.getElementById('dateSelect').value;
+  const timezone = getBrowserTimezone();
 
   resDiv.style.display = 'block';
   resDiv.innerHTML = '<div class="loading">Running AI analysis...</div>';
   btn.disabled = true;
 
   try {
-    const res = await fetch(`/api/soccer/analyze/${matchId}?league=${leagueKey}`);
+    const res = await fetch(
+      `/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}&timezone=${encodeURIComponent(timezone)}`
+    );
     const data = await res.json();
     const a = data.analysis || data;
 
@@ -1243,10 +1287,11 @@ async function analyzeAll() {
   }
 }
 
-document.getElementById('dateSelect').value =
-  new Intl.DateTimeFormat('en-CA', {
-    timeZone:'America/Chicago'
-  }).format(new Date());
+const dateInput = document.getElementById('dateSelect');
+
+if (dateInput) {
+  dateInput.value = getDateInTimezone(getBrowserTimezone());
+}
 
 initTicker();
 loadGames();

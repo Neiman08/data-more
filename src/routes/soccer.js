@@ -21,6 +21,7 @@ const LEAGUES = {
 };
 
 const LEAGUE_IDS = new Set(Object.values(LEAGUES).map(l => l.id));
+const DEFAULT_TIMEZONE = 'America/Chicago';
 
 const cache = {
   fixtures: {},
@@ -34,17 +35,129 @@ function getHeaders() {
   return { 'x-apisports-key': key };
 }
 
-function getChicagoDate() {
+function getLocalDate(timezone = DEFAULT_TIMEZONE, date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Chicago',
+    timeZone: normalizeTimezone(timezone),
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
-  }).format(new Date());
+  }).format(date);
+}
+
+function getChicagoDate() {
+  return getLocalDate(DEFAULT_TIMEZONE);
 }
 
 function getDate(req) {
   return req.query.date || getChicagoDate();
+}
+
+function normalizeTimezone(timezone) {
+  try {
+    if (!timezone) return DEFAULT_TIMEZONE;
+
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone
+    }).format(new Date());
+
+    return timezone;
+  } catch {
+    return DEFAULT_TIMEZONE;
+  }
+}
+
+function getTimezone(req) {
+  return normalizeTimezone(req.query.timezone);
+}
+
+function shiftDate(date, days) {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function formatLocalTime(date, timezone) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: normalizeTimezone(timezone),
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+function normalizeKickoff(rawDate, timezone) {
+  const safeTimezone = normalizeTimezone(timezone);
+
+  if (!rawDate) {
+    const localDate = getLocalDate(safeTimezone);
+
+    return {
+      utcKickoff: '',
+      localKickoff: '',
+      localDate,
+      localTime: 'TBD',
+      timezone: safeTimezone
+    };
+  }
+
+  const kickoffDate = new Date(rawDate);
+  const localDate = getLocalDate(safeTimezone, kickoffDate);
+  const localTime = formatLocalTime(kickoffDate, safeTimezone);
+
+  return {
+    utcKickoff: rawDate,
+    localKickoff: `${localDate} ${localTime}`,
+    localDate,
+    localTime,
+    timezone: safeTimezone
+  };
+}
+
+function getFixtureStatus(fixture = {}) {
+  const status = fixture.status || {};
+
+  return {
+    short: status.short || 'NS',
+    long: status.long || 'Not Started',
+    elapsed: status.elapsed ?? null,
+    extra: status.extra ?? null
+  };
+}
+
+function buildLiveClock(elapsed, extraTime) {
+  if (elapsed === null || elapsed === undefined) return null;
+
+  return extraTime
+    ? `${elapsed}+${extraTime}'`
+    : `${elapsed}'`;
+}
+
+function isLiveStatus(status) {
+  return ['LIVE', '1H', '2H', 'HT', 'ET'].includes(
+    String(status || '').toUpperCase()
+  );
+}
+
+function hasApiErrors(data) {
+  if (!data?.errors) return false;
+
+  if (Array.isArray(data.errors)) return data.errors.length > 0;
+  if (typeof data.errors === 'object') return Object.keys(data.errors).length > 0;
+
+  return Boolean(data.errors);
+}
+
+function hasFatalApiError(data) {
+  if (!hasApiErrors(data)) return false;
+
+  const text = JSON.stringify(data.errors).toLowerCase();
+
+  return (
+    text.includes('request') ||
+    text.includes('key') ||
+    text.includes('token') ||
+    text.includes('account') ||
+    text.includes('subscription')
+  );
 }
 
 function getSoccerSeason(date, leagueKey = '') {
@@ -109,38 +222,47 @@ function buildRecord(lastMatches = [], teamId) {
   return `${wins}-${draws}-${losses}`;
 }
 
-async function formatFixture(g, leagueKey = '') {
+async function formatFixture(g, leagueKey = '', timezone = DEFAULT_TIMEZONE) {
 
-  const date =
-    g.fixture.date?.split('T')[0] || getChicagoDate();
+  const kickoff = normalizeKickoff(
+    g.fixture?.date,
+    timezone
+  );
+  const fixtureStatus = getFixtureStatus(g.fixture);
+  const liveClock = buildLiveClock(
+    fixtureStatus.elapsed,
+    fixtureStatus.extra
+  );
 
   const [
     homeRecent,
     awayRecent
   ] = await Promise.all([
-    getLast5TeamMatches(g.teams.home.id, date),
-    getLast5TeamMatches(g.teams.away.id, date)
+    getLast5TeamMatches(g.teams.home.id, kickoff.localDate),
+    getLast5TeamMatches(g.teams.away.id, kickoff.localDate)
   ]);
 
   return {
     matchId: g.fixture.id,
     fixtureId: g.fixture.id,
 
-    date,
+    date: kickoff.localDate,
+    utcKickoff: kickoff.utcKickoff,
+    localKickoff: kickoff.localKickoff,
+    localDate: kickoff.localDate,
+    localTime: kickoff.localTime,
+    timezone: kickoff.timezone,
 
     time: g.fixture.status.elapsed
       ? `${g.fixture.status.elapsed}'`
-      : new Date(g.fixture.date).toLocaleTimeString(
-          'en-US',
-          {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'America/Chicago'
-          }
-        ),
+      : kickoff.localTime,
 
-    status: g.fixture.status.short,
-    statusLong: g.fixture.status.long,
+    status: fixtureStatus.short,
+    statusLong: fixtureStatus.long,
+    elapsed: fixtureStatus.elapsed,
+    minute: fixtureStatus.elapsed,
+    extraTime: fixtureStatus.extra,
+    liveClock,
 
     leagueKey,
     leagueName: g.league.name,
@@ -269,26 +391,33 @@ async function getLiveStats(fixtureId) {
   return liveStats;
 }
 
-function formatFixtureForList(g) {
+function formatFixtureForList(g, timezone = DEFAULT_TIMEZONE) {
   const leagueKey = Object.keys(LEAGUES).find(k => LEAGUES[k].id === g.league?.id) || '';
   const rawDate = g.fixture?.date || '';
-  const date = rawDate.split('T')[0] || getChicagoDate();
-  const kickoffTime = rawDate
-    ? new Date(rawDate).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'America/Chicago'
-      })
-    : 'TBD';
+  const kickoff = normalizeKickoff(rawDate, timezone);
+  const fixtureStatus = getFixtureStatus(g.fixture);
+  const liveClock = buildLiveClock(
+    fixtureStatus.elapsed,
+    fixtureStatus.extra
+  );
 
   return {
     matchId: g.fixture.id,
     fixtureId: g.fixture.id,
-    date,
+    date: kickoff.localDate,
     kickoff: rawDate,
-    time: kickoffTime,
-    status: g.fixture?.status?.short || 'NS',
-    statusLong: g.fixture?.status?.long || 'Not Started',
+    utcKickoff: kickoff.utcKickoff,
+    localKickoff: kickoff.localKickoff,
+    localDate: kickoff.localDate,
+    localTime: kickoff.localTime,
+    timezone: kickoff.timezone,
+    time: kickoff.localTime,
+    status: fixtureStatus.short,
+    statusLong: fixtureStatus.long,
+    elapsed: fixtureStatus.elapsed,
+    minute: fixtureStatus.elapsed,
+    extraTime: fixtureStatus.extra,
+    liveClock,
     leagueKey,
     leagueName: g.league?.name || '',
     leagueId: g.league?.id || null,
@@ -316,25 +445,67 @@ function formatFixtureForList(g) {
   };
 }
 
-async function getGlobalFixtures(date) {
-  const cacheKey = `global-${date}`;
+async function getGlobalFixtures(date, timezone = DEFAULT_TIMEZONE) {
+  const safeTimezone = normalizeTimezone(timezone);
+  const cacheKey = `global-${safeTimezone}-${date}`;
   const cached = cache.fixtures[cacheKey];
 
-  if (cached && Date.now() - cached.timestamp < cache.TTL) {
+  if (
+    cached &&
+    Date.now() - cached.timestamp < cache.TTL &&
+    !cached.data.some(g => isLiveStatus(g.status))
+  ) {
     return cached.data;
   }
 
-  // Single API call by date — bypasses Free plan season restriction.
-  // Filters in JS by allowed league IDs so World Cup and all configured
-  // leagues are included without requiring a season parameter.
-  const data = await apiFootball(`/fixtures?date=${date}`);
-  const rawGames = data?.response || [];
+  // Query the surrounding UTC dates, then filter by localDate. This prevents
+  // late-night UTC kickoffs from leaking into the wrong local board day.
+  const apiDates = [
+    shiftDate(date, -1),
+    date,
+    shiftDate(date, 1)
+  ];
 
-  const games = rawGames
+  const responses = await Promise.all(
+    apiDates.map(apiDate => apiFootball(`/fixtures?date=${apiDate}`))
+  );
+
+  const apiErrors = responses
+    .filter(data => hasApiErrors(data))
+    .map(data => data.errors);
+  const hasAnyFixtureResponse = responses.some(data => (data?.response || []).length > 0);
+  const allResponsesFailed = responses.every(data => hasApiErrors(data));
+  const hasFatalError = responses.some(data => hasFatalApiError(data));
+
+  if (!hasAnyFixtureResponse && apiErrors.length && (allResponsesFailed || hasFatalError)) {
+    const err = new Error('API-Football returned no fixtures for the requested board.');
+    err.apiErrors = apiErrors;
+    throw err;
+  }
+
+  const byFixture = new Map();
+
+  for (const data of responses) {
+    for (const game of data?.response || []) {
+      const fixtureId = game.fixture?.id;
+
+      if (fixtureId && !byFixture.has(fixtureId)) {
+        byFixture.set(fixtureId, game);
+      }
+    }
+  }
+
+  const games = [...byFixture.values()]
     .filter(g => LEAGUE_IDS.has(g.league?.id))
-    .map(g => formatFixtureForList(g));
+    .map(g => formatFixtureForList(g, safeTimezone))
+    .filter(g => g.localDate === date);
 
-  cache.fixtures[cacheKey] = { data: games, timestamp: Date.now() };
+  if (!games.some(g => isLiveStatus(g.status))) {
+    cache.fixtures[cacheKey] = { data: games, timestamp: Date.now() };
+  } else {
+    delete cache.fixtures[cacheKey];
+  }
+
   return games;
 }
 
@@ -569,21 +740,24 @@ router.get('/games-global', async (req, res) => {
   try {
 
     const date = getDate(req);
+    const timezone = getTimezone(req);
 
-    const games = await getGlobalFixtures(date);
+    const games = await getGlobalFixtures(date, timezone);
 
     res.json({
       ok: true,
       selectedDate: date,
+      timezone,
       count: games.length,
       games
     });
 
-  } catch {
+  } catch (err) {
 
-    res.status(500).json({
+    res.status(502).json({
       ok: false,
-      error: 'Unable to load global soccer games.',
+      error: 'Unable to load global soccer games from API-Football.',
+      details: err.apiErrors || undefined,
       games: []
     });
   }
@@ -594,8 +768,9 @@ router.get('/analyze/:id', async (req, res) => {
   try {
 
     const date = getDate(req);
+    const timezone = getTimezone(req);
 
-    const games = await getGlobalFixtures(date);
+    const games = await getGlobalFixtures(date, timezone);
 
     const matchRaw = games.find(
       g => String(g.matchId) === String(req.params.id)

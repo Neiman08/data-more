@@ -7,6 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="auth-header.js" defer></script>
 
   <style>
     :root {
@@ -242,49 +243,241 @@
       color: var(--green);
     }
 
-    .sports-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      padding: 40px 50px;
+    .sports-hub {
+      padding: 62px 50px 32px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .card {
-      height: 220px;
-      background: #0a0d10;
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      padding: 25px;
+    .section-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .section-header .line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(107,255,25,.55), transparent);
+    }
+
+    .section-header h2 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1;
+      letter-spacing: .2px;
+    }
+
+    .section-header p {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      margin-top: 8px;
+    }
+
+    .sport-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .sport-card {
+      height: 430px;
+      min-height: 430px;
+      border: 1px solid rgba(100,255,100,.15);
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      text-decoration: none;
+      color: #fff;
+      background: #05080b;
+      isolation: isolate;
+      box-shadow: 0 24px 70px rgba(0,0,0,.38);
+      transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+    }
+
+    .sport-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(107,255,25,.65);
+      box-shadow:
+        0 28px 80px rgba(0,0,0,.62),
+        0 0 38px rgba(114,255,0,.22);
+    }
+
+    .sport-bg,
+    .sport-overlay {
+      position: absolute;
+      inset: 0;
+    }
+
+    .sport-bg {
+      background-size: cover;
+      background-position: center;
+      transform: scale(1);
+      filter: saturate(1.05) contrast(1.08);
+      opacity: .96;
+      z-index: -3;
+      transition: transform 300ms ease, filter 300ms ease;
+    }
+
+    .sport-card:hover .sport-bg {
+      transform: scale(1.07);
+      filter: saturate(1.15) contrast(1.12);
+    }
+
+    .mlb-bg {
+      background-image: url('/images/card-mlb.png');
+    }
+
+    .soccer-bg {
+      background-image: url('/images/soccer-card.png');
+    }
+
+    .horse-bg {
+      background-image: url('/images/horse-card.png');
+    }
+
+    .ufc-bg {
+      background-image: url('/images/ufc-card.png');
+    }
+
+    .sport-overlay {
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,.92),
+        rgba(0,0,0,.25)
+      );
+      z-index: -2;
+    }
+
+    .sport-content {
+      height: 430px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       position: relative;
-      overflow: hidden;
-      background-size: cover;
-      background-position: center;
+      z-index: 1;
     }
 
-    .card::before {
-      content: '';
+    .sport-badge {
       position: absolute;
-      inset: 0;
-      background: linear-gradient(0deg, #000 20%, transparent 80%);
+      top: 18px;
+      left: 18px;
+      border: 1px solid rgba(114,255,0,.35);
+      background: rgba(0,0,0,.58);
+      color: #72ff00;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      box-shadow: 0 0 18px rgba(114,255,0,.08);
     }
 
-    .card-content {
-      z-index: 2;
+    .sport-badge.live {
+      background: rgba(239,68,68,.18);
+      color: #ff6b6b;
+      border-color: rgba(239,68,68,.45);
     }
 
-    .card-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid var(--green);
-      color: var(--green);
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 11px;
+    .sport-badge.upcoming {
+      color: #facc15;
+      border-color: rgba(250,204,21,.45);
+    }
+
+    .sport-icon {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .sport-card h3 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(34px, 3vw, 48px);
+      line-height: .95;
+      margin-bottom: 10px;
+      text-shadow: 0 3px 18px rgba(0,0,0,.75);
+    }
+
+    .sport-card p {
+      color: rgba(255,255,255,.82);
+      font-size: 14px;
       font-weight: 800;
-      cursor: pointer;
-      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+
+    .sport-card ul {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      margin-bottom: 22px;
+      color: rgba(255,255,255,.9);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .sport-cta {
+      display: block;
+      width: 100%;
+      border: 1px solid #72ff00;
+      background: #72ff00;
+      color: #000;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 0 18px rgba(114,255,0,.16);
+      transition: transform 300ms ease, box-shadow 300ms ease, filter 300ms ease;
+    }
+
+    .sport-card:hover .sport-cta {
+      transform: scale(1.025);
+      filter: brightness(1.08);
+      box-shadow:
+        0 0 28px rgba(114,255,0,.36),
+        0 12px 28px rgba(0,0,0,.36);
+    }
+
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      padding: 26px 50px 46px;
+    }
+
+    .metric-card {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.035);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .metric-card strong {
+      display: block;
+      color: var(--green);
+      font-family: 'Anton', sans-serif;
+      font-size: 34px;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric-card span {
+      display: block;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .6px;
+    }
+
+    .metric-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 6px;
+      font-weight: 700;
     }
 
     .banner-cta {
@@ -301,9 +494,13 @@
     @media (max-width: 1024px) {
       .hero,
       .stats-row,
-      .sports-grid {
+      .metrics-strip {
         grid-template-columns: 1fr;
         gap: 20px;
+      }
+
+      .sport-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .banner-cta {
@@ -359,8 +556,28 @@
       }
 
       .stats-row,
-      .sports-grid {
+      .sports-hub,
+      .metrics-strip {
         padding: 30px 20px;
+      }
+
+      .sport-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sport-card,
+      .sport-content {
+        height: 430px;
+        min-height: 430px;
+      }
+
+      .section-header {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .section-header .line {
+        display: none;
       }
 
       .banner-cta {
@@ -392,7 +609,7 @@
     <a href="/faq.html">FAQ</a>
   </nav>
 
-  <div class="header-actions">
+  <div class="header-actions" id="headerActions">
     <a href="login.html" class="btn-login">LOG IN</a>
     <a href="registro.html" class="btn-reg">SIGN UP</a>
   </div>
@@ -417,7 +634,7 @@
     </h1>
 
     <p class="subtitle">
-      AI-powered sports predictions for Horse Racing, MLB, NBA, and Soccer.
+      AI-powered sports predictions for MLB, Soccer, Horse Racing, and UFC.
       More analysis. Better results.
     </p>
 
@@ -553,45 +770,113 @@
 
 </section>
 
-<section class="sports-grid">
+<section class="sports-hub">
 
-  <div class="card" style="background-image:url('logos/HIPISMO.png');">
-    <div class="card-content">
-      <p style="color:var(--green);font-size:18px;font-weight:900;">
-        HORSE RACING PICKS
-      </p>
+  <div class="section-header">
+    <div class="line"></div>
 
-      <button class="card-btn"
-        onclick="window.location.href='horse.html'">
-        VIEW PICKS
-      </button>
+    <div>
+      <h2>CHOOSE YOUR SPORT</h2>
+      <p>AI POWERED. REAL TIME. REAL RESULTS.</p>
     </div>
+
+    <div class="line"></div>
   </div>
 
-  <div class="card" style="background-image:url('logos/MLB.png');">
-    <div class="card-content">
-      <p style="color:var(--green);font-size:18px;font-weight:900;">
-        MLB PICKS
-      </p>
+  <div class="sport-grid">
 
-      <button class="card-btn"
-        onclick="window.location.href='mlb.html'">
-        VIEW PICKS
-      </button>
-    </div>
+    <a class="sport-card" href="/mlb.html">
+      <div class="sport-bg mlb-bg"></div>
+      <div class="sport-overlay"></div>
+      <div class="sport-content">
+        <span class="sport-badge">LIVE DATA</span>
+        <div class="sport-icon">⚾</div>
+        <h3>MLB</h3>
+        <p>AI Analysis & Predictions</p>
+        <ul>
+          <li>🔴 Games Today</li>
+          <li>📈 AI Picks Available</li>
+        </ul>
+        <span class="sport-cta">ENTER →</span>
+      </div>
+    </a>
+
+    <a class="sport-card" href="/soccer.html">
+      <div class="sport-bg soccer-bg"></div>
+      <div class="sport-overlay"></div>
+      <div class="sport-content">
+        <span class="sport-badge live">LIVE</span>
+        <div class="sport-icon">⚽</div>
+        <h3>SOCCER</h3>
+        <p>World Cup Coverage</p>
+        <ul>
+          <li>🔴 Live Matches</li>
+          <li>📈 AI Picks Available</li>
+        </ul>
+        <span class="sport-cta">ENTER →</span>
+      </div>
+    </a>
+
+    <a class="sport-card" href="/horse.html">
+      <div class="sport-bg horse-bg"></div>
+      <div class="sport-overlay"></div>
+      <div class="sport-content">
+        <span class="sport-badge">RACING AI</span>
+        <div class="sport-icon">🏇</div>
+        <h3>HORSE RACING</h3>
+        <p>Racing AI Predictions</p>
+        <ul>
+          <li>🐎 Races Today</li>
+          <li>📈 AI Picks Available</li>
+        </ul>
+        <span class="sport-cta">ENTER →</span>
+      </div>
+    </a>
+
+    <a class="sport-card" href="/ufc.html">
+      <div class="sport-bg ufc-bg"></div>
+      <div class="sport-overlay"></div>
+      <div class="sport-content">
+        <span class="sport-badge upcoming">UPCOMING</span>
+        <div class="sport-icon">🥊</div>
+        <h3>UFC</h3>
+        <p>Fight AI Predictions</p>
+        <ul>
+          <li>📅 Next Event</li>
+          <li>📈 AI Picks Available</li>
+        </ul>
+        <span class="sport-cta">ENTER →</span>
+      </div>
+    </a>
+
   </div>
 
-  <div class="card" style="background-image:url('logos/NBA.png');">
-    <div class="card-content">
-      <p style="color:var(--green);font-size:18px;font-weight:900;">
-        NBA PICKS
-      </p>
+</section>
 
-      <button class="card-btn"
-        onclick="window.location.href='nba.html'">
-        VIEW PICKS
-      </button>
-    </div>
+<section class="metrics-strip">
+
+  <div class="metric-card">
+    <strong>78%</strong>
+    <span>WIN RATE</span>
+    <small>Last 30 Days</small>
+  </div>
+
+  <div class="metric-card">
+    <strong>+24.6%</strong>
+    <span>YIELD</span>
+    <small>Last 30 Days</small>
+  </div>
+
+  <div class="metric-card">
+    <strong>2,500+</strong>
+    <span>WINNING MEMBERS</span>
+    <small>And Growing</small>
+  </div>
+
+  <div class="metric-card">
+    <strong>100%</strong>
+    <span>DATA DRIVEN</span>
+    <small>No Luck. Just Data.</small>
   </div>
 
 </section>

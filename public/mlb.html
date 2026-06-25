@@ -11,6 +11,7 @@
   <title>Data More | MLB Prediction Engine</title>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script src="auth-header.js" defer></script>
 
   <style>
     :root {
@@ -1116,22 +1117,8 @@ function renderLineups(data){
   return `<div class="lineup-container"><div style="display:flex;justify-content:space-between;gap:10px;"><div style="width:48%">${renderSide(data.awayLineup)}</div><div style="width:48%">${renderSide(data.homeLineup)}</div></div></div>`;
 }
 
-function renderHeaderActions(){
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  const container = document.getElementById('headerActions');
-  if(!user){
-    container.innerHTML = `<a href="login.html" class="btn-login">LOG IN</a><a href="registro.html" class="btn-reg">SIGN UP</a>`;
-  }else{
-    const planTag = user.proActivo ? '<span style="color:var(--green);">[PRO]</span>' : '<span style="color:#facc15;">[FREE]</span>';
-    container.innerHTML = `<span style="font-size:12px;color:#fff;">👤 ${user.nombre || user.email.split('@')[0]}${planTag}</span><button class="btn-logout" onclick="logout()">LOG OUT</button>`;
-  }
-}
-
-function logout(){ localStorage.removeItem('user'); window.location.href = 'index.html'; }
-
 loadGames();
 initTicker();
-renderHeaderActions();
 </script>
 </body>
 </html>
