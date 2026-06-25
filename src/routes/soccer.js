@@ -5,6 +5,7 @@ const router = express.Router();
 const API_URL = 'https://v3.football.api-sports.io';
 
 const LEAGUES = {
+  world_cup: { id: 1, name: 'FIFA World Cup' },
   epl: { id: 39, name: 'Premier League' },
   laliga: { id: 140, name: 'La Liga' },
   seriea: { id: 135, name: 'Serie A' },
@@ -18,6 +19,8 @@ const LEAGUES = {
   mls: { id: 253, name: 'MLS' },
   ligamx: { id: 262, name: 'Liga MX' }
 };
+
+const LEAGUE_IDS = new Set(Object.values(LEAGUES).map(l => l.id));
 
 const cache = {
   fixtures: {},
@@ -266,53 +269,73 @@ async function getLiveStats(fixtureId) {
   return liveStats;
 }
 
-async function getFixturesByLeague(leagueKey, date) {
+function formatFixtureForList(g) {
+  const leagueKey = Object.keys(LEAGUES).find(k => LEAGUES[k].id === g.league?.id) || '';
+  const rawDate = g.fixture?.date || '';
+  const date = rawDate.split('T')[0] || getChicagoDate();
+  const kickoffTime = rawDate
+    ? new Date(rawDate).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Chicago'
+      })
+    : 'TBD';
 
-  const league = LEAGUES[leagueKey] || LEAGUES.epl;
+  return {
+    matchId: g.fixture.id,
+    fixtureId: g.fixture.id,
+    date,
+    kickoff: rawDate,
+    time: kickoffTime,
+    status: g.fixture?.status?.short || 'NS',
+    statusLong: g.fixture?.status?.long || 'Not Started',
+    leagueKey,
+    leagueName: g.league?.name || '',
+    leagueId: g.league?.id || null,
+    league: g.league?.name || '',
+    round: g.league?.round || '',
+    homeTeam: g.teams?.home?.name || '',
+    awayTeam: g.teams?.away?.name || '',
+    homeTeamId: g.teams?.home?.id || null,
+    awayTeamId: g.teams?.away?.id || null,
+    homeLogo: g.teams?.home?.logo || '',
+    awayLogo: g.teams?.away?.logo || '',
+    score: {
+      home: g.goals?.home ?? null,
+      away: g.goals?.away ?? null,
+      display: (g.goals?.home !== null && g.goals?.home !== undefined)
+        ? `${g.goals.home}-${g.goals.away}`
+        : 'vs'
+    },
+    homeScore: g.goals?.home ?? 0,
+    awayScore: g.goals?.away ?? 0,
+    homeForm: '---',
+    awayForm: '---',
+    homeRecord: '---',
+    awayRecord: '---'
+  };
+}
 
-  const season = getSoccerSeason(date, leagueKey);
-
-  const cacheKey = `${leagueKey}-${season}-${date}`;
-
+async function getGlobalFixtures(date) {
+  const cacheKey = `global-${date}`;
   const cached = cache.fixtures[cacheKey];
 
   if (cached && Date.now() - cached.timestamp < cache.TTL) {
     return cached.data;
   }
 
-  const data = await apiFootball(
-    `/fixtures?league=${league.id}&season=${season}&date=${date}`
-  );
+  // Single API call by date — bypasses Free plan season restriction.
+  // Filters in JS by allowed league IDs so World Cup and all configured
+  // leagues are included without requiring a season parameter.
+  const data = await apiFootball(`/fixtures?date=${date}`);
+  const rawGames = data?.response || [];
 
-  const games = await Promise.all(
-    (data?.response || []).map(g =>
-      formatFixture(g, leagueKey)
-    )
-  );
+  const games = rawGames
+    .filter(g => LEAGUE_IDS.has(g.league?.id))
+    .map(g => formatFixtureForList(g));
 
-  cache.fixtures[cacheKey] = {
-    data: games,
-    timestamp: Date.now()
-  };
-
+  cache.fixtures[cacheKey] = { data: games, timestamp: Date.now() };
   return games;
-}
-
-async function getGlobalFixtures(date) {
-
-  const allGames = [];
-
-  for (const [leagueKey] of Object.entries(LEAGUES)) {
-
-    const games = await getFixturesByLeague(
-      leagueKey,
-      date
-    );
-
-    allGames.push(...games);
-  }
-
-  return allGames;
 }
 
 async function getLineups(fixtureId) {
