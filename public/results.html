@@ -248,7 +248,7 @@
       border-radius: 14px;
       padding: 18px;
       display: grid;
-      grid-template-columns: 98px 105px minmax(180px, 1.25fr) minmax(150px, .9fr) minmax(135px, .8fr) 92px 92px;
+      grid-template-columns: 92px 96px minmax(170px, 1.2fr) minmax(150px, .9fr) minmax(150px, .9fr) 92px 84px 82px;
       align-items: center;
       gap: 14px;
     }
@@ -288,6 +288,11 @@
     .status-loss { color: #fff; background: var(--red); }
     .status-push { color: #000; background: var(--yellow); }
     .status-pending { color: #111827; background: var(--gray); }
+    .status-final { color: #000; background: var(--green); }
+    .status-live { color: #fff; background: var(--red); }
+    .status-scheduled { color: #111827; background: var(--gray); }
+    .status-unavailable { color: #000; background: var(--yellow); }
+    .status-no-pick-tracked { color: #111827; background: var(--gray); }
     .empty-state {
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -297,6 +302,15 @@
       font-size: 13px;
       font-weight: 800;
       text-align: center;
+    }
+
+    .source-note {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.5;
+      margin-top: -12px;
+      margin-bottom: 22px;
     }
 
     @media (max-width: 1120px) {
@@ -341,7 +355,7 @@
     <section class="container">
       <div class="page-kicker">Performance Ledger</div>
       <h1>RESULTS TRACKER</h1>
-      <p class="subtitle">Track every published pick with final scores, grading status, and profit impact across the full Data More sports board.</p>
+      <p class="subtitle">Track Data More picks against real final scores, with grading shown only when a saved pick exists for the game.</p>
 
       <div class="sport-switcher"></div>
 
@@ -355,32 +369,33 @@
           <option value="UFC">UFC</option>
         </select>
       </div>
+      <p class="source-note" id="sourceNote">Loading real results from available project APIs...</p>
 
       <div class="summary-grid" id="summaryGrid">
         <article class="summary-card">
           <strong>0</strong>
-          <span>Total Picks</span>
+          <span>Total Games</span>
           <small>Selected day</small>
         </article>
         <article class="summary-card">
           <strong class="positive">0</strong>
-          <span>Wins</span>
-          <small>Settled winners</small>
+          <span>Tracked Picks</span>
+          <small>Saved Data More picks</small>
         </article>
         <article class="summary-card">
           <strong class="negative">0</strong>
+          <span>Wins</span>
+          <small>Graded WIN</small>
+        </article>
+        <article class="summary-card">
+          <strong>0</strong>
           <span>Losses</span>
-          <small>Settled losses</small>
+          <small>Graded LOSS</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">0%</strong>
-          <span>Win Rate</span>
-          <small>Excludes push/pending</small>
-        </article>
-        <article class="summary-card">
-          <strong class="positive">0.00u</strong>
-          <span>Yield</span>
-          <small>Flat stake P/L</small>
+          <strong>0</strong>
+          <span>Pending</span>
+          <small>No final grade</small>
         </article>
       </div>
 
@@ -394,28 +409,12 @@
   </main>
 
   <script>
-    const mockResults = [
-      { date: '2026-06-25', sport: 'MLB', event: 'Yankees vs Red Sox', pick: 'Yankees ML -135', finalResult: 'NYY 5, BOS 3', status: 'Win', profit: 0.74 },
-      { date: '2026-06-25', sport: 'MLB', event: 'Dodgers vs Giants', pick: 'Over 8.5 Runs', finalResult: 'LAD 6, SF 4', status: 'Win', profit: 0.91 },
-      { date: '2026-06-25', sport: 'MLB', event: 'Mets vs Phillies', pick: 'Phillies -1.5 +125', finalResult: 'PHI 7, NYM 2', status: 'Win', profit: 1.25 },
-      { date: '2026-06-25', sport: 'MLB', event: 'Astros vs Rangers', pick: 'Astros Team Total Over 4.5', finalResult: 'HOU 3, TEX 5', status: 'Loss', profit: -1.00 },
-      { date: '2026-06-25', sport: 'Soccer', event: 'South Africa vs South Korea', pick: 'Under 2.5 Goals', finalResult: 'RSA 0, KOR 0', status: 'Push', profit: 0.00 },
-      { date: '2026-06-25', sport: 'Soccer', event: 'Czechia vs Mexico', pick: 'Mexico Draw No Bet', finalResult: 'CZE 1, MEX 2', status: 'Win', profit: 0.82 },
-      { date: '2026-06-25', sport: 'Soccer', event: 'Croatia vs Morocco', pick: 'Both Teams To Score', finalResult: 'CRO 2, MAR 1', status: 'Win', profit: 0.88 },
-      { date: '2026-06-25', sport: 'Horse Racing', event: 'Belmont Race 4', pick: 'Harbor Signal', finalResult: 'Placed 2nd', status: 'Loss', profit: -1.00 },
-      { date: '2026-06-25', sport: 'Horse Racing', event: 'Saratoga Race 7', pick: 'Midnight Circuit', finalResult: 'Placed 1st', status: 'Win', profit: 1.62 },
-      { date: '2026-06-25', sport: 'Horse Racing', event: 'Gulfstream Race 9', pick: 'Exacta 3-6', finalResult: '3-6 Paid', status: 'Win', profit: 2.40 },
-      { date: '2026-06-25', sport: 'UFC', event: 'Torres vs Allen', pick: 'Torres Decision +180', finalResult: 'Allen KO R2', status: 'Loss', profit: -1.00 },
-      { date: '2026-06-25', sport: 'UFC', event: 'Nguyen vs Price', pick: 'Nguyen ML -120', finalResult: 'Nguyen Sub R3', status: 'Win', profit: 0.83 },
-      { date: '2026-06-24', sport: 'MLB', event: 'Cubs vs Cardinals', pick: 'Cubs ML -110', finalResult: 'CHC 4, STL 2', status: 'Win', profit: 0.91 },
-      { date: '2026-06-24', sport: 'MLB', event: 'Mariners vs Angels', pick: 'Under 7.5 Runs', finalResult: 'SEA 2, LAA 3', status: 'Win', profit: 0.87 },
-      { date: '2026-06-24', sport: 'Soccer', event: 'Argentina vs Japan', pick: 'Argentina ML', finalResult: 'ARG 3, JPN 1', status: 'Win', profit: 0.58 },
-      { date: '2026-06-24', sport: 'Soccer', event: 'USA vs Ghana', pick: 'Over 2.5 Goals', finalResult: 'USA 1, GHA 1', status: 'Loss', profit: -1.00 },
-      { date: '2026-06-24', sport: 'Horse Racing', event: 'Churchill Race 5', pick: 'Blue Ledger', finalResult: 'Placed 1st', status: 'Win', profit: 1.35 },
-      { date: '2026-06-24', sport: 'UFC', event: 'Silva vs Brooks', pick: 'Fight Goes Distance', finalResult: 'Decision', status: 'Win', profit: 0.95 }
-    ];
-
     const sportOrder = ['MLB', 'Soccer', 'Horse Racing', 'UFC'];
+    const sportFilter = document.getElementById('sportFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const resultsList = document.getElementById('resultsList');
+    const resultCountLabel = document.getElementById('resultCountLabel');
+    const sourceNote = document.getElementById('sourceNote');
 
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -425,6 +424,22 @@
         '"': '&quot;',
         "'": '&#039;'
       }[char]));
+    }
+
+    function getBrowserTimezone() {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+    }
+
+    function getLocalDate(offsetDays = 0, timezone = getBrowserTimezone()) {
+      const date = new Date();
+      date.setDate(date.getDate() + offsetDays);
+
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date);
     }
 
     function formatDate(date) {
@@ -437,48 +452,346 @@
       }).format(new Date(year, month - 1, day, 12));
     }
 
-    function formatProfit(value) {
-      if (value === 0) return '0.00u';
-      return `${value > 0 ? '+' : ''}${value.toFixed(2)}u`;
+    function normalizeStatus(status, abstractStatus = '') {
+      const raw = String(status || abstractStatus || '').toLowerCase();
+      const abstractRaw = String(abstractStatus || '').toLowerCase();
+
+      if (raw.includes('final') || abstractRaw === 'final' || raw === 'ft') return 'Final';
+      if (
+        raw.includes('live') ||
+        raw.includes('progress') ||
+        raw.includes('inning') ||
+        raw === '1h' ||
+        raw === '2h' ||
+        raw === 'ht'
+      ) {
+        return 'Live';
+      }
+
+      return 'Scheduled';
     }
 
     function statusClass(status) {
-      return `status-${String(status).toLowerCase()}`;
+      return `status-${String(status).toLowerCase().replace(/\s+/g, '-')}`;
+    }
+
+    function getWinner(awayName, homeName, awayScore, homeScore, status) {
+      if (status !== 'Final') return 'TBD';
+      if (Number(awayScore) > Number(homeScore)) return awayName;
+      if (Number(homeScore) > Number(awayScore)) return homeName;
+      return 'Draw';
+    }
+
+    function scoreDisplay(awayScore, homeScore) {
+      if (awayScore === null || awayScore === undefined || homeScore === null || homeScore === undefined) {
+        return 'vs';
+      }
+
+      return `${awayScore}-${homeScore}`;
+    }
+
+    function normalizeTeam(value = '') {
+      return String(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function formatProfit(value) {
+      if (value === null || value === undefined || value === '') return 'N/A';
+
+      const n = Number(value);
+      if (Number.isNaN(n)) return String(value);
+      if (n === 0) return '0.00u';
+
+      return `${n > 0 ? '+' : ''}${n.toFixed(2)}u`;
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || data.ok === false) {
+        throw new Error(data.error || data.message || `HTTP ${response.status}`);
+      }
+
+      return data;
+    }
+
+    function normalizeMlbGame(game, selectedDate) {
+      const status = normalizeStatus(game.status, game.abstractStatus);
+      const awayScore = game.awayScore ?? null;
+      const homeScore = game.homeScore ?? null;
+
+      return {
+        id: `mlb-${game.gamePk}`,
+        gamePk: String(game.gamePk),
+        date: game.date || selectedDate,
+        sport: 'MLB',
+        event: `${game.awayTeamName || game.awayAbbrev} @ ${game.homeTeamName || game.homeAbbrev}`,
+        awayTeam: game.awayTeamName || game.awayAbbrev,
+        homeTeam: game.homeTeamName || game.homeAbbrev,
+        awayScore,
+        homeScore,
+        winner: getWinner(game.awayTeamName || game.awayAbbrev, game.homeTeamName || game.homeAbbrev, awayScore, homeScore, status),
+        finalResult: `${game.awayAbbrev || 'Away'} ${awayScore ?? 0} - ${game.homeAbbrev || 'Home'} ${homeScore ?? 0}`,
+        time: game.gameTime || game.time || 'TBD',
+        status,
+        source: 'MLB Stats API'
+      };
+    }
+
+    function normalizeSoccerGame(game, selectedDate) {
+      const status = normalizeStatus(game.statusLong || game.status);
+      const awayScore = game.awayScore ?? game.score?.away ?? null;
+      const homeScore = game.homeScore ?? game.score?.home ?? null;
+
+      return {
+        id: `soccer-${game.fixtureId || game.matchId}`,
+        gamePk: String(game.fixtureId || game.matchId || ''),
+        date: game.localDate || game.date || selectedDate,
+        sport: 'Soccer',
+        event: `${game.awayTeam} @ ${game.homeTeam}`,
+        awayTeam: game.awayTeam,
+        homeTeam: game.homeTeam,
+        awayScore,
+        homeScore,
+        winner: getWinner(game.awayTeam, game.homeTeam, awayScore, homeScore, status),
+        finalResult: `${game.awayTeam || 'Away'} ${awayScore ?? 0} - ${game.homeTeam || 'Home'} ${homeScore ?? 0}`,
+        time: game.localTime || game.time || 'TBD',
+        status,
+        source: 'API-Football'
+      };
+    }
+
+    async function loadMlbResults(selectedDate) {
+      const data = await fetchJson(`/api/baseball/games?date=${encodeURIComponent(selectedDate)}`);
+      const games = Array.isArray(data.games) ? data.games : [];
+
+      return {
+        sport: 'MLB',
+        source: 'MLB Stats API',
+        results: games.map(game => normalizeMlbGame(game, selectedDate)),
+        error: null
+      };
+    }
+
+    async function loadSoccerResults(selectedDate) {
+      const timezone = getBrowserTimezone();
+      const data = await fetchJson(
+        `/api/soccer/games-global?date=${encodeURIComponent(selectedDate)}&timezone=${encodeURIComponent(timezone)}`
+      );
+      const games = Array.isArray(data.games) ? data.games : [];
+
+      return {
+        sport: 'Soccer',
+        source: 'API-Football',
+        results: games
+          .filter(game => (game.localDate || game.date) === selectedDate)
+          .map(game => normalizeSoccerGame(game, selectedDate)),
+        error: null
+      };
+    }
+
+    async function loadHorseResults() {
+      return {
+        sport: 'Horse Racing',
+        source: 'Horse Racing PDF parser',
+        results: [],
+        error: 'No finalized horse racing results endpoint is available in this project yet.'
+      };
+    }
+
+    async function loadUfcResults() {
+      return {
+        sport: 'UFC',
+        source: 'Odds API',
+        results: [],
+        error: 'The current UFC endpoint provides upcoming odds, not finalized fight results.'
+      };
+    }
+
+    function pickKey(pick) {
+      return String(pick.gamePk || pick.fixtureId || pick.matchId || pick.id || '');
+    }
+
+    async function loadTrackedPicks(selectedDate) {
+      const candidates = [
+        `/api/picks?date=${encodeURIComponent(selectedDate)}`,
+        `/api/picks/history?date=${encodeURIComponent(selectedDate)}`,
+        `/api/picks/saved?date=${encodeURIComponent(selectedDate)}`
+      ];
+
+      for (const url of candidates) {
+        try {
+          const response = await fetch(url);
+
+          if (response.status === 404) continue;
+
+          const data = await response.json().catch(() => ({}));
+          const picks = Array.isArray(data)
+            ? data
+            : Array.isArray(data.picks)
+              ? data.picks
+              : Array.isArray(data.results)
+                ? data.results
+                : [];
+
+          if (picks.length) {
+            return {
+              source: url,
+              picks
+            };
+          }
+        } catch {
+          // Try the next possible route without blocking real game results.
+        }
+      }
+
+      return {
+        source: null,
+        picks: []
+      };
+    }
+
+    function findTrackedPick(result, picks) {
+      return picks.find(pick => {
+        const key = pickKey(pick);
+
+        if (key && result.gamePk && String(key) === String(result.gamePk)) return true;
+        if (String(pick.sport || '').toLowerCase() !== result.sport.toLowerCase()) return false;
+
+        return normalizeTeam(pick.event || '') === normalizeTeam(result.event);
+      }) || null;
+    }
+
+    function inferMoneylinePickResult(result, pickText) {
+      const pick = normalizeTeam(pickText);
+      const away = normalizeTeam(result.awayTeam);
+      const home = normalizeTeam(result.homeTeam);
+
+      if (!pick || result.status !== 'Final') return 'PENDING';
+      if (Number(result.awayScore) === Number(result.homeScore)) return 'PUSH';
+
+      const pickedAway = pick.includes(away) || away.includes(pick);
+      const pickedHome = pick.includes(home) || home.includes(pick);
+
+      if (!pickedAway && !pickedHome) return 'PENDING';
+
+      const awayWon = Number(result.awayScore) > Number(result.homeScore);
+      const homeWon = Number(result.homeScore) > Number(result.awayScore);
+
+      if ((pickedAway && awayWon) || (pickedHome && homeWon)) return 'WIN';
+      if ((pickedAway && homeWon) || (pickedHome && awayWon)) return 'LOSS';
+
+      return 'PENDING';
+    }
+
+    function gradeTrackedPick(result, pick) {
+      if (!pick) {
+        return {
+          pickText: 'No pick tracked',
+          pickResult: 'No pick tracked',
+          profit: 'N/A'
+        };
+      }
+
+      const savedResult = String(pick.result || '').toLowerCase();
+      const pickText = pick.pick || pick.team || pick.playerName || 'Tracked pick';
+      let pickResult = 'PENDING';
+
+      if (savedResult === 'win') pickResult = 'WIN';
+      else if (savedResult === 'loss') pickResult = 'LOSS';
+      else if (savedResult === 'push') pickResult = 'PUSH';
+      else if (String(pick.market || '').toUpperCase() === 'ML') {
+        pickResult = inferMoneylinePickResult(result, pickText);
+      }
+
+      return {
+        pickText,
+        pickResult,
+        profit: formatProfit(pick.profit ?? pick.pnl ?? pick.units)
+      };
+    }
+
+    function attachTrackedPicks(groups, picks) {
+      return groups.map(group => ({
+        ...group,
+        results: group.results.map(result => {
+          const trackedPick = findTrackedPick(result, picks);
+          const grade = gradeTrackedPick(result, trackedPick);
+
+          return {
+            ...result,
+            trackedPick,
+            pickText: grade.pickText,
+            pickResult: grade.pickResult,
+            profit: grade.profit
+          };
+        })
+      }));
+    }
+
+    async function safeLoad(loader) {
+      try {
+        return await loader();
+      } catch (error) {
+        return {
+          sport: '',
+          source: '',
+          results: [],
+          error: error.message
+        };
+      }
+    }
+
+    async function loadAllResults(selectedDate) {
+      const [mlb, soccer, horse, ufc, trackedPicks] = await Promise.all([
+        safeLoad(() => loadMlbResults(selectedDate)),
+        safeLoad(() => loadSoccerResults(selectedDate)),
+        safeLoad(() => loadHorseResults(selectedDate)),
+        safeLoad(() => loadUfcResults(selectedDate)),
+        loadTrackedPicks(selectedDate)
+      ]);
+
+      const groups = attachTrackedPicks([mlb, soccer, horse, ufc], trackedPicks.picks);
+      groups.trackedPickSource = trackedPicks.source;
+      groups.trackedPickCount = trackedPicks.picks.length;
+
+      return groups;
     }
 
     function renderSummary(results) {
       const total = results.length;
-      const wins = results.filter(r => r.status === 'Win').length;
-      const losses = results.filter(r => r.status === 'Loss').length;
-      const graded = wins + losses;
-      const winRate = graded ? `${((wins / graded) * 100).toFixed(1)}%` : '0%';
-      const profit = results.reduce((sum, r) => sum + r.profit, 0);
+      const tracked = results.filter(r => r.trackedPick).length;
+      const wins = results.filter(r => r.pickResult === 'WIN').length;
+      const losses = results.filter(r => r.pickResult === 'LOSS').length;
+      const pending = results.filter(r => r.pickResult === 'PENDING' || r.pickResult === 'No pick tracked').length;
 
       document.getElementById('summaryGrid').innerHTML = `
         <article class="summary-card">
           <strong>${total}</strong>
-          <span>Total Picks</span>
+          <span>Total Games</span>
           <small>Selected day</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">${tracked}</strong>
+          <span>Tracked Picks</span>
+          <small>Saved Data More picks</small>
         </article>
         <article class="summary-card">
           <strong class="positive">${wins}</strong>
           <span>Wins</span>
-          <small>Settled winners</small>
+          <small>Graded WIN</small>
         </article>
         <article class="summary-card">
           <strong class="negative">${losses}</strong>
           <span>Losses</span>
-          <small>Settled losses</small>
+          <small>Graded LOSS</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">${winRate}</strong>
-          <span>Win Rate</span>
-          <small>Excludes push/pending</small>
-        </article>
-        <article class="summary-card">
-          <strong class="${profit < 0 ? 'negative' : 'positive'}">${formatProfit(profit)}</strong>
-          <span>Yield</span>
-          <small>Flat stake P/L</small>
+          <strong>${pending}</strong>
+          <span>Pending</span>
+          <small>No final grade</small>
         </article>
       `;
     }
@@ -489,33 +802,52 @@
           <div><span class="label">Date</span><span class="value">${formatDate(result.date)}</span></div>
           <div><span class="label">Sport</span><span class="sport-pill">${escapeHtml(result.sport)}</span></div>
           <div><span class="label">Event</span><span class="value">${escapeHtml(result.event)}</span></div>
-          <div><span class="label">Pick</span><span class="value">${escapeHtml(result.pick)}</span></div>
-          <div><span class="label">Final Result</span><span class="value">${escapeHtml(result.finalResult)}</span></div>
-          <div><span class="label">Status</span><span class="status-pill ${statusClass(result.status)}">${escapeHtml(result.status)}</span></div>
-          <div><span class="label">P/L</span><span class="value ${result.profit < 0 ? 'negative' : result.profit > 0 ? 'positive' : 'neutral'}">${formatProfit(result.profit)}</span></div>
+          <div><span class="label">Pick</span><span class="value">${escapeHtml(result.pickText || 'No pick tracked')}</span></div>
+          <div><span class="label">Final</span><span class="value">${escapeHtml(result.finalResult)}</span></div>
+          <div><span class="label">Result</span><span class="status-pill ${statusClass(result.pickResult || 'No pick tracked')}">${escapeHtml(result.pickResult || 'No pick tracked')}</span></div>
+          <div><span class="label">Profit</span><span class="value">${escapeHtml(result.profit || 'N/A')}</span></div>
+          <div><span class="label">Time</span><span class="value">${escapeHtml(result.time)}</span></div>
         </article>
       `;
     }
 
-    function renderResults() {
-      const selectedDate = document.getElementById('dateFilter').value;
-      const selectedSport = document.getElementById('sportFilter').value;
-      const results = mockResults.filter(result =>
-        result.date === selectedDate &&
-        (selectedSport === 'all' || result.sport === selectedSport)
+    function renderSourceNote(groups, visibleResults) {
+      const notes = groups
+        .filter(group => group.error)
+        .map(group => `${group.sport || 'Source'}: ${group.error}`);
+
+      const sources = groups
+        .filter(group => group.results.length)
+        .map(group => `${group.sport}: ${group.source}`);
+
+      const pickSource = groups.trackedPickSource
+        ? `Tracked picks loaded from ${groups.trackedPickSource}.`
+        : 'No saved picks read endpoint is currently available, so unassociated games show “No pick tracked”.';
+
+      sourceNote.textContent = [
+        visibleResults.length ? `Loaded real game results from ${sources.join(', ')}.` : 'No real results returned for the selected filters.',
+        pickSource,
+        ...notes
+      ].join(' ');
+    }
+
+    function renderResults(groups) {
+      const selectedSport = sportFilter.value;
+      const allResults = groups.flatMap(group => group.results);
+      const results = allResults.filter(result =>
+        selectedSport === 'all' || result.sport === selectedSport
       );
-      const list = document.getElementById('resultsList');
-      const countLabel = document.getElementById('resultCountLabel');
 
       renderSummary(results);
-      countLabel.textContent = `${results.length} results loaded`;
+      renderSourceNote(groups, results);
+      resultCountLabel.textContent = `${results.length} games loaded · ${results.filter(r => r.trackedPick).length} tracked picks`;
 
       if (!results.length) {
-        list.innerHTML = '<div class="empty-state">No results found for this date and sport filter.</div>';
+        resultsList.innerHTML = '<div class="empty-state">No real results found for this date and sport filter.</div>';
         return;
       }
 
-      list.innerHTML = sportOrder
+      resultsList.innerHTML = sportOrder
         .map(sport => {
           const group = results.filter(result => result.sport === sport);
 
@@ -531,17 +863,23 @@
         .join('');
     }
 
-    // TODO: Replace mockResults with a real results endpoint when the platform exposes one.
-    const dateFilter = document.getElementById('dateFilter');
-    const availableDates = mockResults
-      .map(result => result.date)
-      .sort();
-    const latestDate = availableDates[availableDates.length - 1];
+    async function refreshResults() {
+      const selectedDate = dateFilter.value;
 
-    dateFilter.value = latestDate;
-    dateFilter.addEventListener('change', renderResults);
-    document.getElementById('sportFilter').addEventListener('change', renderResults);
-    renderResults();
+      resultsList.innerHTML = '<div class="empty-state">Loading real results...</div>';
+      resultCountLabel.textContent = 'Loading real results...';
+
+      const groups = await loadAllResults(selectedDate);
+      window.currentResultGroups = groups;
+      renderResults(groups);
+    }
+
+    dateFilter.value = getLocalDate(-1);
+    dateFilter.addEventListener('change', refreshResults);
+    sportFilter.addEventListener('change', () => {
+      renderResults(window.currentResultGroups || []);
+    });
+    refreshResults();
   </script>
 </body>
 </html>
