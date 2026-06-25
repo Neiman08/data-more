@@ -449,6 +449,222 @@ function gradeMlbPick(pick, game) {
   return { result: 'pending', profit: null };
 }
 
+function isFinalSoccerStatus(status) {
+  return ['FT', 'AET', 'PEN'].includes(String(status || '').toUpperCase());
+}
+
+async function loadSoccerFixtureById(fixtureId) {
+  const key = process.env.API_FOOTBALL_KEY || process.env.FOOTBALL_API_KEY;
+
+  if (!key || !fixtureId) return null;
+
+  const response = await fetch(
+    `https://v3.football.api-sports.io/fixtures?id=${encodeURIComponent(fixtureId)}`,
+    {
+      headers: { 'x-apisports-key': key }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`API-Football returned HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  const raw = data.response?.[0];
+
+  if (!raw) return null;
+
+  return {
+    fixtureId: String(raw.fixture?.id || fixtureId),
+    status: raw.fixture?.status?.short || '',
+    homeTeam: raw.teams?.home?.name || '',
+    awayTeam: raw.teams?.away?.name || '',
+    homeScore: raw.goals?.home ?? raw.score?.fulltime?.home,
+    awayScore: raw.goals?.away ?? raw.score?.fulltime?.away,
+    finalScore: `${raw.teams?.home?.name || 'Home'} ${raw.goals?.home ?? 0} - ${raw.teams?.away?.name || 'Away'} ${raw.goals?.away ?? 0}`
+  };
+}
+
+function gradeSoccerPick(pick, fixture) {
+  if (!fixture || !isFinalSoccerStatus(fixture.status)) {
+    return { result: 'pending', profit: null };
+  }
+
+  const market = String(pick.market || '').toUpperCase();
+  const pickText = normalizeTeamName(pick.team || pick.pick);
+  const home = normalizeTeamName(fixture.homeTeam);
+  const away = normalizeTeamName(fixture.awayTeam);
+  const isDrawPick = /(^|[^a-z])draw([^a-z]|$)|empate|tie/i.test(String(pick.pick || ''));
+
+  if (market !== '1X2' && market !== 'ML') {
+    return { result: 'pending', profit: null };
+  }
+
+  if (Number(fixture.homeScore) === Number(fixture.awayScore)) {
+    const result = isDrawPick ? 'win' : 'loss';
+    return {
+      result,
+      profit: calculateProfit(result, pick.odds, pick.stake)
+    };
+  }
+
+  const winner = Number(fixture.homeScore) > Number(fixture.awayScore)
+    ? home
+    : away;
+  const pickedWinner = pickText && (pickText.includes(winner) || winner.includes(pickText));
+  const result = pickedWinner ? 'win' : 'loss';
+
+  return {
+    result,
+    profit: calculateProfit(result, pick.odds, pick.stake)
+  };
+}
+
+async function gradeMlbPicksForDate(date) {
+  const picks = await Pick.find({
+    date,
+    $or: [
+      { sport: /^MLB$/i },
+      { sport: { $exists: false } },
+      { sport: '' }
+    ]
+  });
+
+  const rawGames = await loadMlbGamesForDate(date);
+  const gamesByPk = new Map(
+    rawGames
+      .map(normalizeMlbGradeGame)
+      .map(game => [game.gamePk, game])
+  );
+
+  const graded = [];
+
+  for (const pick of picks) {
+    const game = gamesByPk.get(String(pick.gamePk || ''));
+    const grade = gradeMlbPick(pick, game);
+
+    pick.result = grade.result;
+    pick.profit = grade.profit;
+    pick.finalScore = game?.finalScore || pick.finalScore;
+    pick.homeTeam = pick.homeTeam || game?.homeTeam;
+    pick.awayTeam = pick.awayTeam || game?.awayTeam;
+    pick.event = pick.event || (game ? `${game.awayTeam} @ ${game.homeTeam}` : pick.event);
+    pick.updatedAt = new Date();
+
+    await pick.save();
+
+    graded.push({
+      id: pick._id,
+      sport: pick.sport || 'MLB',
+      gamePk: pick.gamePk,
+      market: pick.market,
+      pick: pick.pick,
+      result: pick.result,
+      finalScore: pick.finalScore,
+      profit: pick.profit
+    });
+  }
+
+  return graded;
+}
+
+async function gradeSoccerPicksForDate(date) {
+  const picks = await Pick.find({
+    date,
+    sport: /^Soccer$/i
+  });
+
+  const fixtureCache = new Map();
+  const graded = [];
+
+  for (const pick of picks) {
+    const fixtureId = String(pick.fixtureId || '');
+    let fixture = fixtureCache.get(fixtureId);
+
+    if (!fixtureCache.has(fixtureId)) {
+      fixture = fixtureId ? await loadSoccerFixtureById(fixtureId) : null;
+      fixtureCache.set(fixtureId, fixture);
+    }
+
+    const grade = gradeSoccerPick(pick, fixture);
+
+    pick.result = grade.result;
+    pick.profit = grade.profit;
+    pick.finalScore = fixture?.finalScore || pick.finalScore;
+    pick.homeTeam = pick.homeTeam || fixture?.homeTeam;
+    pick.awayTeam = pick.awayTeam || fixture?.awayTeam;
+    pick.event = pick.event || (fixture ? `${fixture.homeTeam} vs ${fixture.awayTeam}` : pick.event);
+    pick.updatedAt = new Date();
+
+    await pick.save();
+
+    graded.push({
+      id: pick._id,
+      sport: 'Soccer',
+      fixtureId: pick.fixtureId,
+      market: pick.market,
+      pick: pick.pick,
+      result: pick.result,
+      finalScore: pick.finalScore,
+      profit: pick.profit
+    });
+  }
+
+  return graded;
+}
+
+async function gradePicksForDate(date, sport = 'all') {
+  const selected = String(sport || 'all').toLowerCase();
+  const graded = [];
+
+  if (selected === 'all' || selected === 'mlb') {
+    graded.push(...await gradeMlbPicksForDate(date));
+  }
+
+  if (selected === 'all' || selected === 'soccer') {
+    graded.push(...await gradeSoccerPicksForDate(date));
+  }
+
+  return graded;
+}
+
+function shiftISODate(date, days) {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function localISODate() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
+}
+
+async function gradeRecentPendingPicks() {
+  const today = localISODate();
+  const dates = Array.from({ length: 8 }, (_, index) => shiftISODate(today, -index));
+
+  for (const date of dates) {
+    const pending = await Pick.exists({
+      date,
+      result: 'pending',
+      $or: [
+        { sport: /^MLB$/i },
+        { sport: /^Soccer$/i },
+        { sport: { $exists: false } },
+        { sport: '' }
+      ]
+    });
+
+    if (pending) {
+      await gradePicksForDate(date, 'all');
+    }
+  }
+}
+
 app.get('/api/picks', async (req, res) => {
   try {
     const date = req.query.date;
@@ -513,7 +729,7 @@ app.post('/api/picks/save', async (req, res) => {
           $setOnInsert: { createdAt: new Date() }
         },
         {
-          new: true,
+          returnDocument: 'after',
           upsert: true
         }
       );
@@ -532,58 +748,18 @@ app.post('/api/picks/save', async (req, res) => {
 app.post('/api/picks/grade', async (req, res) => {
   try {
     const date = req.query.date || req.body?.date;
+    const sport = req.query.sport || req.body?.sport || 'all';
 
     if (!date) {
       return res.status(400).json({ ok: false, error: 'date is required' });
     }
 
-    const picks = await Pick.find({
-      date,
-      $or: [
-        { sport: /^MLB$/i },
-        { sport: { $exists: false } },
-        { sport: '' }
-      ]
-    });
-
-    const rawGames = await loadMlbGamesForDate(date);
-    const gamesByPk = new Map(
-      rawGames
-        .map(normalizeMlbGradeGame)
-        .map(game => [game.gamePk, game])
-    );
-
-    const graded = [];
-
-    for (const pick of picks) {
-      const game = gamesByPk.get(String(pick.gamePk || ''));
-      const grade = gradeMlbPick(pick, game);
-
-      pick.result = grade.result;
-      pick.profit = grade.profit;
-      pick.finalScore = game?.finalScore || pick.finalScore;
-      pick.homeTeam = pick.homeTeam || game?.homeTeam;
-      pick.awayTeam = pick.awayTeam || game?.awayTeam;
-      pick.event = pick.event || (game ? `${game.awayTeam} @ ${game.homeTeam}` : pick.event);
-      pick.updatedAt = new Date();
-
-      await pick.save();
-
-      graded.push({
-        id: pick._id,
-        gamePk: pick.gamePk,
-        market: pick.market,
-        pick: pick.pick,
-        result: pick.result,
-        finalScore: pick.finalScore,
-        profit: pick.profit
-      });
-    }
+    const graded = await gradePicksForDate(date, sport);
 
     res.json({
       ok: true,
       date,
-      sport: 'MLB',
+      sport,
       count: graded.length,
       graded
     });
@@ -928,6 +1104,22 @@ app.get('/admin-payments', (req, res) => {
     )
   );
 });
+
+// =========================
+// PICKS GRADING JOB
+// =========================
+
+setTimeout(() => {
+  gradeRecentPendingPicks().catch(err => {
+    console.error('Initial picks grading job failed:', err.message);
+  });
+}, 30 * 1000);
+
+setInterval(() => {
+  gradeRecentPendingPicks().catch(err => {
+    console.error('Scheduled picks grading job failed:', err.message);
+  });
+}, 60 * 60 * 1000);
 
 // =========================
 // START SERVER

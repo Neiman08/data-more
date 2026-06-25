@@ -1006,6 +1006,51 @@ function translatePickValue(value) {
     .replace(/No/gi, 'No');
 }
 
+function isPregameSoccerStatus(status) {
+  const raw = String(status || '').toUpperCase();
+  return raw === 'NS' || raw === 'TBD' || raw === 'PST';
+}
+
+function resolveSoccerPick(pick, game = {}) {
+  const raw = String(pick || '').trim();
+  const normalized = raw.toLowerCase();
+
+  if (!raw) return '';
+  if (['home', 'local', '1'].includes(normalized)) return game.homeTeam || raw;
+  if (['away', 'visitor', 'visitante', '2'].includes(normalized)) return game.awayTeam || raw;
+  if (['draw', 'empate', 'tie', 'x'].includes(normalized)) return 'Draw';
+
+  return raw;
+}
+
+async function saveTrackedSoccerPick({ date, game, analysis }) {
+  const pick = resolveSoccerPick(analysis?.pick, game);
+
+  if (!pick || pick === 'N/A' || !game?.fixtureId || !isPregameSoccerStatus(game.status)) return;
+
+  try {
+    await fetch('/api/picks/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date,
+        sport: 'Soccer',
+        event: `${game.homeTeam} vs ${game.awayTeam}`,
+        homeTeam: game.homeTeam,
+        awayTeam: game.awayTeam,
+        fixtureId: String(game.fixtureId),
+        market: '1X2',
+        pick,
+        team: pick === 'Draw' ? undefined : pick,
+        stake: 1,
+        source: 'Soccer AI Analysis'
+      })
+    });
+  } catch (error) {
+    console.warn('Unable to save tracked Soccer pick', error);
+  }
+}
+
 function firstValidArray(...arrays) {
   for (const arr of arrays) {
     if (Array.isArray(arr) && arr.length > 0) return arr;
@@ -1137,6 +1182,13 @@ async function analyze(btn, matchId, leagueKey) {
     );
     const data = await res.json();
     const a = data.analysis || data;
+    const game = data.game || {};
+
+    saveTrackedSoccerPick({
+      date,
+      game,
+      analysis: a
+    });
 
     const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
 
