@@ -506,8 +506,8 @@
       return `${n > 0 ? '+' : ''}${n.toFixed(2)}u`;
     }
 
-    async function fetchJson(url) {
-      const response = await fetch(url);
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, options);
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || data.ok === false) {
@@ -615,119 +615,55 @@
     }
 
     async function loadTrackedPicks(selectedDate) {
-      const candidates = [
-        `/api/picks?date=${encodeURIComponent(selectedDate)}`,
-        `/api/picks/history?date=${encodeURIComponent(selectedDate)}`,
-        `/api/picks/saved?date=${encodeURIComponent(selectedDate)}`
-      ];
-
-      for (const url of candidates) {
-        try {
-          const response = await fetch(url);
-
-          if (response.status === 404) continue;
-
-          const data = await response.json().catch(() => ({}));
-          const picks = Array.isArray(data)
-            ? data
-            : Array.isArray(data.picks)
-              ? data.picks
-              : Array.isArray(data.results)
-                ? data.results
-                : [];
-
-          if (picks.length) {
-            return {
-              source: url,
-              picks
-            };
-          }
-        } catch {
-          // Try the next possible route without blocking real game results.
-        }
-      }
+      const url = `/api/picks?date=${encodeURIComponent(selectedDate)}&sport=all`;
+      const data = await fetchJson(url);
 
       return {
-        source: null,
-        picks: []
+        source: url,
+        picks: Array.isArray(data.picks) ? data.picks : []
       };
     }
 
-    function findTrackedPick(result, picks) {
-      return picks.find(pick => {
-        const key = pickKey(pick);
-
-        if (key && result.gamePk && String(key) === String(result.gamePk)) return true;
-        if (String(pick.sport || '').toLowerCase() !== result.sport.toLowerCase()) return false;
-
-        return normalizeTeam(pick.event || '') === normalizeTeam(result.event);
-      }) || null;
+    async function gradePicks(selectedDate) {
+      await fetchJson(`/api/picks/grade?date=${encodeURIComponent(selectedDate)}`, {
+        method: 'POST'
+      });
     }
 
-    function inferMoneylinePickResult(result, pickText) {
-      const pick = normalizeTeam(pickText);
-      const away = normalizeTeam(result.awayTeam);
-      const home = normalizeTeam(result.homeTeam);
-
-      if (!pick || result.status !== 'Final') return 'PENDING';
-      if (Number(result.awayScore) === Number(result.homeScore)) return 'PUSH';
-
-      const pickedAway = pick.includes(away) || away.includes(pick);
-      const pickedHome = pick.includes(home) || home.includes(pick);
-
-      if (!pickedAway && !pickedHome) return 'PENDING';
-
-      const awayWon = Number(result.awayScore) > Number(result.homeScore);
-      const homeWon = Number(result.homeScore) > Number(result.awayScore);
-
-      if ((pickedAway && awayWon) || (pickedHome && homeWon)) return 'WIN';
-      if ((pickedAway && homeWon) || (pickedHome && awayWon)) return 'LOSS';
-
-      return 'PENDING';
-    }
-
-    function gradeTrackedPick(result, pick) {
-      if (!pick) {
-        return {
-          pickText: 'No pick tracked',
-          pickResult: 'No pick tracked',
-          profit: 'N/A'
-        };
-      }
-
-      const savedResult = String(pick.result || '').toLowerCase();
-      const pickText = pick.pick || pick.team || pick.playerName || 'Tracked pick';
-      let pickResult = 'PENDING';
-
-      if (savedResult === 'win') pickResult = 'WIN';
-      else if (savedResult === 'loss') pickResult = 'LOSS';
-      else if (savedResult === 'push') pickResult = 'PUSH';
-      else if (String(pick.market || '').toUpperCase() === 'ML') {
-        pickResult = inferMoneylinePickResult(result, pickText);
-      }
+    function normalizeTrackedPick(pick, selectedDate) {
+      const result = String(pick.result || 'pending').toUpperCase();
 
       return {
-        pickText,
-        pickResult,
-        profit: formatProfit(pick.profit ?? pick.pnl ?? pick.units)
+        id: pick._id || `${pick.sport || 'pick'}-${pick.gamePk || pick.fixtureId || pick.pick}`,
+        gamePk: String(pick.gamePk || pick.fixtureId || ''),
+        date: pick.date || selectedDate,
+        sport: pick.sport || 'MLB',
+        event: pick.event || [pick.awayTeam, pick.homeTeam].filter(Boolean).join(' @ ') || 'Tracked event',
+        awayTeam: pick.awayTeam || '',
+        homeTeam: pick.homeTeam || '',
+        pickText: pick.pick || pick.team || pick.playerName || 'Tracked pick',
+        market: pick.market || 'Pick',
+        finalResult: pick.finalScore || 'Pending final score',
+        time: pick.createdAt
+          ? new Intl.DateTimeFormat('en-US', {
+              hour: 'numeric',
+              minute: '2-digit'
+            }).format(new Date(pick.createdAt))
+          : 'TBD',
+        status: result === 'PENDING' ? 'Pending' : 'Final',
+        pickResult: result,
+        profit: formatProfit(pick.profit)
       };
     }
 
-    function attachTrackedPicks(groups, picks) {
-      return groups.map(group => ({
-        ...group,
-        results: group.results.map(result => {
-          const trackedPick = findTrackedPick(result, picks);
-          const grade = gradeTrackedPick(result, trackedPick);
-
-          return {
-            ...result,
-            trackedPick,
-            pickText: grade.pickText,
-            pickResult: grade.pickResult,
-            profit: grade.profit
-          };
-        })
+    function groupTrackedPicks(picks, selectedDate) {
+      return sportOrder.map(sport => ({
+        sport,
+        source: 'Saved Data More Picks',
+        results: picks
+          .filter(pick => String(pick.sport || 'MLB').toLowerCase() === sport.toLowerCase())
+          .map(pick => normalizeTrackedPick(pick, selectedDate)),
+        error: null
       }));
     }
 
@@ -745,15 +681,14 @@
     }
 
     async function loadAllResults(selectedDate) {
-      const [mlb, soccer, horse, ufc, trackedPicks] = await Promise.all([
-        safeLoad(() => loadMlbResults(selectedDate)),
-        safeLoad(() => loadSoccerResults(selectedDate)),
-        safeLoad(() => loadHorseResults(selectedDate)),
-        safeLoad(() => loadUfcResults(selectedDate)),
-        loadTrackedPicks(selectedDate)
-      ]);
+      try {
+        await gradePicks(selectedDate);
+      } catch (error) {
+        console.warn('Pick grading unavailable', error);
+      }
 
-      const groups = attachTrackedPicks([mlb, soccer, horse, ufc], trackedPicks.picks);
+      const trackedPicks = await loadTrackedPicks(selectedDate);
+      const groups = groupTrackedPicks(trackedPicks.picks, selectedDate);
       groups.trackedPickSource = trackedPicks.source;
       groups.trackedPickCount = trackedPicks.picks.length;
 
@@ -762,19 +697,18 @@
 
     function renderSummary(results) {
       const total = results.length;
-      const tracked = results.filter(r => r.trackedPick).length;
       const wins = results.filter(r => r.pickResult === 'WIN').length;
       const losses = results.filter(r => r.pickResult === 'LOSS').length;
-      const pending = results.filter(r => r.pickResult === 'PENDING' || r.pickResult === 'No pick tracked').length;
+      const pending = results.filter(r => r.pickResult === 'PENDING').length;
 
       document.getElementById('summaryGrid').innerHTML = `
         <article class="summary-card">
           <strong>${total}</strong>
-          <span>Total Games</span>
+          <span>Total Picks</span>
           <small>Selected day</small>
         </article>
         <article class="summary-card">
-          <strong class="positive">${tracked}</strong>
+          <strong class="positive">${total}</strong>
           <span>Tracked Picks</span>
           <small>Saved Data More picks</small>
         </article>
@@ -802,9 +736,9 @@
           <div><span class="label">Date</span><span class="value">${formatDate(result.date)}</span></div>
           <div><span class="label">Sport</span><span class="sport-pill">${escapeHtml(result.sport)}</span></div>
           <div><span class="label">Event</span><span class="value">${escapeHtml(result.event)}</span></div>
-          <div><span class="label">Pick</span><span class="value">${escapeHtml(result.pickText || 'No pick tracked')}</span></div>
+          <div><span class="label">Pick</span><span class="value">${escapeHtml(result.market)} · ${escapeHtml(result.pickText)}</span></div>
           <div><span class="label">Final</span><span class="value">${escapeHtml(result.finalResult)}</span></div>
-          <div><span class="label">Result</span><span class="status-pill ${statusClass(result.pickResult || 'No pick tracked')}">${escapeHtml(result.pickResult || 'No pick tracked')}</span></div>
+          <div><span class="label">Result</span><span class="status-pill ${statusClass(result.pickResult)}">${escapeHtml(result.pickResult)}</span></div>
           <div><span class="label">Profit</span><span class="value">${escapeHtml(result.profit || 'N/A')}</span></div>
           <div><span class="label">Time</span><span class="value">${escapeHtml(result.time)}</span></div>
         </article>
@@ -822,10 +756,10 @@
 
       const pickSource = groups.trackedPickSource
         ? `Tracked picks loaded from ${groups.trackedPickSource}.`
-        : 'No saved picks read endpoint is currently available, so unassociated games show “No pick tracked”.';
+        : 'No tracked picks found for this date.';
 
       sourceNote.textContent = [
-        visibleResults.length ? `Loaded real game results from ${sources.join(', ')}.` : 'No real results returned for the selected filters.',
+        visibleResults.length ? `Loaded saved Data More picks from ${sources.join(', ')}.` : 'No tracked picks found for this date.',
         pickSource,
         ...notes
       ].join(' ');
@@ -840,10 +774,10 @@
 
       renderSummary(results);
       renderSourceNote(groups, results);
-      resultCountLabel.textContent = `${results.length} games loaded · ${results.filter(r => r.trackedPick).length} tracked picks`;
+      resultCountLabel.textContent = `${results.length} tracked picks`;
 
       if (!results.length) {
-        resultsList.innerHTML = '<div class="empty-state">No real results found for this date and sport filter.</div>';
+        resultsList.innerHTML = '<div class="empty-state">No tracked picks found for this date.</div>';
         return;
       }
 
@@ -855,7 +789,7 @@
 
           return `
             <section class="sport-group">
-              <div class="sport-group-title">${sport} <span>${group.length} results</span></div>
+              <div class="sport-group-title">${sport} <span>${group.length} picks</span></div>
               ${group.map(resultCard).join('')}
             </section>
           `;
@@ -866,8 +800,8 @@
     async function refreshResults() {
       const selectedDate = dateFilter.value;
 
-      resultsList.innerHTML = '<div class="empty-state">Loading real results...</div>';
-      resultCountLabel.textContent = 'Loading real results...';
+      resultsList.innerHTML = '<div class="empty-state">Loading tracked picks...</div>';
+      resultCountLabel.textContent = 'Loading tracked picks...';
 
       const groups = await loadAllResults(selectedDate);
       window.currentResultGroups = groups;
