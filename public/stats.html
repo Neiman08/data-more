@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data More | Performance Stats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #6bff19;
+      --border: rgba(255,255,255,.08);
+      --text: #fff;
+      --muted: #89909a;
+      --panel: rgba(18,24,30,.68);
+      --red: #ef4444;
+      --yellow: #facc15;
+      --blue: #60a5fa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+    }
+
+    main.page {
+      max-width: 1440px;
+      min-height: 100vh;
+      margin: 0 auto;
+      background:
+        radial-gradient(circle at 20% 9%, rgba(107,255,25,.16), transparent 31%),
+        radial-gradient(circle at 76% 26%, rgba(96,165,250,.15), transparent 34%),
+        #020509;
+    }
+
+    header {
+      height: 70px;
+      padding: 0 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.42);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-family: 'Anton', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .logo span { color: var(--green); }
+
+    nav { display: flex; gap: 20px; }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 800;
+      opacity: .7;
+      text-transform: uppercase;
+    }
+
+    nav a.active {
+      color: var(--green);
+      opacity: 1;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+
+    .btn-login,
+    .btn-reg {
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .btn-login { color: #fff; border: 1px solid rgba(255,255,255,.45); }
+    .btn-reg { color: #000; background: var(--green); }
+
+    .container { padding: 46px 50px 64px; }
+
+    .page-kicker {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(44px, 6vw, 76px);
+      line-height: .96;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 720px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .kpi-grid,
+    .sport-grid,
+    .insight-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .kpi-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 34px;
+    }
+
+    .sport-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 34px;
+    }
+
+    .insight-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .kpi-card,
+    .sport-card,
+    .insight-card {
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)),
+        var(--panel);
+      border-radius: 14px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+    }
+
+    .kpi-card { min-height: 152px; padding: 22px; }
+    .sport-card { min-height: 290px; padding: 22px; }
+    .insight-card { min-height: 172px; padding: 22px; }
+
+    .kpi-card strong,
+    .insight-card strong {
+      display: block;
+      font-family: 'Anton', sans-serif;
+      font-size: 42px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .kpi-card span,
+    .insight-card span {
+      display: block;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .kpi-card small,
+    .insight-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .sport-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .sport-icon {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: #000;
+      background: var(--green);
+      font-size: 24px;
+    }
+
+    .sport-card h3 {
+      font-family: 'Anton', sans-serif;
+      font-size: 28px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .trend {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .metric-row span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .metric-row strong {
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .bar {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+      margin-top: 16px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), #d9ff00);
+      box-shadow: 0 0 18px rgba(107,255,25,.35);
+    }
+
+    .positive { color: var(--green); }
+    .warning { color: var(--yellow); }
+    .info { color: var(--blue); }
+
+    @media (max-width: 1120px) {
+      .kpi-grid,
+      .sport-grid,
+      .insight-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        height: auto;
+        padding: 18px 20px;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      nav { flex-wrap: wrap; justify-content: center; gap: 14px; }
+      .container { padding: 34px 20px 46px; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+
+      .kpi-grid,
+      .sport-grid,
+      .insight-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="logo">DATA <span>MORE</span></div>
+      <nav>
+        <a href="/index.html">Home</a>
+        <a href="/picks.html">Picks</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/results.html">Results</a>
+        <a class="active" href="/stats.html">Stats</a>
+        <a href="/faq.html">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn-login" href="/login.html">LOG IN</a>
+        <a class="btn-reg" href="/registro.html">SIGN UP</a>
+      </div>
+    </header>
+
+    <section class="container">
+      <div class="page-kicker">Model Intelligence</div>
+      <h1>PERFORMANCE STATS</h1>
+      <p class="subtitle">A premium snapshot of model performance, sport-level edge, and confidence accuracy across the Data More prediction engine.</p>
+
+      <div class="kpi-grid">
+        <article class="kpi-card">
+          <strong class="positive">68.3%</strong>
+          <span>Overall Win Rate</span>
+          <small>Settled picks, last 30 days</small>
+        </article>
+        <article class="kpi-card">
+          <strong class="positive">+18.7%</strong>
+          <span>Monthly Yield</span>
+          <small>Flat stake performance model</small>
+        </article>
+        <article class="kpi-card">
+          <strong>2,914</strong>
+          <span>Picks Analyzed</span>
+          <small>Across live and historical boards</small>
+        </article>
+        <article class="kpi-card">
+          <strong class="info">MLB</strong>
+          <span>Best Performing Sport</span>
+          <small>Highest combined ROI and hit rate</small>
+        </article>
+      </div>
+
+      <div class="section-title">
+        <h2>Sport Performance</h2>
+        <span>Mock analytics until live performance API is connected</span>
+      </div>
+
+      <!-- TODO: Replace mock stats with /api/stats or a consolidated analytics feed when available. -->
+      <div class="sport-grid">
+        <article class="sport-card">
+          <div class="sport-head">
+            <div class="sport-icon">⚾</div>
+            <div class="trend">+12.4% Trend</div>
+          </div>
+          <h3>MLB</h3>
+          <div class="bar"><div class="bar-fill" style="width: 72%"></div></div>
+          <div class="metric-row"><span>Win Rate</span><strong class="positive">72%</strong></div>
+          <div class="metric-row"><span>Picks</span><strong>412</strong></div>
+          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+22.1%</strong></div>
+          <div class="metric-row"><span>Accuracy Trend</span><strong class="positive">Rising</strong></div>
+        </article>
+
+        <article class="sport-card">
+          <div class="sport-head">
+            <div class="sport-icon">⚽</div>
+            <div class="trend">+8.8% Trend</div>
+          </div>
+          <h3>Soccer</h3>
+          <div class="bar"><div class="bar-fill" style="width: 66%"></div></div>
+          <div class="metric-row"><span>Win Rate</span><strong class="positive">66%</strong></div>
+          <div class="metric-row"><span>Picks</span><strong>305</strong></div>
+          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+15.9%</strong></div>
+          <div class="metric-row"><span>Accuracy Trend</span><strong class="positive">Stable</strong></div>
+        </article>
+
+        <article class="sport-card">
+          <div class="sport-head">
+            <div class="sport-icon">🏇</div>
+            <div class="trend">+6.2% Trend</div>
+          </div>
+          <h3>Horse</h3>
+          <div class="bar"><div class="bar-fill" style="width: 61%"></div></div>
+          <div class="metric-row"><span>Win Rate</span><strong class="positive">61%</strong></div>
+          <div class="metric-row"><span>Picks</span><strong>198</strong></div>
+          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+13.4%</strong></div>
+          <div class="metric-row"><span>Accuracy Trend</span><strong class="warning">Volatile</strong></div>
+        </article>
+
+        <article class="sport-card">
+          <div class="sport-head">
+            <div class="sport-icon">🥊</div>
+            <div class="trend">+5.7% Trend</div>
+          </div>
+          <h3>UFC</h3>
+          <div class="bar"><div class="bar-fill" style="width: 64%"></div></div>
+          <div class="metric-row"><span>Win Rate</span><strong class="positive">64%</strong></div>
+          <div class="metric-row"><span>Picks</span><strong>74</strong></div>
+          <div class="metric-row"><span>ROI/Yield</span><strong class="positive">+11.2%</strong></div>
+          <div class="metric-row"><span>Accuracy Trend</span><strong class="positive">Rising</strong></div>
+        </article>
+      </div>
+
+      <div class="section-title">
+        <h2>Model Insights</h2>
+        <span>Confidence bands and edge quality</span>
+      </div>
+
+      <div class="insight-grid">
+        <article class="insight-card">
+          <strong class="positive">74%</strong>
+          <span>High Confidence Accuracy</span>
+          <small>Picks graded at 80% confidence or higher.</small>
+          <div class="bar"><div class="bar-fill" style="width: 74%"></div></div>
+        </article>
+        <article class="insight-card">
+          <strong class="positive">63%</strong>
+          <span>Medium Confidence Accuracy</span>
+          <small>Picks graded between 60% and 79% confidence.</small>
+          <div class="bar"><div class="bar-fill" style="width: 63%"></div></div>
+        </article>
+        <article class="insight-card">
+          <strong class="warning">52%</strong>
+          <span>Low Confidence Accuracy</span>
+          <small>Picks below 60% confidence, used for signal discovery.</small>
+          <div class="bar"><div class="bar-fill" style="width: 52%"></div></div>
+        </article>
+        <article class="insight-card">
+          <strong class="info">6.8%</strong>
+          <span>Average Edge</span>
+          <small>Projected market edge across qualifying picks.</small>
+          <div class="bar"><div class="bar-fill" style="width: 68%"></div></div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
