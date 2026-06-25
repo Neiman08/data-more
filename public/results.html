@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data More | Results Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #6bff19;
+      --border: rgba(255,255,255,.08);
+      --text: #fff;
+      --muted: #8a9099;
+      --panel: rgba(18,24,30,.68);
+      --red: #ef4444;
+      --yellow: #facc15;
+      --gray: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+    }
+
+    main.page {
+      max-width: 1440px;
+      min-height: 100vh;
+      margin: 0 auto;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(107,255,25,.16), transparent 30%),
+        radial-gradient(circle at 82% 22%, rgba(14,165,233,.14), transparent 34%),
+        #020509;
+    }
+
+    header {
+      height: 70px;
+      padding: 0 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,.42);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-family: 'Anton', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .logo span { color: var(--green); }
+
+    nav { display: flex; gap: 20px; }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 800;
+      opacity: .7;
+      text-transform: uppercase;
+    }
+
+    nav a.active {
+      color: var(--green);
+      opacity: 1;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+
+    .btn-login,
+    .btn-reg {
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .btn-login { color: #fff; border: 1px solid rgba(255,255,255,.45); }
+    .btn-reg { color: #000; background: var(--green); }
+
+    .container { padding: 46px 50px 64px; }
+
+    .page-kicker {
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(44px, 6vw, 76px);
+      line-height: .96;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 710px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 26px;
+    }
+
+    .filter-btn,
+    .sport-select {
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.045);
+      color: #fff;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .filter-btn.active {
+      color: #000;
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .sport-select { appearance: none; min-width: 150px; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    .summary-card,
+    .result-card {
+      border: 1px solid var(--border);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)),
+        var(--panel);
+      box-shadow: 0 18px 55px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+    }
+
+    .summary-card {
+      min-height: 128px;
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    .summary-card strong {
+      display: block;
+      font-family: 'Anton', sans-serif;
+      font-size: 36px;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .summary-card span {
+      display: block;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .summary-card small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 7px;
+    }
+
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .neutral { color: var(--yellow); }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .results-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-card {
+      border-radius: 14px;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 98px 105px minmax(180px, 1.25fr) minmax(150px, .9fr) minmax(135px, .8fr) 92px 92px;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .label {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .value {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .sport-pill,
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sport-pill { color: #000; background: var(--green); }
+    .status-win { color: #000; background: var(--green); }
+    .status-loss { color: #fff; background: var(--red); }
+    .status-push { color: #000; background: var(--yellow); }
+    .status-pending { color: #111827; background: var(--gray); }
+
+    @media (max-width: 1120px) {
+      .summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .result-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        height: auto;
+        padding: 18px 20px;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      nav { flex-wrap: wrap; justify-content: center; gap: 14px; }
+      .container { padding: 34px 20px 46px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+      .result-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="logo">DATA <span>MORE</span></div>
+      <nav>
+        <a href="/index.html">Home</a>
+        <a href="/picks.html">Picks</a>
+        <a href="/pricing.html">Pricing</a>
+        <a class="active" href="/results.html">Results</a>
+        <a href="/stats.html">Stats</a>
+        <a href="/faq.html">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn-login" href="/login.html">LOG IN</a>
+        <a class="btn-reg" href="/registro.html">SIGN UP</a>
+      </div>
+    </header>
+
+    <section class="container">
+      <div class="page-kicker">Performance Ledger</div>
+      <h1>RESULTS TRACKER</h1>
+      <p class="subtitle">Track every published pick with final scores, grading status, and profit impact across the full Data More sports board.</p>
+
+      <div class="filters" aria-label="Result filters">
+        <button class="filter-btn active" type="button">Today</button>
+        <button class="filter-btn" type="button">Last 7 Days</button>
+        <button class="filter-btn" type="button">Last 30 Days</button>
+        <button class="filter-btn" type="button">All Time</button>
+        <select class="sport-select" aria-label="Sport filter">
+          <option>All Sports</option>
+          <option>MLB</option>
+          <option>Soccer</option>
+          <option>Horse Racing</option>
+          <option>UFC</option>
+        </select>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card">
+          <strong>128</strong>
+          <span>Total Picks</span>
+          <small>Tracked this month</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">84</strong>
+          <span>Wins</span>
+          <small>Settled winners</small>
+        </article>
+        <article class="summary-card">
+          <strong class="negative">39</strong>
+          <span>Losses</span>
+          <small>Settled losses</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">68.3%</strong>
+          <span>Win Rate</span>
+          <small>Excludes push/pending</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">+18.7%</strong>
+          <span>Yield</span>
+          <small>Flat stake model</small>
+        </article>
+      </div>
+
+      <div class="section-title">
+        <h2>Recent Results</h2>
+        <span>Mock board until live result API is connected</span>
+      </div>
+
+      <!-- TODO: Replace mock results with /api/results or sport-specific settled-picks feed when available. -->
+      <div class="results-list">
+        <article class="result-card">
+          <div><span class="label">Date</span><span class="value">Jun 24, 2026</span></div>
+          <div><span class="label">Sport</span><span class="sport-pill">MLB</span></div>
+          <div><span class="label">Event</span><span class="value">Yankees vs Red Sox</span></div>
+          <div><span class="label">Pick</span><span class="value">Yankees ML -135</span></div>
+          <div><span class="label">Final Result</span><span class="value">NYY 5, BOS 3</span></div>
+          <div><span class="label">Status</span><span class="status-pill status-win">Win</span></div>
+          <div><span class="label">P/L</span><span class="value positive">+0.74u</span></div>
+        </article>
+
+        <article class="result-card">
+          <div><span class="label">Date</span><span class="value">Jun 24, 2026</span></div>
+          <div><span class="label">Sport</span><span class="sport-pill">Soccer</span></div>
+          <div><span class="label">Event</span><span class="value">Czechia vs Mexico</span></div>
+          <div><span class="label">Pick</span><span class="value">Under 2.5 Goals</span></div>
+          <div><span class="label">Final Result</span><span class="value">Pending</span></div>
+          <div><span class="label">Status</span><span class="status-pill status-pending">Pending</span></div>
+          <div><span class="label">P/L</span><span class="value">0.00u</span></div>
+        </article>
+
+        <article class="result-card">
+          <div><span class="label">Date</span><span class="value">Jun 23, 2026</span></div>
+          <div><span class="label">Sport</span><span class="sport-pill">Horse</span></div>
+          <div><span class="label">Event</span><span class="value">Belmont Race 7</span></div>
+          <div><span class="label">Pick</span><span class="value">Midnight Circuit</span></div>
+          <div><span class="label">Final Result</span><span class="value">Placed 1st</span></div>
+          <div><span class="label">Status</span><span class="status-pill status-win">Win</span></div>
+          <div><span class="label">P/L</span><span class="value positive">+1.62u</span></div>
+        </article>
+
+        <article class="result-card">
+          <div><span class="label">Date</span><span class="value">Jun 22, 2026</span></div>
+          <div><span class="label">Sport</span><span class="sport-pill">UFC</span></div>
+          <div><span class="label">Event</span><span class="value">Torres vs Allen</span></div>
+          <div><span class="label">Pick</span><span class="value">Torres Decision +180</span></div>
+          <div><span class="label">Final Result</span><span class="value">Allen KO R2</span></div>
+          <div><span class="label">Status</span><span class="status-pill status-loss">Loss</span></div>
+          <div><span class="label">P/L</span><span class="value negative">-1.00u</span></div>
+        </article>
+
+        <article class="result-card">
+          <div><span class="label">Date</span><span class="value">Jun 21, 2026</span></div>
+          <div><span class="label">Sport</span><span class="sport-pill">MLB</span></div>
+          <div><span class="label">Event</span><span class="value">Dodgers vs Giants</span></div>
+          <div><span class="label">Pick</span><span class="value">Over 8.5 Runs</span></div>
+          <div><span class="label">Final Result</span><span class="value">LAD 4, SF 4</span></div>
+          <div><span class="label">Status</span><span class="status-pill status-push">Push</span></div>
+          <div><span class="label">P/L</span><span class="value neutral">0.00u</span></div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
