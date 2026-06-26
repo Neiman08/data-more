@@ -267,6 +267,8 @@ async function formatFixture(g, leagueKey = '', timezone = DEFAULT_TIMEZONE) {
     leagueKey,
     leagueName: g.league.name,
     league: g.league.name,
+    venue: g.fixture?.venue?.name || '',
+    city: g.fixture?.venue?.city || '',
 
     homeTeam: g.teams.home.name,
     awayTeam: g.teams.away.name,
@@ -379,8 +381,23 @@ async function getLiveStats(fixtureId) {
     homeShots: findStat(homeStats, ['Total Shots']),
     awayShots: findStat(awayStats, ['Total Shots']),
 
+    homeShotsOnTarget: findStat(homeStats, ['Shots on Goal']),
+    awayShotsOnTarget: findStat(awayStats, ['Shots on Goal']),
+
     homeCorners: findStat(homeStats, ['Corner Kicks']),
-    awayCorners: findStat(awayStats, ['Corner Kicks'])
+    awayCorners: findStat(awayStats, ['Corner Kicks']),
+
+    homeFouls: findStat(homeStats, ['Fouls']),
+    awayFouls: findStat(awayStats, ['Fouls']),
+
+    homeYellowCards: findStat(homeStats, ['Yellow Cards']),
+    awayYellowCards: findStat(awayStats, ['Yellow Cards']),
+
+    homeRedCards: findStat(homeStats, ['Red Cards']),
+    awayRedCards: findStat(awayStats, ['Red Cards']),
+
+    homeDangerousAttacks: findStat(homeStats, ['Dangerous Attacks']),
+    awayDangerousAttacks: findStat(awayStats, ['Dangerous Attacks'])
   };
 
   cache.liveStats[cacheKey] = {
@@ -423,6 +440,8 @@ function formatFixtureForList(g, timezone = DEFAULT_TIMEZONE) {
     leagueId: g.league?.id || null,
     league: g.league?.name || '',
     round: g.league?.round || '',
+    venue: g.fixture?.venue?.name || '',
+    city: g.fixture?.venue?.city || '',
     homeTeam: g.teams?.home?.name || '',
     awayTeam: g.teams?.away?.name || '',
     homeTeamId: g.teams?.home?.id || null,
@@ -552,6 +571,119 @@ async function getLineups(fixtureId) {
   };
 
   return lineups;
+}
+
+async function getFixtureEvents(fixtureId) {
+  try {
+    const data = await apiFootball(`/fixtures/events?fixture=${fixtureId}`);
+
+    return (data?.response || []).map(event => ({
+      time: event.time?.elapsed ?? null,
+      extra: event.time?.extra ?? null,
+      team: event.team?.name || '',
+      teamId: event.team?.id || null,
+      player: event.player?.name || '',
+      assist: event.assist?.name || '',
+      type: event.type || '',
+      detail: event.detail || '',
+      comments: event.comments || ''
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function summarizeTeamForm(events = [], teamId) {
+  const summary = {
+    games: 0,
+    wins: 0,
+    draws: 0,
+    losses: 0,
+    goalsFor: 0,
+    goalsAgainst: 0,
+    cleanSheets: 0,
+    form: []
+  };
+
+  for (const game of events.slice(0, 10)) {
+    const isHome = Number(game.homeTeamId) === Number(teamId);
+    const isAway = Number(game.awayTeamId) === Number(teamId);
+
+    if (!isHome && !isAway) continue;
+
+    const goalsFor = Number(isHome ? game.intHomeScore : game.intAwayScore) || 0;
+    const goalsAgainst = Number(isHome ? game.intAwayScore : game.intHomeScore) || 0;
+
+    summary.games += 1;
+    summary.goalsFor += goalsFor;
+    summary.goalsAgainst += goalsAgainst;
+    if (goalsAgainst === 0) summary.cleanSheets += 1;
+
+    if (goalsFor > goalsAgainst) {
+      summary.wins += 1;
+      summary.form.push('W');
+    } else if (goalsFor < goalsAgainst) {
+      summary.losses += 1;
+      summary.form.push('L');
+    } else {
+      summary.draws += 1;
+      summary.form.push('D');
+    }
+  }
+
+  return {
+    ...summary,
+    avgGoalsFor: summary.games ? Number((summary.goalsFor / summary.games).toFixed(2)) : null,
+    avgGoalsAgainst: summary.games ? Number((summary.goalsAgainst / summary.games).toFixed(2)) : null,
+    formText: summary.form.join(' ')
+  };
+}
+
+async function getHeadToHead(homeTeamId, awayTeamId) {
+  if (!homeTeamId || !awayTeamId) return null;
+
+  try {
+    const data = await apiFootball(`/fixtures/headtohead?h2h=${homeTeamId}-${awayTeamId}&last=10`);
+    const games = data?.response || [];
+
+    if (!games.length) return null;
+
+    const summary = {
+      games: 0,
+      homeWins: 0,
+      awayWins: 0,
+      draws: 0,
+      goals: 0,
+      btts: 0,
+      over25: 0
+    };
+
+    for (const game of games) {
+      const homeGoals = Number(game.goals?.home);
+      const awayGoals = Number(game.goals?.away);
+
+      if (!Number.isFinite(homeGoals) || !Number.isFinite(awayGoals)) continue;
+
+      summary.games += 1;
+      summary.goals += homeGoals + awayGoals;
+      if (homeGoals > awayGoals) summary.homeWins += 1;
+      else if (awayGoals > homeGoals) summary.awayWins += 1;
+      else summary.draws += 1;
+      if (homeGoals > 0 && awayGoals > 0) summary.btts += 1;
+      if (homeGoals + awayGoals > 2.5) summary.over25 += 1;
+    }
+
+    if (!summary.games) return null;
+
+    return {
+      ...summary,
+      avgGoals: Number((summary.goals / summary.games).toFixed(2)),
+      bttsRate: Number(((summary.btts / summary.games) * 100).toFixed(1)),
+      over25Rate: Number(((summary.over25 / summary.games) * 100).toFixed(1))
+    };
+  } catch {
+    return null;
+  }
 }
 
 function buildPlayerPropsFromLineups(lineups) {
@@ -719,13 +851,25 @@ function buildPublicSoccerAnalysis(
 
     over25:
       analysis.over25 ||
+      analysis.markets?.over25 ||
       analysis.totalPick ||
       null,
 
     btts:
       analysis.btts ||
+      analysis.markets?.btts ||
       analysis.bothTeamsToScore ||
       null,
+
+    expectedGoals: analysis.expectedGoals || analysis.goals || null,
+
+    goals: analysis.goals || analysis.expectedGoals || null,
+
+    markets: analysis.markets || null,
+
+    form: analysis.form || null,
+
+    modelNote: analysis.modelNote || null,
 
     lineups: buildPublicLineups(lineups),
 
@@ -787,7 +931,9 @@ router.get('/analyze/:id', async (req, res) => {
       homeRecentEvents,
       awayRecentEvents,
       lineups,
-      liveStats
+      liveStats,
+      events,
+      headToHead
     ] = await Promise.all([
 
       getLast5TeamMatches(
@@ -806,11 +952,19 @@ router.get('/analyze/:id', async (req, res) => {
 
       getLiveStats(
         matchRaw.fixtureId || matchRaw.matchId
+      ),
+
+      getFixtureEvents(
+        matchRaw.fixtureId || matchRaw.matchId
+      ),
+
+      getHeadToHead(
+        matchRaw.homeTeamId,
+        matchRaw.awayTeamId
       )
     ]);
 
-    const playerProps =
-      buildPlayerPropsFromLineups(lineups);
+    const playerProps = [];
 
     const privateAnalysis = buildSoccerAnalysis({
 
@@ -822,6 +976,9 @@ router.get('/analyze/:id', async (req, res) => {
 
         homeTeam: matchRaw.homeTeam,
         awayTeam: matchRaw.awayTeam,
+        homeTeamId: matchRaw.homeTeamId,
+        awayTeamId: matchRaw.awayTeamId,
+        leagueKey: matchRaw.leagueKey,
 
         homeScore: matchRaw.homeScore,
         awayScore: matchRaw.awayScore,
@@ -854,7 +1011,16 @@ router.get('/analyze/:id', async (req, res) => {
 
       playerProps,
 
-      live: liveStats
+      live: liveStats,
+
+      events,
+
+      teamForm: {
+        home: summarizeTeamForm(homeRecentEvents, matchRaw.homeTeamId),
+        away: summarizeTeamForm(awayRecentEvents, matchRaw.awayTeamId)
+      },
+
+      headToHead
     });
 
   } catch (error) {

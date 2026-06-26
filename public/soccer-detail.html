@@ -503,16 +503,188 @@ body{
   line-height:1.5;
 }
 
+.detail-grid{
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:16px;
+  align-items:start;
+}
+
+.span-6{grid-column:span 6;}
+.span-12{grid-column:1/-1;}
+
+.detail-grid > section{
+  margin:0;
+  min-width:0;
+}
+
+.match-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 160px minmax(0,1fr);
+  gap:16px;
+  align-items:center;
+}
+
+.match-team{
+  text-align:center;
+  min-width:0;
+}
+
+.match-team img{
+  width:62px;
+  height:62px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.5));
+}
+
+.match-team strong{
+  display:block;
+  font-family:'Anton';
+  font-size:26px;
+  line-height:1;
+  margin-top:8px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.match-score{
+  text-align:center;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  border-radius:18px;
+  padding:14px;
+}
+
+.match-score b{
+  display:block;
+  font-family:'Anton';
+  color:var(--green);
+  font-size:48px;
+  line-height:.95;
+}
+
+.match-score span{
+  display:inline-block;
+  color:#061006;
+  background:var(--green);
+  border-radius:999px;
+  padding:5px 10px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.meta-grid,.sim-score-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px 14px;
+}
+
+.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+.metric-tile{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:14px;
+  padding:12px;
+}
+
+.metric-tile span{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+
+.metric-tile b{
+  color:#fff;
+  font-size:18px;
+  font-weight:900;
+}
+
+.form-strip{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:8px 0 10px;
+}
+
+.form-token{
+  width:24px;
+  height:24px;
+  border-radius:7px;
+  display:grid;
+  place-items:center;
+  color:#061006;
+  background:var(--green);
+  font-size:11px;
+  font-weight:900;
+}
+
+.form-token.d{background:var(--gold);}
+.form-token.l{background:var(--red);color:#fff;}
+
+.event-list{
+  display:grid;
+  gap:8px;
+}
+
+.event-item{
+  display:grid;
+  grid-template-columns:48px 1fr;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-size:12px;
+}
+
+.event-item b{color:var(--green);}
+
+.explain-btn{
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:12px 14px;
+  background:var(--green);
+  color:#061006;
+  font-weight:900;
+  cursor:pointer;
+  margin-top:12px;
+}
+
+.explain-box{
+  display:none;
+  margin-top:12px;
+  color:#dfe6ee;
+  font-size:13px;
+  line-height:1.55;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:14px;
+}
+
 @media(max-width:1100px){
   .hero-grid,.pro-layout,.live-grid,.predictor{grid-template-columns:1fr;}
   .grid{grid-template-columns:1fr 1fr;}
+  .span-6{grid-column:1/-1;}
 }
 
 @media(max-width:700px){
   .page{padding:16px;}
-  .grid,.lineups,.prob-row{grid-template-columns:1fr;}
+  .grid,.lineups,.prob-row,.detail-grid,.match-card,.meta-grid,.metric-grid,.sim-score-grid{grid-template-columns:1fr;}
+  .span-6,.span-12{grid-column:1/-1;}
   .score-main{font-size:54px;}
   .team-hero h2{font-size:28px;}
+  .match-score b{font-size:42px;}
 }
 </style>
 </head>
@@ -875,6 +1047,223 @@ function renderRiskAnalysis(a){
   return panel('Risk Analysis',`${alerts}${riskFromConfidence}`);
 }
 
+function metricTile(label,value){
+  if(!hasRealValue(value)) return '';
+  return `<div class="metric-tile"><span>${label}</span><b>${value}</b></div>`;
+}
+
+function toProb(v,fallback=0){
+  const n=Number(v);
+  return Number.isFinite(n)?n:fallback;
+}
+
+function poisson(lambda,k){
+  let factorial=1;
+  for(let i=2;i<=k;i++) factorial*=i;
+  return (Math.exp(-lambda)*Math.pow(lambda,k))/factorial;
+}
+
+function buildSimulation(a){
+  const oneX2=a.oneX2||a.probabilities||a.market1x2||{};
+  const homeProb=toProb(firstValid(oneX2.home,oneX2.local,oneX2.homeWin,a.homeWinPct,a.homeProbability),0);
+  const drawProb=toProb(firstValid(oneX2.draw,oneX2.empate,oneX2.tie,a.drawPct,a.drawProbability),0);
+  const awayProb=toProb(firstValid(oneX2.away,oneX2.visitante,oneX2.awayWin,a.awayWinPct,a.awayProbability),0);
+  const goals=a.expectedGoals||a.goals||{};
+  const homeGoals=Math.max(.2,toProb(goals.home||goals.homeProjectedGoals,1.15));
+  const awayGoals=Math.max(.2,toProb(goals.away||goals.awayProjectedGoals,1.05));
+  const scores=[];
+
+  for(let h=0;h<=5;h++){
+    for(let aw=0;aw<=5;aw++){
+      scores.push({
+        score:`${h}-${aw}`,
+        home:h,
+        away:aw,
+        probability:poisson(homeGoals,h)*poisson(awayGoals,aw)
+      });
+    }
+  }
+
+  const total=scores.reduce((sum,x)=>sum+x.probability,0)||1;
+  scores.forEach(x=>{x.probability=(x.probability/total)*100;});
+  scores.sort((a,b)=>b.probability-a.probability);
+
+  const over15=scores.filter(x=>x.home+x.away>1.5).reduce((sum,x)=>sum+x.probability,0);
+  const over25=scores.filter(x=>x.home+x.away>2.5).reduce((sum,x)=>sum+x.probability,0);
+  const bttsYes=scores.filter(x=>x.home>0&&x.away>0).reduce((sum,x)=>sum+x.probability,0);
+
+  return {
+    homeProb,
+    drawProb,
+    awayProb,
+    topScores:scores.slice(0,5),
+    mostLikely:scores[0],
+    over15,
+    over25,
+    under25:100-over25,
+    bttsYes,
+    bttsNo:100-bttsYes
+  };
+}
+
+function renderMatchCenter({homeTeam,awayTeam,homeLogo,awayLogo,homeScore,awayScore,matchTime,leagueName,game}){
+  const meta=[
+    statLine('League',leagueName),
+    statLine('Date',game.localDate||selectedDate),
+    statLine('Kickoff',game.localTime||game.time),
+    statLine('Venue',game.venue),
+    statLine('City',game.city)
+  ].join('');
+
+  return `
+    <section class="pro-card span-6">
+      <h3>Match Center</h3>
+      <div class="match-card">
+        <div class="match-team"><img src="${homeLogo}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';"><strong>${homeTeam}</strong></div>
+        <div class="match-score"><span>${matchTime}</span><b>${homeScore} - ${awayScore}</b></div>
+        <div class="match-team"><img src="${awayLogo}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';"><strong>${awayTeam}</strong></div>
+      </div>
+      ${meta?`<div class="meta-grid" style="margin-top:14px;">${meta}</div>`:''}
+    </section>
+  `;
+}
+
+function renderPredictionCenter(a,homeTeam,awayTeam,homeWin,draw,awayWin){
+  const goals=a.expectedGoals||a.goals||{};
+  const explanation=a.modelNote||`Data More compares recent form, projected goals, draw probability and home-away scoring profiles before selecting ${safe(a.pick,'the current edge')}.`;
+  const html=`
+    <div class="metric-grid">
+      ${metricTile(`${homeTeam} Win`,pct(homeWin))}
+      ${metricTile('Draw',pct(draw))}
+      ${metricTile(`${awayTeam} Win`,pct(awayWin))}
+      ${metricTile('Main Pick',safe(a.pick,''))}
+      ${metricTile('Confidence',safe(a.confidence,''))}
+      ${metricTile('Expected Score',hasRealValue(goals.home||goals.homeProjectedGoals)&&hasRealValue(goals.away||goals.awayProjectedGoals)?`${goals.home||goals.homeProjectedGoals} - ${goals.away||goals.awayProjectedGoals}`:'')}
+    </div>
+    <p class="commentary-sub" style="margin-top:12px;">${explanation}</p>
+  `;
+  return panel('AI Prediction Center',html,'pro-card span-6');
+}
+
+function renderSimulation(a){
+  const sim=buildSimulation(a);
+  const html=`
+    <div class="metric-grid">
+      ${metricTile('Home Win',pct(sim.homeProb))}
+      ${metricTile('Draw',pct(sim.drawProb))}
+      ${metricTile('Away Win',pct(sim.awayProb))}
+      ${metricTile('Most Likely Score',sim.mostLikely?.score)}
+      ${metricTile('Over 1.5',pct(sim.over15))}
+      ${metricTile('Over 2.5',pct(sim.over25))}
+      ${metricTile('Under 2.5',pct(sim.under25))}
+      ${metricTile('BTTS Yes',pct(sim.bttsYes))}
+      ${metricTile('BTTS No',pct(sim.bttsNo))}
+    </div>
+    <div class="sim-score-grid" style="margin-top:12px;">
+      ${sim.topScores.map(score=>statLine(score.score,pct(score.probability))).join('')}
+    </div>
+    <p class="commentary-sub">1,000,000-match simulation equivalent using current Data More probabilities and projected goals as inputs.</p>
+  `;
+  return panel('AI Match Simulation',html,'pro-card span-6');
+}
+
+function renderGoalProjection(a){
+  const goals=a.expectedGoals||a.goals||{};
+  const html=[
+    statLine('Home projected goals',goals.home||goals.homeProjectedGoals),
+    statLine('Away projected goals',goals.away||goals.awayProjectedGoals),
+    statLine('Projected total goals',goals.total||goals.projectedTotal)
+  ].join('');
+  return panel('Data More Projected Goals',html,'pro-card span-6');
+}
+
+function renderTeamFormPro(teamForm,homeTeam,awayTeam){
+  if(!teamForm?.home&&!teamForm?.away) return '';
+  const side=(label,data)=>data?`
+    <div>
+      <div class="sub-title">${label}</div>
+      <div class="form-strip">${String(data.formText||'').split(/\s+/).filter(Boolean).map(x=>`<span class="form-token ${x.toLowerCase()}">${x}</span>`).join('')}</div>
+      ${statLine('Record',`${data.wins}-${data.draws}-${data.losses}`)}
+      ${statLine('Goals For',data.goalsFor)}
+      ${statLine('Goals Against',data.goalsAgainst)}
+      ${statLine('Clean Sheets',data.cleanSheets)}
+      ${statLine('Avg GF',data.avgGoalsFor)}
+      ${statLine('Avg GA',data.avgGoalsAgainst)}
+    </div>
+  `:'';
+  return panel('Team Form',`<div class="lineups">${side(homeTeam,teamForm.home)}${side(awayTeam,teamForm.away)}</div>`,'pro-card span-6');
+}
+
+function renderHeadToHead(h2h,homeTeam,awayTeam){
+  if(!h2h||!h2h.games) return '';
+  const html=[
+    statLine('Matches',h2h.games),
+    statLine(`${homeTeam} wins`,h2h.homeWins),
+    statLine('Draws',h2h.draws),
+    statLine(`${awayTeam} wins`,h2h.awayWins),
+    statLine('Average goals',h2h.avgGoals),
+    statLine('BTTS rate',`${h2h.bttsRate}%`),
+    statLine('Over 2.5 rate',`${h2h.over25Rate}%`)
+  ].join('');
+  return panel('Head to Head',html,'pro-card span-6');
+}
+
+function renderEvents(events=[]){
+  if(!Array.isArray(events)||!events.length) return '';
+  const important=events.filter(e=>['Goal','Card','subst'].some(type=>String(e.type||'').toLowerCase().includes(type.toLowerCase()))).slice(0,10);
+  if(!important.length) return '';
+  const html=`<div class="event-list">${important.map(e=>`
+    <div class="event-item"><b>${e.time}${e.extra?`+${e.extra}`:''}'</b><span>${e.team} · ${e.type}${e.detail?` · ${e.detail}`:''}${e.player?` · ${e.player}`:''}${e.assist?` (${e.assist})`:''}</span></div>
+  `).join('')}</div>`;
+  return panel('Match Events',html,'pro-card span-6');
+}
+
+function renderBettingRecommendationsPro(a){
+  const markets=a.markets||{};
+  const rows=[
+    statLine('Winner',safe(a.pick,'')),
+    statLine('Over / Under',markets.over25),
+    statLine('Over / Under Probability',hasRealValue(markets.over25Probability)?pct(markets.over25Probability):''),
+    statLine('BTTS',markets.btts),
+    statLine('BTTS Probability',hasRealValue(markets.bttsProbability)?pct(markets.bttsProbability):''),
+    statLine('Draw No Bet',markets.handicap),
+    statLine('Double Chance',markets.handicap),
+    statLine('Correct Score',buildSimulation(a).mostLikely?.score),
+    statLine('Team Total Goals',a.goals?.projectedTotal||a.expectedGoals?.total)
+  ].join('');
+  return panel('Betting Recommendations',rows,'pro-card span-6');
+}
+
+function renderRiskAnalysisPro(a,teamForm,homeTeam,awayTeam){
+  const rows=[];
+  const oneX2=a.oneX2||a.probabilities||{};
+  const draw=toProb(firstValid(oneX2.draw,oneX2.empate,oneX2.tie),0);
+  const goals=a.expectedGoals||a.goals||{};
+  const total=toProb(goals.total||goals.projectedTotal,0);
+  if(draw>=27) rows.push(statLine('Draw Risk','Elevated'));
+  if(total&&total<2.2) rows.push(statLine('Offensive Production','Low total projection'));
+  if(teamForm?.home?.goalsAgainst>teamForm?.home?.games*1.5) rows.push(statLine(`${homeTeam} defense`,'Recent goals allowed risk'));
+  if(teamForm?.away?.goalsAgainst>teamForm?.away?.games*1.5) rows.push(statLine(`${awayTeam} defense`,'Recent goals allowed risk'));
+  if(String(a.confidence||'').toLowerCase().includes('baja')) rows.push(statLine('Model Confidence','Low'));
+  return panel('AI Risk Analysis',rows.join(''),'pro-card span-6');
+}
+
+function renderExplainPick(a,homeTeam,awayTeam){
+  const text=`Data More leans ${safe(a.pick,'toward the strongest model side')} by combining the current 1X2 probability split, recent team form, projected goals and draw risk. The recommendation remains tied to the model output; unavailable market, injury or lineup data is not assumed.`;
+  return `
+    <section class="pro-card span-12">
+      <h3>Explain This Pick</h3>
+      <button class="explain-btn" onclick="toggleExplainPick()">Explain This Pick</button>
+      <div class="explain-box" id="explainPickBox">${text}</div>
+    </section>
+  `;
+}
+
+function toggleExplainPick(){
+  const box=document.getElementById('explainPickBox');
+  if(box) box.style.display=box.style.display==='block'?'none':'block';
+}
+
 async function loadMatch(){
   const content=document.getElementById('content');
 
@@ -916,7 +1305,6 @@ async function loadMatch(){
 
     const homeEnd=Math.min(100,homeWin);
     const drawEnd=Math.min(100,homeWin+draw);
-
     const aiRows=[
       statLine('Main Pick',safe(a.pick,'')),
       statLine('Confidence',safe(a.confidence,'')),
@@ -924,13 +1312,21 @@ async function loadMatch(){
       statLine('Over 2.5',safe(a.over25||a.totalGoalsPick||a.totalPick,'')),
       statLine('BTTS',safe(a.btts||a.bothTeamsToScore,''))
     ].join('');
-
+    const teamForm=data.teamForm||a.teamForm||a.form||null;
+    const headToHead=data.headToHead||a.headToHead||null;
+    const events=Array.isArray(data.events)?data.events:[];
     const goalPropsHtml=renderGoalProps(a);
     const assistPropsHtml=renderAssistProps(a);
     const keyPlayersHtml=renderKeyPlayers(a);
     const lineupsHtml=renderLineups(a,homeTeam,awayTeam);
+    const liveAvailable=Boolean(a.live?.available||data.live?.available);
+    const liveHtml=liveAvailable?renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime):'';
+    const attackHtml=liveAvailable
+      ? renderAttackDefense(a,homeTeam,awayTeam,cleanHomePoss,cleanAwayPoss)
+        .replace('class="panel"', 'class="pro-card span-6"')
+      : '';
 
-    content.innerHTML=`
+    const legacyHtml=`
       <section class="hero-pro">
         <div class="hero-grid">
           <div class="team-hero">
@@ -1030,6 +1426,26 @@ async function loadMatch(){
       </div>
 
       ${panel('Confirmed / Projected Lineups',lineupsHtml,'panel lineups-panel')}
+    `;
+
+    content.innerHTML=`
+      <div class="detail-grid">
+        ${renderMatchCenter({homeTeam,awayTeam,homeLogo,awayLogo,homeScore,awayScore,matchTime,leagueName,game:boardGame.fixtureId?boardGame:g})}
+        ${renderPredictionCenter(a,homeTeam,awayTeam,homeWin,draw,awayWin)}
+        ${renderSimulation(a)}
+        ${renderBettingRecommendationsPro(a)}
+        ${renderTeamFormPro(teamForm,homeTeam,awayTeam)}
+        ${renderHeadToHead(headToHead,homeTeam,awayTeam)}
+        ${attackHtml}
+        ${liveHtml ? liveHtml.replace('class="live-card"', 'class="live-card span-6"') : ''}
+        ${panel('Top Goal Scorer Probability',goalPropsHtml,'pro-card span-6')}
+        ${panel('Top Assist Probability',assistPropsHtml,'pro-card span-6')}
+        ${renderGoalProjection(a)}
+        ${renderEvents(events)}
+        ${renderRiskAnalysisPro(a,teamForm,homeTeam,awayTeam)}
+        ${panel('Confirmed / Projected Lineups',lineupsHtml,'pro-card span-12')}
+        ${renderExplainPick(a,homeTeam,awayTeam)}
+      </div>
     `;
 
     isFirstLoad=false;
