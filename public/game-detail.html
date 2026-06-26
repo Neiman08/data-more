@@ -1323,6 +1323,53 @@
       height:7px;
     }
 
+    .sabermetric-card{
+      grid-column:1/-1;
+    }
+
+    .sabermetric-summary{
+      color:#dfe6ee;
+      font-size:13px;
+      line-height:1.55;
+      margin:0 0 14px;
+    }
+
+    .sabermetric-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .sabermetric-block{
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:14px;
+      padding:12px;
+      min-width:0;
+    }
+
+    .sabermetric-block h4{
+      margin:0 0 8px;
+      color:var(--green);
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.6px;
+    }
+
+    .sabermetric-lean{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:#061006;
+      background:var(--green);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
     .pro-info-grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -1689,6 +1736,9 @@
       }
       .metric-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+      .sabermetric-grid{
+        grid-template-columns:1fr;
       }
     }
 
@@ -2249,6 +2299,165 @@
       `;
     }
 
+    function numberValue(value){
+      if(isUnavailable(value)) return null;
+      const n = Number(String(value).replace('%', ''));
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function lowerIsBetterScore(value, min, max){
+      const n = numberValue(value);
+      if(n === null) return null;
+      return Math.max(0, Math.min(100, ((max - n) / (max - min)) * 100));
+    }
+
+    function higherIsBetterScore(value, min, max){
+      const n = numberValue(value);
+      if(n === null) return null;
+      return Math.max(0, Math.min(100, ((n - min) / (max - min)) * 100));
+    }
+
+    function averageScores(...scores){
+      const clean = scores.filter(score => Number.isFinite(score));
+      if(!clean.length) return null;
+      return clean.reduce((sum, score) => sum + score, 0) / clean.length;
+    }
+
+    function compareMetric(label, awayValue, homeValue, awayScore, homeScore){
+      if(isUnavailable(awayValue) && isUnavailable(homeValue)) return '';
+      const a = Number.isFinite(awayScore) ? awayScore : 50;
+      const h = Number.isFinite(homeScore) ? homeScore : 50;
+      const total = a + h;
+      const width = total > 0 ? Math.max(5, Math.min(95, (a / total) * 100)) : 50;
+      return `
+        <div class="compare-row">
+          <span>${label}</span>
+          <div class="compare-track"><div class="compare-fill" style="width:${width}%"></div></div>
+          <span>${displayValue(awayValue, '--')} | ${displayValue(homeValue, '--')}</span>
+        </div>
+      `;
+    }
+
+    function pitcherKRate(stats = {}){
+      const k = numberValue(stats.K);
+      const bf = numberValue(stats.battersFaced);
+      if(Number.isFinite(k) && Number.isFinite(bf) && bf > 0) return Number(((k / bf) * 100).toFixed(1));
+      return null;
+    }
+
+    function pitcherBbRate(stats = {}){
+      const bb = numberValue(stats.BB);
+      const bf = numberValue(stats.battersFaced);
+      if(Number.isFinite(bb) && Number.isFinite(bf) && bf > 0) return Number(((bb / bf) * 100).toFixed(1));
+      return null;
+    }
+
+    function renderSabermetricStudy(game, centerData){
+      const awayPitcher = centerData?.pitcherStats?.away || {};
+      const homePitcher = centerData?.pitcherStats?.home || {};
+      const awayTeam = centerData?.teamStats?.away || {};
+      const homeTeam = centerData?.teamStats?.home || {};
+      const odds = centerData?.odds || {};
+      const projected = centerData?.advancedModel?.projectedRuns || {};
+
+      const awayKRate = pitcherKRate(awayPitcher);
+      const homeKRate = pitcherKRate(homePitcher);
+      const awayBbRate = pitcherBbRate(awayPitcher);
+      const homeBbRate = pitcherBbRate(homePitcher);
+
+      const awayPitchingScore = averageScores(
+        lowerIsBetterScore(awayPitcher.ERA, 2.4, 6.2),
+        lowerIsBetterScore(awayPitcher.WHIP, 0.9, 1.7),
+        higherIsBetterScore(awayKRate, 12, 34),
+        lowerIsBetterScore(awayBbRate, 4, 14),
+        lowerIsBetterScore(awayPitcher.HR, 0, 28)
+      );
+      const homePitchingScore = averageScores(
+        lowerIsBetterScore(homePitcher.ERA, 2.4, 6.2),
+        lowerIsBetterScore(homePitcher.WHIP, 0.9, 1.7),
+        higherIsBetterScore(homeKRate, 12, 34),
+        lowerIsBetterScore(homeBbRate, 4, 14),
+        lowerIsBetterScore(homePitcher.HR, 0, 28)
+      );
+
+      const awayOffenseScore = averageScores(
+        higherIsBetterScore(awayTeam.AVG, .210, .285),
+        higherIsBetterScore(awayTeam.OBP, .285, .365),
+        higherIsBetterScore(awayTeam.SLG, .340, .480),
+        higherIsBetterScore(awayTeam.OPS, .630, .850),
+        higherIsBetterScore(awayTeam.runs, 250, 460),
+        higherIsBetterScore(awayTeam.HR, 45, 130),
+        higherIsBetterScore(awayTeam.hits, 500, 760)
+      );
+      const homeOffenseScore = averageScores(
+        higherIsBetterScore(homeTeam.AVG, .210, .285),
+        higherIsBetterScore(homeTeam.OBP, .285, .365),
+        higherIsBetterScore(homeTeam.SLG, .340, .480),
+        higherIsBetterScore(homeTeam.OPS, .630, .850),
+        higherIsBetterScore(homeTeam.runs, 250, 460),
+        higherIsBetterScore(homeTeam.HR, 45, 130),
+        higherIsBetterScore(homeTeam.hits, 500, 760)
+      );
+
+      const awayProjected = higherIsBetterScore(projected.away, 2, 7);
+      const homeProjected = higherIsBetterScore(projected.home, 2, 7);
+      const awayOverall = averageScores(awayPitchingScore, awayOffenseScore, awayProjected);
+      const homeOverall = averageScores(homePitchingScore, homeOffenseScore, homeProjected);
+      const lean = Number(homeOverall || 0) >= Number(awayOverall || 0) ? game.homeAbbrev : game.awayAbbrev;
+      const leanTeam = lean === game.homeAbbrev ? game.homeTeamName || game.homeAbbrev : game.awayTeamName || game.awayAbbrev;
+      const pitchingEdge = Number(homePitchingScore || 0) >= Number(awayPitchingScore || 0) ? game.homeAbbrev : game.awayAbbrev;
+      const offensiveEdge = Number(homeOffenseScore || 0) >= Number(awayOffenseScore || 0) ? game.homeAbbrev : game.awayAbbrev;
+      const marketEdge = !isUnavailable(odds.modelEdge) ? odds.modelEdge : null;
+      const hasData = hasAnyData(
+        awayPitcher.ERA, homePitcher.ERA,
+        awayTeam.OPS, homeTeam.OPS,
+        projected.away, projected.home
+      );
+
+      if(!hasData) return '';
+
+      const summary = `Data More gives ${leanTeam} the sabermetric edge using the available pitching, offensive efficiency and projected run profile. ${pitchingEdge} owns the starting pitching edge, while ${offensiveEdge} grades stronger on lineup production.`;
+
+      return `
+        <section class="premium-card sabermetric-card">
+          <div class="card-head">
+            <div><div class="card-kicker">Sabermetric Study</div><h3>${game.awayAbbrev} vs ${game.homeAbbrev}</h3></div>
+            <span class="sabermetric-lean">Data More Sabermetric Lean: ${lean}</span>
+          </div>
+          <p class="sabermetric-summary">${summary}${marketEdge ? ` Current market edge is ${marketEdge}.` : ''}</p>
+          <div class="sabermetric-grid">
+            <div class="sabermetric-block">
+              <h4>Pitching</h4>
+              ${compareMetric('ERA', awayPitcher.ERA, homePitcher.ERA, lowerIsBetterScore(awayPitcher.ERA, 2.4, 6.2), lowerIsBetterScore(homePitcher.ERA, 2.4, 6.2))}
+              ${compareMetric('WHIP', awayPitcher.WHIP, homePitcher.WHIP, lowerIsBetterScore(awayPitcher.WHIP, .9, 1.7), lowerIsBetterScore(homePitcher.WHIP, .9, 1.7))}
+              ${compareMetric('K%', awayKRate ? `${awayKRate}%` : null, homeKRate ? `${homeKRate}%` : null, higherIsBetterScore(awayKRate, 12, 34), higherIsBetterScore(homeKRate, 12, 34))}
+              ${compareMetric('BB%', awayBbRate ? `${awayBbRate}%` : null, homeBbRate ? `${homeBbRate}%` : null, lowerIsBetterScore(awayBbRate, 4, 14), lowerIsBetterScore(homeBbRate, 4, 14))}
+              ${compareMetric('HR Allowed', awayPitcher.HR, homePitcher.HR, lowerIsBetterScore(awayPitcher.HR, 0, 28), lowerIsBetterScore(homePitcher.HR, 0, 28))}
+              ${compareMetric('IP', awayPitcher.IP, homePitcher.IP, higherIsBetterScore(awayPitcher.IP, 20, 130), higherIsBetterScore(homePitcher.IP, 20, 130))}
+              ${compareMetric('Quality Starts', awayPitcher.qualityStarts, homePitcher.qualityStarts, higherIsBetterScore(awayPitcher.qualityStarts, 0, 18), higherIsBetterScore(homePitcher.qualityStarts, 0, 18))}
+            </div>
+            <div class="sabermetric-block">
+              <h4>Offense</h4>
+              ${compareMetric('AVG', awayTeam.AVG, homeTeam.AVG, higherIsBetterScore(awayTeam.AVG, .210, .285), higherIsBetterScore(homeTeam.AVG, .210, .285))}
+              ${compareMetric('OBP', awayTeam.OBP, homeTeam.OBP, higherIsBetterScore(awayTeam.OBP, .285, .365), higherIsBetterScore(homeTeam.OBP, .285, .365))}
+              ${compareMetric('SLG', awayTeam.SLG, homeTeam.SLG, higherIsBetterScore(awayTeam.SLG, .340, .480), higherIsBetterScore(homeTeam.SLG, .340, .480))}
+              ${compareMetric('OPS', awayTeam.OPS, homeTeam.OPS, higherIsBetterScore(awayTeam.OPS, .630, .850), higherIsBetterScore(homeTeam.OPS, .630, .850))}
+              ${compareMetric('Runs', awayTeam.runs, homeTeam.runs, higherIsBetterScore(awayTeam.runs, 250, 460), higherIsBetterScore(homeTeam.runs, 250, 460))}
+              ${compareMetric('HR', awayTeam.HR, homeTeam.HR, higherIsBetterScore(awayTeam.HR, 45, 130), higherIsBetterScore(homeTeam.HR, 45, 130))}
+              ${compareMetric('Hits', awayTeam.hits, homeTeam.hits, higherIsBetterScore(awayTeam.hits, 500, 760), higherIsBetterScore(homeTeam.hits, 500, 760))}
+            </div>
+            <div class="sabermetric-block">
+              <h4>Matchup Edge</h4>
+              ${statLine('Starting Pitching Edge', pitchingEdge)}
+              ${statLine('Offensive Edge', offensiveEdge)}
+              ${statLine('Market Edge', marketEdge)}
+              ${statLine('Overall Sabermetric Lean', lean)}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
     function renderPitcherHistory(game){
       return '';
     }
@@ -2639,6 +2848,8 @@
             renderMarketIntelligence({ centerData, modelProb, confidence }),
             renderFirstInningCenter(game, centerData)
           )}
+
+          ${renderSabermetricStudy(game, centerData)}
 
           <div class="pro-dashboard">
             <section class="hero-card">

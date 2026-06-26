@@ -318,6 +318,8 @@ async function getPitcherStats(pitcherId, season) {
       K: safeNumber(stat.strikeOuts),
       BB: safeNumber(stat.baseOnBalls),
       HR: safeNumber(stat.homeRuns),
+      battersFaced: safeNumber(stat.battersFaced),
+      qualityStarts: safeNumber(stat.qualityStarts),
       gamesStarted: safeNumber(stat.gamesStarted),
       record: stat.wins != null && stat.losses != null ? `${stat.wins}-${stat.losses}` : 'Pending'
     };
@@ -514,6 +516,8 @@ function buildPublicGameCenter({
         K: awayPitcherStats?.K ?? 0,
         BB: awayPitcherStats?.BB ?? 0,
         HR: awayPitcherStats?.HR ?? 0,
+        battersFaced: awayPitcherStats?.battersFaced ?? null,
+        qualityStarts: awayPitcherStats?.qualityStarts ?? null,
         gamesStarted: awayPitcherStats?.gamesStarted ?? 0,
         record: awayPitcherStats?.record || '--'
       },
@@ -527,6 +531,8 @@ function buildPublicGameCenter({
         K: homePitcherStats?.K ?? 0,
         BB: homePitcherStats?.BB ?? 0,
         HR: homePitcherStats?.HR ?? 0,
+        battersFaced: homePitcherStats?.battersFaced ?? null,
+        qualityStarts: homePitcherStats?.qualityStarts ?? null,
         gamesStarted: homePitcherStats?.gamesStarted ?? 0,
         record: homePitcherStats?.record || '--'
       }
