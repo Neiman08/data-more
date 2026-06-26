@@ -1601,7 +1601,8 @@ function openSoccerDetail(matchId, leagueKey, fixtureId){
     fixtureId: fixtureId || matchId,
     league: leagueKey || '',
     date: dateInput?.value || getDateInTimezone(getBrowserTimezone()),
-    timezone: getBrowserTimezone()
+    timezone: getBrowserTimezone(),
+    soccerMarket: getSelectedSoccerMarket().key
   });
 
   window.location.href = `/soccer-detail.html?${params.toString()}`;

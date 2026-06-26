@@ -706,6 +706,7 @@ const fixtureId = params.get('fixtureId') || matchId;
 const league = params.get('league');
 const selectedDate = params.get('date') || '';
 const selectedTimezone = params.get('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+const selectedSoccerMarket = params.get('soccerMarket') || 'winner';
 
 function paramClean(key){
   const value = params.get(key);
@@ -1220,7 +1221,11 @@ function renderEvents(events=[]){
 
 function renderBettingRecommendationsPro(a){
   const markets=a.markets||{};
+  const selectedLabel=soccerMarketLabel(selectedSoccerMarket);
+  const selectedRecommendation=soccerMarketRecommendation(selectedSoccerMarket,a);
   const rows=[
+    statLine('Selected Market',selectedLabel),
+    statLine('Selected Recommendation',selectedRecommendation),
     statLine('Winner',safe(a.pick,'')),
     statLine('Over / Under',markets.over25),
     statLine('Over / Under Probability',hasRealValue(markets.over25Probability)?pct(markets.over25Probability):''),
@@ -1232,6 +1237,36 @@ function renderBettingRecommendationsPro(a){
     statLine('Team Total Goals',a.goals?.projectedTotal||a.expectedGoals?.total)
   ].join('');
   return panel('Betting Recommendations',rows,'pro-card span-6');
+}
+
+function soccerMarketLabel(key){
+  const labels={
+    winner:'Moneyline / Winner',
+    'draw-no-bet':'Draw No Bet',
+    'double-chance':'Double Chance',
+    'goals-total':'Over / Under Goals',
+    btts:'Both Teams To Score',
+    'first-half':'First Half Result',
+    'correct-score':'Correct Score',
+    'team-total':'Team Total Goals'
+  };
+  return labels[key]||labels.winner;
+}
+
+function soccerMarketRecommendation(key,a){
+  const markets=a.markets||{};
+  const sim=buildSimulation(a);
+  const goals=a.expectedGoals||a.goals||{};
+  const recommendations={
+    winner:safe(a.pick,''),
+    'draw-no-bet':markets.handicap,
+    'double-chance':markets.handicap,
+    'goals-total':markets.over25,
+    btts:markets.btts,
+    'correct-score':sim.mostLikely?.score,
+    'team-total':goals.total||goals.projectedTotal
+  };
+  return recommendations[key]||'';
 }
 
 function renderRiskAnalysisPro(a,teamForm,homeTeam,awayTeam){
