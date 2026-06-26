@@ -888,31 +888,41 @@ let selectedSoccerMarket = {
 
 function initSoccerMarketSelector() {
   const selector = document.getElementById('soccerMarketSelector');
-  const label = document.getElementById('selectedSoccerMarketLabel');
 
   if (!selector) return;
 
-  selector.querySelectorAll('.ai-market-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      selector.querySelectorAll('.ai-market-chip').forEach(item => {
-        item.classList.remove('active');
-        item.setAttribute('aria-pressed', 'false');
-      });
-
-      chip.classList.add('active');
-      chip.setAttribute('aria-pressed', 'true');
-
-      selectedSoccerMarket = {
-        key: chip.dataset.market || 'winner',
-        label: chip.dataset.label || chip.innerText.trim() || 'Moneyline / Winner'
-      };
-
-      if (label) label.textContent = selectedSoccerMarket.label;
-    });
+  selector.addEventListener('click', event => {
+    const chip = event.target.closest('.ai-market-chip');
+    if (!chip || !selector.contains(chip)) return;
+    selectSoccerMarket(chip);
   });
 
   const active = selector.querySelector('.ai-market-chip.active');
-  if (active) active.setAttribute('aria-pressed', 'true');
+  selectSoccerMarket(active || selector.querySelector('.ai-market-chip'));
+}
+
+function selectSoccerMarket(chip) {
+  const selector = document.getElementById('soccerMarketSelector');
+  const label = document.getElementById('selectedSoccerMarketLabel');
+
+  if (!selector || !chip) return;
+
+  selector.querySelectorAll('.ai-market-chip').forEach(item => {
+    item.classList.remove('active');
+    item.setAttribute('aria-pressed', 'false');
+  });
+
+  chip.classList.add('active');
+  chip.setAttribute('aria-pressed', 'true');
+
+  selectedSoccerMarket = {
+    key: chip.dataset.market || 'winner',
+    label: chip.dataset.label || chip.innerText.trim() || 'Moneyline / Winner'
+  };
+
+  selector.dataset.selectedMarket = selectedSoccerMarket.key;
+
+  if (label) label.textContent = selectedSoccerMarket.label;
 }
 
 function getSelectedSoccerMarket() {
@@ -1435,7 +1445,7 @@ async function analyze(btn, matchId, leagueKey) {
 
   try {
     const res = await fetch(
-      `/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}&timezone=${encodeURIComponent(timezone)}`
+      `/api/soccer/analyze/${matchId}?league=${leagueKey}&date=${date}&timezone=${encodeURIComponent(timezone)}&market=${encodeURIComponent(selectedMarket.key)}`
     );
     const data = await res.json();
     const a = data.analysis || data;
