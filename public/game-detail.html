@@ -1200,6 +1200,27 @@
 
     .half-card{grid-column:span 6;}
     .third-card{grid-column:span 4;}
+    .span-8{grid-column:span 8;}
+    .span-12{grid-column:1/-1;}
+
+    .detail-grid > .half-card:only-child,
+    .detail-grid > .third-card:only-child,
+    .detail-grid > .span-8:only-child{
+      grid-column:1/-1;
+    }
+
+    .detail-grid > div > .premium-card,
+    .detail-grid > div > .panel,
+    .detail-grid > div > .hero-card,
+    .detail-grid > div > .live-mini-card{
+      height:100%;
+      margin-bottom:0;
+    }
+
+    .detail-grid > div .sabermetric-card{
+      grid-column:auto;
+      height:100%;
+    }
 
     .compact-card .card-head{
       margin-bottom:10px;
@@ -2067,6 +2088,11 @@
     function renderGrid(className, ...sections){
       const html = joinSections(...sections);
       return html ? `<div class="${className}">${html}</div>` : '';
+    }
+
+    function gridItem(section, className = 'half-card'){
+      if(!String(section || '').trim()) return '';
+      return `<div class="${className}">${section}</div>`;
     }
 
     function confidenceRating(confidence, probability){
@@ -3066,38 +3092,37 @@
             </section>
           </div>
 
-          <div class="premium-stack">
-            ${renderAIPredictionCenter({ game, analysis, centerData, advancedModel, awayPct, homePct })}
-          </div>
-
           ${renderGrid(
-            'premium-grid',
-            renderMarketIntelligence({ centerData, modelProb, confidence }),
-            renderFirstInningCenter(game, centerData)
+            'detail-grid',
+            gridItem(renderAIPredictionCenter({ game, analysis, centerData, advancedModel, awayPct, homePct }), 'half-card'),
+            gridItem(renderMarketIntelligence({ centerData, modelProb, confidence }), 'half-card')
           )}
 
-          ${renderSabermetricStudy(game, centerData)}
+          ${renderGrid(
+            'detail-grid',
+            gridItem(renderSabermetricStudy(game, centerData), 'span-8'),
+            gridItem(renderConfidenceMeter({ centerData, modelProb }), 'third-card')
+          )}
 
           ${renderGrid(
-            'premium-grid',
-            renderBullpenCenter(centerData),
-            renderWeatherCenter(centerData),
-            renderVegasVsDataMore(game, centerData, modelProb)
+            'detail-grid',
+            gridItem(renderBullpenCenter(centerData), 'half-card'),
+            gridItem(renderWeatherCenter(centerData), 'half-card')
           )}
 
           ${renderPitcherBreakdownExpanded(game, centerData, awayPitcherImg, homePitcherImg)}
 
           ${renderGrid(
             'detail-grid',
-            renderConfidenceMeter({ centerData, modelProb }),
-            renderTeamComparisonVisual(game, centerData)
+            gridItem(renderTeamComparisonVisual(game, centerData), 'half-card'),
+            gridItem(renderFirstInningCenter(game, centerData), 'half-card')
           )}
 
           ${renderGrid(
-            'premium-grid',
-            renderPitcherHistory(game, centerData),
-            renderSimulationCenter(game, advancedModel),
-            renderBettingRecommendations({ analysis, modelProb, advancedModel })
+            'detail-grid',
+            gridItem(renderVegasVsDataMore(game, centerData, modelProb), 'third-card'),
+            gridItem(renderPitcherHistory(game, centerData), 'third-card'),
+            gridItem(renderSimulationCenter(game, advancedModel), 'third-card')
           )}
 
           <section class="pro-info-grid">
@@ -3162,9 +3187,10 @@
           </section>
 
           ${renderGrid(
-            'premium-grid',
-            renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers),
-            renderHistoricalPerformance(performanceData)
+            'detail-grid',
+            gridItem(renderBettingRecommendations({ analysis, modelProb, advancedModel }), 'half-card'),
+            gridItem(renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers), 'half-card'),
+            gridItem(renderHistoricalPerformance(performanceData), 'span-12')
           )}
 
           <div class="premium-stack">
