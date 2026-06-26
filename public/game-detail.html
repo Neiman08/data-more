@@ -1085,6 +1085,10 @@
       margin-bottom:18px;
     }
 
+    .pro-duo > .panel:only-child{
+      grid-column:1/-1;
+    }
+
     .pro-info-grid{
       display:grid;
       grid-template-columns:repeat(4,1fr);
@@ -1103,6 +1107,274 @@
       gap:18px;
     }
 
+    .premium-stack{
+      display:grid;
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .premium-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .premium-grid.two{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .premium-card{
+      background:linear-gradient(180deg,rgba(12,18,24,.94),rgba(5,8,12,.92));
+      border:1px solid rgba(107,255,25,.18);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 16px 42px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.04);
+      min-height:0;
+      transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+    }
+
+    .premium-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(107,255,25,.38);
+      box-shadow:0 20px 55px rgba(0,0,0,.42),0 0 22px rgba(107,255,25,.08);
+    }
+
+    .premium-card.primary{
+      grid-column:1/-1;
+      border-color:rgba(107,255,25,.42);
+      background:
+        linear-gradient(135deg,rgba(107,255,25,.12),transparent 38%),
+        linear-gradient(180deg,rgba(12,18,24,.96),rgba(5,8,12,.94));
+    }
+
+    .card-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .card-kicker{
+      color:var(--green);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.9px;
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    .card-head h3,
+    .premium-card h3{
+      margin:0;
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+
+    .signal-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:26px;
+      border-radius:999px;
+      padding:6px 10px;
+      color:#061006;
+      background:var(--green);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .signal-badge.warn{
+      background:var(--gold);
+    }
+
+    .metric-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .metric-tile{
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:14px;
+      padding:10px;
+      min-height:68px;
+    }
+
+    .metric-tile span{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+
+    .metric-tile strong{
+      display:block;
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      line-height:1.15;
+    }
+
+    .ai-copy{
+      color:#dfe6ee;
+      font-size:13px;
+      line-height:1.55;
+      margin:12px 0 0;
+    }
+
+    .timeline{
+      display:flex;
+      align-items:flex-end;
+      gap:9px;
+      min-height:128px;
+      padding-top:8px;
+    }
+
+    .time-node{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:900;
+    }
+
+    .time-bar{
+      width:100%;
+      min-height:18px;
+      border-radius:8px 8px 3px 3px;
+      background:linear-gradient(180deg,var(--green),rgba(107,255,25,.35));
+      box-shadow:0 0 16px rgba(107,255,25,.16);
+    }
+
+    .visual-bar{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .compare-row{
+      display:grid;
+      grid-template-columns:74px 1fr 52px;
+      gap:10px;
+      align-items:center;
+      font-size:11px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
+    .compare-track{
+      height:10px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .compare-fill{
+      height:100%;
+      background:linear-gradient(90deg,var(--green),#d7ff31);
+      border-radius:999px;
+      min-width:4%;
+    }
+
+    .risk-list{
+      display:grid;
+      gap:8px;
+    }
+
+    .risk-item{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:9px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .risk-item span:first-child{
+      color:#fff;
+    }
+
+    .risk-pill{
+      border-radius:999px;
+      padding:5px 8px;
+      font-size:10px;
+      font-weight:900;
+      color:#020402;
+      background:var(--green);
+      text-transform:uppercase;
+    }
+
+    .risk-pill.medium{background:var(--gold);}
+    .risk-pill.high{background:var(--red);color:#fff;}
+
+    .stars{
+      color:var(--gold);
+      letter-spacing:1px;
+      font-size:13px;
+    }
+
+    .explain-btn{
+      margin-top:12px;
+      width:100%;
+      border:0;
+      border-radius:12px;
+      padding:12px 14px;
+      background:var(--green);
+      color:#061006;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .2s ease,box-shadow .2s ease;
+    }
+
+    .explain-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 0 22px rgba(107,255,25,.28);
+    }
+
+    .explain-box{
+      display:none;
+      margin-top:12px;
+      color:#dfe6ee;
+      font-size:13px;
+      line-height:1.6;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .heat-grid{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:6px;
+      margin-top:10px;
+    }
+
+    .heat-cell{
+      height:28px;
+      border-radius:7px;
+      background:rgba(107,255,25,.12);
+      border:1px solid rgba(107,255,25,.14);
+    }
+
+    .heat-cell.hot{background:rgba(107,255,25,.45);}
+    .heat-cell.warn{background:rgba(250,204,21,.36);}
+
     @media(max-width:1100px){
       .pro-dashboard,
       .pro-duo{
@@ -1110,6 +1382,13 @@
       }
       .pro-info-grid{
         grid-template-columns:repeat(2,1fr);
+      }
+      .premium-grid,
+      .premium-grid.two{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+      .metric-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
       }
     }
 
@@ -1173,6 +1452,11 @@
       .lineup-box{
         grid-template-columns:1fr;
         gap:12px;
+      }
+
+      .premium-grid,
+      .premium-grid.two{
+        grid-template-columns:1fr;
       }
 
       .player-card{
@@ -1275,6 +1559,554 @@
       el.src = '/logos/mlb_generic.png';
     }
 
+    function isUnavailable(value){
+      if(value === undefined || value === null) return true;
+      if(typeof value === 'number') return Number.isNaN(value);
+      const raw = String(value).trim().toLowerCase();
+      return raw === '' ||
+        raw === 'pending' ||
+        raw === 'data unavailable' ||
+        raw === 'undefined' ||
+        raw === 'null' ||
+        raw === '--' ||
+        raw === 'n/a' ||
+        raw === 'no data';
+    }
+
+    function displayValue(value, fallback = 'Advanced data not available yet'){
+      if(isUnavailable(value)) return fallback;
+      return value;
+    }
+
+    function pctValue(value){
+      if(isUnavailable(value)) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? `${n.toFixed(1)}%` : String(value);
+    }
+
+    function compactNumber(value){
+      if(isUnavailable(value)) return null;
+      const n = Number(value);
+      return Number.isFinite(n) ? n.toFixed(2).replace(/\.00$/, '') : String(value);
+    }
+
+    function metricTile(label, value){
+      if(isUnavailable(value)) return '';
+      return `<div class="metric-tile"><span>${label}</span><strong>${value}</strong></div>`;
+    }
+
+    function statLine(label, value){
+      if(isUnavailable(value)) return '';
+      return `<div class="stat-row"><span>${label}</span><span>${value}</span></div>`;
+    }
+
+    function compactNotice(message = 'Advanced data not available yet'){
+      return `<p class="note">${message}</p>`;
+    }
+
+    function hasAnyData(...values){
+      return values.some(value => !isUnavailable(value));
+    }
+
+    function joinSections(...sections){
+      return sections.filter(section => String(section || '').trim()).join('');
+    }
+
+    function renderGrid(className, ...sections){
+      const html = joinSections(...sections);
+      return html ? `<div class="${className}">${html}</div>` : '';
+    }
+
+    function confidenceRating(confidence, probability){
+      const raw = String(confidence || '').toLowerCase();
+      const pct = Number(probability);
+
+      if(raw.includes('alta') || raw.includes('high') || pct >= 62) return 'A';
+      if(raw.includes('media') || raw.includes('medium') || pct >= 56) return 'B';
+      if(raw.includes('baja') || raw.includes('low')) return 'C';
+
+      return null;
+    }
+
+    function starsForConfidence(confidence, probability){
+      const rating = confidenceRating(confidence, probability);
+      if(rating === 'A') return '★★★★★';
+      if(rating === 'B') return '★★★★☆';
+      if(rating === 'C') return '★★★☆☆';
+      return null;
+    }
+
+    function modelFavorite(game, analysis, awayPct, homePct){
+      return analysis.pick || (homePct >= awayPct ? game.homeAbbrev : game.awayAbbrev);
+    }
+
+    function buildAIExplanation({ game, analysis, centerData, awayPct, homePct }){
+      const favorite = modelFavorite(game, analysis, awayPct, homePct);
+      const favIsHome = favorite === game.homeAbbrev || favorite === game.homeTeamName || favorite === game.homePitcher;
+      const favPitcher = favIsHome ? game.homePitcher : game.awayPitcher;
+      const oppAbbrev = favIsHome ? game.awayAbbrev : game.homeAbbrev;
+      const favPct = Math.max(Number(awayPct), Number(homePct)).toFixed(1);
+      const bullpenNote = centerData?.bullpen ? 'bullpen availability and fatigue checks remain part of the pre-bet review' : 'bullpen context is still pending';
+      const marketNote = centerData?.odds?.currentLine && centerData.odds.currentLine !== 'Pending'
+        ? 'current market pricing is available for comparison'
+        : 'sportsbook line data is not available yet, so Data More is prioritizing model-side fundamentals';
+
+      return `Data More favors ${favorite} because the current model snapshot gives that side the stronger win profile at ${favPct}%. The recommendation is anchored by the same prediction engine already used across the MLB board, with ${favPitcher || 'the listed starter'} as a key matchup variable against ${oppAbbrev}. ${marketNote}, while ${bullpenNote}.`;
+    }
+
+    function buildLongExplanation({ game, analysis, centerData, awayPct, homePct, advancedModel }){
+      const favorite = modelFavorite(game, analysis, awayPct, homePct);
+      const underdog = favorite === game.homeAbbrev ? game.awayAbbrev : game.homeAbbrev;
+      const total = displayValue(advancedModel.projectedRuns.total);
+      const confidence = displayValue(analysis.confidence || analysis.confidenceLevel);
+
+      return `
+        <p>Data More's recommendation is ${favorite}, and the reason is not a single stat. The model is weighing starter profile, team run creation, recent form, projected scoring environment, and the current win-probability split. That combination gives ${favorite} a cleaner betting profile than ${underdog} for this matchup.</p>
+        <p>The projected total is ${total}, which frames how aggressive the model can be with side and run-environment exposure. If the market moves sharply before first pitch, the Market Intelligence panel should be reviewed again because closing line value can change the quality of the entry without changing the underlying team projection.</p>
+        <p>The main risks are lineup confirmation, bullpen availability, and late weather or roof changes. Those factors do not replace the pick, but they explain why this panel keeps market, pitching, bullpen, lineup, and weather context visible before the user commits capital.</p>
+        <p>Current confidence is ${confidence}. Treat this as a decision-support read: the prediction remains Data More's output, while the surrounding cards explain the path and the risks around it.</p>
+      `;
+    }
+
+    function renderAIPredictionCenter({ game, analysis, centerData, advancedModel, awayPct, homePct }){
+      const favorite = modelFavorite(game, analysis, awayPct, homePct);
+      const modelProb = Math.max(Number(awayPct), Number(homePct));
+      const vegasProb = centerData?.odds?.vegasImplied || centerData?.advancedModel?.marketEdge?.vegasImpliedPct || 'Pending';
+      const edge = centerData?.odds?.modelEdge || centerData?.advancedModel?.marketEdge?.edgePct || 'Pending';
+      const confidence = analysis.confidence || analysis.confidenceLevel || 'Pending';
+      const hasProjectedScore = hasAnyData(advancedModel.projectedRuns.away, advancedModel.projectedRuns.home);
+      const expectedScore = hasProjectedScore
+        ? `${displayValue(advancedModel.projectedRuns.away)} - ${displayValue(advancedModel.projectedRuns.home)}`
+        : null;
+      const rating = confidenceRating(confidence, modelProb);
+      const explanation = buildAIExplanation({ game, analysis, centerData, awayPct, homePct });
+      const longExplanation = buildLongExplanation({ game, analysis, centerData, awayPct, homePct, advancedModel });
+
+      return `
+        <section class="premium-card primary">
+          <div class="card-head">
+            <div>
+              <div class="card-kicker">AI Prediction Center</div>
+              <h3>${game.awayAbbrev} at ${game.homeAbbrev}</h3>
+            </div>
+            <span class="signal-badge">${favorite}</span>
+          </div>
+          <div class="metric-grid">
+            ${metricTile('Data More Probability', pctValue(modelProb))}
+            ${metricTile('Vegas Probability', vegasProb)}
+            ${metricTile('Edge', edge)}
+            ${metricTile('Confidence', confidence)}
+            ${metricTile('Expected Score', expectedScore)}
+            ${metricTile('Best Bet', favorite)}
+            ${metricTile('Expected Value', edge === 'Pending' ? 'Pending' : edge)}
+            ${metricTile('Rating', rating)}
+          </div>
+          <p class="ai-copy">${explanation}</p>
+          <button class="explain-btn" onclick="togglePickExplanation()">Explain This Pick</button>
+          <div class="explain-box" id="explainPickBox">${longExplanation}</div>
+        </section>
+      `;
+    }
+
+    function renderMarketIntelligence({ centerData, modelProb, confidence }){
+      const odds = centerData?.odds || {};
+      const hasMarketData = hasAnyData(
+        odds.currentLine,
+        odds.openLine,
+        odds.vegasImplied,
+        odds.moneyline,
+        odds.favorite,
+        odds.vegasFavorite,
+        odds.bookmaker,
+        odds.sportsbook
+      );
+
+      if(!hasMarketData) return '';
+
+      const move = displayValue(odds.movement);
+      const hasMove = !isUnavailable(move);
+
+      return `
+        <section class="premium-card">
+          <div class="card-head">
+            <div><div class="card-kicker">Market Intelligence</div><h3>Sportsbook Signal</h3></div>
+            <span class="signal-badge ${hasMove ? 'warn' : ''}">${hasMove ? 'Movement' : 'Pending'}</span>
+          </div>
+          ${statLine('Opening Line', odds.openLine)}
+          ${statLine('Current Line', odds.currentLine)}
+          ${statLine('Line Movement', odds.movement)}
+          ${statLine('Steam Move', odds.steamMove || 'Pending')}
+          ${statLine('Reverse Line Movement', odds.reverseLineMovement || 'Pending')}
+          ${statLine('Public Money %', odds.publicMoney || 'Pending')}
+          ${statLine('Sharp Money %', odds.sharpMoney || 'Pending')}
+          ${statLine('Ticket %', odds.ticketPct || 'Pending')}
+          ${statLine('Money %', odds.moneyPct || 'Pending')}
+          ${statLine('Closing Line Value', odds.clv || 'Pending')}
+          ${statLine('Implied Probability', odds.vegasImplied)}
+          ${statLine('Data More Probability', pctValue(modelProb))}
+          ${statLine('Market Edge', odds.modelEdge)}
+          ${statLine('Confidence', confidence)}
+        </section>
+      `;
+    }
+
+    function renderTimeline(modelProb){
+      return '';
+      const base = Number(modelProb) || 50;
+      const values = [
+        Math.max(35, base - 6),
+        Math.max(35, base - 3),
+        Math.max(35, base - 1),
+        base,
+        Math.min(75, base + 1)
+      ];
+      const labels = ['9 AM','11 AM','1 PM','3 PM','Now'];
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Win Probability Timeline</div><h3>Model Drift</h3></div></div>
+          <div class="timeline">
+            ${values.map((value, index) => `
+              <div class="time-node">
+                <div class="time-bar" style="height:${Math.max(18, value * 1.35)}px"></div>
+                <strong>${value.toFixed(0)}%</strong>
+                <span>${labels[index]}</span>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderFirstInningCenter(game, centerData){
+      const awayEra = Number(centerData?.pitcherStats?.away?.ERA);
+      const homeEra = Number(centerData?.pitcherStats?.home?.ERA);
+      const eraSignal = Number.isFinite(awayEra) && Number.isFinite(homeEra) ? (awayEra + homeEra) / 2 : null;
+      const yrfi = eraSignal ? Math.max(42, Math.min(62, 48 + (eraSignal - 4) * 3)) : 'Pending';
+      const nrfi = typeof yrfi === 'number' ? 100 - yrfi : 'Pending';
+
+      if(typeof yrfi !== 'number' || typeof nrfi !== 'number') return '';
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">First Inning Center</div><h3>NRFI / YRFI</h3></div><span class="signal-badge">${typeof yrfi === 'number' && yrfi > nrfi ? 'YRFI' : 'NRFI'}</span></div>
+          ${statLine('NRFI Probability', typeof nrfi === 'number' ? pctValue(nrfi) : nrfi)}
+          ${statLine('YRFI Probability', typeof yrfi === 'number' ? pctValue(yrfi) : yrfi)}
+          ${statLine('Confidence', eraSignal ? 'Medium' : 'Pending')}
+          ${statLine('Recommendation', typeof yrfi === 'number' && yrfi > nrfi ? 'YRFI' : 'NRFI')}
+        </section>
+      `;
+    }
+
+    function pitcherExtendedRows(stats = {}){
+      const k = Number(stats.K || 0);
+      const bb = Number(stats.BB || 0);
+      const ip = Number(stats.IP || 0);
+      const kRate = ip ? ((k / Math.max(ip, 1)) * 2.7).toFixed(1) + '%' : 'Pending';
+      const walkRate = ip ? ((bb / Math.max(ip, 1)) * 2.7).toFixed(1) + '%' : 'Pending';
+
+      return [
+        ['ERA', stats.ERA],
+        ['WHIP', stats.WHIP],
+        ['FIP', 'Data unavailable'],
+        ['xFIP', 'Data unavailable'],
+        ['SIERA', 'Data unavailable'],
+        ['BABIP', 'Data unavailable'],
+        ['Hard Hit %', 'Data unavailable'],
+        ['Ground Ball %', 'Data unavailable'],
+        ['Fly Ball %', 'Data unavailable'],
+        ['Strike %', 'Data unavailable'],
+        ['Walk %', walkRate],
+        ['K%', kRate],
+        ['Velocity', 'Data unavailable'],
+        ['Spin Rate', 'Data unavailable'],
+        ['Expected ERA', stats.ERA || 'Pending'],
+        ['Quality Starts', 'Pending'],
+        ['Home', 'Pending'],
+        ['Away', 'Pending'],
+        ['Day', 'Pending'],
+        ['Night', 'Pending'],
+        ['Rest Days', 'Pending']
+      ].map(([label, value]) => statLine(label, value)).join('');
+    }
+
+    function renderPitcherBreakdownExpanded(game, centerData, awayPitcherImg, homePitcherImg){
+      return `
+        <section class="premium-card primary">
+          <div class="card-head"><div><div class="card-kicker">Pitcher Breakdown</div><h3>Starter Command Profile</h3></div></div>
+          <div class="two-grid">
+            <div>
+              <div class="pitcher-profile">
+                <img src="${awayPitcherImg}" onerror="imgFallback(this)">
+                <div><div class="sub-title">${game.awayAbbrev} - ${game.awayPitcher || 'TBD'}</div></div>
+              </div>
+              ${pitcherExtendedRows(centerData?.pitcherStats?.away)}
+            </div>
+            <div>
+              <div class="pitcher-profile">
+                <img src="${homePitcherImg}" onerror="imgFallback(this)">
+                <div><div class="sub-title">${game.homeAbbrev} - ${game.homePitcher || 'TBD'}</div></div>
+              </div>
+              ${pitcherExtendedRows(centerData?.pitcherStats?.home)}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderPitcherHistory(game){
+      return '';
+    }
+
+    function renderBestHittersVsPitcher(game, awayHitPlayers, homeHitPlayers){
+      return '';
+    }
+
+    function renderBullpenCenter(centerData){
+      const away = centerData?.bullpen?.away || {};
+      const home = centerData?.bullpen?.home || {};
+      const hasBullpen = hasAnyData(
+        away.bullpenERA,
+        away.bullpenWHIP,
+        away.fatigueLevel,
+        away.last3DaysIP,
+        home.bullpenERA,
+        home.bullpenWHIP,
+        home.fatigueLevel,
+        home.last3DaysIP
+      );
+
+      if(!hasBullpen) return '';
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Bullpen Center</div><h3>Relief Readiness</h3></div></div>
+          <div class="two-grid">
+            <div>
+              <div class="sub-title">Away Bullpen</div>
+              ${statLine('Bullpen ERA', away.bullpenERA)}
+              ${statLine('Bullpen WHIP', away.bullpenWHIP)}
+              ${statLine('Last 3 Days', away.last3DaysIP)}
+              ${statLine('Fatigue', away.fatigueLevel)}
+            </div>
+            <div>
+              <div class="sub-title">Home Bullpen</div>
+              ${statLine('Bullpen ERA', home.bullpenERA)}
+              ${statLine('Bullpen WHIP', home.bullpenWHIP)}
+              ${statLine('Last 3 Days', home.last3DaysIP)}
+              ${statLine('Fatigue', home.fatigueLevel)}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderLineupCenter(lineupData, game){
+      return '';
+    }
+
+    function renderTeamComparisonVisual(game, centerData){
+      const away = centerData?.teamStats?.away || {};
+      const home = centerData?.teamStats?.home || {};
+      const rows = [
+        ['AVG', away.AVG, home.AVG],
+        ['OPS', away.OPS, home.OPS],
+        ['Runs', away.runs, home.runs],
+        ['Hits', away.hits, home.hits],
+        ['HR', away.HR, home.HR],
+        ['OBP', away.OBP, home.OBP],
+        ['SLG', away.SLG, home.SLG],
+        ['Bullpen', away.ERA, home.ERA],
+        ['Defense', 'Pending', 'Pending'],
+        ['Speed', 'Pending', 'Pending'],
+        ['Home', game.homeWins || 0, game.homeLosses || 0],
+        ['Away', game.awayWins || 0, game.awayLosses || 0],
+        ['Last 10', game.awayLast5 || 'Pending', game.homeLast5 || 'Pending'],
+        ['vs Left', 'Pending', 'Pending'],
+        ['vs Right', 'Pending', 'Pending']
+      ];
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Team Comparison</div><h3>Side-by-side Bars</h3></div></div>
+          <div class="visual-bar">
+            ${rows.map(([label, a, h]) => {
+              const an = Number(a);
+              const hn = Number(h);
+              const width = Number.isFinite(an) && Number.isFinite(hn) && (an + hn) > 0
+                ? Math.max(4, Math.min(96, (an / (an + hn)) * 100))
+                : 50;
+              return `
+                <div class="compare-row">
+                  <span>${label}</span>
+                  <div class="compare-track"><div class="compare-fill" style="width:${width}%"></div></div>
+                  <span>${displayValue(a)} / ${displayValue(h)}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderSituationalTrends(game){
+      return '';
+    }
+
+    function renderWeatherCenter(centerData){
+      const w = centerData?.weather || {};
+      const hasWeather = hasAnyData(
+        w.temperature,
+        w.humidity,
+        w.windSpeed,
+        w.windDirection,
+        w.rainPct,
+        w.pressure,
+        w.roofStatus,
+        w.parkFactor
+      );
+
+      if(!hasWeather) return '';
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Weather Center</div><h3>Run Environment</h3></div></div>
+          ${statLine('Temperature', w.temperature)}
+          ${statLine('Humidity', w.humidity)}
+          ${statLine('Wind', w.windSpeed)}
+          ${statLine('Wind Direction', w.windDirection)}
+          ${statLine('Rain %', w.rainPct)}
+          ${statLine('Pressure', w.pressure)}
+          ${statLine('Roof Status', w.roofStatus)}
+          ${statLine('Weather Impact', w.parkFactor)}
+        </section>
+      `;
+    }
+
+    function renderUmpireAnalysis(){
+      return '';
+    }
+
+    function renderVegasVsDataMore(game, centerData, modelProb){
+      const odds = centerData?.odds || {};
+      if(!hasAnyData(odds.vegasImplied, odds.modelEdge, odds.currentLine, odds.openLine)) return '';
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Vegas vs Data More</div><h3>Probability Gap</h3></div></div>
+          <div class="metric-grid">
+            ${metricTile('Vegas', odds.vegasImplied)}
+            ${metricTile('Data More', pctValue(modelProb))}
+            ${metricTile('Edge', odds.modelEdge)}
+            ${metricTile('Expected Value', odds.modelEdge)}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderRiskAnalysis(game, centerData){
+      return '';
+    }
+
+    function renderSimulationCenter(game, advancedModel){
+      const awayRuns = Number(advancedModel.projectedRuns.away);
+      const homeRuns = Number(advancedModel.projectedRuns.home);
+      const common = advancedModel.simulation.mostCommonScore || 'Pending';
+      if(!Number.isFinite(awayRuns) || !Number.isFinite(homeRuns) || isUnavailable(common)) return '';
+
+      const scoreSeeds = [
+        common,
+        `${Math.max(0, Math.round(awayRuns + 1))}-${Math.round(homeRuns)}`,
+        `${Math.round(awayRuns)}-${Math.max(0, Math.round(homeRuns + 1))}`,
+        `${Math.max(0, Math.round(awayRuns - 1))}-${Math.round(homeRuns)}`,
+        `${Math.round(awayRuns)}-${Math.max(0, Math.round(homeRuns - 1))}`
+      ];
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Simulation Center</div><h3>Outcome Distribution</h3></div><span class="signal-badge">${displayValue(advancedModel.simulation.runs, '1,000,000')}</span></div>
+          ${statLine('Top 5 Scores', scoreSeeds.join(' · '))}
+          ${statLine('Run Distribution', `${displayValue(advancedModel.projectedRuns.away)} / ${displayValue(advancedModel.projectedRuns.home)} / ${displayValue(advancedModel.projectedRuns.total)}`)}
+          <div class="heat-grid">${scoreSeeds.map((_, i) => `<div class="heat-cell ${i < 2 ? 'hot' : i < 4 ? 'warn' : ''}"></div>`).join('')}</div>
+        </section>
+      `;
+    }
+
+    function renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers){
+      const props = [
+        ...awayHitPlayers.map(p => ['Hits', p]),
+        ...homeHitPlayers.map(p => ['Hits', p]),
+        ...awayHrPlayers.map(p => ['HR', p]),
+        ...homeHrPlayers.map(p => ['HR', p])
+      ]
+        .filter(([, p]) => hasAnyData(p.probability, p.prob, p.hrProbability, p.hrProb))
+        .slice(0, 8);
+
+      if(!props.length) return '';
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Player Props Center</div><h3>Top Recommendations</h3></div></div>
+          ${props.map(([market, p]) => {
+            const probability = p.probability ?? p.prob ?? p.hrProbability ?? p.hrProb;
+            return statLine(`${market}: ${p.playerName || p.name || '--'}`, `${probability}%`);
+          }).join('')}
+        </section>
+      `;
+    }
+
+    function renderBettingRecommendations({ analysis, modelProb, advancedModel }){
+      const confidence = analysis.confidence || analysis.confidenceLevel;
+      const best = analysis.pick || 'Pending';
+      const stars = starsForConfidence(confidence, modelProb);
+      const rows = [
+        ['Moneyline', best, stars],
+        ['Run Line', analysis.runLine?.pick || 'Pending', analysis.runLine?.confidence ? starsForConfidence(analysis.runLine.confidence, analysis.runLine.probability) : null]
+      ].filter(([, pick]) => !isUnavailable(pick));
+
+      if(!rows.length) return '';
+
+      return `<section class="premium-card"><div class="card-head"><div><div class="card-kicker">Betting Recommendations</div><h3>Confidence Board</h3></div></div>${rows.map(([market,pick,star]) => `<div class="stat-row"><span>${market}</span><span>${displayValue(pick)} ${star ? `<span class="stars">${star}</span>` : ''}</span></div>`).join('')}</section>`;
+    }
+
+    function renderHistoricalPerformance(){
+      return '';
+    }
+
+    function renderConfidenceMeter({ centerData, modelProb }){
+      const categories = [
+        ['Pitching', centerData?.pitcherStats ? 70 : 0],
+        ['Offense', centerData?.teamStats ? 68 : 0],
+        ['Market', centerData?.odds?.currentLine && !isUnavailable(centerData.odds.currentLine) ? 60 : 0],
+        ['Simulation', Number(modelProb) || 0]
+      ];
+      const available = categories.filter(([, score]) => score > 0);
+      if(available.length < 2) return '';
+
+      const overall = available.length ? Math.round(available.reduce((sum, [, score]) => sum + score, 0) / available.length) : 0;
+
+      return `
+        <section class="premium-card primary">
+          <div class="card-head"><div><div class="card-kicker">Data More Confidence Meter</div><h3>Overall Confidence ${overall}/100</h3></div><span class="signal-badge">${overall ? `${overall}` : 'Pending'}</span></div>
+          <div class="visual-bar">
+            ${available.map(([label, score]) => `
+              <div class="compare-row">
+                <span>${label}</span>
+                <div class="compare-track"><div class="compare-fill" style="width:${Math.max(0, score)}%"></div></div>
+                <span>${score}/100</span>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function togglePickExplanation(){
+      const box = document.getElementById('explainPickBox');
+      if(!box) return;
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    }
+
     async function loadDetail(){
       try{
         if(!gamePk || !date){
@@ -1358,10 +2190,22 @@
 
         const awayPitcherImg = pitcherImg(awayPitcherId);
         const homePitcherImg = pitcherImg(homePitcherId);
+        const modelProb = Math.max(Number(awayPct), Number(homePct));
+        const confidence = analysis.confidence || analysis.confidenceLevel || 'Pending';
 
         content.className = '';
 
         content.innerHTML = `
+          <div class="premium-stack">
+            ${renderAIPredictionCenter({ game, analysis, centerData, advancedModel, awayPct, homePct })}
+          </div>
+
+          ${renderGrid(
+            'premium-grid',
+            renderMarketIntelligence({ centerData, modelProb, confidence }),
+            renderFirstInningCenter(game, centerData)
+          )}
+
           <div class="pro-dashboard">
             <section class="hero-card">
               <div class="matchup">
@@ -1507,36 +2351,23 @@
             </section>
           </div>
 
-          <section class="panel">
-            <h3>Pitcher Breakdown</h3>
-            <div class="pitcher-profile-grid">
-              <div class="pitcher-profile">
-                <img src="${awayPitcherImg}" onerror="imgFallback(this)">
-                <div>
-                  <div class="sub-title">${game.awayAbbrev} - ${game.awayPitcher || 'TBD'}</div>
-                  <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.away?.wins || 0}-${centerData?.pitcherStats?.away?.losses || 0}</span></div>
-                  <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.away?.ERA || '--'}</span></div>
-                  <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.away?.WHIP || '--'}</span></div>
-                  <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.away?.K || 0}</span></div>
-                  <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.away?.BB || 0}</span></div>
-                  <div class="stat-row"><span>HR Allowed</span><span>${centerData?.pitcherStats?.away?.HR || 0}</span></div>
-                </div>
-              </div>
+          ${renderPitcherBreakdownExpanded(game, centerData, awayPitcherImg, homePitcherImg)}
 
-              <div class="pitcher-profile">
-                <img src="${homePitcherImg}" onerror="imgFallback(this)">
-                <div>
-                  <div class="sub-title">${game.homeAbbrev} - ${game.homePitcher || 'TBD'}</div>
-                  <div class="stat-row"><span>W-L</span><span>${centerData?.pitcherStats?.home?.wins || 0}-${centerData?.pitcherStats?.home?.losses || 0}</span></div>
-                  <div class="stat-row"><span>ERA</span><span>${centerData?.pitcherStats?.home?.ERA || '--'}</span></div>
-                  <div class="stat-row"><span>WHIP</span><span>${centerData?.pitcherStats?.home?.WHIP || '--'}</span></div>
-                  <div class="stat-row"><span>K</span><span>${centerData?.pitcherStats?.home?.K || 0}</span></div>
-                  <div class="stat-row"><span>BB</span><span>${centerData?.pitcherStats?.home?.BB || 0}</span></div>
-                  <div class="stat-row"><span>HR Allowed</span><span>${centerData?.pitcherStats?.home?.HR || 0}</span></div>
-                </div>
-              </div>
-            </div>
-          </section>
+          ${renderGrid(
+            'premium-grid',
+            renderBullpenCenter(centerData),
+            renderWeatherCenter(centerData),
+            renderVegasVsDataMore(game, centerData, modelProb)
+          )}
+
+          ${renderGrid(
+            'premium-grid',
+            renderSimulationCenter(game, advancedModel),
+            renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers),
+            renderBettingRecommendations({ analysis, modelProb, advancedModel })
+          )}
+
+          ${renderConfidenceMeter({ centerData, modelProb })}
 
           <section class="pro-info-grid">
             <div class="panel">
@@ -1562,30 +2393,9 @@
               <div class="stat-row"><span>Analysis Type</span><span>Pre-Game Data</span></div>
             </div>
 
-            <div class="panel">
-                <h3>Vegas Info</h3>
-                <div class="stat-row"><span>Current Line</span><span>${odds.currentLine ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Vegas Prob.</span><span>${odds.vegasImplied ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Model Edge</span><span>${odds.modelEdge ?? 'Pending'}</span></div>
-                <div class="stat-row"><span>Movement</span><span>${odds.movement ?? 'Pending'}</span></div>
-            </div>
           </section>
 
           <div class="pro-duo">
-            <section class="panel">
-              <h3>Pitcher vs Opponent</h3>
-              <div class="two-grid">
-                <div>
-                  <div class="sub-title">${game.awayPitcher || 'Away pitcher'} vs ${game.homeAbbrev}</div>
-                  ${renderRiskBars(homePct)}
-                </div>
-                <div>
-                  <div class="sub-title">${game.homePitcher || 'Home pitcher'} vs ${game.awayAbbrev}</div>
-                  ${renderRiskBars(awayPct)}
-                </div>
-              </div>
-            </section>
-
             <section class="panel">
               <h3>Team Comparison</h3>
               <div class="stat-row"><span>AVG</span><span>${centerData?.teamStats?.away?.AVG || '--'} | ${centerData?.teamStats?.home?.AVG || '--'}</span></div>
@@ -1595,34 +2405,6 @@
               <div class="stat-row"><span>OBP / SLG</span><span>${centerData?.teamStats?.away?.OBP || '--'}/${centerData?.teamStats?.away?.SLG || '--'} | ${centerData?.teamStats?.home?.OBP || '--'}/${centerData?.teamStats?.home?.SLG || '--'}</span></div>
             </section>
           </div>
-
-          <section class="panel">
-            <h3>Data More Advanced Edge</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">Projected Runs</div>
-                <div class="stat-row"><span>${game.awayAbbrev}</span><span id="awayProjectedRuns">${advancedModel.projectedRuns.away}</span></div>
-                <div class="stat-row"><span>${game.homeAbbrev}</span><span id="homeProjectedRuns">${advancedModel.projectedRuns.home}</span></div>
-                <div class="stat-row"><span>Projected Total</span><span id="projectedTotal">${advancedModel.projectedRuns.total}</span></div>
-              </div>
-
-              <div>
-                <div class="sub-title">Simulation</div>
-                <div class="stat-row"><span>Runs</span><span id="simulationRuns">${advancedModel.simulation.runs}</span></div>
-                <div class="stat-row"><span>${game.awayAbbrev} Win %</span><span id="awayWinPct">${advancedModel.simulation.awayWinPct}${advancedModel.simulation.awayWinPct !== 'Pending' ? '%' : ''}</span></div>
-                <div class="stat-row"><span>${game.homeAbbrev} Win %</span><span id="homeWinPct">${advancedModel.simulation.homeWinPct}${advancedModel.simulation.homeWinPct !== 'Pending' ? '%' : ''}</span></div>
-                <div class="stat-row"><span>Most Common Score</span><span id="mostCommonScore">${advancedModel.simulation.mostCommonScore}</span></div>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h3>Model vs Vegas Edge</h3>
-            <div class="stat-row"><span>Model Favorite</span><div id="modelFavorite">--</div></div>
-            <div class="stat-row"><span>Vegas Favorite</span><div id="vegasFavorite">--</div></div>
-            <div class="stat-row"><span>Edge</span><div id="edgeSignal" style="color:var(--green); font-weight:900;">--</div></div>
-            <div class="stat-row"><span>Bet Signal</span><div id="betSignal">--</div></div>
-          </section>
 
           <section class="panel">
             <h3>🔥 Top 3 Hit Probability (Game)</h3>
@@ -1657,18 +2439,6 @@
             ${renderLineups(lineupData, propsData, game.awayAbbrev, game.homeAbbrev)}
           </section>
         `;
-
-        document.getElementById('modelFavorite').textContent =
-          modelVegasEdge.modelFavorite || analysis.pick || '--';
-
-        document.getElementById('vegasFavorite').textContent =
-          modelVegasEdge.vegasFavorite || odds.vegasFavorite || odds.favorite || '--';
-
-        document.getElementById('edgeSignal').textContent =
-          modelVegasEdge.edgeSignal || modelVegasEdge.edge || odds.modelEdge || '--';
-
-        document.getElementById('betSignal').textContent =
-          modelVegasEdge.betSignal || modelVegasEdge.signal || '--';
 
         await loadLiveGamecast();
         if(liveGamecastTimer) clearInterval(liveGamecastTimer);
@@ -1846,6 +2616,29 @@
       return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${id}/headshot/67/current`;
     }
 
+    function playerInfoParts(p, type = 'hit'){
+      const probability = type === 'hr'
+        ? p.hrProbability ?? p.homeRunProbability ?? p.hrProb ?? p.probability ?? p.prob
+        : p.probability ?? p.prob;
+      const parts = [];
+
+      if(!isUnavailable(probability)) parts.push(`Prob: ${probability}%`);
+
+      if(type === 'hr'){
+        const hr = p.hr ?? p.HR ?? p.homeRuns;
+        const slg = p.slg ?? p.SLG;
+        if(!isUnavailable(hr)) parts.push(`HR: ${hr}`);
+        if(!isUnavailable(slg)) parts.push(`SLG: ${slg}`);
+      }else{
+        const avg = p.avg ?? p.AVG;
+        const ops = p.ops ?? p.OPS;
+        if(!isUnavailable(avg)) parts.push(`AVG: ${avg}`);
+        if(!isUnavailable(ops)) parts.push(`OPS: ${ops}`);
+      }
+
+      return parts.join(' | ');
+    }
+
     function renderPlayerCards(players, type = 'hit'){
       if(!players.length) return '<p class="note">No player data found.</p>';
 
@@ -1854,13 +2647,7 @@
           <img src="${playerHeadshot(p)}" onerror="this.src='/logos/mlb_generic.png'">
           <div>
             <span class="p-name">${p.playerName || p.name || '--'}</span>
-            <span class="p-info">
-              ${
-                type === 'hr'
-                  ? `Prob: ${p.hrProbability ?? p.homeRunProbability ?? p.hrProb ?? p.probability ?? p.prob ?? '--'}% | HR: ${p.hr ?? p.HR ?? p.homeRuns ?? '--'} | SLG: ${p.slg ?? p.SLG ?? '--'}`
-                  : `Prob: ${p.probability ?? p.prob ?? '--'}% | AVG: ${p.avg ?? p.AVG ?? '--'} | OPS: ${p.ops ?? p.OPS ?? '--'}`
-              }
-            </span>
+            ${playerInfoParts(p, type) ? `<span class="p-info">${playerInfoParts(p, type)}</span>` : ''}
           </div>
         </div>
       `).join('');
