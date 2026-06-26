@@ -2470,35 +2470,47 @@
       const away = centerData?.bullpen?.away || {};
       const home = centerData?.bullpen?.home || {};
       const hasBullpen = hasAnyData(
+        away.fatigue,
+        away.lastGamePitchCount,
+        away.relieversUsedYesterday,
+        away.backToBackRisk,
+        away.bullpenRating,
         away.bullpenERA,
         away.bullpenWHIP,
-        away.fatigueLevel,
-        away.last3DaysIP,
+        home.fatigue,
+        home.lastGamePitchCount,
+        home.relieversUsedYesterday,
+        home.backToBackRisk,
+        home.bullpenRating,
         home.bullpenERA,
-        home.bullpenWHIP,
-        home.fatigueLevel,
-        home.last3DaysIP
+        home.bullpenWHIP
       );
 
       if(!hasBullpen) return '';
 
       return `
         <section class="premium-card">
-          <div class="card-head"><div><div class="card-kicker">Bullpen Center</div><h3>Relief Readiness</h3></div></div>
+          <div class="card-head"><div><div class="card-kicker">Bullpen Intelligence</div><h3>Relief Readiness</h3></div></div>
           <div class="two-grid">
             <div>
               <div class="sub-title">Away Bullpen</div>
+              ${statLine('Fatigue', away.fatigue)}
+              ${statLine('Last Game Pitch Count', away.lastGamePitchCount)}
+              ${statLine('Relievers Used Yesterday', away.relieversUsedYesterday)}
+              ${statLine('Back-to-back Risk', away.backToBackRisk)}
+              ${statLine('Bullpen Rating', away.bullpenRating)}
               ${statLine('Bullpen ERA', away.bullpenERA)}
               ${statLine('Bullpen WHIP', away.bullpenWHIP)}
-              ${statLine('Last 3 Days', away.last3DaysIP)}
-              ${statLine('Fatigue', away.fatigueLevel)}
             </div>
             <div>
               <div class="sub-title">Home Bullpen</div>
+              ${statLine('Fatigue', home.fatigue)}
+              ${statLine('Last Game Pitch Count', home.lastGamePitchCount)}
+              ${statLine('Relievers Used Yesterday', home.relieversUsedYesterday)}
+              ${statLine('Back-to-back Risk', home.backToBackRisk)}
+              ${statLine('Bullpen Rating', home.bullpenRating)}
               ${statLine('Bullpen ERA', home.bullpenERA)}
               ${statLine('Bullpen WHIP', home.bullpenWHIP)}
-              ${statLine('Last 3 Days', home.last3DaysIP)}
-              ${statLine('Fatigue', home.fatigueLevel)}
             </div>
           </div>
         </section>
