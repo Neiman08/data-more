@@ -1256,7 +1256,40 @@ function renderBettingRecommendationsPro(a){
   return panel('Betting Recommendations',rows,'pro-card span-6');
 }
 
+function renderSelectedMarketAnalysis(a){
+  const selectedLabel=soccerMarketLabel(selectedSoccerMarket);
+  const selectedRecommendation=soccerMarketRecommendation(selectedSoccerMarket,a);
+  const hasRecommendation=hasRealValue(selectedRecommendation);
+  const html=hasRecommendation
+    ? [
+        statLine('Selected Market',selectedLabel),
+        statLine('Recommendation',selectedRecommendation)
+      ].join('')
+    : `<p class="commentary-sub">Market selected, but no reliable data available yet.</p>`;
+
+  return panel('Selected Market Analysis',html,'pro-card span-6');
+}
+
+function normalizeSoccerMarketKey(key){
+  const raw=String(key||'winner').toLowerCase().replace(/_/g,'-');
+  const aliases={
+    moneyline:'winner',
+    ml:'winner',
+    '1x2':'winner',
+    'over-under':'goals-total',
+    overunder:'goals-total',
+    totals:'goals-total',
+    correctscore:'correct-score',
+    teamtotal:'team-total',
+    drawnobet:'draw-no-bet',
+    doublechance:'double-chance',
+    firsthalf:'first-half'
+  };
+  return aliases[raw]||raw;
+}
+
 function soccerMarketLabel(key){
+  const normalized=normalizeSoccerMarketKey(key);
   const labels={
     winner:'Moneyline / Winner',
     'draw-no-bet':'Draw No Bet',
@@ -1267,10 +1300,11 @@ function soccerMarketLabel(key){
     'correct-score':'Correct Score',
     'team-total':'Team Total Goals'
   };
-  return labels[key]||labels.winner;
+  return labels[normalized]||labels.winner;
 }
 
 function soccerMarketRecommendation(key,a){
+  const normalized=normalizeSoccerMarketKey(key);
   const markets=a.markets||{};
   const sim=buildSimulation(a);
   const goals=a.expectedGoals||a.goals||{};
@@ -1283,7 +1317,7 @@ function soccerMarketRecommendation(key,a){
     'correct-score':sim.mostLikely?.score,
     'team-total':goals.total||goals.projectedTotal
   };
-  return recommendations[key]||'';
+  return recommendations[normalized]||'';
 }
 
 function renderRiskAnalysisPro(a,teamForm,homeTeam,awayTeam){
@@ -1485,6 +1519,7 @@ async function loadMatch(){
         ${renderMatchCenter({homeTeam,awayTeam,homeLogo,awayLogo,homeScore,awayScore,matchTime,leagueName,game:boardGame.fixtureId?boardGame:g})}
         ${renderPredictionCenter(a,homeTeam,awayTeam,homeWin,draw,awayWin)}
         ${renderSimulation(a)}
+        ${renderSelectedMarketAnalysis(a)}
         ${renderBettingRecommendationsPro(a)}
         ${renderTeamFormPro(teamForm,homeTeam,awayTeam)}
         ${renderHeadToHead(headToHead,homeTeam,awayTeam)}

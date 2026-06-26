@@ -1272,6 +1272,57 @@ function translatePickValue(value) {
     .replace(/No/gi, 'No');
 }
 
+function normalizeSoccerMarketKey(key) {
+  const raw = String(key || 'winner').toLowerCase().replace(/_/g, '-');
+  const aliases = {
+    'moneyline': 'winner',
+    'ml': 'winner',
+    '1x2': 'winner',
+    'over-under': 'goals-total',
+    'overunder': 'goals-total',
+    'totals': 'goals-total',
+    'correctscore': 'correct-score',
+    'teamtotal': 'team-total',
+    'drawnobet': 'draw-no-bet',
+    'doublechance': 'double-chance',
+    'firsthalf': 'first-half'
+  };
+
+  return aliases[raw] || raw;
+}
+
+function getSelectedSoccerMarketRecommendation(market, analysis, over25, btts) {
+  const key = normalizeSoccerMarketKey(market?.key);
+  const a = analysis || {};
+  const markets = a.markets || {};
+  const goals = a.expectedGoals || a.goals || {};
+  const score = val(
+    a.correctScore,
+    a.mostLikelyScore,
+    a.predictedScore,
+    a.simulation?.mostLikelyScore,
+    a.simulation?.mostLikely?.score,
+    a.scorePrediction,
+    markets.correctScore
+  );
+
+  const recommendations = {
+    'winner': translatePickValue(a.pick || ''),
+    'draw-no-bet': translatePickValue(val(markets.drawNoBet, markets.handicap, a.drawNoBet)),
+    'double-chance': translatePickValue(val(markets.doubleChance, a.doubleChance, markets.handicap)),
+    'goals-total': translatePickValue(val(over25, markets.totalGoals, markets.overUnder)),
+    'btts': translatePickValue(val(btts, markets.btts)),
+    'first-half': translatePickValue(val(markets.firstHalf, a.firstHalf, a.firstHalfPick)),
+    'correct-score': translatePickValue(score),
+    'team-total': translatePickValue(val(goals.total, goals.projectedTotal, markets.teamTotal, a.teamTotal))
+  };
+
+  const recommendation = recommendations[key];
+  return recommendation && recommendation !== 'N/A'
+    ? recommendation
+    : 'Market selected, but no reliable data available yet.';
+}
+
 function isPregameSoccerStatus(status) {
   const raw = String(status || '').toUpperCase();
   return raw === 'NS' || raw === 'TBD' || raw === 'PST';
@@ -1507,6 +1558,8 @@ async function analyze(btn, matchId, leagueKey) {
       a.markets?.btts
     );
 
+    const selectedRecommendation = getSelectedSoccerMarketRecommendation(selectedMarket, a, over25, btts);
+
     const props = firstValidArray(
       a.playerProps,
       a.props,
@@ -1546,19 +1599,24 @@ async function analyze(btn, matchId, leagueKey) {
     resDiv.innerHTML = `
       <div class="prediction-box">
         <div class="prediction-title">
-          <span>🔥 Winner / 1X2 Pick</span>
+          <span>🔥 ${escapeHtml(selectedMarket.label)}</span>
           <span style="background:rgba(255,255,255,.1);padding:3px 8px;border-radius:5px;">
             ${normalizeConfidence(a.confidence)}
           </span>
         </div>
 
-        <span class="pick-val">${translatePickValue(a.pick || 'N/A')}</span>
+        <span class="pick-val">${escapeHtml(selectedRecommendation)}</span>
         <div class="data-mono">
           Model Probability: ${pct(a.probability ?? a.pickProbability ?? a.winProbability)}
         </div>
       </div>
 
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
+        <span>Main 1X2 Pick:</span>
+        <b>${translatePickValue(a.pick || 'N/A')}</b>
+      </div>
+
+      <div class="stat-row">
         <span>Selected Market:</span>
         <b>${escapeHtml(selectedMarket.label)}</b>
       </div>
