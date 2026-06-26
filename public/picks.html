@@ -139,6 +139,11 @@
       border-color: var(--green);
     }
 
+    .date-filter {
+      color-scheme: dark;
+      min-width: 150px;
+    }
+
     .section-title {
       display: flex;
       align-items: center;
@@ -260,6 +265,27 @@
       font-size: 12px;
       font-weight: 900;
       cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      padding: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+
+    .board-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
     }
 
     @media (max-width: 1100px) {
@@ -315,129 +341,300 @@
     <div class="sport-switcher"></div>
 
     <div class="filters" aria-label="Sport filters">
-      <button class="filter-btn active">All</button>
-      <button class="filter-btn">MLB</button>
-      <button class="filter-btn">Soccer</button>
-      <button class="filter-btn">Horse Racing</button>
-      <button class="filter-btn">UFC</button>
+      <input class="filter-btn date-filter" id="dateFilter" type="date" aria-label="Picks date">
+      <button class="filter-btn active" data-sport="all" type="button">All</button>
+      <button class="filter-btn" data-sport="MLB" type="button">MLB</button>
+      <button class="filter-btn" data-sport="Soccer" type="button">Soccer</button>
+      <button class="filter-btn" data-sport="Horse Racing" type="button">Horse Racing</button>
+      <button class="filter-btn" data-sport="UFC" type="button">UFC</button>
+    </div>
+
+    <div class="board-actions">
+      <button class="analysis-btn" id="loadBoardBtn" type="button" style="width:auto;min-width:150px;">Load Board</button>
+      <button class="analysis-btn" id="runFullAnalysisBtn" type="button" style="width:auto;min-width:190px;">Run Full Analysis</button>
     </div>
 
     <div class="section-title">
-      <h2>Top Picks Today</h2>
-      <span>Mock data ready for future picks API integration</span>
+      <h2 id="trackedTitle">Tracked Picks Today</h2>
+      <span id="trackedMeta">Loading real picks...</span>
     </div>
 
-    <!-- TODO: Replace mockPicks with /api/picks or sport-specific picks feed when available. -->
-    <div class="picks-grid">
-      <article class="pick-card">
-        <div>
-          <div class="pick-top">
-            <span class="sport-pill">Soccer</span>
-            <span class="status-pill status-live">Live</span>
-          </div>
-          <h3 class="event">South Africa vs South Korea</h3>
-          <div class="pick">Under 2.5 Goals</div>
-          <div class="meta-grid">
-            <div class="meta"><small>Confidence</small><span class="confidence high">High</span></div>
-            <div class="meta"><small>Odds</small><b>-115</b></div>
-            <div class="meta"><small>Time</small><b>Live 45'</b></div>
-            <div class="meta"><small>Market</small><b>Total Goals</b></div>
-          </div>
-        </div>
-        <button class="analysis-btn" type="button">View Analysis</button>
-      </article>
+    <div class="picks-grid" id="trackedPicksGrid">
+      <div class="empty-state">Loading real tracked picks...</div>
+    </div>
 
-      <article class="pick-card">
-        <div>
-          <div class="pick-top">
-            <span class="sport-pill">MLB</span>
-            <span class="status-pill status-pending">Pending</span>
-          </div>
-          <h3 class="event">Dodgers vs Giants</h3>
-          <div class="pick">Dodgers ML</div>
-          <div class="meta-grid">
-            <div class="meta"><small>Confidence</small><span class="confidence medium">Medium</span></div>
-            <div class="meta"><small>Odds</small><b>-135</b></div>
-            <div class="meta"><small>Time</small><b>7:10 PM</b></div>
-            <div class="meta"><small>Market</small><b>Moneyline</b></div>
-          </div>
-        </div>
-        <button class="analysis-btn" type="button">View Analysis</button>
-      </article>
+    <div class="section-title" style="margin-top:34px;">
+      <h2>Available Games To Analyze</h2>
+      <span id="availableMeta">Loading boards...</span>
+    </div>
 
-      <article class="pick-card">
-        <div>
-          <div class="pick-top">
-            <span class="sport-pill">Horse Racing</span>
-            <span class="status-pill status-pending">Pending</span>
-          </div>
-          <h3 class="event">Gulfstream Park Race 6</h3>
-          <div class="pick">#4 Win</div>
-          <div class="meta-grid">
-            <div class="meta"><small>Confidence</small><span class="confidence high">High</span></div>
-            <div class="meta"><small>Odds</small><b>5/2</b></div>
-            <div class="meta"><small>Time</small><b>3:42 PM</b></div>
-            <div class="meta"><small>Market</small><b>Win</b></div>
-          </div>
-        </div>
-        <button class="analysis-btn" type="button">View Analysis</button>
-      </article>
-
-      <article class="pick-card">
-        <div>
-          <div class="pick-top">
-            <span class="sport-pill">UFC</span>
-            <span class="status-pill status-pending">Pending</span>
-          </div>
-          <h3 class="event">Main Event Projection</h3>
-          <div class="pick">Fight Goes Distance</div>
-          <div class="meta-grid">
-            <div class="meta"><small>Confidence</small><span class="confidence low">Low</span></div>
-            <div class="meta"><small>Odds</small><b>+145</b></div>
-            <div class="meta"><small>Time</small><b>Upcoming</b></div>
-            <div class="meta"><small>Market</small><b>Method</b></div>
-          </div>
-        </div>
-        <button class="analysis-btn" type="button">View Analysis</button>
-      </article>
-
-      <article class="pick-card">
-        <div>
-          <div class="pick-top">
-            <span class="sport-pill">MLB</span>
-            <span class="status-pill status-finished">Finished</span>
-          </div>
-          <h3 class="event">Mets vs Phillies</h3>
-          <div class="pick">Over 8.5</div>
-          <div class="meta-grid">
-            <div class="meta"><small>Confidence</small><span class="confidence medium">Medium</span></div>
-            <div class="meta"><small>Odds</small><b>-105</b></div>
-            <div class="meta"><small>Time</small><b>Final</b></div>
-            <div class="meta"><small>Market</small><b>Total Runs</b></div>
-          </div>
-        </div>
-        <button class="analysis-btn" type="button">View Analysis</button>
-      </article>
-
-      <article class="pick-card">
-        <div>
-          <div class="pick-top">
-            <span class="sport-pill">Soccer</span>
-            <span class="status-pill status-pending">Pending</span>
-          </div>
-          <h3 class="event">Curacao vs Ivory Coast</h3>
-          <div class="pick">Ivory Coast ML</div>
-          <div class="meta-grid">
-            <div class="meta"><small>Confidence</small><span class="confidence high">High</span></div>
-            <div class="meta"><small>Odds</small><b>-125</b></div>
-            <div class="meta"><small>Time</small><b>3:00 PM</b></div>
-            <div class="meta"><small>Market</small><b>1X2</b></div>
-          </div>
-        </div>
-        <button class="analysis-btn" type="button">View Analysis</button>
-      </article>
+    <div class="picks-grid" id="availableGamesGrid">
+      <div class="empty-state">Loading available games...</div>
     </div>
   </section>
 </main>
+<script>
+  const sportButtons = [...document.querySelectorAll('[data-sport]')];
+  const dateFilter = document.getElementById('dateFilter');
+  const loadBoardBtn = document.getElementById('loadBoardBtn');
+  const runFullAnalysisBtn = document.getElementById('runFullAnalysisBtn');
+  const trackedPicksGrid = document.getElementById('trackedPicksGrid');
+  const availableGamesGrid = document.getElementById('availableGamesGrid');
+  const trackedMeta = document.getElementById('trackedMeta');
+  const availableMeta = document.getElementById('availableMeta');
+
+  let selectedSport = 'all';
+  let trackedPicks = [];
+  let availableGames = [];
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    }[char]));
+  }
+
+  function getTimezone() {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+  }
+
+  function getLocalDate(offsetDays = 0, timezone = getTimezone()) {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(date);
+  }
+
+  function statusClass(status) {
+    const raw = String(status || '').toLowerCase();
+    if (raw.includes('live') || raw === '1h' || raw === '2h' || raw === 'ht') return 'status-live';
+    if (raw.includes('final') || raw === 'ft') return 'status-finished';
+    return 'status-pending';
+  }
+
+  function formatOdds(value) {
+    if (value === null || value === undefined || value === '') return 'N/A';
+    const n = Number(value);
+    if (!Number.isFinite(n)) return String(value);
+    return n > 0 ? `+${n}` : String(n);
+  }
+
+  function formatTime(value) {
+    if (!value) return 'TBD';
+    if (/^\\d{1,2}:\\d{2}/.test(String(value))) return value;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+  }
+
+  async function fetchJson(url) {
+    const response = await fetch(url);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) throw new Error(data.error || data.message || `HTTP ${response.status}`);
+    return data;
+  }
+
+  function filtered(items) {
+    return selectedSport === 'all'
+      ? items
+      : items.filter(item => item.sport === selectedSport);
+  }
+
+  function viewHref(item) {
+    if (item.sport === 'MLB' && item.gamePk) return `/game-detail.html?gamePk=${encodeURIComponent(item.gamePk)}&date=${encodeURIComponent(dateFilter.value)}`;
+    if (item.sport === 'Soccer' && item.fixtureId) return `/soccer-detail.html?fixtureId=${encodeURIComponent(item.fixtureId)}&date=${encodeURIComponent(dateFilter.value)}&timezone=${encodeURIComponent(getTimezone())}`;
+    if (item.sport === 'Horse Racing') return '/horse.html';
+    if (item.sport === 'UFC') return '/ufc.html';
+    return `/${String(item.sport || 'picks').toLowerCase().replace(/\\s+/g, '-')}.html`;
+  }
+
+  function pickCard(item) {
+    return `
+      <article class="pick-card">
+        <div>
+          <div class="pick-top">
+            <span class="sport-pill">${escapeHtml(item.sport)}</span>
+            <span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status || 'Pending')}</span>
+          </div>
+          <h3 class="event">${escapeHtml(item.event)}</h3>
+          <div class="pick">${escapeHtml(item.pick || 'Analyze Available')}</div>
+          <div class="meta-grid">
+            <div class="meta"><small>Confidence</small><span class="confidence ${String(item.confidence || 'medium').toLowerCase()}">${escapeHtml(item.confidence || 'Pending')}</span></div>
+            <div class="meta"><small>Odds</small><b>${escapeHtml(formatOdds(item.odds))}</b></div>
+            <div class="meta"><small>Time</small><b>${escapeHtml(formatTime(item.time))}</b></div>
+            <div class="meta"><small>Market</small><b>${escapeHtml(item.market || 'Analysis')}</b></div>
+          </div>
+        </div>
+        <a class="analysis-btn" href="${escapeHtml(viewHref(item))}">${escapeHtml(item.action || 'View Analysis')}</a>
+      </article>
+    `;
+  }
+
+  function normalizeTrackedPick(pick) {
+    return {
+      sport: pick.sport || 'MLB',
+      event: pick.event || [pick.awayTeam, pick.homeTeam].filter(Boolean).join(' @ ') || 'Tracked event',
+      market: pick.market || 'Pick',
+      pick: pick.pick || pick.team || pick.playerName || 'Tracked pick',
+      confidence: pick.confidence || pick.modelProbability || 'Pending',
+      odds: pick.odds,
+      time: pick.createdAt || pick.time,
+      status: String(pick.result || 'pending').toUpperCase(),
+      gamePk: pick.gamePk,
+      fixtureId: pick.fixtureId,
+      action: 'View Analysis'
+    };
+  }
+
+  function normalizeMlbGame(game) {
+    return {
+      sport: 'MLB',
+      event: `${game.awayTeamName || game.awayAbbrev || 'Away'} @ ${game.homeTeamName || game.homeAbbrev || 'Home'}`,
+      market: 'Pregame Board',
+      pick: 'Open MLB board',
+      confidence: 'Pending',
+      odds: '',
+      time: game.gameTime || game.time,
+      status: game.status || game.abstractStatus || 'Scheduled',
+      gamePk: game.gamePk,
+      action: 'View Analysis'
+    };
+  }
+
+  function normalizeSoccerGame(game) {
+    return {
+      sport: 'Soccer',
+      event: `${game.awayTeam || 'Away'} @ ${game.homeTeam || 'Home'}`,
+      market: 'Pregame Board',
+      pick: 'Open Soccer board',
+      confidence: 'Pending',
+      odds: '',
+      time: game.localTime || game.time,
+      status: game.status || 'Scheduled',
+      fixtureId: game.fixtureId || game.matchId,
+      action: 'View Analysis'
+    };
+  }
+
+  function normalizeHorseTrack(track) {
+    const name = track.name || track.trackName || track.code || 'Race Track';
+    return {
+      sport: 'Horse Racing',
+      event: name,
+      market: 'Racing Board',
+      pick: 'Open racing board',
+      confidence: 'Pending',
+      odds: '',
+      time: 'Today',
+      status: 'Available',
+      action: 'View Analysis'
+    };
+  }
+
+  function normalizeUfcFight(fight) {
+    const event = `${fight.fighterA?.name || fight.home_team || 'Fighter A'} vs ${fight.fighterB?.name || fight.away_team || 'Fighter B'}`;
+    return {
+      sport: 'UFC',
+      event,
+      market: 'Fight Board',
+      pick: fight.prediction?.winner ? `${fight.prediction.winner} lean` : 'Open fight board',
+      confidence: fight.prediction?.confidence || 'Pending',
+      odds: '',
+      time: fight.date || fight.commence_time || 'Upcoming',
+      status: 'Available',
+      action: 'View Analysis'
+    };
+  }
+
+  async function loadTrackedPicks(date) {
+    const data = await fetchJson(`/api/picks?date=${encodeURIComponent(date)}&sport=all`);
+    return (data.picks || []).map(normalizeTrackedPick);
+  }
+
+  async function loadAvailableGames(date) {
+    const timezone = getTimezone();
+    const results = await Promise.allSettled([
+      fetchJson(`/api/baseball/games?date=${encodeURIComponent(date)}`).then(data => (data.games || []).map(normalizeMlbGame)),
+      fetchJson(`/api/soccer/games-global?date=${encodeURIComponent(date)}&timezone=${encodeURIComponent(timezone)}`).then(data => (data.games || []).filter(game => (game.localDate || game.date) === date).map(normalizeSoccerGame)),
+      fetchJson(`/api/horse-racing/tracks?date=${encodeURIComponent(date)}`).then(data => (Array.isArray(data.tracks) ? data.tracks : []).slice(0, 8).map(normalizeHorseTrack)),
+      fetchJson('/api/ufc/fights').then(data => (data.fights || []).map(normalizeUfcFight))
+    ]);
+
+    return results.flatMap(result => result.status === 'fulfilled' ? result.value : []);
+  }
+
+  function render() {
+    const visiblePicks = filtered(trackedPicks);
+    const visibleGames = filtered(availableGames);
+
+    trackedMeta.textContent = `${visiblePicks.length} tracked picks for ${dateFilter.value}`;
+    availableMeta.textContent = visiblePicks.length
+      ? 'Boards remain available for deeper analysis'
+      : 'No tracked picks yet today';
+
+    trackedPicksGrid.innerHTML = visiblePicks.length
+      ? visiblePicks.map(pickCard).join('')
+      : '<div class="empty-state"><strong>No tracked picks yet today.</strong><br>Run analysis from the sport boards to save picks for Results grading.</div>';
+
+    availableGamesGrid.innerHTML = visibleGames.length
+      ? visibleGames.map(pickCard).join('')
+      : '<div class="empty-state">No available games to analyze for this date from the current project APIs.</div>';
+  }
+
+  async function loadBoard() {
+    const date = dateFilter.value || getLocalDate();
+    loadBoardBtn.disabled = true;
+    loadBoardBtn.textContent = 'Loading...';
+    trackedPicksGrid.innerHTML = '<div class="empty-state">Loading real tracked picks...</div>';
+    availableGamesGrid.innerHTML = '<div class="empty-state">Loading available games...</div>';
+
+    try {
+      const [picks, games] = await Promise.all([
+        loadTrackedPicks(date),
+        loadAvailableGames(date)
+      ]);
+      trackedPicks = picks;
+      availableGames = games;
+      render();
+    } catch (error) {
+      trackedPicksGrid.innerHTML = `<div class="empty-state">Unable to load daily picks: ${escapeHtml(error.message)}</div>`;
+      availableGamesGrid.innerHTML = '';
+    } finally {
+      loadBoardBtn.disabled = false;
+      loadBoardBtn.textContent = 'Load Board';
+    }
+  }
+
+  function runFullAnalysis() {
+    const firstGame = filtered(availableGames)[0];
+    if (firstGame) {
+      window.location.href = viewHref(firstGame);
+      return;
+    }
+    availableGamesGrid.innerHTML = '<div class="empty-state">No available games to analyze right now.</div>';
+  }
+
+  sportButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      sportButtons.forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      selectedSport = button.dataset.sport;
+      render();
+    });
+  });
+
+  dateFilter.value = getLocalDate();
+  dateFilter.addEventListener('change', loadBoard);
+  loadBoardBtn.addEventListener('click', loadBoard);
+  runFullAnalysisBtn.addEventListener('click', runFullAnalysis);
+  loadBoard();
+</script>
 </body>
 </html>
