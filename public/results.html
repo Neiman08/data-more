@@ -248,7 +248,7 @@
       border-radius: 14px;
       padding: 18px;
       display: grid;
-      grid-template-columns: 92px 96px minmax(170px, 1.2fr) minmax(150px, .9fr) minmax(150px, .9fr) 92px 84px 82px;
+      grid-template-columns: 92px 96px minmax(170px, 1.2fr) minmax(150px, .9fr) minmax(150px, .9fr) 92px 76px 84px 82px;
       align-items: center;
       gap: 14px;
     }
@@ -293,6 +293,7 @@
     .status-scheduled { color: #111827; background: var(--gray); }
     .status-unavailable { color: #000; background: var(--yellow); }
     .status-no-pick-tracked { color: #111827; background: var(--gray); }
+    .status-no-tracked-pick { color: #111827; background: var(--gray); }
     .empty-state {
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -643,6 +644,7 @@
         homeTeam: pick.homeTeam || '',
         pickText: pick.pick || pick.team || pick.playerName || 'Tracked pick',
         market: pick.market || 'Pick',
+        odds: pick.odds || 'N/A',
         finalResult: pick.finalScore || 'Pending final score',
         time: pick.createdAt
           ? new Intl.DateTimeFormat('en-US', {
@@ -656,14 +658,62 @@
       };
     }
 
-    function groupTrackedPicks(picks, selectedDate) {
-      return sportOrder.map(sport => ({
-        sport,
-        source: 'Saved Data More Picks',
-        results: picks
-          .filter(pick => String(pick.sport || 'MLB').toLowerCase() === sport.toLowerCase())
-          .map(pick => normalizeTrackedPick(pick, selectedDate)),
-        error: null
+    function pickMatchKey(value) {
+      return normalizeTeam(value);
+    }
+
+    function findTrackedPickForGame(game, picks) {
+      const sport = String(game.sport || '').toLowerCase();
+      const gameId = String(game.gamePk || game.fixtureId || game.matchId || '').trim();
+      const eventKey = pickMatchKey(game.event);
+      const teamsKey = `${pickMatchKey(game.awayTeam)}-${pickMatchKey(game.homeTeam)}`;
+
+      return picks.find(pick => {
+        const normalized = normalizeTrackedPick(pick, game.date);
+        const pickSport = String(normalized.sport || '').toLowerCase();
+        const pickGameId = String(normalized.gamePk || pick.fixtureId || pick.matchId || '').trim();
+        const pickEventKey = pickMatchKey(normalized.event);
+        const pickTeamsKey = `${pickMatchKey(normalized.awayTeam)}-${pickMatchKey(normalized.homeTeam)}`;
+
+        if (pickSport !== sport) return false;
+        if (gameId && pickGameId && gameId === pickGameId) return true;
+        if (eventKey && pickEventKey && eventKey === pickEventKey) return true;
+        return teamsKey !== '-' && teamsKey === pickTeamsKey;
+      });
+    }
+
+    function applyTrackedPickOverlay(game, picks, selectedDate) {
+      const pick = findTrackedPickForGame(game, picks);
+
+      if (!pick) {
+        return {
+          ...game,
+          pickText: 'No Pick',
+          market: 'No Pick',
+          odds: 'N/A',
+          pickResult: 'No Tracked Pick',
+          profit: 'N/A'
+        };
+      }
+
+      const tracked = normalizeTrackedPick(pick, selectedDate);
+
+      return {
+        ...game,
+        pickText: tracked.pickText,
+        market: tracked.market,
+        odds: tracked.odds,
+        pickResult: tracked.pickResult,
+        profit: tracked.profit,
+        finalResult: game.finalResult || tracked.finalResult,
+        time: game.time || tracked.time
+      };
+    }
+
+    function overlayTrackedPicks(groups, picks, selectedDate) {
+      return groups.map(group => ({
+        ...group,
+        results: group.results.map(game => applyTrackedPickOverlay(game, picks, selectedDate))
       }));
     }
 
@@ -687,23 +737,41 @@
         console.warn('Pick grading unavailable', error);
       }
 
-      const trackedPicks = await loadTrackedPicks(selectedDate);
-      const groups = groupTrackedPicks(trackedPicks.picks, selectedDate);
+      const trackedPicks = await safeLoad(() => loadTrackedPicks(selectedDate));
+      const picks = Array.isArray(trackedPicks.picks) ? trackedPicks.picks : [];
+      const realGroups = await Promise.all([
+        safeLoad(() => loadMlbResults(selectedDate)),
+        safeLoad(() => loadSoccerResults(selectedDate)),
+        safeLoad(() => loadHorseResults(selectedDate)),
+        safeLoad(() => loadUfcResults(selectedDate))
+      ]);
+
+      const groups = overlayTrackedPicks(realGroups, picks, selectedDate);
       groups.trackedPickSource = trackedPicks.source;
-      groups.trackedPickCount = trackedPicks.picks.length;
+      groups.trackedPickCount = picks.length;
+
+      if (trackedPicks.error) {
+        groups.push({
+          sport: 'Saved Data More Picks',
+          source: '/api/picks',
+          results: [],
+          error: trackedPicks.error
+        });
+      }
 
       return groups;
     }
 
     function renderSummary(results) {
       const total = results.length;
-      const wins = results.filter(r => r.pickResult === 'WIN').length;
-      const losses = results.filter(r => r.pickResult === 'LOSS').length;
-      const pushes = results.filter(r => r.pickResult === 'PUSH').length;
-      const pending = results.filter(r => r.pickResult === 'PENDING').length;
+      const tracked = results.filter(r => r.pickResult && r.pickResult !== 'No Tracked Pick');
+      const wins = tracked.filter(r => r.pickResult === 'WIN').length;
+      const losses = tracked.filter(r => r.pickResult === 'LOSS').length;
+      const pushes = tracked.filter(r => r.pickResult === 'PUSH').length;
+      const pending = tracked.filter(r => r.pickResult === 'PENDING').length;
       const graded = wins + losses;
       const settled = wins + losses + pushes;
-      const profit = results.reduce((sum, result) => {
+      const profit = tracked.reduce((sum, result) => {
         const raw = String(result.profit || '').replace(/[+u]/g, '');
         const value = Number(raw);
         return sum + (Number.isFinite(value) ? value : 0);
@@ -714,8 +782,8 @@
       document.getElementById('summaryGrid').innerHTML = `
         <article class="summary-card">
           <strong>${total}</strong>
-          <span>Total Picks</span>
-          <small>Selected day</small>
+          <span>Games Shown</span>
+          <small>Selected day scoreboard</small>
         </article>
         <article class="summary-card">
           <strong class="positive">${winRate}%</strong>
@@ -733,9 +801,9 @@
           <small>Settled picks only</small>
         </article>
         <article class="summary-card">
-          <strong>${pending}</strong>
-          <span>Pending</span>
-          <small>No final grade</small>
+          <strong>${tracked.length}</strong>
+          <span>Tracked Picks</span>
+          <small>${pending} pending grades</small>
         </article>
       `;
     }
@@ -749,6 +817,7 @@
           <div><span class="label">Pick</span><span class="value">${escapeHtml(result.market)} · ${escapeHtml(result.pickText)}</span></div>
           <div><span class="label">Final</span><span class="value">${escapeHtml(result.finalResult)}</span></div>
           <div><span class="label">Result</span><span class="status-pill ${statusClass(result.pickResult)}">${escapeHtml(result.pickResult)}</span></div>
+          <div><span class="label">Odds</span><span class="value">${escapeHtml(result.odds || 'N/A')}</span></div>
           <div><span class="label">Profit</span><span class="value">${escapeHtml(result.profit || 'N/A')}</span></div>
           <div><span class="label">Time</span><span class="value">${escapeHtml(result.time)}</span></div>
         </article>
@@ -769,7 +838,7 @@
         : 'No tracked picks found for this date.';
 
       sourceNote.textContent = [
-        visibleResults.length ? `Loaded saved Data More picks from ${sources.join(', ')}.` : 'No tracked picks found for this date.',
+        visibleResults.length ? `Loaded real scoreboard from ${sources.join(', ')}.` : 'No real results found for this date.',
         pickSource,
         ...notes
       ].join(' ');
@@ -784,10 +853,10 @@
 
       renderSummary(results);
       renderSourceNote(groups, results);
-      resultCountLabel.textContent = `${results.length} tracked picks`;
+      resultCountLabel.textContent = `${results.length} results`;
 
       if (!results.length) {
-        resultsList.innerHTML = '<div class="empty-state">No tracked picks found for this date.</div>';
+        resultsList.innerHTML = '<div class="empty-state">No real results found for this date.</div>';
         return;
       }
 
@@ -799,7 +868,7 @@
 
           return `
             <section class="sport-group">
-              <div class="sport-group-title">${sport} <span>${group.length} picks</span></div>
+              <div class="sport-group-title">${sport} <span>${group.length} results</span></div>
               ${group.map(resultCard).join('')}
             </section>
           `;
@@ -810,8 +879,8 @@
     async function refreshResults() {
       const selectedDate = dateFilter.value;
 
-      resultsList.innerHTML = '<div class="empty-state">Loading tracked picks...</div>';
-      resultCountLabel.textContent = 'Loading tracked picks...';
+      resultsList.innerHTML = '<div class="empty-state">Loading real results...</div>';
+      resultCountLabel.textContent = 'Loading results...';
 
       const groups = await loadAllResults(selectedDate);
       window.currentResultGroups = groups;
