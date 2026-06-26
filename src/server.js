@@ -83,7 +83,7 @@ mongoose.connect(process.env.MONGO_URI)
     console.log('🚀 Connected to MongoDB Atlas (Data More PRO)');
   })
   .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error('❌ MongoDB connection error:', err.message);
   });
 
 // =========================
@@ -1347,6 +1347,25 @@ app.get('/admin-payments', (req, res) => {
       __dirname,
       '../public/admin-payments.html'
     )
+  );
+});
+
+// =========================
+// SAFE ERROR HANDLER
+// =========================
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+
+  console.error('Unhandled request error:', err.message);
+
+  res.status(err.status || 500).json(
+    process.env.NODE_ENV === 'production'
+      ? { error: 'Internal server error' }
+      : { ok: false, error: err.message || 'Internal server error' }
   );
 });
 

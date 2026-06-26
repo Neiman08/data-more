@@ -167,13 +167,13 @@ async function fetchCurrentOdds() {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Odds API error:', data);
+      console.error('Odds API error:', response.status);
       return [];
     }
 
     return Array.isArray(data) ? data : [];
   } catch (err) {
-    console.error('Error fetchCurrentOdds:', err);
+    console.error('Error fetchCurrentOdds:', err.message);
     return [];
   }
 }

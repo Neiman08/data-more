@@ -366,12 +366,6 @@ router.post("/analyze", async (req, res) => {
 
     const aiBoard = buildAIBoard(games);
 
-    console.log("🔥 RAW GAME SAMPLE:");
-    console.log(JSON.stringify(games[0], null, 2));
-
-    console.log("✅ AI BOARD:");
-    console.log(JSON.stringify(aiBoard, null, 2));
-
     if (boardIsEmpty(aiBoard)) {
       return res.json({
         success: true,
@@ -595,15 +589,11 @@ Only if rankedHrProps is empty respond:
     });
 
   } catch (error) {
-    console.error("AI ERROR FULL:", error);
+    console.error("AI analysis failed:", error.message || error.type || 'Unknown error');
 
     res.status(500).json({
       success: false,
-      error: "AI analysis failed",
-      details: error.message || String(error),
-      status: error.status || null,
-      code: error.code || null,
-      type: error.type || null
+      error: "AI analysis failed"
     });
   }
 });

@@ -48,7 +48,7 @@ router.post('/commentary', async (req,res)=>{
 
   }catch(err){
 
-    console.log(err);
+    console.error('Voice commentary error:', err.message);
 
     res.status(500).json({
       ok:false,

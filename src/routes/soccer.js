@@ -315,7 +315,7 @@ async function apiFootball(path) {
   const data = await res.json();
 
   if (!res.ok) {
-    console.error('API-Football error:', data);
+    console.error('API-Football error:', res.status);
     return null;
   }
 
