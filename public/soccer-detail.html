@@ -556,6 +556,22 @@ function safe(v,fallback='--'){
   return v;
 }
 
+function hasRealValue(v){
+  if(v===undefined||v===null) return false;
+  const raw=String(v).trim();
+  return raw!==''&&raw!=='--'&&raw!=='N/A'&&raw!=='Pending'&&raw!=='Data unavailable'&&raw!=='null'&&raw!=='undefined';
+}
+
+function statLine(label,value){
+  if(!hasRealValue(value)) return '';
+  return `<div class="stat"><span>${label}</span><b>${value}</b></div>`;
+}
+
+function panel(title,html,extraClass='panel'){
+  if(!hasRealValue(html)) return '';
+  return `<section class="${extraClass}"><h3>${title}</h3>${html}</section>`;
+}
+
 function firstValid(){
   for(const value of arguments){
     if(value!==undefined&&value!==null&&value!==''&&value!=='null'&&value!=='undefined') return value;
@@ -664,8 +680,10 @@ function renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime){
   const homeCards=safe(a.homeCards ?? a.live?.homeCards ?? a.cards?.home,'--');
   const awayCards=safe(a.awayCards ?? a.live?.awayCards ?? a.cards?.away,'--');
 
-  const ballLeft=Math.min(88,Math.max(12,cleanHomePoss+(Math.random()-.5)*16));
-  const ballTop=Math.min(78,Math.max(22,50+(Math.random()-.5)*38));
+  const pressureDiff=num(homeAttacks)-num(awayAttacks);
+  const shotDiff=num(homeShots)-num(awayShots);
+  const ballLeft=Math.min(88,Math.max(12,cleanHomePoss+(pressureDiff*.18)));
+  const ballTop=Math.min(78,Math.max(22,50-(shotDiff*1.8)));
 
   const liveReading=a.liveSummary||a.matchFlow||buildLiveReading({
     homeTeam,awayTeam,homePoss:cleanHomePoss,awayPoss,homeAttacks,awayAttacks,homeShots,awayShots,homeCorners,awayCorners,homeCards,awayCards
@@ -705,29 +723,40 @@ function renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime){
 
 function renderGoalProps(a){
   const props=a.goalProps||a.playerProps||[];
-  if(!Array.isArray(props)||!props.length) return `<p class="note">Goal scorer props unavailable.</p>`;
-  return props.slice(0,5).map(p=>`
-    <div class="stat"><span>${p.player||p.name||'Player'}</span><b>${safe(p.goalChance||p.probability,'--')}%</b></div>
-  `).join('');
+  if(!Array.isArray(props)||!props.length) return '';
+  return props
+    .filter(p=>hasRealValue(p.goalChance||p.probability))
+    .slice(0,5)
+    .map(p=>`<div class="stat"><span>${p.player||p.name||'Player'}</span><b>${p.goalChance||p.probability}%</b></div>`)
+    .join('');
 }
 
 function renderAssistProps(a){
   const props=a.assistProps||a.playerProps||[];
-  if(!Array.isArray(props)||!props.length) return `<p class="note">Assist props unavailable.</p>`;
+  if(!Array.isArray(props)||!props.length) return '';
   return props
-    .filter(p=>p.assistChance!==undefined&&p.assistChance!==null)
+    .filter(p=>hasRealValue(p.assistChance))
     .sort((x,y)=>num(y.assistChance)-num(x.assistChance))
     .slice(0,5)
-    .map(p=>`<div class="stat"><span>${p.player||p.name||'Player'}</span><b>${safe(p.assistChance,'--')}%</b></div>`)
-    .join('') || `<p class="note">Assist props unavailable.</p>`;
+    .map(p=>`<div class="stat"><span>${p.player||p.name||'Player'}</span><b>${p.assistChance}%</b></div>`)
+    .join('');
 }
 
 function renderKeyPlayers(a){
   const players=a.keyPlayers||a.playerProps||a.players||[];
-  if(!Array.isArray(players)||!players.length) return `<p class="note">Key player data pending.</p>`;
-  return players.slice(0,8).map(p=>`
-    <div class="stat"><span>${p.name||p.player||'Player'}</span><b>${p.goalChance||p.probability||p.market||'Watch'}</b></div>
-  `).join('');
+  if(!Array.isArray(players)||!players.length) return '';
+  return players
+    .filter(p=>hasRealValue(p.name||p.player))
+    .slice(0,8)
+    .map(p=>{
+      const metric=firstValid(
+        hasRealValue(p.goalChance)?`Goal ${p.goalChance}%`:'',
+        hasRealValue(p.probability)?`${p.probability}%`:'',
+        p.market
+      );
+      return statLine(p.name||p.player||'Player',metric);
+    })
+    .join('');
 }
 
 function renderLineups(a,homeTeam,awayTeam){
@@ -735,7 +764,7 @@ function renderLineups(a,homeTeam,awayTeam){
   const home=lineups.home||lineups.local||[];
   const away=lineups.away||lineups.visitante||[];
 
-  if(!home.length&&!away.length) return `<p class="note">Lineups not available yet.</p>`;
+  if(!home.length&&!away.length) return '';
 
   return `
     <div class="lineups">
@@ -757,8 +786,70 @@ function renderLineups(a,homeTeam,awayTeam){
 
 function renderRiskAlerts(a){
   const alerts=a.riskAlerts||a.alerts||[];
-  if(!Array.isArray(alerts)||!alerts.length) return `<div class="alert">No major betting risk alerts detected.</div>`;
+  if(!Array.isArray(alerts)||!alerts.length) return '';
   return alerts.map(x=>`<div class="alert">⚠️ ${typeof x==='string'?x:x.message}</div>`).join('');
+}
+
+function renderMarketIntelligence(a){
+  const odds=a.odds||a.market||a.marketIntelligence||{};
+  const html=[
+    statLine('Sportsbook',odds.sportsbook||odds.bookmaker),
+    statLine('Moneyline',odds.moneyline||odds.h2h),
+    statLine('Spread',odds.spread||odds.handicap),
+    statLine('Total Goals',odds.total||odds.overUnder),
+    statLine('Implied Probability',hasRealValue(odds.impliedProbability)?pct(odds.impliedProbability):''),
+    statLine('Market Edge',hasRealValue(odds.edge)?pct(odds.edge):'')
+  ].join('');
+
+  return panel('Market Intelligence',html);
+}
+
+function renderTeamForm(a,homeTeam,awayTeam){
+  const html=[
+    statLine(`${homeTeam} Form`,a.homeForm||a.homeRecord),
+    statLine(`${awayTeam} Form`,a.awayForm||a.awayRecord),
+    statLine(`${homeTeam} Last 5`,a.homeLast5),
+    statLine(`${awayTeam} Last 5`,a.awayLast5)
+  ].join('');
+
+  return panel('Team Form',html);
+}
+
+function renderAttackDefense(a,homeTeam,awayTeam,cleanHomePoss,cleanAwayPoss){
+  const html=[
+    statLine(`${homeTeam} Possession`,`${cleanHomePoss.toFixed(0)}%`),
+    statLine(`${awayTeam} Possession`,`${cleanAwayPoss.toFixed(0)}%`),
+    statLine(`${homeTeam} Shots`,a.homeShots??a.live?.homeShots??a.shots?.home),
+    statLine(`${awayTeam} Shots`,a.awayShots??a.live?.awayShots??a.shots?.away),
+    statLine(`${homeTeam} Attacks`,a.homeAttacks??a.live?.homeAttacks??a.attacks?.home),
+    statLine(`${awayTeam} Attacks`,a.awayAttacks??a.live?.awayAttacks??a.attacks?.away),
+    statLine(`${homeTeam} Corners`,a.homeCorners??a.live?.homeCorners??a.corners?.home),
+    statLine(`${awayTeam} Corners`,a.awayCorners??a.live?.awayCorners??a.corners?.away)
+  ].join('');
+
+  return panel('Attack vs Defense',html);
+}
+
+function renderBettingRecommendations(a){
+  const rows=[
+    statLine('Main Pick',safe(a.pick,'')),
+    statLine('Confidence',safe(a.confidence,'')),
+    statLine('Model Probability',hasRealValue(a.probability??a.pickProbability)?pct(a.probability??a.pickProbability):''),
+    statLine('Over 2.5 Goals',safe(a.over25||a.totalGoalsPick||a.totalPick,'')),
+    statLine('Both Teams To Score',safe(a.btts||a.bothTeamsToScore,''))
+  ].join('');
+
+  return panel('Betting Recommendations',rows);
+}
+
+function renderRiskAnalysis(a){
+  const alerts=renderRiskAlerts(a);
+  const confidence=String(a.confidence||'').toUpperCase();
+  const riskFromConfidence=confidence.includes('LOW')
+    ? '<div class="alert">Low model confidence. Keep exposure conservative.</div>'
+    : '';
+
+  return panel('Risk Analysis',`${alerts}${riskFromConfidence}`);
 }
 
 async function loadMatch(){
@@ -802,13 +893,26 @@ async function loadMatch(){
     const homeEnd=Math.min(100,homeWin);
     const drawEnd=Math.min(100,homeWin+draw);
 
+    const aiRows=[
+      statLine('Main Pick',safe(a.pick,'')),
+      statLine('Confidence',safe(a.confidence,'')),
+      statLine('Probability',hasRealValue(a.probability??a.pickProbability)?pct(a.probability??a.pickProbability):''),
+      statLine('Over 2.5',safe(a.over25||a.totalGoalsPick||a.totalPick,'')),
+      statLine('BTTS',safe(a.btts||a.bothTeamsToScore,''))
+    ].join('');
+
+    const goalPropsHtml=renderGoalProps(a);
+    const assistPropsHtml=renderAssistProps(a);
+    const keyPlayersHtml=renderKeyPlayers(a);
+    const lineupsHtml=renderLineups(a,homeTeam,awayTeam);
+
     content.innerHTML=`
       <section class="hero-pro">
         <div class="hero-grid">
           <div class="team-hero">
             <img src="${homeLogo}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${homeTeam}</h2>
-            <small>${safe(a.homeRecord,'Home Form Pending')}</small>
+            ${hasRealValue(a.homeRecord)?`<small>${a.homeRecord}</small>`:''}
           </div>
 
           <div class="score-box">
@@ -820,7 +924,7 @@ async function loadMatch(){
           <div class="team-hero">
             <img src="${awayLogo}" onerror="this.onerror=null;this.src='/logos/DATA-MORE.png';">
             <h2>${awayTeam}</h2>
-            <small>${safe(a.awayRecord,'Away Form Pending')}</small>
+            ${hasRealValue(a.awayRecord)?`<small>${a.awayRecord}</small>`:''}
           </div>
         </div>
       </section>
@@ -862,13 +966,8 @@ async function loadMatch(){
         </section>
 
         <section class="pro-card">
-          <h3>AI Match Edge</h3>
-          <div class="stat"><span>Main Pick</span><b>${safe(a.pick)}</b></div>
-          <div class="stat"><span>Confidence</span><b>${safe(a.confidence)}</b></div>
-          <div class="stat"><span>Probability</span><b>${pct(a.probability??a.pickProbability)}</b></div>
-          <div class="stat"><span>Over 2.5</span><b>${safe(a.over25||a.totalGoalsPick,'Pending')}</b></div>
-          <div class="stat"><span>BTTS</span><b>${safe(a.btts||a.bothTeamsToScore,'Pending')}</b></div>
-          <div class="stat"><span>Projected Goals</span><b>${safe(a.projectedGoals,'Pending')}</b></div>
+          <h3>AI Prediction Center</h3>
+          ${aiRows}
         </section>
       </div>
 
@@ -887,38 +986,16 @@ async function loadMatch(){
 
       ${renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime)}
 
+      ${renderMarketIntelligence(a)}
+
       <div class="grid">
-        <section class="panel">
-          <h3>Advanced Variables</h3>
-          <div class="stat"><span>xG Projection</span><b>${safe(a.xgTotal,'Pending')}</b></div>
-          <div class="stat"><span>Possession Edge</span><b>${safe(a.possessionEdge,'Pending')}</b></div>
-          <div class="stat"><span>Shots Projection</span><b>${safe(a.shotsProjection,'Pending')}</b></div>
-          <div class="stat"><span>Danger Level</span><b>${safe(a.riskLevel,'Pending')}</b></div>
-          <div class="stat"><span>Game Tempo</span><b>${safe(a.gameTempo,'Pending')}</b></div>
-        </section>
-
-        <section class="panel">
-          <h3>Corners / Cards</h3>
-          <div class="stat"><span>Corners Over</span><b>${safe(a.cornersOver,'Pending')}</b></div>
-          <div class="stat"><span>Cards Over</span><b>${safe(a.cardsOver,'Pending')}</b></div>
-          <div class="stat"><span>Referee Risk</span><b>${safe(a.refereeRisk,'Pending')}</b></div>
-          <div class="stat"><span>Intensity</span><b>${safe(a.gameIntensity,'Pending')}</b></div>
-        </section>
-
-        <section class="panel">
-          <h3>Top Goal Props</h3>
-          ${renderGoalProps(a)}
-        </section>
-
-        <section class="panel">
-          <h3>Top Assist Props</h3>
-          ${renderAssistProps(a)}
-        </section>
-
-        <section class="panel">
-          <h3>Key Players</h3>
-          ${renderKeyPlayers(a)}
-        </section>
+        ${renderTeamForm(a,homeTeam,awayTeam)}
+        ${renderAttackDefense(a,homeTeam,awayTeam,cleanHomePoss,cleanAwayPoss)}
+        ${renderBettingRecommendations(a)}
+        ${renderRiskAnalysis(a)}
+        ${panel('Key Players',keyPlayersHtml)}
+        ${panel('Top Goal Probability',goalPropsHtml)}
+        ${panel('Top Assist Probability',assistPropsHtml)}
 
         <section class="panel">
           <h3>Live Possession</h3>
@@ -928,15 +1005,7 @@ async function loadMatch(){
         </section>
       </div>
 
-      <section class="panel" style="margin-top:20px;">
-        <h3>Confirmed / Projected Lineups</h3>
-        ${renderLineups(a,homeTeam,awayTeam)}
-      </section>
-
-      <section class="panel" style="margin-top:20px;">
-        <h3>Betting Risk Alerts</h3>
-        ${renderRiskAlerts(a)}
-      </section>
+      ${panel('Confirmed / Projected Lineups',lineupsHtml,'panel lineups-panel')}
     `;
 
     isFirstLoad=false;
