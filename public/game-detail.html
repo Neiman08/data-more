@@ -2132,7 +2132,6 @@
         : null;
       const rating = confidenceRating(confidence, modelProb);
       const explanation = buildAIExplanation({ game, analysis, centerData, awayPct, homePct });
-      const longExplanation = buildLongExplanation({ game, analysis, centerData, awayPct, homePct, advancedModel });
 
       return `
         <section class="premium-card primary">
@@ -2154,6 +2153,21 @@
             ${metricTile('Rating', rating)}
           </div>
           <p class="ai-copy">${explanation}</p>
+        </section>
+      `;
+    }
+
+    function renderExplainThisPick({ game, analysis, centerData, advancedModel, awayPct, homePct }){
+      const longExplanation = buildLongExplanation({ game, analysis, centerData, awayPct, homePct, advancedModel });
+
+      return `
+        <section class="premium-card primary explain-section">
+          <div class="card-head">
+            <div>
+              <div class="card-kicker">Explain This Pick</div>
+              <h3>Why Data More Likes This Side</h3>
+            </div>
+          </div>
           <button class="explain-btn" onclick="togglePickExplanation()">Explain This Pick</button>
           <div class="explain-box" id="explainPickBox">${longExplanation}</div>
         </section>
@@ -2902,18 +2916,6 @@
         content.className = '';
 
         content.innerHTML = `
-          <div class="premium-stack">
-            ${renderAIPredictionCenter({ game, analysis, centerData, advancedModel, awayPct, homePct })}
-          </div>
-
-          ${renderGrid(
-            'premium-grid',
-            renderMarketIntelligence({ centerData, modelProb, confidence }),
-            renderFirstInningCenter(game, centerData)
-          )}
-
-          ${renderSabermetricStudy(game, centerData)}
-
           <div class="pro-dashboard">
             <section class="hero-card">
               <div class="matchup">
@@ -3064,28 +3066,38 @@
             </section>
           </div>
 
-          ${renderPitcherBreakdownExpanded(game, centerData, awayPitcherImg, homePitcherImg)}
+          <div class="premium-stack">
+            ${renderAIPredictionCenter({ game, analysis, centerData, advancedModel, awayPct, homePct })}
+          </div>
+
+          ${renderGrid(
+            'premium-grid',
+            renderMarketIntelligence({ centerData, modelProb, confidence }),
+            renderFirstInningCenter(game, centerData)
+          )}
+
+          ${renderSabermetricStudy(game, centerData)}
 
           ${renderGrid(
             'premium-grid',
             renderBullpenCenter(centerData),
             renderWeatherCenter(centerData),
-            renderVegasVsDataMore(game, centerData, modelProb),
-            renderPitcherHistory(game, centerData)
+            renderVegasVsDataMore(game, centerData, modelProb)
           )}
 
-          ${renderGrid(
-            'premium-grid',
-            renderSimulationCenter(game, advancedModel),
-            renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers),
-            renderBettingRecommendations({ analysis, modelProb, advancedModel }),
-            renderHistoricalPerformance(performanceData)
-          )}
+          ${renderPitcherBreakdownExpanded(game, centerData, awayPitcherImg, homePitcherImg)}
 
           ${renderGrid(
             'detail-grid',
             renderConfidenceMeter({ centerData, modelProb }),
             renderTeamComparisonVisual(game, centerData)
+          )}
+
+          ${renderGrid(
+            'premium-grid',
+            renderPitcherHistory(game, centerData),
+            renderSimulationCenter(game, advancedModel),
+            renderBettingRecommendations({ analysis, modelProb, advancedModel })
           )}
 
           <section class="pro-info-grid">
@@ -3148,6 +3160,16 @@
             <h3>Confirmed / Projected Lineups</h3>
             ${renderLineups(lineupData, propsData, game.awayAbbrev, game.homeAbbrev)}
           </section>
+
+          ${renderGrid(
+            'premium-grid',
+            renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers),
+            renderHistoricalPerformance(performanceData)
+          )}
+
+          <div class="premium-stack">
+            ${renderExplainThisPick({ game, analysis, centerData, advancedModel, awayPct, homePct })}
+          </div>
         `;
 
         await loadLiveGamecast();
