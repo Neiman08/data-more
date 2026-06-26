@@ -377,6 +377,7 @@
           <option value="PENDING">Pending</option>
           <option value="No Tracked Pick">No Pick</option>
         </select>
+        <button class="filter-btn" id="gradeResultsBtn" type="button">Grade Results</button>
       </div>
       <p class="source-note" id="sourceNote">Loading real results from available project APIs...</p>
 
@@ -422,6 +423,7 @@
     const sportFilter = document.getElementById('sportFilter');
     const pickResultFilter = document.getElementById('pickResultFilter');
     const dateFilter = document.getElementById('dateFilter');
+    const gradeResultsBtn = document.getElementById('gradeResultsBtn');
     const resultsList = document.getElementById('resultsList');
     const resultCountLabel = document.getElementById('resultCountLabel');
     const sourceNote = document.getElementById('sourceNote');
@@ -642,7 +644,7 @@
     }
 
     async function gradePicks(selectedDate) {
-      await fetchJson(`/api/picks/grade?date=${encodeURIComponent(selectedDate)}`, {
+      return fetchJson(`/api/picks/grade?date=${encodeURIComponent(selectedDate)}`, {
         method: 'POST'
       });
     }
@@ -678,6 +680,10 @@
       return normalizeTeam(value);
     }
 
+    function trackedPickId(pick) {
+      return String(pick?._id || `${pick?.sport || ''}-${pick?.gamePk || pick?.fixtureId || ''}-${pick?.market || ''}-${pick?.pick || ''}`);
+    }
+
     function findTrackedPickForGame(game, picks) {
       const sport = String(game.sport || '').toLowerCase();
       const gameId = String(game.gamePk || game.fixtureId || game.matchId || '').trim();
@@ -698,7 +704,7 @@
       });
     }
 
-    function applyTrackedPickOverlay(game, picks, selectedDate) {
+    function applyTrackedPickOverlay(game, picks, selectedDate, matchedPickIds) {
       const pick = findTrackedPickForGame(game, picks);
 
       if (!pick) {
@@ -713,9 +719,11 @@
       }
 
       const tracked = normalizeTrackedPick(pick, selectedDate);
+      matchedPickIds.add(trackedPickId(pick));
 
       return {
         ...game,
+        trackedPickId: trackedPickId(pick),
         pickText: tracked.pickText,
         market: tracked.market,
         odds: tracked.odds,
@@ -727,10 +735,36 @@
     }
 
     function overlayTrackedPicks(groups, picks, selectedDate) {
-      return groups.map(group => ({
+      const matchedPickIds = new Set();
+      const groupsWithScoreboard = groups.map(group => ({
         ...group,
-        results: group.results.map(game => applyTrackedPickOverlay(game, picks, selectedDate))
+        results: group.results.map(game => applyTrackedPickOverlay(game, picks, selectedDate, matchedPickIds))
       }));
+
+      picks
+        .filter(pick => !matchedPickIds.has(trackedPickId(pick)))
+        .forEach(pick => {
+          const tracked = normalizeTrackedPick(pick, selectedDate);
+          const sport = sportOrder.find(item => item.toLowerCase() === String(tracked.sport || '').toLowerCase()) || tracked.sport || 'MLB';
+          let group = groupsWithScoreboard.find(item => item.sport === sport);
+
+          if (!group) {
+            group = {
+              sport,
+              source: 'Saved Data More Picks',
+              results: [],
+              error: null
+            };
+            groupsWithScoreboard.push(group);
+          }
+
+          group.results.push({
+            ...tracked,
+            source: 'Saved Data More Picks'
+          });
+        });
+
+      return groupsWithScoreboard;
     }
 
     async function safeLoad(loader) {
@@ -915,6 +949,22 @@
       renderResults(groups);
     }
 
+    async function manualGradeResults() {
+      const selectedDate = dateFilter.value;
+      gradeResultsBtn.disabled = true;
+      gradeResultsBtn.textContent = 'Grading...';
+
+      try {
+        await gradePicks(selectedDate);
+        await refreshResults();
+      } catch (error) {
+        sourceNote.textContent = `Unable to grade results: ${error.message}`;
+      } finally {
+        gradeResultsBtn.disabled = false;
+        gradeResultsBtn.textContent = 'Grade Results';
+      }
+    }
+
     dateFilter.value = getLocalDate(-1);
     dateFilter.addEventListener('change', refreshResults);
     sportFilter.addEventListener('change', () => {
@@ -923,6 +973,7 @@
     pickResultFilter.addEventListener('change', () => {
       renderResults(window.currentResultGroups || []);
     });
+    gradeResultsBtn.addEventListener('click', manualGradeResults);
     refreshResults();
   </script>
 </body>

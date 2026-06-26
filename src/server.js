@@ -400,10 +400,20 @@ function normalizeMlbGradeGame(game) {
   };
 }
 
+function normalizePickMarket(market = '') {
+  const compact = String(market || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  if (compact === 'ML' || compact === 'MONEYLINE' || compact === 'WINNER') return 'ML';
+  if (compact === 'RL' || compact === 'RUNLINE') return 'RL';
+  if (compact === '1X2' || compact === 'THREEWAY') return '1X2';
+
+  return compact;
+}
+
 function gradeMlbPick(pick, game) {
   if (!game || !game.isFinal) return { result: 'pending', profit: null };
 
-  const market = String(pick.market || '').toUpperCase();
+  const market = normalizePickMarket(pick.market);
   const pickText = normalizeTeamName(pick.team || pick.pick);
   const winner = normalizeTeamName(game.winner);
   const away = normalizeTeamName(game.awayTeam);
@@ -490,7 +500,7 @@ function gradeSoccerPick(pick, fixture) {
     return { result: 'pending', profit: null };
   }
 
-  const market = String(pick.market || '').toUpperCase();
+  const market = normalizePickMarket(pick.market);
   const pickText = normalizeTeamName(pick.team || pick.pick);
   const home = normalizeTeamName(fixture.homeTeam);
   const away = normalizeTeamName(fixture.awayTeam);
