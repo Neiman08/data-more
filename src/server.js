@@ -3,7 +3,6 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
@@ -29,30 +28,7 @@ import ufcRoutes from './routes/ufc.js';
 
 const app = express();
 
-const DEFAULT_CORS_ORIGINS = [
-  'https://data-more.onrender.com',
-  'https://data-more.com',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
-
-const allowedCorsOrigins = (process.env.CORS_ORIGINS || DEFAULT_CORS_ORIGINS.join(','))
-  .split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean);
-
-app.use(helmet());
-
-app.use(cors({
-  origin(origin, callback) {
-    if (!origin || allowedCorsOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
-
-    callback(new Error('Not allowed by CORS'));
-  }
-}));
+app.use(cors());
 
 console.log('✅ UFC routes imported');
 
@@ -90,10 +66,9 @@ mongoose.connect(process.env.MONGO_URI)
 // MIDDLEWARE
 // =========================
 
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json());
 
 app.use(express.urlencoded({
-  limit: '100kb',
   extended: true
 }));
 
@@ -119,59 +94,6 @@ const apiLimiter = rateLimit({
 });
 
 app.use('/api', apiLimiter);
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    ok: false,
-    error: 'Too many auth attempts. Please try again later.'
-  }
-});
-
-const picksSaveLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    ok: false,
-    error: 'Too many pick save requests. Please try again later.'
-  }
-});
-
-const gradeAdminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    ok: false,
-    error: 'Too many admin requests. Please try again later.'
-  }
-});
-
-const aiEndpointLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    ok: false,
-    error: 'Too many AI requests. Please try again later.'
-  }
-});
-
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/ai', aiEndpointLimiter);
-app.use('/api/analyze', aiEndpointLimiter);
-app.use('/api/soccer/analyze', aiEndpointLimiter);
-app.use('/api/nba-analyze', aiEndpointLimiter);
-app.use('/api/nba-ticket', aiEndpointLimiter);
-app.use('/api/ufc/simulate', aiEndpointLimiter);
 
 // =========================
 // AUTH
