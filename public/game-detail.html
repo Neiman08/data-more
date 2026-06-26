@@ -74,23 +74,23 @@
 
     .matchup{
       display:grid;
-      grid-template-columns:1fr 210px 1fr;
-      gap:16px;
+      grid-template-columns:1fr 176px 1fr;
+      gap:12px;
       align-items:center;
       text-align:center;
     }
 
     .team img{
-      width:95px;
-      height:95px;
+      width:78px;
+      height:78px;
       object-fit:contain;
       filter:drop-shadow(0 10px 18px rgba(0,0,0,.65));
     }
 
     .team h2{
       font-family:'Anton',sans-serif;
-      font-size:44px;
-      margin:10px 0 4px;
+      font-size:36px;
+      margin:7px 0 3px;
       letter-spacing:1px;
     }
 
@@ -102,9 +102,9 @@
 
     .pitcher{
       color:var(--gold);
-      font-size:13px;
+      font-size:12px;
       font-weight:900;
-      margin-top:7px;
+      margin-top:5px;
     }
 
     .status{
@@ -112,7 +112,7 @@
       font-size:12px;
       font-weight:900;
       text-transform:uppercase;
-      margin-bottom:10px;
+      margin-bottom:7px;
     }
 
     .predictor-title{
@@ -120,13 +120,13 @@
       font-weight:900;
       text-transform:uppercase;
       letter-spacing:.5px;
-      font-size:14px;
-      margin-bottom:12px;
+      font-size:12px;
+      margin-bottom:9px;
     }
 
     .circle-chart{
-      width:205px;
-      height:205px;
+      width:176px;
+      height:176px;
       border-radius:50%;
       background:conic-gradient(
         var(--gold) 0%,
@@ -142,8 +142,8 @@
     }
 
     .circle-inner{
-      width:134px;
-      height:134px;
+      width:112px;
+      height:112px;
       background:#05080c;
       border-radius:50%;
       display:flex;
@@ -153,7 +153,7 @@
       gap:4px;
       font-weight:900;
       border:1px solid rgba(255,255,255,.10);
-      font-size:18px;
+      font-size:16px;
     }
 
     .circle-inner .vs{
@@ -164,8 +164,8 @@
     .pct-row{
       display:flex;
       justify-content:space-between;
-      gap:14px;
-      margin-top:14px;
+      gap:10px;
+      margin-top:10px;
     }
 
     .pct-box{
@@ -173,8 +173,9 @@
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.08);
       border-radius:12px;
-      padding:10px;
+      padding:8px;
       font-weight:900;
+      font-size:13px;
     }
 
     .pct-box span{
@@ -195,8 +196,8 @@
     .sub-title{
       color:#fff;
       font-weight:900;
-      font-size:14px;
-      margin:8px 0 12px;
+      font-size:12px;
+      margin:6px 0 8px;
     }
 
     .stat-row{
@@ -260,15 +261,15 @@
     .player-card{
       display:flex;
       align-items:center;
-      gap:10px;
-      padding:8px 0;
+      gap:8px;
+      padding:6px 0;
       border-bottom:1px solid rgba(255,255,255,.07);
     }
 
     .player-card img,
     .avatar-fallback{
-      width:40px;
-      height:40px;
+      width:36px;
+      height:36px;
       border-radius:50%;
       background:#111;
       border:1px solid rgba(255,255,255,.15);
@@ -292,29 +293,29 @@
     .p-name{
       font-weight:900;
       display:block;
-      font-size:12px;
+      font-size:11px;
     }
 
     .p-info{
       color:var(--muted);
-      font-size:10px;
+      font-size:9px;
       display:block;
-      margin-top:3px;
+      margin-top:2px;
     }
 
     .lineup-box{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:14px;
+      gap:12px;
     }
 
     .player{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:7px 0;
+      padding:5px 0;
       border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:12px;
+      font-size:11px;
     }
 
     .num{
@@ -325,14 +326,14 @@
 
     .badge{
       display:inline-block;
-      padding:4px 8px;
+      padding:3px 7px;
       border-radius:999px;
-      font-size:10px;
+      font-size:9px;
       font-weight:900;
       background:rgba(107,255,25,.12);
       color:var(--green);
       border:1px solid rgba(107,255,25,.35);
-      margin-bottom:8px;
+      margin-bottom:6px;
     }
 
     .note{
@@ -362,21 +363,23 @@
     .live-mini-card{
       background:rgba(10,14,18,.96);
       border:1px solid rgba(107,255,25,.28);
-      border-radius:22px;
-      padding:18px;
+      border-radius:18px;
+      padding:14px;
+      align-self:start;
     }
 
     .mini-top{
       display:grid;
       grid-template-columns:1fr auto 1fr;
-      gap:16px;
+      gap:10px;
       align-items:center;
     }
 
     .mini-player{
       background:rgba(255,255,255,.04);
-      border-radius:16px;
-      padding:12px;
+      border-radius:14px;
+      padding:9px;
+      min-width:0;
     }
 
     .mini-player.right{
@@ -386,15 +389,17 @@
     .mini-label{
       display:block;
       color:var(--green);
-      font-size:11px;
+      font-size:9px;
       font-weight:900;
-      margin-bottom:10px;
+      margin-bottom:7px;
+      letter-spacing:.7px;
     }
 
     .mini-flex{
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:8px;
+      min-width:0;
     }
 
     .mini-flex.right{
@@ -402,32 +407,60 @@
     }
 
     .mini-headshot{
-      width:52px;
-      height:52px;
+      width:42px;
+      height:42px;
       border-radius:50%;
       object-fit:cover;
       border:2px solid rgba(255,255,255,.12);
+      flex:0 0 auto;
+    }
+
+    .mini-name-row{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      min-width:0;
     }
 
     .mini-player strong{
       display:block;
-      font-size:15px;
+      font-size:13px;
+      line-height:1.15;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
     }
 
     .mini-player small{
       color:var(--muted);
-      font-size:11px;
+      font-size:10px;
     }
 
     .mini-vs{
       font-weight:900;
       color:var(--muted);
+      font-size:11px;
+      padding:0 2px;
+    }
+
+    .position-badge{
+      display:none;
+      color:var(--green);
+      border:1px solid rgba(107,255,25,.28);
+      background:rgba(107,255,25,.10);
+      border-radius:999px;
+      padding:2px 6px;
+      font-size:9px;
+      font-weight:900;
+      line-height:1;
+      flex:0 0 auto;
     }
 
     .mini-counts{
       display:grid;
       grid-template-columns:repeat(3,1fr);
-      margin-top:18px;
+      gap:6px;
+      margin-top:12px;
       text-align:center;
       font-size:12px;
       font-weight:900;
@@ -437,25 +470,26 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
+      gap:6px;
+      min-width:0;
     }
 
     .mini-count-title{
       color:#fff;
-      font-size:13px;
+      font-size:10px;
       font-weight:900;
-      letter-spacing:.7px;
+      letter-spacing:.5px;
     }
 
     .count-dots{
       display:flex;
       align-items:center;
-      gap:6px;
+      gap:4px;
     }
 
     .count-dot{
-      width:12px;
-      height:12px;
+      width:9px;
+      height:9px;
       border-radius:50%;
       background:transparent;
       border:2px solid rgba(255,255,255,.28);
@@ -482,17 +516,17 @@
     }
 
     .mini-zone-wrap{
-      margin-top:20px;
+      margin-top:12px;
       display:flex;
       justify-content:center;
       align-items:center;
-      gap:30px;
+      gap:18px;
     }
 
     .mini-zone{
       position:relative;
-      width:180px;
-      height:180px;
+      width:155px;
+      height:155px;
       background:
         linear-gradient(90deg,#e67c5f 0 33%,#5fa1ea 33% 66%,#8db7e8 66%);
       border-radius:8px;
@@ -501,14 +535,14 @@
 
     .mini-zone-box{
       position:absolute;
-      inset:34px;
-      border:4px solid white;
+      inset:29px;
+      border:3px solid white;
     }
 
     .mini-pitch-dot{
       position:absolute;
-      width:34px;
-      height:34px;
+      width:28px;
+      height:28px;
       border-radius:50%;
       background:red;
       color:#fff;
@@ -523,14 +557,14 @@
 
     .mini-bases{
       position:relative;
-      width:90px;
-      height:90px;
+      width:76px;
+      height:76px;
     }
 
     .mini-base{
       position:absolute;
-      width:22px;
-      height:22px;
+      width:18px;
+      height:18px;
       transform:rotate(45deg);
       border-radius:4px;
       border:2px solid rgba(255,255,255,.35);
@@ -545,42 +579,44 @@
 
     .mini-base.first{
       right:0;
-      top:34px;
+      top:29px;
     }
 
     .mini-base.second{
-      left:34px;
+      left:29px;
       top:0;
     }
 
     .mini-base.third{
       left:0;
-      top:34px;
+      top:29px;
     }
 
     .mini-bottom{
-      margin-top:20px;
+      margin-top:12px;
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:16px;
+      gap:10px;
     }
 
     .mini-last,
     .mini-prob{
       background:rgba(255,255,255,.04);
-      border-radius:14px;
-      padding:12px;
+      border-radius:12px;
+      padding:9px;
+      min-width:0;
     }
 
     .pitch-num{
-      width:30px;
-      height:30px;
+      width:24px;
+      height:24px;
       border-radius:50%;
       background:red;
       display:grid;
       place-items:center;
       font-weight:900;
-      margin-bottom:8px;
+      margin-bottom:6px;
+      font-size:11px;
     }
 
     .mini-bar{
@@ -589,7 +625,7 @@
       border-radius:999px;
       overflow:hidden;
       background:rgba(255,255,255,.08);
-      margin-top:8px;
+      margin-top:6px;
     }
 
     .mini-fill{
@@ -1070,10 +1106,10 @@
     /* PRO DASHBOARD LAYOUT */
     .pro-dashboard{
       display:grid;
-      grid-template-columns:46% 54%;
-      gap:16px;
+      grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);
+      gap:12px;
       align-items:start;
-      margin-bottom:18px;
+      margin-bottom:14px;
     }
 
     .pro-dashboard .hero-card,
@@ -1081,6 +1117,11 @@
       height:auto;
       min-height:0;
       margin-bottom:0;
+    }
+
+    .pro-dashboard .hero-card{
+      padding:18px;
+      border-radius:18px;
     }
 
     .pro-dashboard > *,
@@ -1684,12 +1725,12 @@
 
       .player-card img,
       .avatar-fallback{
-        width:50px;
-        height:50px;
+        width:38px;
+        height:38px;
       }
 
-      .hero-card,.panel,.live-gamecast-card{
-        padding:18px;
+      .hero-card,.panel,.live-gamecast-card,.live-mini-card{
+        padding:14px;
         border-radius:18px;
       }
 
@@ -1714,6 +1755,15 @@
 
       .mini-counts{
         grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .mini-zone-wrap{
+        gap:12px;
+      }
+
+      .mini-zone{
+        width:min(180px,58vw);
+        height:min(180px,58vw);
       }
 
       .strike-zone{
@@ -1788,6 +1838,17 @@
       return 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2232%22 fill=%22%230b1117%22/%3E%3Ccircle cx=%2232%22 cy=%2224%22 r=%2212%22 fill=%22%236bff19%22 fill-opacity=%22.32%22/%3E%3Cpath d=%22M14 56c3-13 12-20 18-20s15 7 18 20%22 fill=%22%236bff19%22 fill-opacity=%22.22%22/%3E%3C/svg%3E';
     }
 
+    function initialsForName(name){
+      const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+      if(!parts.length) return 'DM';
+      return parts.slice(0, 2).map(part => part[0]).join('').toUpperCase();
+    }
+
+    function mlbHeadshot(id, size = 120){
+      if(!id) return playerPlaceholderSrc();
+      return `https://img.mlbstatic.com/mlb-photos/image/upload/w_${size},q_auto:best/v1/people/${id}/headshot/67/current`;
+    }
+
     function pitcherImg(id){
       if(!id) return playerPlaceholderSrc();
       return `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${id}/headshot/67/current`;
@@ -1803,6 +1864,32 @@
       fallback.className = img.className ? `avatar-fallback ${img.className}` : 'avatar-fallback';
       fallback.textContent = 'DM';
       img.replaceWith(fallback);
+    }
+
+    function setLiveAvatarFallback(type, name){
+      const img = document.getElementById(`gc${type}Img`);
+      const avatar = document.getElementById(`gc${type}Avatar`);
+      if(!img || !avatar) return;
+      img.style.display = 'none';
+      avatar.style.display = 'inline-grid';
+      avatar.textContent = initialsForName(name || document.getElementById(`gc${type}`)?.textContent);
+    }
+
+    function setLivePlayerImage(type, player){
+      const img = document.getElementById(`gc${type}Img`);
+      const avatar = document.getElementById(`gc${type}Avatar`);
+      const id = player?.id || player?.personId || player?.playerId || player?.mlbId;
+      const name = player?.fullName || player?.name || document.getElementById(`gc${type}`)?.textContent || '';
+      if(!img || !avatar) return;
+
+      if(id){
+        avatar.style.display = 'none';
+        img.style.display = 'block';
+        img.onerror = () => setLiveAvatarFallback(type, name);
+        img.src = mlbHeadshot(id, 120);
+      }else{
+        setLiveAvatarFallback(type, name);
+      }
     }
 
     function isUnavailable(value){
@@ -2503,7 +2590,8 @@
                   <span class="mini-label">${game.awayAbbrev} PITCHER</span>
 
                   <div class="mini-flex">
-                    <img src="${awayPitcherImg}" class="mini-headshot" onerror="setPlayerImageFallback(this)">
+                    <img id="gcPitcherImg" src="${awayPitcherImg}" class="mini-headshot" onerror="setLiveAvatarFallback('Pitcher')">
+                    <span id="gcPitcherAvatar" class="avatar-fallback mini-headshot" style="display:none;">--</span>
 
                     <div>
                       <strong id="gcPitcher">${game.awayPitcher || '--'}</strong>
@@ -2520,10 +2608,14 @@
                   <span class="mini-label">${game.homeAbbrev} BATTER</span>
 
                   <div class="mini-flex right">
-                    <span class="avatar-fallback mini-headshot">DM</span>
+                    <img id="gcBatterImg" src="${playerPlaceholderSrc()}" class="mini-headshot" onerror="setLiveAvatarFallback('Batter')">
+                    <span id="gcBatterAvatar" class="avatar-fallback mini-headshot" style="display:none;">--</span>
 
                     <div>
-                      <strong id="gcBatter">--</strong>
+                      <div class="mini-name-row">
+                        <strong id="gcBatter">--</strong>
+                        <span id="gcBatterPos" class="position-badge"></span>
+                      </div>
                       <small id="gcBatterInfo">At Bat</small>
                     </div>
                   </div>
@@ -2711,8 +2803,28 @@
         
         updateLiveWinProbability(linescore);
 
-        document.getElementById('gcPitcher').textContent = matchup.pitcher?.fullName || '--';
-        document.getElementById('gcBatter').textContent = matchup.batter?.fullName || '--';
+        const pitcherName = matchup.pitcher?.fullName || '--';
+        const batterName = matchup.batter?.fullName || '--';
+        document.getElementById('gcPitcher').textContent = pitcherName;
+        document.getElementById('gcBatter').textContent = batterName;
+        setLivePlayerImage('Pitcher', matchup.pitcher);
+        setLivePlayerImage('Batter', matchup.batter);
+
+        const batterId = matchup.batter?.id || matchup.batter?.personId || matchup.batter?.playerId;
+        const batterGameData = batterId ? data.gameData?.players?.[`ID${batterId}`] : null;
+        const batterPosition =
+          matchup.batter?.primaryPosition?.abbreviation ||
+          matchup.batter?.primaryPosition?.code ||
+          matchup.batter?.position?.abbreviation ||
+          batterGameData?.primaryPosition?.abbreviation ||
+          batterGameData?.primaryPosition?.code ||
+          (typeof matchup.batter?.position === 'string' ? matchup.batter.position : '') ||
+          '';
+        const batterPosBadge = document.getElementById('gcBatterPos');
+        if(batterPosBadge){
+          batterPosBadge.textContent = batterPosition;
+          batterPosBadge.style.display = batterPosition ? 'inline-block' : 'none';
+        }
 
         updateCountDots('gcBalls', count.balls);
         updateCountDots('gcStrikes', count.strikes);
