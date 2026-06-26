@@ -66,7 +66,7 @@ async function fetchOdds() {
   const data = await res.json();
 
   if (!res.ok) {
-    console.log('Odds API error:', res.status);
+    console.log('Odds API error:', data);
     return null;
   }
 

@@ -18,6 +18,8 @@ const fighterImages = {
   "Valentina Shevchenko": "https://dmxg5wxfqgb4u.cloudfront.net/styles/athlete_bio_full_body/s3/2024-09/SHEVCHENKO_VALENTINA_BELT_09-14.png"
 };
 
+console.log('ODDS KEY UFC:', process.env.ODDS_API_KEY ? 'LOADED' : 'MISSING');
+
 /* =========================================================
    🥊 DATA MORE UFC ANALYTICS PRO
 ========================================================= */
@@ -329,11 +331,11 @@ router.get('/fights', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ UFC API ERROR:', error.message);
+    console.error('❌ UFC API ERROR:', error);
 
     res.status(500).json({
       ok: false,
-      error: 'Unable to load UFC fights'
+      error: error.message
     });
   }
 });

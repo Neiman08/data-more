@@ -1112,6 +1112,8 @@ async function generateAIParlay() {
   card.innerHTML = `<div class="loading">🤖 AI Selector scanning MLB board...</div>`;
 
   try {
+    console.log("📦 Sending to AI:", window.fullAnalysisData);
+
     const res = await fetch("/api/ai/analyze", {
       method: "POST",
       headers: {
@@ -1123,6 +1125,7 @@ async function generateAIParlay() {
     });
 
     const text = await res.text();
+    console.log("🔥 RAW AI RESPONSE:", text);
 
     let data;
     try {
