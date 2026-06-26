@@ -596,6 +596,16 @@ function getChicagoDate(){
 
 dateInput.value = getChicagoDate();
 
+const TEAM_LOGO_ALIASES = {
+  ATH: 'OAK',
+  CLE: 'MLB'
+};
+
+function getTeamLogoSrc(abbrev){
+  const safeAbbrev = String(abbrev || 'MLB').toUpperCase();
+  return `/logos/${TEAM_LOGO_ALIASES[safeAbbrev] || safeAbbrev}.png`;
+}
+
 async function initTicker(){
   const ticker = document.getElementById('tickerWrapper');
 
@@ -611,13 +621,13 @@ async function initTicker(){
             html += `
               <div class="ticker-item">
                 <span class="sport-tag tag-mlb">MLB</span>
-                <img src="/logos/${g.awayAbbrev}.png" onerror="this.style.display='none'">
+                <img src="${getTeamLogoSrc(g.awayAbbrev)}" onerror="this.style.display='none'">
                 ${g.awayAbbrev}
                 <span class="ticker-score">${g.awayScore ?? 0}</span>
                 @
                 <span class="ticker-score">${g.homeScore ?? 0}</span>
                 ${g.homeAbbrev}
-                <img src="/logos/${g.homeAbbrev}.png" onerror="this.style.display='none'">
+                <img src="${getTeamLogoSrc(g.homeAbbrev)}" onerror="this.style.display='none'">
                 <span class="ticker-status">${g.status || ''}</span>
               </div>
             `;
@@ -709,7 +719,7 @@ async function loadGames(){
       card.innerHTML = `
         <div class="match-header" onclick="window.location.href='/game-detail.html?gamePk=${game.gamePk}&date=${dateInput.value}'" style="cursor:pointer;">
           <div class="team-box">
-            <img src="/logos/${game.awayAbbrev}.png" class="team-logo">
+            <img src="${getTeamLogoSrc(game.awayAbbrev)}" class="team-logo" onerror="this.src='/logos/MLB.png'">
             <span class="team-abbr">${game.awayAbbrev}</span>
             <span class="team-record">${game.awayWins || 0}-${game.awayLosses || 0}</span>
             ${renderLast5Boxes(game.awayLast5)}
@@ -726,7 +736,7 @@ async function loadGames(){
           </div>
 
           <div class="team-box">
-            <img src="/logos/${game.homeAbbrev}.png" class="team-logo">
+            <img src="${getTeamLogoSrc(game.homeAbbrev)}" class="team-logo" onerror="this.src='/logos/MLB.png'">
             <span class="team-abbr">${game.homeAbbrev}</span>
             <span class="team-record">${game.homeWins || 0}-${game.homeLosses || 0}</span>
             ${renderLast5Boxes(game.homeLast5)}
