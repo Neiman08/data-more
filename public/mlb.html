@@ -796,8 +796,24 @@ function canTrackPickForStatus(gameStatus){
     raw.includes('warmup');
 }
 
+function trackingStatusHtml(status){
+  const positive = status?.tracked === true;
+  const message = status?.message || 'Tracking unavailable';
+  const color = positive ? '#72ff00' : '#fbbf24';
+  const bg = positive ? 'rgba(114,255,0,.08)' : 'rgba(251,191,36,.08)';
+  const border = positive ? 'rgba(114,255,0,.25)' : 'rgba(251,191,36,.25)';
+
+  return `
+    <div style="margin-top:8px;padding:7px 9px;border:1px solid ${border};border-radius:8px;background:${bg};color:${color};font-size:10px;font-weight:800;letter-spacing:.04em;">
+      ${message}
+    </div>
+  `;
+}
+
 async function saveTrackedMlbPicks({ gamePk, date, awayTeam, homeTeam, analysis, modelProbability, isPro }){
-  if(!analysis?.pick) return;
+  if(!analysis?.pick) {
+    return { tracked: false, message: 'Tracking unavailable' };
+  }
 
   const event = `${awayTeam} @ ${homeTeam}`;
   const picks = [{
@@ -811,6 +827,7 @@ async function saveTrackedMlbPicks({ gamePk, date, awayTeam, homeTeam, analysis,
     pick: analysis.pick,
     team: analysis.pick,
     stake: 1,
+    result: 'pending',
     source: 'MLB AI Analysis',
     modelProbability
   }];
@@ -829,19 +846,33 @@ async function saveTrackedMlbPicks({ gamePk, date, awayTeam, homeTeam, analysis,
       pick: analysis.runLine.pick,
       line: lineMatch ? Number(lineMatch[1]) : undefined,
       stake: 1,
+      result: 'pending',
       source: 'MLB AI Analysis',
       modelProbability: analysis.runLine.coverProb
     });
   }
 
   try{
-    await fetch('/api/picks/save', {
+    const response = await fetch('/api/picks/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(picks)
     });
+
+    const data = await response.json().catch(() => ({}));
+
+    if(!response.ok || data.ok === false){
+      throw new Error(data.error || 'Unable to save pick');
+    }
+
+    return {
+      tracked: true,
+      message: 'Tracked for Results',
+      count: data.count || picks.length
+    };
   }catch(e){
     console.warn('Unable to save tracked MLB picks', e);
+    return { tracked: false, message: 'Tracking unavailable' };
   }
 }
 
@@ -926,8 +957,8 @@ async function analyzeGame(gamePk,awayAbbrev,homeAbbrev,gameStatus){
     window.fullAnalysisData = window.fullAnalysisData.filter(g => String(g.gamePk) !== String(gamePk));
     window.fullAnalysisData.push(analyzedGame);
 
-    if(canTrackPickForStatus(gameStatus)){
-      saveTrackedMlbPicks({
+    const trackingStatus = canTrackPickForStatus(gameStatus)
+      ? await saveTrackedMlbPicks({
         gamePk,
         date: dateInput.value,
         awayTeam: awayAbbrev,
@@ -935,8 +966,10 @@ async function analyzeGame(gamePk,awayAbbrev,homeAbbrev,gameStatus){
         analysis: a,
         modelProbability: Number(winPct).toFixed(2),
         isPro
-      });
-    }
+      })
+      : { tracked: false, message: 'Not tracked: game already started' };
+
+    html += trackingStatusHtml(trackingStatus);
 
     if(!isPro){
       html += `

@@ -1343,10 +1343,16 @@ function resolveSoccerPick(pick, game = {}) {
 async function saveTrackedSoccerPick({ date, game, analysis }) {
   const pick = resolveSoccerPick(analysis?.pick, game);
 
-  if (!pick || pick === 'N/A' || !game?.fixtureId || !isPregameSoccerStatus(game.status)) return;
+  if (!pick || pick === 'N/A' || !game?.fixtureId) {
+    return { tracked: false, message: 'Tracking unavailable' };
+  }
+
+  if (!isPregameSoccerStatus(game.status)) {
+    return { tracked: false, message: 'Not tracked: game already started' };
+  }
 
   try {
-    await fetch('/api/picks/save', {
+    const response = await fetch('/api/picks/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1360,12 +1366,40 @@ async function saveTrackedSoccerPick({ date, game, analysis }) {
         pick,
         team: pick === 'Draw' ? undefined : pick,
         stake: 1,
+        result: 'pending',
         source: 'Soccer AI Analysis'
       })
     });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || data.ok === false) {
+      throw new Error(data.error || 'Unable to save pick');
+    }
+
+    return {
+      tracked: true,
+      message: 'Tracked for Results',
+      count: data.count || 1
+    };
   } catch (error) {
     console.warn('Unable to save tracked Soccer pick', error);
+    return { tracked: false, message: 'Tracking unavailable' };
   }
+}
+
+function trackingStatusHtml(status) {
+  const positive = status?.tracked === true;
+  const message = status?.message || 'Tracking unavailable';
+  const color = positive ? '#72ff00' : '#fbbf24';
+  const bg = positive ? 'rgba(114,255,0,.08)' : 'rgba(251,191,36,.08)';
+  const border = positive ? 'rgba(114,255,0,.25)' : 'rgba(251,191,36,.25)';
+
+  return `
+    <div style="margin-top:8px;padding:7px 9px;border:1px solid ${border};border-radius:8px;background:${bg};color:${color};font-size:10px;font-weight:800;letter-spacing:.04em;">
+      ${escapeHtml(message)}
+    </div>
+  `;
 }
 
 function firstValidArray(...arrays) {
@@ -1502,7 +1536,7 @@ async function analyze(btn, matchId, leagueKey) {
     const a = data.analysis || data;
     const game = data.game || {};
 
-    saveTrackedSoccerPick({
+    const trackingStatus = await saveTrackedSoccerPick({
       date,
       game,
       analysis: a
@@ -1610,6 +1644,8 @@ async function analyze(btn, matchId, leagueKey) {
           Model Probability: ${pct(a.probability ?? a.pickProbability ?? a.winProbability)}
         </div>
       </div>
+
+      ${trackingStatusHtml(trackingStatus)}
 
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
         <span>Main 1X2 Pick:</span>
