@@ -1,6 +1,7 @@
 import express from 'express';
 
 const router = express.Router();
+const ODDS_API = 'https://api.the-odds-api.com/v4/sports/baseball_mlb/odds';
 
 const TEAM_ABBR = {
   "Boston Red Sox": "BOS",
@@ -87,6 +88,158 @@ function seasonYear(date) {
 function safeNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function normalizeName(value = '') {
+  return String(value).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function americanToImplied(odds) {
+  const n = Number(odds);
+  if (!Number.isFinite(n)) return null;
+  return n > 0 ? 100 / (n + 100) : Math.abs(n) / (Math.abs(n) + 100);
+}
+
+function formatAmericanOdds(odds) {
+  const n = Number(odds);
+  if (!Number.isFinite(n)) return null;
+  return n > 0 ? `+${n}` : String(n);
+}
+
+function formatPct(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? `${n.toFixed(1)}%` : null;
+}
+
+async function fetchCurrentOdds() {
+  try {
+    if (!process.env.ODDS_API_KEY) return [];
+
+    const url = new URL(ODDS_API);
+    url.searchParams.set('apiKey', process.env.ODDS_API_KEY);
+    url.searchParams.set('regions', process.env.ODDS_REGION || 'us');
+    url.searchParams.set('markets', process.env.ODDS_MARKETS || 'h2h,spreads,totals');
+    url.searchParams.set('oddsFormat', 'american');
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Odds API error:', data);
+      return [];
+    }
+
+    return Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error('Error fetchCurrentOdds:', err);
+    return [];
+  }
+}
+
+function isSameMatchup(oddsGame, awayName, homeName) {
+  const oddsAway = normalizeName(oddsGame?.away_team);
+  const oddsHome = normalizeName(oddsGame?.home_team);
+  const away = normalizeName(awayName);
+  const home = normalizeName(homeName);
+
+  return (
+    oddsAway &&
+    oddsHome &&
+    away &&
+    home &&
+    (oddsAway.includes(away) || away.includes(oddsAway)) &&
+    (oddsHome.includes(home) || home.includes(oddsHome))
+  );
+}
+
+function isSameOddsWindow(oddsGame, rawGame) {
+  const oddsTime = new Date(oddsGame?.commence_time).getTime();
+  const gameTime = new Date(rawGame?.gameDate).getTime();
+  if (!Number.isFinite(oddsTime) || !Number.isFinite(gameTime)) return false;
+
+  const hoursDiff = Math.abs(oddsTime - gameTime) / (1000 * 60 * 60);
+  return hoursDiff <= 18;
+}
+
+function findOddsForRawGame(oddsData, rawGame) {
+  const awayName = rawGame?.teams?.away?.team?.name;
+  const homeName = rawGame?.teams?.home?.team?.name;
+
+  return (oddsData || []).find(oddsGame =>
+    isSameMatchup(oddsGame, awayName, homeName) &&
+    isSameOddsWindow(oddsGame, rawGame)
+  ) || null;
+}
+
+function getMarket(bookmaker, marketKey) {
+  return bookmaker?.markets?.find(market => market.key === marketKey) || null;
+}
+
+function outcomeForTeam(market, teamName) {
+  const team = normalizeName(teamName);
+  return market?.outcomes?.find(outcome => {
+    const name = normalizeName(outcome.name);
+    return name && team && (name.includes(team) || team.includes(name));
+  }) || null;
+}
+
+function formatSpread(outcome) {
+  if (!outcome || outcome.point === undefined || outcome.price === undefined) return null;
+  const point = Number(outcome.point);
+  const pointText = Number.isFinite(point) && point > 0 ? `+${point}` : String(outcome.point);
+  return `${pointText} (${formatAmericanOdds(outcome.price)})`;
+}
+
+function formatTotal(outcome) {
+  if (!outcome || outcome.point === undefined || outcome.price === undefined) return null;
+  return `${outcome.name} ${outcome.point} (${formatAmericanOdds(outcome.price)})`;
+}
+
+function normalizeOddsForGame(oddsGame, rawGame, modelFavorite, modelPct) {
+  if (!oddsGame?.bookmakers?.length) return null;
+
+  const preferredBook = oddsGame.bookmakers.find(book => book.key === 'fanduel') ||
+    oddsGame.bookmakers.find(book => book.key === 'draftkings') ||
+    oddsGame.bookmakers[0];
+
+  const awayName = rawGame?.teams?.away?.team?.name;
+  const homeName = rawGame?.teams?.home?.team?.name;
+  const h2h = getMarket(preferredBook, 'h2h');
+  const spreads = getMarket(preferredBook, 'spreads');
+  const totals = getMarket(preferredBook, 'totals');
+
+  const awayMl = outcomeForTeam(h2h, awayName);
+  const homeMl = outcomeForTeam(h2h, homeName);
+  const awaySpread = outcomeForTeam(spreads, awayName);
+  const homeSpread = outcomeForTeam(spreads, homeName);
+  const total = totals?.outcomes?.find(outcome => outcome.name === 'Over') || totals?.outcomes?.[0];
+  const modelSide = normalizeName(modelFavorite).includes(normalizeName(homeName)) ? homeName : awayName;
+  const modelOutcome = outcomeForTeam(h2h, modelSide);
+  const implied = americanToImplied(modelOutcome?.price);
+  const edge = implied !== null && Number.isFinite(Number(modelPct))
+    ? Number(modelPct) - (implied * 100)
+    : null;
+
+  return {
+    source: 'The Odds API',
+    sportsbook: preferredBook.title || preferredBook.key,
+    eventId: oddsGame.id,
+    lastUpdate: h2h?.last_update || preferredBook.last_update,
+    currentMoneyline: [
+      awayMl ? `${TEAM_ABBR[awayName] || TEAM_ID_TO_ABBR[rawGame?.teams?.away?.team?.id] || awayName}: ${formatAmericanOdds(awayMl.price)}` : null,
+      homeMl ? `${TEAM_ABBR[homeName] || TEAM_ID_TO_ABBR[rawGame?.teams?.home?.team?.id] || homeName}: ${formatAmericanOdds(homeMl.price)}` : null
+    ].filter(Boolean).join(' / ') || null,
+    currentSpread: [
+      awaySpread ? `${TEAM_ABBR[awayName] || TEAM_ID_TO_ABBR[rawGame?.teams?.away?.team?.id] || awayName} ${formatSpread(awaySpread)}` : null,
+      homeSpread ? `${TEAM_ABBR[homeName] || TEAM_ID_TO_ABBR[rawGame?.teams?.home?.team?.id] || homeName} ${formatSpread(homeSpread)}` : null
+    ].filter(Boolean).join(' / ') || null,
+    currentTotal: total ? formatTotal(total) : null,
+    modelSide,
+    modelSideMoneyline: modelOutcome ? formatAmericanOdds(modelOutcome.price) : null,
+    vegasImplied: formatPct(implied !== null ? implied * 100 : null),
+    dataMoreProbability: formatPct(modelPct),
+    modelEdge: edge !== null ? `${edge >= 0 ? '+' : ''}${edge.toFixed(1)}%` : null
+  };
 }
 
 async function getLast5(teamId, beforeDate) {
@@ -306,7 +459,8 @@ function buildPublicGameCenter({
   homePitcherStats,
   awayTeamStats,
   homeTeamStats,
-  headToHead
+  headToHead,
+  odds
 }) {
   const awayRunsPerGame = awayTeamStats?.runs
     ? awayTeamStats.runs / Math.max(awayTeamStats.gamesPlayed || 35, 1)
@@ -342,6 +496,10 @@ function buildPublicGameCenter({
     homeWinPct > awayWinPct
       ? homeTeam?.team?.name
       : awayTeam?.team?.name;
+  const modelPct = Math.max(awayWinPct, homeWinPct);
+  const oddsStatus = odds
+    ? 'Current sportsbook odds available.'
+    : 'Model edge ready. Waiting for real sportsbook odds.';
 
   return {
     ok: true,
@@ -418,11 +576,11 @@ function buildPublicGameCenter({
       },
       marketEdge: {
         modelFavorite,
-        vegasFavorite: 'Pending odds',
-        modelPct: Math.max(awayWinPct, homeWinPct),
-        vegasImpliedPct: 'Pending',
-        edgePct: 'Pending',
-        status: 'Model edge ready. Waiting for real sportsbook odds.'
+        vegasFavorite: odds?.modelSide || null,
+        modelPct,
+        vegasImpliedPct: odds?.vegasImplied || null,
+        edgePct: odds?.modelEdge || null,
+        status: oddsStatus
       },
       alerts: [
         'Review confirmed lineup before first pitch',
@@ -463,13 +621,7 @@ function buildPublicGameCenter({
       humidity: 'Pending',
       parkFactor: 'Pending'
     },
-    odds: {
-      openLine: 'Pending',
-      currentLine: 'Pending',
-      movement: 'Pending',
-      modelEdge: 'Pending',
-      vegasImplied: 'Pending'
-    }
+    odds: odds || {}
   };
 }
 
@@ -564,14 +716,34 @@ router.get('/game-center/:gamePk', async (req, res) => {
       homePitcherStats,
       awayTeamStats,
       homeTeamStats,
-      headToHead
+      headToHead,
+      oddsData
     ] = await Promise.all([
       getPitcherStats(awayPitcherId, season),
       getPitcherStats(homePitcherId, season),
       getTeamStats(awayTeamId, season),
       getTeamStats(homeTeamId, season),
-      getHeadToHead(awayTeamId, homeTeamId, queryDate)
+      getHeadToHead(awayTeamId, homeTeamId, queryDate),
+      fetchCurrentOdds()
     ]);
+    const rawOdds = findOddsForRawGame(oddsData, rawGame);
+
+    const projectedCenter = buildPublicGameCenter({
+      awayTeam,
+      homeTeam,
+      awayPitcherStats,
+      homePitcherStats,
+      awayTeamStats,
+      homeTeamStats,
+      headToHead,
+      odds: null
+    });
+    const odds = normalizeOddsForGame(
+      rawOdds,
+      rawGame,
+      projectedCenter.advancedModel.marketEdge.modelFavorite,
+      projectedCenter.advancedModel.marketEdge.modelPct
+    );
 
     res.json(buildPublicGameCenter({
       awayTeam,
@@ -580,7 +752,8 @@ router.get('/game-center/:gamePk', async (req, res) => {
       homePitcherStats,
       awayTeamStats,
       homeTeamStats,
-      headToHead
+      headToHead,
+      odds
     }));
 
   } catch (error) {

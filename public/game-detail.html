@@ -1972,6 +1972,20 @@
       return Number.isFinite(n) ? `${n.toFixed(1)}%` : String(value);
     }
 
+    function parsePctValue(value){
+      if(isUnavailable(value)) return null;
+      const n = Number(String(value).replace('%', '').trim());
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function marketEdgeValue(modelProb, vegasImplied){
+      const model = Number(modelProb);
+      const vegas = parsePctValue(vegasImplied);
+      if(!Number.isFinite(model) || !Number.isFinite(vegas)) return null;
+      const edge = model - vegas;
+      return `${edge >= 0 ? '+' : ''}${edge.toFixed(1)}%`;
+    }
+
     function compactNumber(value){
       if(isUnavailable(value)) return null;
       const n = Number(value);
@@ -2035,7 +2049,7 @@
       const oppAbbrev = favIsHome ? game.awayAbbrev : game.homeAbbrev;
       const favPct = Math.max(Number(awayPct), Number(homePct)).toFixed(1);
       const bullpenNote = centerData?.bullpen ? 'bullpen availability and fatigue checks remain part of the pre-bet review' : 'bullpen context is still pending';
-      const marketNote = centerData?.odds?.currentLine && centerData.odds.currentLine !== 'Pending'
+      const marketNote = centerData?.odds?.currentMoneyline
         ? 'current market pricing is available for comparison'
         : 'sportsbook line data is not available yet, so Data More is prioritizing model-side fundamentals';
 
@@ -2060,7 +2074,7 @@
       const favorite = modelFavorite(game, analysis, awayPct, homePct);
       const modelProb = Math.max(Number(awayPct), Number(homePct));
       const vegasProb = centerData?.odds?.vegasImplied || centerData?.advancedModel?.marketEdge?.vegasImpliedPct || 'Pending';
-      const edge = centerData?.odds?.modelEdge || centerData?.advancedModel?.marketEdge?.edgePct || 'Pending';
+      const edge = marketEdgeValue(modelProb, vegasProb) || centerData?.odds?.modelEdge || centerData?.advancedModel?.marketEdge?.edgePct || 'Pending';
       const confidence = analysis.confidence || analysis.confidenceLevel || 'Pending';
       const hasProjectedScore = hasAnyData(advancedModel.projectedRuns.away, advancedModel.projectedRuns.home);
       const expectedScore = hasProjectedScore
@@ -2099,41 +2113,30 @@
     function renderMarketIntelligence({ centerData, modelProb, confidence }){
       const odds = centerData?.odds || {};
       const hasMarketData = hasAnyData(
-        odds.currentLine,
-        odds.openLine,
+        odds.currentMoneyline,
+        odds.currentSpread,
+        odds.currentTotal,
         odds.vegasImplied,
-        odds.moneyline,
-        odds.favorite,
-        odds.vegasFavorite,
-        odds.bookmaker,
         odds.sportsbook
       );
 
       if(!hasMarketData) return '';
-
-      const move = displayValue(odds.movement);
-      const hasMove = !isUnavailable(move);
+      const dataMoreProbability = pctValue(modelProb);
+      const marketEdge = marketEdgeValue(modelProb, odds.vegasImplied) || odds.modelEdge;
 
       return `
         <section class="premium-card">
           <div class="card-head">
             <div><div class="card-kicker">Market Intelligence</div><h3>Sportsbook Signal</h3></div>
-            <span class="signal-badge ${hasMove ? 'warn' : ''}">${hasMove ? 'Movement' : 'Pending'}</span>
+            <span class="signal-badge">${displayValue(odds.sportsbook, 'Current')}</span>
           </div>
-          ${statLine('Opening Line', odds.openLine)}
-          ${statLine('Current Line', odds.currentLine)}
-          ${statLine('Line Movement', odds.movement)}
-          ${statLine('Steam Move', odds.steamMove || 'Pending')}
-          ${statLine('Reverse Line Movement', odds.reverseLineMovement || 'Pending')}
-          ${statLine('Public Money %', odds.publicMoney || 'Pending')}
-          ${statLine('Sharp Money %', odds.sharpMoney || 'Pending')}
-          ${statLine('Ticket %', odds.ticketPct || 'Pending')}
-          ${statLine('Money %', odds.moneyPct || 'Pending')}
-          ${statLine('Closing Line Value', odds.clv || 'Pending')}
+          ${statLine('Current Moneyline', odds.currentMoneyline)}
+          ${statLine('Current Spread', odds.currentSpread)}
+          ${statLine('Current Total', odds.currentTotal)}
+          ${statLine('Sportsbook', odds.sportsbook)}
           ${statLine('Implied Probability', odds.vegasImplied)}
-          ${statLine('Data More Probability', pctValue(modelProb))}
-          ${statLine('Market Edge', odds.modelEdge)}
-          ${statLine('Confidence', confidence)}
+          ${statLine('Data More Probability', dataMoreProbability)}
+          ${statLine('Market Edge', marketEdge)}
         </section>
       `;
     }
@@ -2380,16 +2383,18 @@
 
     function renderVegasVsDataMore(game, centerData, modelProb){
       const odds = centerData?.odds || {};
-      if(!hasAnyData(odds.vegasImplied, odds.modelEdge, odds.currentLine, odds.openLine)) return '';
+      if(!hasAnyData(odds.vegasImplied, odds.modelEdge, odds.dataMoreProbability)) return '';
+      const dataMoreProbability = pctValue(modelProb);
+      const marketEdge = marketEdgeValue(modelProb, odds.vegasImplied) || odds.modelEdge;
 
       return `
         <section class="premium-card">
           <div class="card-head"><div><div class="card-kicker">Vegas vs Data More</div><h3>Probability Gap</h3></div></div>
           <div class="metric-grid">
             ${metricTile('Vegas', odds.vegasImplied)}
-            ${metricTile('Data More', pctValue(modelProb))}
-            ${metricTile('Edge', odds.modelEdge)}
-            ${metricTile('Expected Value', odds.modelEdge)}
+            ${metricTile('Data More', dataMoreProbability)}
+            ${metricTile('Edge', marketEdge)}
+            ${metricTile('Moneyline', odds.modelSideMoneyline)}
           </div>
         </section>
       `;
@@ -2430,7 +2435,10 @@
         ...awayHrPlayers.map(p => ['HR', p]),
         ...homeHrPlayers.map(p => ['HR', p])
       ]
-        .filter(([, p]) => hasAnyData(p.probability, p.prob, p.hrProbability, p.hrProb))
+        .filter(([market, p]) => market === 'HR'
+          ? hasAnyData(p.hrChance, p.hrProbability, p.homeRunProbability, p.hrProb, p.probability, p.prob)
+          : hasAnyData(p.hitChance, p.hitProbability, p.probability, p.prob)
+        )
         .slice(0, 8);
 
       if(!props.length) return '';
@@ -2439,8 +2447,11 @@
         <section class="premium-card">
           <div class="card-head"><div><div class="card-kicker">Player Props Center</div><h3>Top Recommendations</h3></div></div>
           ${props.map(([market, p]) => {
-            const probability = p.probability ?? p.prob ?? p.hrProbability ?? p.hrProb;
-            return statLine(`${market}: ${p.playerName || p.name || '--'}`, `${probability}%`);
+            const probability = market === 'HR'
+              ? p.hrChance ?? p.hrProbability ?? p.homeRunProbability ?? p.hrProb ?? p.probability ?? p.prob
+              : p.hitChance ?? p.hitProbability ?? p.probability ?? p.prob;
+            const label = market === 'HR' ? 'Data More HR Probability' : 'Data More Hit Probability';
+            return statLine(`${label}: ${p.playerName || p.name || '--'}`, `${probability}%`);
           }).join('')}
         </section>
       `;
@@ -2460,8 +2471,39 @@
       return `<section class="premium-card"><div class="card-head"><div><div class="card-kicker">Betting Recommendations</div><h3>Confidence Board</h3></div></div>${rows.map(([market,pick,star]) => `<div class="stat-row"><span>${market}</span><span>${displayValue(pick)} ${star ? `<span class="stars">${star}</span>` : ''}</span></div>`).join('')}</section>`;
     }
 
-    function renderHistoricalPerformance(){
-      return '';
+    function renderHistoricalPerformance(performanceData){
+      const overall = performanceData?.overall || {};
+      const hasPerformance = hasAnyData(
+        overall.winRate,
+        overall.wins,
+        overall.losses,
+        overall.profit,
+        overall.roi
+      );
+
+      if(!performanceData?.ok || !hasPerformance) return '';
+
+      const record = `${overall.wins ?? 0}-${overall.losses ?? 0}${overall.pushes ? `-${overall.pushes}` : ''}`;
+      const profit = Number(overall.profit);
+      const profitText = Number.isFinite(profit)
+        ? `${profit > 0 ? '+' : ''}${profit.toFixed(2)}u`
+        : null;
+      const roi = Number(overall.roi);
+      const roiText = Number.isFinite(roi)
+        ? `${roi > 0 ? '+' : ''}${roi.toFixed(1)}%`
+        : null;
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Historical Performance</div><h3>Last 30 Days</h3></div></div>
+          <div class="metric-grid">
+            ${metricTile('Win Rate', `${overall.winRate}%`)}
+            ${metricTile('Record', record)}
+            ${metricTile('Profit', profitText)}
+            ${metricTile('ROI', roiText)}
+          </div>
+        </section>
+      `;
     }
 
     function renderConfidenceMeter({ centerData, modelProb }){
@@ -2510,6 +2552,7 @@
         const propsData = await safeFetch(`/api/baseball/player-props/${gamePk}`, { ok:false });
         const analysisData = await safeFetch(`/api/analyze/${gamePk}?date=${date}`, { ok:false });
         const centerData = await safeFetch(`/api/baseball/game-center/${gamePk}?date=${date}`, {});
+        const performanceData = await safeFetch('/api/performance/summary?days=30', { ok:false });
 
         if(!gamesData.ok){
           content.innerHTML = 'Unable to load schedule.';
@@ -2760,7 +2803,8 @@
             'premium-grid',
             renderSimulationCenter(game, advancedModel),
             renderPlayerPropsCenter(awayHitPlayers, homeHitPlayers, awayHrPlayers, homeHrPlayers),
-            renderBettingRecommendations({ analysis, modelProb, advancedModel })
+            renderBettingRecommendations({ analysis, modelProb, advancedModel }),
+            renderHistoricalPerformance(performanceData)
           )}
 
           ${renderGrid(
@@ -3029,11 +3073,16 @@
 
     function playerInfoParts(p, type = 'hit'){
       const probability = type === 'hr'
-        ? p.hrProbability ?? p.homeRunProbability ?? p.hrProb ?? p.probability ?? p.prob
-        : p.probability ?? p.prob;
+        ? p.hrChance ?? p.hrProbability ?? p.homeRunProbability ?? p.hrProb ?? p.probability ?? p.prob
+        : p.hitChance ?? p.hitProbability ?? p.probability ?? p.prob;
       const parts = [];
 
-      if(!isUnavailable(probability)) parts.push(`Prob: ${probability}%`);
+      if(!isUnavailable(probability)){
+        parts.push(type === 'hr'
+          ? `Data More HR Probability: ${probability}%`
+          : `Data More Hit Probability: ${probability}%`
+        );
+      }
 
       if(type === 'hr'){
         const hr = p.hr ?? p.HR ?? p.homeRuns;
