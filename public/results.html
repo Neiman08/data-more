@@ -355,8 +355,8 @@
 
     <section class="container">
       <div class="page-kicker">Performance Ledger</div>
-      <h1>RESULTS TRACKER</h1>
-      <p class="subtitle">Track Data More picks against real final scores, with grading shown only when a saved pick exists for the game.</p>
+      <h1>DAILY RESULTS REPORT</h1>
+      <p class="subtitle">Yesterday's real scoreboard with Data More pick grading for the selected report date only.</p>
 
       <div class="sport-switcher"></div>
 
@@ -379,7 +379,7 @@
         </select>
         <button class="filter-btn" id="gradeResultsBtn" type="button">Grade Results</button>
       </div>
-      <p class="source-note" id="sourceNote">Loading real results from available project APIs...</p>
+      <p class="source-note" id="sourceNote">Loading yesterday's real results from available project APIs...</p>
 
       <div class="summary-grid" id="summaryGrid">
         <article class="summary-card">
@@ -780,11 +780,15 @@
       }
     }
 
-    async function loadAllResults(selectedDate) {
-      try {
-        await gradePicks(selectedDate);
-      } catch (error) {
-        console.warn('Pick grading unavailable', error);
+    async function loadAllResults(selectedDate, options = {}) {
+      const shouldGrade = options.grade !== false;
+
+      if (shouldGrade) {
+        try {
+          await gradePicks(selectedDate);
+        } catch (error) {
+          console.warn('Pick grading unavailable', error);
+        }
       }
 
       const trackedPicks = await safeLoad(() => loadTrackedPicks(selectedDate));
@@ -885,6 +889,7 @@
     }
 
     function renderSourceNote(groups, visibleResults) {
+      const selectedDate = dateFilter.value;
       const notes = groups
         .filter(group => group.error)
         .map(group => `${group.sport || 'Source'}: ${group.error}`);
@@ -898,6 +903,7 @@
         : 'No tracked picks found for this date.';
 
       sourceNote.textContent = [
+        `Daily report for ${formatDate(selectedDate)}.`,
         visibleResults.length ? `Loaded real scoreboard from ${sources.join(', ')}.` : 'No real results found for this date.',
         pickSource,
         ...notes
@@ -938,13 +944,13 @@
         .join('');
     }
 
-    async function refreshResults() {
+    async function refreshResults(options = {}) {
       const selectedDate = dateFilter.value;
 
       resultsList.innerHTML = '<div class="empty-state">Loading real results...</div>';
       resultCountLabel.textContent = 'Loading results...';
 
-      const groups = await loadAllResults(selectedDate);
+      const groups = await loadAllResults(selectedDate, options);
       window.currentResultGroups = groups;
       renderResults(groups);
     }
@@ -956,7 +962,7 @@
 
       try {
         await gradePicks(selectedDate);
-        await refreshResults();
+        await refreshResults({ grade: false });
       } catch (error) {
         sourceNote.textContent = `Unable to grade results: ${error.message}`;
       } finally {
