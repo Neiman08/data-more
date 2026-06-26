@@ -333,9 +333,17 @@
     }
 
     .ai-market-chip.active {
-      border-color: rgba(107,255,25,.75);
-      box-shadow: 0 0 0 1px rgba(107,255,25,.18), 0 18px 42px rgba(107,255,25,.12);
-      background: linear-gradient(180deg, rgba(107,255,25,.16), rgba(107,255,25,.045));
+      border-color: rgba(114,255,0,.98);
+      box-shadow: 0 0 0 2px rgba(114,255,0,.28), 0 20px 48px rgba(107,255,25,.2);
+      background: linear-gradient(180deg, rgba(107,255,25,.2), rgba(107,255,25,.06));
+    }
+
+    .ai-market-feedback {
+      margin-top: 12px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .3px;
     }
 
     .ai-market-icon {
@@ -599,6 +607,23 @@
       color: var(--muted);
     }
 
+    .detail-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      width: 100%;
+      border: 1px solid rgba(107,255,25,.6);
+      border-radius: 9px;
+      background: rgba(107,255,25,.1);
+      color: var(--green);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 10px;
+      text-transform: uppercase;
+    }
+
     .stat-row {
       display: flex;
       justify-content: space-between;
@@ -860,6 +885,7 @@
           </span>
         </button>
       </div>
+      <div class="ai-market-feedback" id="soccerMarketFeedback">Market selected. Click Run Full Analysis to apply.</div>
     </section>
 
     <div id="boardDateLabel" style="color:var(--muted);font-size:11px;font-weight:800;margin:-10px 0 18px;text-transform:uppercase;"></div>
@@ -904,6 +930,7 @@ function initSoccerMarketSelector() {
 function selectSoccerMarket(chip) {
   const selector = document.getElementById('soccerMarketSelector');
   const label = document.getElementById('selectedSoccerMarketLabel');
+  const feedback = document.getElementById('soccerMarketFeedback');
 
   if (!selector || !chip) return;
 
@@ -923,6 +950,7 @@ function selectSoccerMarket(chip) {
   selector.dataset.selectedMarket = selectedSoccerMarket.key;
 
   if (label) label.textContent = selectedSoccerMarket.label;
+  if (feedback) feedback.textContent = 'Market selected. Click Run Full Analysis to apply.';
 }
 
 function getSelectedSoccerMarket() {
@@ -1320,7 +1348,7 @@ function getSelectedSoccerMarketRecommendation(market, analysis, over25, btts) {
   const recommendation = recommendations[key];
   return recommendation && recommendation !== 'N/A'
     ? recommendation
-    : 'Market selected, but no reliable data available yet.';
+    : 'No reliable recommendation for this market yet.';
 }
 
 function isPregameSoccerStatus(status) {
@@ -1624,6 +1652,7 @@ async function analyze(btn, matchId, leagueKey) {
     const lineupsHtml = renderLineups(lineupsObject, lineupsArray);
     const goalPropsHtml = renderTopGoalProps(props);
     const assistPropsHtml = renderTopAssistProps(props);
+    const detailHref = buildSoccerDetailHref(matchId, leagueKey, game.fixtureId || matchId);
 
     if (lineupBox) {
       lineupBox.style.display = 'block';
@@ -1658,6 +1687,16 @@ async function analyze(btn, matchId, leagueKey) {
       </div>
 
       <div class="stat-row">
+        <span>Recommendation:</span>
+        <b>${escapeHtml(selectedRecommendation)}</b>
+      </div>
+
+      <div class="stat-row">
+        <span>Confidence:</span>
+        <b>${normalizeConfidence(a.confidence)}</b>
+      </div>
+
+      <div class="stat-row">
         <span>1X2 %:</span>
         <b>${pct(homePct)} | ${pct(drawPct)} | ${pct(awayPct)}</b>
       </div>
@@ -1677,6 +1716,8 @@ async function analyze(btn, matchId, leagueKey) {
 
       <div class="prop-title">Top 3 Assist Props</div>
       ${assistPropsHtml}
+
+      <a class="detail-link" href="${escapeHtml(detailHref)}">View Detail</a>
     `;
 
     btn.innerText = 'RE-ANALYZE';
@@ -1689,6 +1730,10 @@ async function analyze(btn, matchId, leagueKey) {
 }
 
 function openSoccerDetail(matchId, leagueKey, fixtureId){
+  window.location.href = buildSoccerDetailHref(matchId, leagueKey, fixtureId);
+}
+
+function buildSoccerDetailHref(matchId, leagueKey, fixtureId){
   const dateInput = document.getElementById('dateSelect');
   const params = new URLSearchParams({
     matchId,
@@ -1699,7 +1744,7 @@ function openSoccerDetail(matchId, leagueKey, fixtureId){
     soccerMarket: getSelectedSoccerMarket().key
   });
 
-  window.location.href = `/soccer-detail.html?${params.toString()}`;
+  return `/soccer-detail.html?${params.toString()}`;
 }
 
 async function analyzeAll() {
