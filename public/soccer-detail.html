@@ -530,7 +530,10 @@ body{
 <script>
 const params = new URLSearchParams(window.location.search);
 const matchId = params.get('matchId') || params.get('fixtureId') || params.get('id') || params.get('gameId');
+const fixtureId = params.get('fixtureId') || matchId;
 const league = params.get('league');
+const selectedDate = params.get('date') || '';
+const selectedTimezone = params.get('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
 
 function paramClean(key){
   const value = params.get(key);
@@ -601,21 +604,41 @@ function shortName(name){
 }
 
 function getMinuteText(matchTime){
+  const status = String(matchTime || '').toUpperCase();
+  if(status === 'FT') return 'Final';
+  if(status === 'NS' || status === 'TBD' || status === 'SCHEDULED') return 'Scheduled';
   const raw=String(matchTime||'').replace(/[^\d]/g,'');
   if(!raw) return 'LIVE';
   return `Minuto ${raw}`;
+}
+
+function getDetailStatusText(game, fallbackTime='') {
+  const status = String(game?.status || game?.fixture?.status?.short || '').toUpperCase();
+  const liveClock = game?.liveClock;
+  const elapsed = game?.elapsed ?? game?.minute ?? game?.fixture?.status?.elapsed;
+
+  if(['1H','2H','HT','ET','LIVE'].includes(status)) {
+    return liveClock || (elapsed ? `${elapsed}'` : status);
+  }
+
+  if(status === 'FT') return 'FT';
+  if(status === 'NS' || status === 'TBD') return game?.localTime || game?.time || fallbackTime || 'Scheduled';
+
+  return liveClock || status || game?.localTime || game?.time || fallbackTime || 'Scheduled';
 }
 
 async function fetchGameFromBoard(){
   const endpoints=['/api/soccer/games-global','/api/soccer-games-global'];
   for(const endpoint of endpoints){
     try{
-      const res=await fetch(`${endpoint}?t=${Date.now()}`);
+      const query = new URLSearchParams({ t: Date.now(), timezone: selectedTimezone });
+      if(selectedDate) query.set('date', selectedDate);
+      const res=await fetch(`${endpoint}?${query.toString()}`);
       const data=await res.json();
       if(!data.ok||!Array.isArray(data.games)) continue;
       const found=data.games.find(g=>{
         const ids=[g.matchId,g.fixtureId,g.id,g.gameId,g.fixture?.id].map(x=>String(x||''));
-        return ids.includes(String(matchId||''));
+        return ids.includes(String(matchId||'')) || ids.includes(String(fixtureId||''));
       });
       if(found) return found;
     }catch(e){}
@@ -864,7 +887,7 @@ async function loadMatch(){
     if(isFirstLoad) content.innerHTML=`Loading Match Center...`;
 
     const [analysisRes,boardGame]=await Promise.all([
-      fetch(`/api/soccer/analyze/${matchId}?league=${league||''}&t=${Date.now()}`).then(r=>r.json()).catch(()=>({})),
+      fetch(`/api/soccer/analyze/${fixtureId || matchId}?league=${league||''}&date=${selectedDate || ''}&timezone=${encodeURIComponent(selectedTimezone)}&t=${Date.now()}`).then(r=>r.json()).catch(()=>({})),
       fetchGameFromBoard()
     ]);
 
@@ -878,7 +901,8 @@ async function loadMatch(){
     const awayLogo=normalizeLogo(firstValid(boardGame.awayLogo,boardGame.away_logo,boardGame.teams?.away?.logo,urlGame.awayLogo,data.awayLogo,a.awayLogo,g.awayLogo,g.away_logo,g.teams?.away?.logo));
     const homeScore=firstValid(boardGame.homeScore,data.homeScore,a.homeScore,g.homeScore,g.goals?.home,urlGame.homeScore,0);
     const awayScore=firstValid(boardGame.awayScore,data.awayScore,a.awayScore,g.awayScore,g.goals?.away,urlGame.awayScore,0);
-    const matchTime=firstValid(boardGame.time,data.time,a.time,g.time,g.fixture?.status?.elapsed,urlGame.time,'LIVE');
+    const fallbackTime=firstValid(boardGame.localTime,boardGame.time,data.localTime,data.time,a.time,g.localTime,g.time,urlGame.time);
+    const matchTime=getDetailStatusText(boardGame.fixtureId ? boardGame : g, fallbackTime);
     const leagueName=firstValid(urlGame.leagueName,boardGame.leagueName,data.leagueName,a.leagueName,g.leagueName,g.league?.name,league?.toUpperCase(),'LEAGUE');
 
     const oneX2=a.oneX2||a.probabilities||a.market1x2||{};

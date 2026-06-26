@@ -1186,7 +1186,7 @@ async function loadGames() {
           <div class="card">
 
             <div class="match-header" 
-                 onclick="openSoccerDetail('${g.matchId}', '${g.leagueKey}')">
+                 onclick="openSoccerDetail('${g.matchId}', '${g.leagueKey}', '${g.fixtureId || g.matchId}')">
 
               <div class="team-box">
                 <img src="${g.homeLogo}" class="team-logo" onerror="this.src='/logo.png'">
@@ -1594,9 +1594,17 @@ async function analyze(btn, matchId, leagueKey) {
   }
 }
 
-function openSoccerDetail(matchId, leagueKey){
-  window.location.href =
-    `/soccer-detail.html?matchId=${matchId}&league=${leagueKey}`;
+function openSoccerDetail(matchId, leagueKey, fixtureId){
+  const dateInput = document.getElementById('dateSelect');
+  const params = new URLSearchParams({
+    matchId,
+    fixtureId: fixtureId || matchId,
+    league: leagueKey || '',
+    date: dateInput?.value || getDateInTimezone(getBrowserTimezone()),
+    timezone: getBrowserTimezone()
+  });
+
+  window.location.href = `/soccer-detail.html?${params.toString()}`;
 }
 
 async function analyzeAll() {
