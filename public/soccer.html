@@ -251,6 +251,121 @@
       color: #fff;
     }
 
+    .ai-market-selector {
+      margin: 0 0 24px;
+      padding: 16px;
+      border: 1px solid rgba(107,255,25,.14);
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(10,18,14,.94), rgba(2,5,9,.94)),
+        radial-gradient(circle at top left, rgba(107,255,25,.14), transparent 34%);
+      box-shadow: 0 18px 50px rgba(0,0,0,.32);
+    }
+
+    .ai-market-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .ai-market-kicker {
+      display: block;
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .ai-market-title {
+      display: block;
+      margin-top: 4px;
+      font-family: 'Anton', sans-serif;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+
+    .ai-market-current {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      text-align: right;
+    }
+
+    .ai-market-current b {
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .ai-market-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .ai-market-chip {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
+      color: #fff;
+      min-height: 74px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease, background .25s ease;
+    }
+
+    .ai-market-chip:hover {
+      transform: translateY(-2px);
+      border-color: rgba(107,255,25,.35);
+      box-shadow: 0 14px 32px rgba(107,255,25,.1);
+      background: linear-gradient(180deg, rgba(107,255,25,.09), rgba(255,255,255,.025));
+    }
+
+    .ai-market-chip.active {
+      border-color: rgba(107,255,25,.75);
+      box-shadow: 0 0 0 1px rgba(107,255,25,.18), 0 18px 42px rgba(107,255,25,.12);
+      background: linear-gradient(180deg, rgba(107,255,25,.16), rgba(107,255,25,.045));
+    }
+
+    .ai-market-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(107,255,25,.1);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .ai-market-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1.05;
+    }
+
+    .ai-market-desc {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
     .league-title {
       font-family: 'Anton';
       color: var(--green);
@@ -572,6 +687,19 @@
         align-items: stretch;
       }
 
+      .ai-market-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .ai-market-current {
+        text-align: left;
+      }
+
+      .ai-market-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .nav-sports {
         overflow-x: auto;
       }
@@ -599,6 +727,24 @@
       .team-logo {
         width: 38px;
         height: 38px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .ai-market-selector {
+        padding: 14px;
+      }
+
+      .ai-market-grid {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x proximity;
+      }
+
+      .ai-market-chip {
+        min-width: 220px;
+        scroll-snap-align: start;
       }
     }
   </style>
@@ -644,6 +790,78 @@
       <button class="btn-action" onclick="loadGames()">LOAD BOARD</button>
       <button class="btn-action btn-sec" onclick="analyzeAll()">⚡ RUN FULL ANALYSIS</button>
     </div>
+
+    <section class="ai-market-selector" aria-label="Soccer AI Betting Selector">
+      <div class="ai-market-header">
+        <div>
+          <span class="ai-market-kicker">AI Betting Selector</span>
+          <span class="ai-market-title">Choose Soccer Market</span>
+        </div>
+        <div class="ai-market-current">
+          Selected: <b id="selectedSoccerMarketLabel">Moneyline / Winner</b>
+        </div>
+      </div>
+
+      <div class="ai-market-grid" id="soccerMarketSelector">
+        <button type="button" class="ai-market-chip active" data-market="winner" data-label="Moneyline / Winner">
+          <span class="ai-market-icon">1X2</span>
+          <span>
+            <span class="ai-market-name">Moneyline / Winner</span>
+            <span class="ai-market-desc">Home, draw or away</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="draw-no-bet" data-label="Draw No Bet">
+          <span class="ai-market-icon">DNB</span>
+          <span>
+            <span class="ai-market-name">Draw No Bet</span>
+            <span class="ai-market-desc">Team edge without draw risk</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="double-chance" data-label="Double Chance">
+          <span class="ai-market-icon">DC</span>
+          <span>
+            <span class="ai-market-name">Double Chance</span>
+            <span class="ai-market-desc">Two outcomes covered</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="goals-total" data-label="Over / Under Goals">
+          <span class="ai-market-icon">O/U</span>
+          <span>
+            <span class="ai-market-name">Over / Under Goals</span>
+            <span class="ai-market-desc">Total goals market</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="btts" data-label="Both Teams To Score">
+          <span class="ai-market-icon">BTTS</span>
+          <span>
+            <span class="ai-market-name">Both Teams To Score</span>
+            <span class="ai-market-desc">Yes or no scoring profile</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="first-half" data-label="First Half Result">
+          <span class="ai-market-icon">1H</span>
+          <span>
+            <span class="ai-market-name">First Half Result</span>
+            <span class="ai-market-desc">Opening 45 minutes</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="correct-score" data-label="Correct Score">
+          <span class="ai-market-icon">CS</span>
+          <span>
+            <span class="ai-market-name">Correct Score</span>
+            <span class="ai-market-desc">Projected scoreline</span>
+          </span>
+        </button>
+        <button type="button" class="ai-market-chip" data-market="team-total" data-label="Team Total Goals">
+          <span class="ai-market-icon">TT</span>
+          <span>
+            <span class="ai-market-name">Team Total Goals</span>
+            <span class="ai-market-desc">Club-specific goal total</span>
+          </span>
+        </button>
+      </div>
+    </section>
+
     <div id="boardDateLabel" style="color:var(--muted);font-size:11px;font-weight:800;margin:-10px 0 18px;text-transform:uppercase;"></div>
 
     <div id="gamesList"></div>
@@ -661,6 +879,44 @@ function escapeHtml(v) {
     '"':'&quot;',
     "'":"&#039;"
   }[m]));
+}
+
+let selectedSoccerMarket = {
+  key: 'winner',
+  label: 'Moneyline / Winner'
+};
+
+function initSoccerMarketSelector() {
+  const selector = document.getElementById('soccerMarketSelector');
+  const label = document.getElementById('selectedSoccerMarketLabel');
+
+  if (!selector) return;
+
+  selector.querySelectorAll('.ai-market-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      selector.querySelectorAll('.ai-market-chip').forEach(item => {
+        item.classList.remove('active');
+        item.setAttribute('aria-pressed', 'false');
+      });
+
+      chip.classList.add('active');
+      chip.setAttribute('aria-pressed', 'true');
+
+      selectedSoccerMarket = {
+        key: chip.dataset.market || 'winner',
+        label: chip.dataset.label || chip.innerText.trim() || 'Moneyline / Winner'
+      };
+
+      if (label) label.textContent = selectedSoccerMarket.label;
+    });
+  });
+
+  const active = selector.querySelector('.ai-market-chip.active');
+  if (active) active.setAttribute('aria-pressed', 'true');
+}
+
+function getSelectedSoccerMarket() {
+  return selectedSoccerMarket;
 }
 
 function shortTeamName(name) {
@@ -1171,9 +1427,10 @@ async function analyze(btn, matchId, leagueKey) {
   const lineupBox = document.getElementById(`lineup-${matchId}`);
   const date = document.getElementById('dateSelect').value;
   const timezone = getBrowserTimezone();
+  const selectedMarket = getSelectedSoccerMarket();
 
   resDiv.style.display = 'block';
-  resDiv.innerHTML = '<div class="loading">Running AI analysis...</div>';
+  resDiv.innerHTML = `<div class="loading">Running AI analysis for ${escapeHtml(selectedMarket.label)}...</div>`;
   btn.disabled = true;
 
   try {
@@ -1292,6 +1549,11 @@ async function analyze(btn, matchId, leagueKey) {
       </div>
 
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
+        <span>Selected Market:</span>
+        <b>${escapeHtml(selectedMarket.label)}</b>
+      </div>
+
+      <div class="stat-row">
         <span>1X2 %:</span>
         <b>${pct(homePct)} | ${pct(drawPct)} | ${pct(awayPct)}</b>
       </div>
@@ -1342,6 +1604,7 @@ if (dateInput) {
   dateInput.value = getDateInTimezone(getBrowserTimezone());
 }
 
+initSoccerMarketSelector();
 initTicker();
 loadGames();
 </script>
