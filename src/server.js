@@ -271,15 +271,90 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // =========================
-// ADMIN MIDDLEWARE
+// ADMIN / VALIDATION MIDDLEWARE
 // =========================
 
-function requireAdmin(req, res, next) {
-  const key = req.headers['x-admin-key'] || req.query.adminKey;
+function requireAdminKey(req, res, next) {
+  const key = req.headers['x-admin-key'];
   const adminKey = process.env.ADMIN_KEY;
+
   if (!adminKey || key !== adminKey) {
     return res.status(401).json({ ok: false, error: 'Unauthorized' });
   }
+
+  next();
+}
+
+const dangerousPayloadKeys = new Set([
+  '$where',
+  '$set',
+  '$push',
+  '$inc',
+  '$rename',
+  '$unset',
+  '__proto__',
+  'constructor',
+  'prototype'
+]);
+
+function containsDangerousKeys(value) {
+  if (!value || typeof value !== 'object') return false;
+
+  if (Array.isArray(value)) {
+    return value.some(item => containsDangerousKeys(item));
+  }
+
+  return Object.entries(value).some(([key, nested]) =>
+    dangerousPayloadKeys.has(key) ||
+    key.startsWith('$') ||
+    containsDangerousKeys(nested)
+  );
+}
+
+function isValidPickPayload(pick) {
+  if (!pick || typeof pick !== 'object' || Array.isArray(pick)) return false;
+  if (containsDangerousKeys(pick)) return false;
+
+  const requiredStrings = ['date', 'market', 'pick'];
+  const hasRequired = requiredStrings.every(field =>
+    typeof pick[field] === 'string' &&
+    pick[field].trim().length > 0 &&
+    pick[field].length <= 200
+  );
+
+  if (!hasRequired) return false;
+
+  const optionalStrings = [
+    'sport',
+    'event',
+    'homeTeam',
+    'awayTeam',
+    'gamePk',
+    'fixtureId',
+    'playerName',
+    'team',
+    'source',
+    'finalScore'
+  ];
+
+  return optionalStrings.every(field =>
+    pick[field] === undefined ||
+    pick[field] === null ||
+    (typeof pick[field] === 'string' && pick[field].length <= 500)
+  );
+}
+
+function validatePicksPayload(req, res, next) {
+  if (containsDangerousKeys(req.body)) {
+    return res.status(400).json({ ok: false, error: 'Invalid pick payload.' });
+  }
+
+  const picks = Array.isArray(req.body) ? req.body : [req.body];
+
+  if (!picks.length || picks.length > 25 || !picks.every(isValidPickPayload)) {
+    return res.status(400).json({ ok: false, error: 'Invalid pick payload.' });
+  }
+
   next();
 }
 
@@ -313,7 +388,7 @@ app.post('/api/payment-request', async (req, res) => {
   }
 });
 
-app.get('/api/payment-requests', requireAdmin, async (req, res) => {
+app.get('/api/payment-requests', gradeAdminLimiter, requireAdminKey, async (req, res) => {
   try {
     const requests =
       await PaymentRequest
@@ -335,7 +410,7 @@ app.get('/api/payment-requests', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/api/activate-pro', requireAdmin, async (req, res) => {
+app.post('/api/activate-pro', gradeAdminLimiter, requireAdminKey, async (req, res) => {
   try {
     const {
       email,
@@ -877,7 +952,7 @@ app.get('/api/picks', async (req, res) => {
   }
 });
 
-app.post('/api/picks/save', async (req, res) => {
+app.post('/api/picks/save', picksSaveLimiter, validatePicksPayload, async (req, res) => {
   try {
     const picks = Array.isArray(req.body)
       ? req.body
@@ -915,7 +990,7 @@ app.post('/api/picks/save', async (req, res) => {
   }
 });
 
-app.post('/api/picks/grade', async (req, res) => {
+app.post('/api/picks/grade', gradeAdminLimiter, requireAdminKey, async (req, res) => {
   try {
     const date = req.query.date || req.body?.date;
     const sport = req.query.sport || req.body?.sport || 'all';
