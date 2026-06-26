@@ -1620,6 +1620,57 @@
     .heat-cell.hot{background:rgba(107,255,25,.45);}
     .heat-cell.warn{background:rgba(250,204,21,.36);}
 
+    .props-row{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+      align-items:start;
+      margin-bottom:14px;
+    }
+
+    .props-row .panel{
+      margin-bottom:0;
+    }
+
+    .props-row .compact-card{
+      padding:12px;
+    }
+
+    .props-row h3{
+      font-size:13px;
+      margin-bottom:8px;
+    }
+
+    .props-row .two-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+    }
+
+    .props-row .sub-title{
+      font-size:11px;
+      margin:4px 0 5px;
+    }
+
+    .props-row .player-card{
+      padding:4px 0;
+      gap:7px;
+    }
+
+    .props-row .player-card img,
+    .props-row .avatar-fallback{
+      width:34px;
+      height:34px;
+    }
+
+    .props-row .p-name{
+      font-size:10px;
+    }
+
+    .props-row .p-info{
+      font-size:8px;
+      line-height:1.25;
+    }
+
     @media(max-width:1100px){
       .pro-dashboard,
       .pro-duo{
@@ -1705,6 +1756,10 @@
 
       .premium-grid,
       .premium-grid.two{
+        grid-template-columns:1fr;
+      }
+
+      .props-row{
         grid-template-columns:1fr;
       }
 
@@ -2740,33 +2795,35 @@
 
           </section>
 
-          <section class="panel compact-card">
-            <h3>🔥 Top 3 Hit Probability (Game)</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayAbbrev}</div>
-                ${renderPlayerCards(awayHitPlayers, 'hit')}
+          <div class="props-row">
+            <section class="panel compact-card">
+              <h3>🔥 Top 3 Hit Probability (Game)</h3>
+              <div class="two-grid">
+                <div>
+                  <div class="sub-title">${game.awayAbbrev}</div>
+                  ${renderPlayerCards(awayHitPlayers, 'hit')}
+                </div>
+                <div>
+                  <div class="sub-title">${game.homeAbbrev}</div>
+                  ${renderPlayerCards(homeHitPlayers, 'hit')}
+                </div>
               </div>
-              <div>
-                <div class="sub-title">${game.homeAbbrev}</div>
-                ${renderPlayerCards(homeHitPlayers, 'hit')}
-              </div>
-            </div>
-          </section>
+            </section>
 
-          <section class="panel compact-card">
-            <h3>💣 Top 3 HR Potential (Game)</h3>
-            <div class="two-grid">
-              <div>
-                <div class="sub-title">${game.awayAbbrev}</div>
-                ${renderPlayerCards(awayHrPlayers, 'hr')}
+            <section class="panel compact-card">
+              <h3>💣 Top 3 HR Potential (Game)</h3>
+              <div class="two-grid">
+                <div>
+                  <div class="sub-title">${game.awayAbbrev}</div>
+                  ${renderPlayerCards(awayHrPlayers, 'hr')}
+                </div>
+                <div>
+                  <div class="sub-title">${game.homeAbbrev}</div>
+                  ${renderPlayerCards(homeHrPlayers, 'hr')}
+                </div>
               </div>
-              <div>
-                <div class="sub-title">${game.homeAbbrev}</div>
-                ${renderPlayerCards(homeHrPlayers, 'hr')}
-              </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
           <section class="panel compact-card">
             <h3>Confirmed / Projected Lineups</h3>
