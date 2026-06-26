@@ -41,7 +41,20 @@ const allowedCorsOrigins = (process.env.CORS_ORIGINS || DEFAULT_CORS_ORIGINS.joi
   .map(origin => origin.trim())
   .filter(Boolean);
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'", "'unsafe-inline'"],
+      "script-src-attr": ["'unsafe-inline'"],
+      "style-src": ["'self'", "'unsafe-inline'", "https:"],
+      "img-src": ["'self'", "data:", "https:"],
+      "connect-src": ["'self'"],
+      "font-src": ["'self'", "https:", "data:"]
+    }
+  }
+}));
 
 app.use(cors({
   origin(origin, callback) {
