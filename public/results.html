@@ -149,7 +149,7 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 14px;
       margin-bottom: 30px;
     }
@@ -287,7 +287,7 @@
     .status-win { color: #000; background: var(--green); }
     .status-loss { color: #fff; background: var(--red); }
     .status-push { color: #000; background: var(--yellow); }
-    .status-pending { color: #111827; background: var(--gray); }
+    .status-pending { color: #031019; background: #38bdf8; }
     .status-final { color: #000; background: var(--green); }
     .status-live { color: #fff; background: var(--red); }
     .status-scheduled { color: #111827; background: var(--gray); }
@@ -369,6 +369,14 @@
           <option value="Horse Racing">Horse Racing</option>
           <option value="UFC">UFC</option>
         </select>
+        <select class="sport-select" id="pickResultFilter" aria-label="Pick result filter">
+          <option value="all">All Picks</option>
+          <option value="WIN">Wins</option>
+          <option value="LOSS">Losses</option>
+          <option value="PUSH">Pushes</option>
+          <option value="PENDING">Pending</option>
+          <option value="No Tracked Pick">No Pick</option>
+        </select>
       </div>
       <p class="source-note" id="sourceNote">Loading real results from available project APIs...</p>
 
@@ -412,6 +420,7 @@
   <script>
     const sportOrder = ['MLB', 'Soccer', 'Horse Racing', 'UFC'];
     const sportFilter = document.getElementById('sportFilter');
+    const pickResultFilter = document.getElementById('pickResultFilter');
     const dateFilter = document.getElementById('dateFilter');
     const resultsList = document.getElementById('resultsList');
     const resultCountLabel = document.getElementById('resultCountLabel');
@@ -505,6 +514,13 @@
       if (n === 0) return '0.00u';
 
       return `${n > 0 ? '+' : ''}${n.toFixed(2)}u`;
+    }
+
+    function formatOdds(value) {
+      if (value === null || value === undefined || value === '') return 'N/A';
+      const n = Number(value);
+      if (!Number.isFinite(n)) return String(value);
+      return n > 0 ? `+${n}` : String(n);
     }
 
     async function fetchJson(url, options = {}) {
@@ -644,7 +660,7 @@
         homeTeam: pick.homeTeam || '',
         pickText: pick.pick || pick.team || pick.playerName || 'Tracked pick',
         market: pick.market || 'Pick',
-        odds: pick.odds || 'N/A',
+        odds: formatOdds(pick.odds),
         finalResult: pick.finalScore || 'Pending final score',
         time: pick.createdAt
           ? new Intl.DateTimeFormat('en-US', {
@@ -781,9 +797,24 @@
 
       document.getElementById('summaryGrid').innerHTML = `
         <article class="summary-card">
-          <strong>${total}</strong>
-          <span>Games Shown</span>
-          <small>Selected day scoreboard</small>
+          <strong>${tracked.length}</strong>
+          <span>Total Picks</span>
+          <small>${total} games shown</small>
+        </article>
+        <article class="summary-card">
+          <strong class="positive">${wins}</strong>
+          <span>Wins</span>
+          <small>Graded WIN</small>
+        </article>
+        <article class="summary-card">
+          <strong class="negative">${losses}</strong>
+          <span>Losses</span>
+          <small>Graded LOSS</small>
+        </article>
+        <article class="summary-card">
+          <strong class="neutral">${pushes}</strong>
+          <span>Pushes</span>
+          <small>Returned stake</small>
         </article>
         <article class="summary-card">
           <strong class="positive">${winRate}%</strong>
@@ -799,11 +830,6 @@
           <strong class="${Number(roi) >= 0 ? 'positive' : 'negative'}">${roi}%</strong>
           <span>ROI</span>
           <small>Settled picks only</small>
-        </article>
-        <article class="summary-card">
-          <strong>${tracked.length}</strong>
-          <span>Tracked Picks</span>
-          <small>${pending} pending grades</small>
         </article>
       `;
     }
@@ -846,9 +872,11 @@
 
     function renderResults(groups) {
       const selectedSport = sportFilter.value;
+      const selectedPickResult = pickResultFilter.value;
       const allResults = groups.flatMap(group => group.results);
       const results = allResults.filter(result =>
-        selectedSport === 'all' || result.sport === selectedSport
+        (selectedSport === 'all' || result.sport === selectedSport) &&
+        (selectedPickResult === 'all' || result.pickResult === selectedPickResult)
       );
 
       renderSummary(results);
@@ -890,6 +918,9 @@
     dateFilter.value = getLocalDate(-1);
     dateFilter.addEventListener('change', refreshResults);
     sportFilter.addEventListener('change', () => {
+      renderResults(window.currentResultGroups || []);
+    });
+    pickResultFilter.addEventListener('change', () => {
       renderResults(window.currentResultGroups || []);
     });
     refreshResults();
