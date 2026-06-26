@@ -211,6 +211,27 @@
     .stat-row span:first-child{color:var(--muted);}
     .stat-row span:last-child{font-weight:900;text-align:right;}
 
+    .mini-stat-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      border-bottom:1px solid rgba(255,255,255,.055);
+      padding:7px 0;
+      font-size:12px;
+    }
+
+    .mini-stat-row span:first-child{
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .mini-stat-row span:last-child{
+      color:#fff;
+      font-weight:900;
+      text-align:right;
+    }
+
     .bar-row{margin:12px 0;}
 
     .bar-top{
@@ -239,29 +260,44 @@
     .player-card{
       display:flex;
       align-items:center;
-      gap:12px;
-      padding:12px 0;
+      gap:10px;
+      padding:8px 0;
       border-bottom:1px solid rgba(255,255,255,.07);
     }
 
-    .player-card img{
-      width:48px;
-      height:48px;
+    .player-card img,
+    .avatar-fallback{
+      width:40px;
+      height:40px;
       border-radius:50%;
-      object-fit:cover;
       background:#111;
       border:1px solid rgba(255,255,255,.15);
+      flex:0 0 auto;
+    }
+
+    .player-card img{
+      object-fit:cover;
+    }
+
+    .avatar-fallback{
+      display:inline-grid;
+      place-items:center;
+      color:var(--green);
+      font-size:12px;
+      font-weight:900;
+      background:radial-gradient(circle at 30% 20%,rgba(107,255,25,.22),rgba(10,14,18,.95));
+      box-shadow:inset 0 0 18px rgba(107,255,25,.06);
     }
 
     .p-name{
       font-weight:900;
       display:block;
-      font-size:13px;
+      font-size:12px;
     }
 
     .p-info{
       color:var(--muted);
-      font-size:11px;
+      font-size:10px;
       display:block;
       margin-top:3px;
     }
@@ -269,16 +305,16 @@
     .lineup-box{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:18px;
+      gap:14px;
     }
 
     .player{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:9px 0;
+      padding:7px 0;
       border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:13px;
+      font-size:12px;
     }
 
     .num{
@@ -289,14 +325,14 @@
 
     .badge{
       display:inline-block;
-      padding:5px 9px;
+      padding:4px 8px;
       border-radius:999px;
-      font-size:11px;
+      font-size:10px;
       font-weight:900;
       background:rgba(107,255,25,.12);
       color:var(--green);
       border:1px solid rgba(107,255,25,.35);
-      margin-bottom:12px;
+      margin-bottom:8px;
     }
 
     .note{
@@ -1047,6 +1083,13 @@
       margin-bottom:0;
     }
 
+    .pro-dashboard > *,
+    .live-mini-card,
+    .premium-card,
+    .panel{
+      min-width:0;
+    }
+
     .hero-card{
       min-height:0 !important;
     }
@@ -1089,16 +1132,177 @@
       grid-column:1/-1;
     }
 
+    .detail-grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:12px;
+      align-items:start;
+      margin-bottom:14px;
+    }
+
+    .detail-section-title{
+      grid-column:1/-1;
+      color:var(--green);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+      margin:0 0 -2px;
+    }
+
+    .compact-card{
+      padding:15px;
+      border-radius:18px;
+      margin-bottom:0;
+      min-height:0;
+    }
+
+    .half-card{grid-column:span 6;}
+    .third-card{grid-column:span 4;}
+
+    .compact-card .card-head{
+      margin-bottom:10px;
+    }
+
+    .compact-card .card-kicker{
+      font-size:10px;
+      margin-bottom:4px;
+    }
+
+    .compact-card h3{
+      font-size:16px;
+      line-height:1.1;
+    }
+
+    .pitcher-compact-head{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+    }
+
+    .compact-avatar{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#101419;
+      border:1px solid rgba(107,255,25,.26);
+      box-shadow:0 0 20px rgba(107,255,25,.08);
+      flex:0 0 auto;
+    }
+
+    .pitcher-compact-head strong{
+      display:block;
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+    }
+
+    .pitcher-compact-head span{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+
+    .advanced-toggle{
+      margin-top:10px;
+      border-top:1px solid rgba(255,255,255,.06);
+      padding-top:8px;
+    }
+
+    .advanced-toggle summary{
+      cursor:pointer;
+      color:var(--green);
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.45px;
+    }
+
+    .confidence-compact .overall-score{
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
+      margin-bottom:10px;
+    }
+
+    .confidence-compact .overall-score strong{
+      color:#fff;
+      font-family:'Anton',sans-serif;
+      font-size:34px;
+      line-height:.95;
+    }
+
+    .confidence-compact .overall-score span{
+      color:var(--muted);
+      font-size:11px;
+      font-weight:900;
+      margin-bottom:4px;
+      text-transform:uppercase;
+    }
+
+    .compact-bar-row{
+      margin:9px 0;
+    }
+
+    .compact-bar-top{
+      display:flex;
+      justify-content:space-between;
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      margin-bottom:5px;
+    }
+
+    .compact-bar-track{
+      height:7px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+
+    .compact-bar-fill{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--green),#eaff4c);
+      box-shadow:0 0 16px rgba(107,255,25,.24);
+    }
+
+    .team-compare-compact .compare-row{
+      grid-template-columns:52px 1fr 92px;
+      gap:10px;
+      padding:7px 0;
+      font-size:11px;
+    }
+
+    .team-compare-compact .compare-track{
+      height:7px;
+    }
+
     .pro-info-grid{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:14px;
-      margin-bottom:18px;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-bottom:14px;
     }
 
     .pro-info-grid .panel{
       margin-bottom:0;
-      padding:18px;
+      padding:14px;
+      border-radius:16px;
+    }
+
+    .pro-info-grid .panel h3{
+      font-size:13px;
+      margin-bottom:9px;
+    }
+
+    .pro-info-grid .stat-row{
+      padding:6px 0;
+      font-size:12px;
     }
 
     .two-grid{
@@ -1380,6 +1584,10 @@
       .pro-duo{
         grid-template-columns:1fr;
       }
+      .half-card,
+      .third-card{
+        grid-column:span 6;
+      }
       .pro-info-grid{
         grid-template-columns:repeat(2,1fr);
       }
@@ -1459,13 +1667,23 @@
         grid-template-columns:1fr;
       }
 
+      .detail-grid{
+        grid-template-columns:1fr;
+      }
+
+      .half-card,
+      .third-card{
+        grid-column:1/-1;
+      }
+
       .player-card{
         flex-direction:row;
         align-items:center;
         gap:12px;
       }
 
-      .player-card img{
+      .player-card img,
+      .avatar-fallback{
         width:50px;
         height:50px;
       }
@@ -1479,6 +1697,23 @@
       .gamecast-matchup,
       .gamecast-main{
         grid-template-columns:1fr;
+      }
+
+      .mini-top,
+      .mini-bottom{
+        grid-template-columns:1fr;
+      }
+
+      .mini-player.right{
+        text-align:left;
+      }
+
+      .mini-flex.right{
+        justify-content:flex-start;
+      }
+
+      .mini-counts{
+        grid-template-columns:repeat(3,minmax(0,1fr));
       }
 
       .strike-zone{
@@ -1549,14 +1784,25 @@
       );
     }
 
+    function playerPlaceholderSrc(){
+      return 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2232%22 fill=%22%230b1117%22/%3E%3Ccircle cx=%2232%22 cy=%2224%22 r=%2212%22 fill=%22%236bff19%22 fill-opacity=%22.32%22/%3E%3Cpath d=%22M14 56c3-13 12-20 18-20s15 7 18 20%22 fill=%22%236bff19%22 fill-opacity=%22.22%22/%3E%3C/svg%3E';
+    }
+
     function pitcherImg(id){
-      if(!id) return '/logos/player-placeholder.png';
+      if(!id) return playerPlaceholderSrc();
       return `https://img.mlbstatic.com/mlb-photos/image/upload/w_213,d_people:generic:headshot:silo:current.png,q_auto:best,f_auto/v1/people/${id}/headshot/67/current`;
     }
 
     function imgFallback(el){
       el.onerror = null;
       el.src = '/logos/mlb_generic.png';
+    }
+
+    function setPlayerImageFallback(img){
+      const fallback = document.createElement('span');
+      fallback.className = img.className ? `avatar-fallback ${img.className}` : 'avatar-fallback';
+      fallback.textContent = 'DM';
+      img.replaceWith(fallback);
     }
 
     function isUnavailable(value){
@@ -1798,7 +2044,7 @@
       `;
     }
 
-    function pitcherExtendedRows(stats = {}){
+    function pitcherRateRows(stats = {}){
       const k = Number(stats.K || 0);
       const bb = Number(stats.BB || 0);
       const ip = Number(stats.IP || 0);
@@ -1808,49 +2054,53 @@
       return [
         ['ERA', stats.ERA],
         ['WHIP', stats.WHIP],
-        ['FIP', 'Data unavailable'],
-        ['xFIP', 'Data unavailable'],
-        ['SIERA', 'Data unavailable'],
-        ['BABIP', 'Data unavailable'],
-        ['Hard Hit %', 'Data unavailable'],
-        ['Ground Ball %', 'Data unavailable'],
-        ['Fly Ball %', 'Data unavailable'],
-        ['Strike %', 'Data unavailable'],
-        ['Walk %', walkRate],
         ['K%', kRate],
-        ['Velocity', 'Data unavailable'],
-        ['Spin Rate', 'Data unavailable'],
-        ['Expected ERA', stats.ERA || 'Pending'],
-        ['Quality Starts', 'Pending'],
-        ['Home', 'Pending'],
-        ['Away', 'Pending'],
-        ['Day', 'Pending'],
-        ['Night', 'Pending'],
-        ['Rest Days', 'Pending']
-      ].map(([label, value]) => statLine(label, value)).join('');
+        ['BB%', walkRate],
+        ['Expected ERA', stats.ERA || 'Pending']
+      ].map(([label, value]) => statLine(label, value).replace('stat-row', 'mini-stat-row')).join('');
+    }
+
+    function pitcherAdvancedRows(stats = {}){
+      return [
+        ['IP', stats.IP],
+        ['K', stats.K],
+        ['BB', stats.BB],
+        ['HR', stats.HR],
+        ['Wins', stats.W],
+        ['Losses', stats.L]
+      ].map(([label, value]) => statLine(label, value).replace('stat-row', 'mini-stat-row')).join('');
+    }
+
+    function renderCompactPitcherCard(label, abbrev, name, image, stats = {}){
+      const mainRows = pitcherRateRows(stats);
+      const advancedRows = pitcherAdvancedRows(stats);
+      return `
+        <section class="premium-card compact-card half-card pitcher-compact">
+          <div class="pitcher-compact-head">
+            <img class="compact-avatar" src="${image}" onerror="setPlayerImageFallback(this)">
+            <div>
+              <span>${label} Pitcher</span>
+              <strong>${abbrev} - ${name || 'TBD'}</strong>
+            </div>
+          </div>
+          ${mainRows || compactNotice()}
+          ${advancedRows ? `
+            <details class="advanced-toggle">
+              <summary>Advanced Pitcher Stats</summary>
+              ${advancedRows}
+            </details>
+          ` : ''}
+        </section>
+      `;
     }
 
     function renderPitcherBreakdownExpanded(game, centerData, awayPitcherImg, homePitcherImg){
       return `
-        <section class="premium-card primary">
-          <div class="card-head"><div><div class="card-kicker">Pitcher Breakdown</div><h3>Starter Command Profile</h3></div></div>
-          <div class="two-grid">
-            <div>
-              <div class="pitcher-profile">
-                <img src="${awayPitcherImg}" onerror="imgFallback(this)">
-                <div><div class="sub-title">${game.awayAbbrev} - ${game.awayPitcher || 'TBD'}</div></div>
-              </div>
-              ${pitcherExtendedRows(centerData?.pitcherStats?.away)}
-            </div>
-            <div>
-              <div class="pitcher-profile">
-                <img src="${homePitcherImg}" onerror="imgFallback(this)">
-                <div><div class="sub-title">${game.homeAbbrev} - ${game.homePitcher || 'TBD'}</div></div>
-              </div>
-              ${pitcherExtendedRows(centerData?.pitcherStats?.home)}
-            </div>
-          </div>
-        </section>
+        <div class="detail-grid pitcher-detail-grid">
+          <div class="detail-section-title">Pitcher Breakdown</div>
+          ${renderCompactPitcherCard('Away', game.awayAbbrev, game.awayPitcher, awayPitcherImg, centerData?.pitcherStats?.away)}
+          ${renderCompactPitcherCard('Home', game.homeAbbrev, game.homePitcher, homePitcherImg, centerData?.pitcherStats?.home)}
+        </div>
       `;
     }
 
@@ -1910,25 +2160,24 @@
       const home = centerData?.teamStats?.home || {};
       const rows = [
         ['AVG', away.AVG, home.AVG],
-        ['OPS', away.OPS, home.OPS],
         ['Runs', away.runs, home.runs],
         ['Hits', away.hits, home.hits],
-        ['HR', away.HR, home.HR],
-        ['OBP', away.OBP, home.OBP],
-        ['SLG', away.SLG, home.SLG],
-        ['Bullpen', away.ERA, home.ERA],
-        ['Defense', 'Pending', 'Pending'],
-        ['Speed', 'Pending', 'Pending'],
-        ['Home', game.homeWins || 0, game.homeLosses || 0],
-        ['Away', game.awayWins || 0, game.awayLosses || 0],
-        ['Last 10', game.awayLast5 || 'Pending', game.homeLast5 || 'Pending'],
-        ['vs Left', 'Pending', 'Pending'],
-        ['vs Right', 'Pending', 'Pending']
-      ];
+        ['HR', away.HR, home.HR]
+      ].filter(([, a, h]) => hasAnyData(a, h));
+
+      if(hasAnyData(away.OBP, away.SLG, home.OBP, home.SLG)){
+        rows.push([
+          'OBP/SLG',
+          `${displayValue(away.OBP, '--')}/${displayValue(away.SLG, '--')}`,
+          `${displayValue(home.OBP, '--')}/${displayValue(home.SLG, '--')}`
+        ]);
+      }
+
+      if(!rows.length) return '';
 
       return `
-        <section class="premium-card">
-          <div class="card-head"><div><div class="card-kicker">Team Comparison</div><h3>Side-by-side Bars</h3></div></div>
+        <section class="premium-card compact-card half-card team-compare-compact">
+          <div class="card-head"><div><div class="card-kicker">Team Comparison</div><h3>${game.awayAbbrev} vs ${game.homeAbbrev}</h3></div></div>
           <div class="visual-bar">
             ${rows.map(([label, a, h]) => {
               const an = Number(a);
@@ -1940,7 +2189,7 @@
                 <div class="compare-row">
                   <span>${label}</span>
                   <div class="compare-track"><div class="compare-fill" style="width:${width}%"></div></div>
-                  <span>${displayValue(a)} / ${displayValue(h)}</span>
+                  <span>${displayValue(a)} | ${displayValue(h)}</span>
                 </div>
               `;
             }).join('')}
@@ -2086,14 +2335,14 @@
       const overall = available.length ? Math.round(available.reduce((sum, [, score]) => sum + score, 0) / available.length) : 0;
 
       return `
-        <section class="premium-card primary">
-          <div class="card-head"><div><div class="card-kicker">Data More Confidence Meter</div><h3>Overall Confidence ${overall}/100</h3></div><span class="signal-badge">${overall ? `${overall}` : 'Pending'}</span></div>
-          <div class="visual-bar">
+        <section class="premium-card compact-card half-card confidence-compact">
+          <div class="card-head"><div><div class="card-kicker">Data More Confidence Meter</div><h3>Model Confidence</h3></div></div>
+          <div class="overall-score"><strong>${overall}</strong><span>/100 Overall Confidence</span></div>
+          <div>
             ${available.map(([label, score]) => `
-              <div class="compare-row">
-                <span>${label}</span>
-                <div class="compare-track"><div class="compare-fill" style="width:${Math.max(0, score)}%"></div></div>
-                <span>${score}/100</span>
+              <div class="compact-bar-row">
+                <div class="compact-bar-top"><span>${label}</span><span>${score}</span></div>
+                <div class="compact-bar-track"><div class="compact-bar-fill" style="width:${Math.max(0, score)}%"></div></div>
               </div>
             `).join('')}
           </div>
@@ -2254,7 +2503,7 @@
                   <span class="mini-label">${game.awayAbbrev} PITCHER</span>
 
                   <div class="mini-flex">
-                    <img src="${awayPitcherImg}" class="mini-headshot">
+                    <img src="${awayPitcherImg}" class="mini-headshot" onerror="setPlayerImageFallback(this)">
 
                     <div>
                       <strong id="gcPitcher">${game.awayPitcher || '--'}</strong>
@@ -2271,7 +2520,7 @@
                   <span class="mini-label">${game.homeAbbrev} BATTER</span>
 
                   <div class="mini-flex right">
-                    <img src="/logos/mlb_generic.png" class="mini-headshot">
+                    <span class="avatar-fallback mini-headshot">DM</span>
 
                     <div>
                       <strong id="gcBatter">--</strong>
@@ -2367,7 +2616,11 @@
             renderBettingRecommendations({ analysis, modelProb, advancedModel })
           )}
 
-          ${renderConfidenceMeter({ centerData, modelProb })}
+          ${renderGrid(
+            'detail-grid',
+            renderConfidenceMeter({ centerData, modelProb }),
+            renderTeamComparisonVisual(game, centerData)
+          )}
 
           <section class="pro-info-grid">
             <div class="panel">
@@ -2395,18 +2648,7 @@
 
           </section>
 
-          <div class="pro-duo">
-            <section class="panel">
-              <h3>Team Comparison</h3>
-              <div class="stat-row"><span>AVG</span><span>${centerData?.teamStats?.away?.AVG || '--'} | ${centerData?.teamStats?.home?.AVG || '--'}</span></div>
-              <div class="stat-row"><span>Runs</span><span>${centerData?.teamStats?.away?.runs || 0} | ${centerData?.teamStats?.home?.runs || 0}</span></div>
-              <div class="stat-row"><span>Hits</span><span>${centerData?.teamStats?.away?.hits || 0} | ${centerData?.teamStats?.home?.hits || 0}</span></div>
-              <div class="stat-row"><span>HR</span><span>${centerData?.teamStats?.away?.HR || 0} | ${centerData?.teamStats?.home?.HR || 0}</span></div>
-              <div class="stat-row"><span>OBP / SLG</span><span>${centerData?.teamStats?.away?.OBP || '--'}/${centerData?.teamStats?.away?.SLG || '--'} | ${centerData?.teamStats?.home?.OBP || '--'}/${centerData?.teamStats?.home?.SLG || '--'}</span></div>
-            </section>
-          </div>
-
-          <section class="panel">
+          <section class="panel compact-card">
             <h3>🔥 Top 3 Hit Probability (Game)</h3>
             <div class="two-grid">
               <div>
@@ -2420,7 +2662,7 @@
             </div>
           </section>
 
-          <section class="panel">
+          <section class="panel compact-card">
             <h3>💣 Top 3 HR Potential (Game)</h3>
             <div class="two-grid">
               <div>
@@ -2434,7 +2676,7 @@
             </div>
           </section>
 
-          <section class="panel">
+          <section class="panel compact-card">
             <h3>Confirmed / Projected Lineups</h3>
             ${renderLineups(lineupData, propsData, game.awayAbbrev, game.homeAbbrev)}
           </section>
@@ -2612,7 +2854,7 @@
 
     function playerHeadshot(p){
       const id = p.personId || p.playerId || p.id || p.mlbId;
-      if(!id) return '/logos/mlb_generic.png';
+      if(!id) return playerPlaceholderSrc();
       return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${id}/headshot/67/current`;
     }
 
@@ -2644,7 +2886,7 @@
 
       return players.map(p => `
         <div class="player-card">
-          <img src="${playerHeadshot(p)}" onerror="this.src='/logos/mlb_generic.png'">
+          <img src="${playerHeadshot(p)}" onerror="setPlayerImageFallback(this)">
           <div>
             <span class="p-name">${p.playerName || p.name || '--'}</span>
             ${playerInfoParts(p, type) ? `<span class="p-info">${playerInfoParts(p, type)}</span>` : ''}
