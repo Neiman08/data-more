@@ -46,6 +46,39 @@ const TEAM_ID_TO_ABBR = {
   119: "LAD", 137: "SF", 135: "SD", 109: "ARI", 115: "COL"
 };
 
+const BALLPARKS = {
+  108: { name: 'Angel Stadium', lat: 33.8003, lon: -117.8827, roof: 'Open Air' },
+  109: { name: 'Chase Field', lat: 33.4455, lon: -112.0667, roof: 'Retractable' },
+  110: { name: 'Camden Yards', lat: 39.2840, lon: -76.6217, roof: 'Open Air' },
+  111: { name: 'Fenway Park', lat: 42.3467, lon: -71.0972, roof: 'Open Air' },
+  112: { name: 'Wrigley Field', lat: 41.9484, lon: -87.6553, roof: 'Open Air' },
+  113: { name: 'Great American Ball Park', lat: 39.0979, lon: -84.5082, roof: 'Open Air' },
+  114: { name: 'Progressive Field', lat: 41.4962, lon: -81.6852, roof: 'Open Air' },
+  115: { name: 'Coors Field', lat: 39.7562, lon: -104.9942, roof: 'Open Air' },
+  116: { name: 'Comerica Park', lat: 42.3390, lon: -83.0485, roof: 'Open Air' },
+  117: { name: 'Daikin Park', lat: 29.7573, lon: -95.3555, roof: 'Retractable' },
+  118: { name: 'Kauffman Stadium', lat: 39.0517, lon: -94.4803, roof: 'Open Air' },
+  119: { name: 'Dodger Stadium', lat: 34.0739, lon: -118.2400, roof: 'Open Air' },
+  120: { name: 'Nationals Park', lat: 38.8730, lon: -77.0074, roof: 'Open Air' },
+  121: { name: 'Citi Field', lat: 40.7571, lon: -73.8458, roof: 'Open Air' },
+  133: { name: 'Sutter Health Park', lat: 38.5804, lon: -121.5130, roof: 'Open Air' },
+  134: { name: 'PNC Park', lat: 40.4469, lon: -80.0057, roof: 'Open Air' },
+  135: { name: 'Petco Park', lat: 32.7076, lon: -117.1570, roof: 'Open Air' },
+  136: { name: 'T-Mobile Park', lat: 47.5914, lon: -122.3325, roof: 'Retractable' },
+  137: { name: 'Oracle Park', lat: 37.7786, lon: -122.3893, roof: 'Open Air' },
+  138: { name: 'Busch Stadium', lat: 38.6226, lon: -90.1928, roof: 'Open Air' },
+  139: { name: 'Tropicana Field', lat: 27.7682, lon: -82.6534, roof: 'Fixed Roof' },
+  140: { name: 'Globe Life Field', lat: 32.7473, lon: -97.0842, roof: 'Retractable' },
+  141: { name: 'Rogers Centre', lat: 43.6414, lon: -79.3894, roof: 'Retractable' },
+  142: { name: 'Target Field', lat: 44.9817, lon: -93.2776, roof: 'Open Air' },
+  143: { name: 'Citizens Bank Park', lat: 39.9061, lon: -75.1665, roof: 'Open Air' },
+  144: { name: 'Truist Park', lat: 33.8908, lon: -84.4678, roof: 'Open Air' },
+  145: { name: 'Rate Field', lat: 41.8300, lon: -87.6339, roof: 'Open Air' },
+  146: { name: 'loanDepot park', lat: 25.7781, lon: -80.2197, roof: 'Retractable' },
+  147: { name: 'Yankee Stadium', lat: 40.8296, lon: -73.9262, roof: 'Open Air' },
+  158: { name: 'American Family Field', lat: 43.0280, lon: -87.9712, roof: 'Retractable' }
+};
+
 const last5Cache = {};
 const LAST5_CACHE_TTL = 1000 * 60 * 10;
 
@@ -597,6 +630,184 @@ async function getBullpenIntelligence(teamId, date) {
   };
 }
 
+function nearestHourlyIndex(times = [], targetISO) {
+  const target = new Date(targetISO).getTime();
+  if (!Number.isFinite(target) || !times.length) return -1;
+
+  let bestIndex = -1;
+  let bestDiff = Infinity;
+
+  times.forEach((time, index) => {
+    const value = new Date(time).getTime();
+    const diff = Math.abs(value - target);
+    if (Number.isFinite(value) && diff < bestDiff) {
+      bestDiff = diff;
+      bestIndex = index;
+    }
+  });
+
+  return bestIndex;
+}
+
+function windDirectionLabel(degrees) {
+  const n = Number(degrees);
+  if (!Number.isFinite(n)) return null;
+  const labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return labels[Math.round(n / 45) % 8];
+}
+
+function weatherImpact({ temperature, windSpeed, rainProbability }) {
+  const temp = Number(temperature);
+  const wind = Number(windSpeed);
+  const rain = Number(rainProbability);
+  const warmBoost = Number.isFinite(temp) && temp >= 78;
+  const coldDrag = Number.isFinite(temp) && temp <= 55;
+  const windBoost = Number.isFinite(wind) && wind >= 12;
+  const rainDrag = Number.isFinite(rain) && rain >= 45;
+
+  if (rainDrag) {
+    return {
+      runEnvironment: 'Suppressed',
+      hrImpact: 'Lower',
+      totalImpact: 'Under lean'
+    };
+  }
+
+  if (warmBoost && windBoost) {
+    return {
+      runEnvironment: 'Hitter friendly',
+      hrImpact: 'Boost',
+      totalImpact: 'Over lean'
+    };
+  }
+
+  if (coldDrag) {
+    return {
+      runEnvironment: 'Pitcher friendly',
+      hrImpact: 'Lower',
+      totalImpact: 'Under lean'
+    };
+  }
+
+  return {
+    runEnvironment: warmBoost || windBoost ? 'Slight boost' : 'Neutral',
+    hrImpact: warmBoost || windBoost ? 'Slight boost' : 'Neutral',
+    totalImpact: warmBoost || windBoost ? 'Slight over lean' : 'Neutral'
+  };
+}
+
+async function getWeatherContext(homeTeamId, gameDate) {
+  try {
+    const park = BALLPARKS[Number(homeTeamId)];
+    if (!park?.lat || !park?.lon || !gameDate) return null;
+
+    const date = new Date(gameDate).toISOString().slice(0, 10);
+    const url = new URL('https://api.open-meteo.com/v1/forecast');
+    url.searchParams.set('latitude', park.lat);
+    url.searchParams.set('longitude', park.lon);
+    url.searchParams.set('timezone', 'UTC');
+    url.searchParams.set('start_date', date);
+    url.searchParams.set('end_date', date);
+    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation_probability,pressure_msl,wind_speed_10m,wind_direction_10m');
+    url.searchParams.set('temperature_unit', 'fahrenheit');
+    url.searchParams.set('wind_speed_unit', 'mph');
+
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const hourly = data.hourly || {};
+    const index = nearestHourlyIndex(hourly.time || [], gameDate);
+    if (index < 0) return null;
+
+    const temperature = safeNumber(hourly.temperature_2m?.[index]);
+    const humidity = safeNumber(hourly.relative_humidity_2m?.[index]);
+    const rainProbability = safeNumber(hourly.precipitation_probability?.[index]);
+    const pressure = safeNumber(hourly.pressure_msl?.[index]);
+    const windSpeed = safeNumber(hourly.wind_speed_10m?.[index]);
+    const windDirectionDegrees = safeNumber(hourly.wind_direction_10m?.[index]);
+
+    if ([temperature, humidity, windSpeed].every(value => value === null)) return null;
+
+    return {
+      source: 'Open-Meteo',
+      venue: park.name,
+      roofStatus: park.roof,
+      temperature: temperature !== null ? `${Math.round(temperature)}°F` : null,
+      humidity: humidity !== null ? `${Math.round(humidity)}%` : null,
+      rainProbability: rainProbability !== null ? `${Math.round(rainProbability)}%` : null,
+      pressure: pressure !== null ? `${Math.round(pressure)} hPa` : null,
+      windSpeed: windSpeed !== null ? `${Math.round(windSpeed)} mph` : null,
+      windDirection: windDirectionLabel(windDirectionDegrees),
+      ...weatherImpact({ temperature, windSpeed, rainProbability })
+    };
+  } catch (err) {
+    console.error('Error getWeatherContext:', err);
+    return null;
+  }
+}
+
+async function getPitcherVsOpponentHistory(pitcherId, opponentTeamId, season) {
+  try {
+    if (!pitcherId || !opponentTeamId) return null;
+
+    const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}/stats?stats=gameLog&group=pitching&season=${season}`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const splits = data?.stats?.[0]?.splits || [];
+    const games = splits.filter(split => {
+      const opponentId = split.opponent?.id;
+      return opponentId && Number(opponentId) === Number(opponentTeamId);
+    });
+
+    if (!games.length) return null;
+
+    const totals = games.reduce((sum, split) => {
+      const stat = split.stat || {};
+      return {
+        starts: sum.starts + (Number(stat.gamesStarted || 0) > 0 ? 1 : 0),
+        innings: sum.innings + parseInningsPitched(stat.inningsPitched),
+        earnedRuns: sum.earnedRuns + (safeNumber(stat.earnedRuns) ?? 0),
+        hits: sum.hits + (safeNumber(stat.hits) ?? 0),
+        walks: sum.walks + (safeNumber(stat.baseOnBalls) ?? 0),
+        strikeouts: sum.strikeouts + (safeNumber(stat.strikeOuts) ?? 0),
+        homeRuns: sum.homeRuns + (safeNumber(stat.homeRuns) ?? 0),
+        atBats: sum.atBats + (safeNumber(stat.atBats) ?? 0),
+        totalBases: sum.totalBases + (safeNumber(stat.totalBases) ?? 0)
+      };
+    }, {
+      starts: 0,
+      innings: 0,
+      earnedRuns: 0,
+      hits: 0,
+      walks: 0,
+      strikeouts: 0,
+      homeRuns: 0,
+      atBats: 0,
+      totalBases: 0
+    });
+
+    if (totals.innings <= 0) return null;
+
+    return {
+      starts: totals.starts || games.length,
+      innings: totals.innings.toFixed(1),
+      ERA: ((totals.earnedRuns * 9) / totals.innings).toFixed(2),
+      WHIP: ((totals.hits + totals.walks) / totals.innings).toFixed(2),
+      strikeouts: totals.strikeouts,
+      walks: totals.walks,
+      homeRuns: totals.homeRuns,
+      avgAgainst: totals.atBats > 0 ? (totals.hits / totals.atBats).toFixed(3).replace(/^0/, '') : null,
+      opsAgainst: totals.atBats > 0 ? ((totals.hits + totals.walks) / Math.max(totals.atBats + totals.walks, 1) + (totals.totalBases / totals.atBats)).toFixed(3).replace(/^0/, '') : null
+    };
+  } catch (err) {
+    console.error('Error getPitcherVsOpponentHistory:', err);
+    return null;
+  }
+}
+
 function buildPublicGameCenter({
   awayTeam,
   homeTeam,
@@ -606,7 +817,9 @@ function buildPublicGameCenter({
   homeTeamStats,
   headToHead,
   odds,
-  bullpen
+  bullpen,
+  weather,
+  pitcherVsOpponent
 }) {
   const awayRunsPerGame = awayTeamStats?.runs
     ? awayTeamStats.runs / Math.max(awayTeamStats.gamesPlayed || 35, 1)
@@ -751,13 +964,8 @@ function buildPublicGameCenter({
       home: []
     },
     bullpen: bullpen || {},
-    weather: {
-      temperature: 'Pending',
-      windSpeed: 'Pending',
-      windDirection: 'Pending',
-      humidity: 'Pending',
-      parkFactor: 'Pending'
-    },
+    weather: weather || {},
+    pitcherVsOpponent: pitcherVsOpponent || {},
     odds: odds || {}
   };
 }
@@ -856,7 +1064,10 @@ router.get('/game-center/:gamePk', async (req, res) => {
       headToHead,
       oddsData,
       awayBullpen,
-      homeBullpen
+      homeBullpen,
+      weather,
+      awayPitcherVsOpponent,
+      homePitcherVsOpponent
     ] = await Promise.all([
       getPitcherStats(awayPitcherId, season),
       getPitcherStats(homePitcherId, season),
@@ -865,7 +1076,10 @@ router.get('/game-center/:gamePk', async (req, res) => {
       getHeadToHead(awayTeamId, homeTeamId, queryDate),
       fetchCurrentOdds(),
       getBullpenIntelligence(awayTeamId, queryDate),
-      getBullpenIntelligence(homeTeamId, queryDate)
+      getBullpenIntelligence(homeTeamId, queryDate),
+      getWeatherContext(homeTeamId, rawGame.gameDate),
+      getPitcherVsOpponentHistory(awayPitcherId, homeTeamId, season),
+      getPitcherVsOpponentHistory(homePitcherId, awayTeamId, season)
     ]);
     const rawOdds = findOddsForRawGame(oddsData, rawGame);
 
@@ -881,6 +1095,11 @@ router.get('/game-center/:gamePk', async (req, res) => {
       bullpen: {
         away: awayBullpen,
         home: homeBullpen
+      },
+      weather,
+      pitcherVsOpponent: {
+        away: awayPitcherVsOpponent,
+        home: homePitcherVsOpponent
       }
     });
     const odds = normalizeOddsForGame(
@@ -902,6 +1121,11 @@ router.get('/game-center/:gamePk', async (req, res) => {
       bullpen: {
         away: awayBullpen,
         home: homeBullpen
+      },
+      weather,
+      pitcherVsOpponent: {
+        away: awayPitcherVsOpponent,
+        home: homePitcherVsOpponent
       }
     }));
 

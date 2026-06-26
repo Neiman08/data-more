@@ -2458,8 +2458,53 @@
       `;
     }
 
-    function renderPitcherHistory(game){
-      return '';
+    function renderPitcherHistory(game, centerData){
+      const away = centerData?.pitcherVsOpponent?.away || {};
+      const home = centerData?.pitcherVsOpponent?.home || {};
+      const hasHistory = hasAnyData(
+        away.starts,
+        away.innings,
+        away.ERA,
+        away.WHIP,
+        home.starts,
+        home.innings,
+        home.ERA,
+        home.WHIP
+      );
+
+      if(!hasHistory) return '';
+
+      return `
+        <section class="premium-card">
+          <div class="card-head"><div><div class="card-kicker">Pitcher vs Opponent History</div><h3>Starter Track Record</h3></div></div>
+          <div class="two-grid">
+            <div>
+              <div class="sub-title">${game.awayPitcher || game.awayAbbrev} vs ${game.homeAbbrev}</div>
+              ${statLine('Starts', away.starts)}
+              ${statLine('Innings', away.innings)}
+              ${statLine('ERA', away.ERA)}
+              ${statLine('WHIP', away.WHIP)}
+              ${statLine('Strikeouts', away.strikeouts)}
+              ${statLine('Walks', away.walks)}
+              ${statLine('HR Allowed', away.homeRuns)}
+              ${statLine('AVG Against', away.avgAgainst)}
+              ${statLine('OPS Against', away.opsAgainst)}
+            </div>
+            <div>
+              <div class="sub-title">${game.homePitcher || game.homeAbbrev} vs ${game.awayAbbrev}</div>
+              ${statLine('Starts', home.starts)}
+              ${statLine('Innings', home.innings)}
+              ${statLine('ERA', home.ERA)}
+              ${statLine('WHIP', home.WHIP)}
+              ${statLine('Strikeouts', home.strikeouts)}
+              ${statLine('Walks', home.walks)}
+              ${statLine('HR Allowed', home.homeRuns)}
+              ${statLine('AVG Against', home.avgAgainst)}
+              ${statLine('OPS Against', home.opsAgainst)}
+            </div>
+          </div>
+        </section>
+      `;
     }
 
     function renderBestHittersVsPitcher(game, awayHitPlayers, homeHitPlayers){
@@ -2575,10 +2620,12 @@
         w.humidity,
         w.windSpeed,
         w.windDirection,
-        w.rainPct,
+        w.rainProbability,
         w.pressure,
         w.roofStatus,
-        w.parkFactor
+        w.runEnvironment,
+        w.hrImpact,
+        w.totalImpact
       );
 
       if(!hasWeather) return '';
@@ -2586,14 +2633,18 @@
       return `
         <section class="premium-card">
           <div class="card-head"><div><div class="card-kicker">Weather Center</div><h3>Run Environment</h3></div></div>
+          ${statLine('Venue', w.venue)}
+          ${statLine('Roof Status', w.roofStatus)}
           ${statLine('Temperature', w.temperature)}
           ${statLine('Humidity', w.humidity)}
           ${statLine('Wind', w.windSpeed)}
           ${statLine('Wind Direction', w.windDirection)}
-          ${statLine('Rain %', w.rainPct)}
+          ${statLine('Rain %', w.rainProbability)}
           ${statLine('Pressure', w.pressure)}
-          ${statLine('Roof Status', w.roofStatus)}
-          ${statLine('Weather Impact', w.parkFactor)}
+          ${statLine('Run Environment', w.runEnvironment)}
+          ${statLine('HR Impact', w.hrImpact)}
+          ${statLine('Over/Under Impact', w.totalImpact)}
+          ${statLine('Source', w.source)}
         </section>
       `;
     }
@@ -3019,7 +3070,8 @@
             'premium-grid',
             renderBullpenCenter(centerData),
             renderWeatherCenter(centerData),
-            renderVegasVsDataMore(game, centerData, modelProb)
+            renderVegasVsDataMore(game, centerData, modelProb),
+            renderPitcherHistory(game, centerData)
           )}
 
           ${renderGrid(
