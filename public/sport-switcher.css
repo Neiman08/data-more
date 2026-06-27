@@ -1,8 +1,9 @@
 .sport-switcher {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin: 18px 0 22px;
+  gap: 8px;
+  width: min(100%, 920px);
+  margin: 14px 0 18px;
   padding-bottom: 2px;
 }
 
@@ -12,14 +13,14 @@
 
 .sport-switcher-card {
   position: relative;
-  min-height: 82px;
+  min-height: 72px;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   overflow: hidden;
   border: 1px solid rgba(107, 255, 25, .13);
-  border-radius: 18px;
-  padding: 13px 14px;
+  border-radius: 15px;
+  padding: 10px 11px;
   color: #fff;
   text-decoration: none;
   background:
@@ -27,8 +28,8 @@
     linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.025) 42%, rgba(0,0,0,.32)),
     #05080b;
   box-shadow:
-    0 12px 28px rgba(0,0,0,.28),
-    0 0 10px var(--sport-shadow);
+    0 9px 22px rgba(0,0,0,.26),
+    0 0 8px var(--sport-shadow);
   transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease, filter .25s ease;
   isolation: isolate;
 }
@@ -48,7 +49,7 @@
   left: 18px;
   right: 18px;
   bottom: 0;
-  height: 3px;
+  height: 2px;
   border-radius: 999px 999px 0 0;
   background: var(--sport-accent);
   box-shadow: 0 0 18px var(--sport-accent);
@@ -58,19 +59,19 @@
 }
 
 .sport-switcher-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: var(--sport-accent);
   filter: brightness(1.08);
   box-shadow:
-    0 16px 34px rgba(0,0,0,.38),
-    0 0 18px var(--sport-shadow);
+    0 12px 26px rgba(0,0,0,.36),
+    0 0 14px var(--sport-shadow);
 }
 
 .sport-switcher-card.is-active {
   border-color: var(--sport-accent);
   box-shadow:
-    0 15px 34px rgba(0,0,0,.42),
-    0 0 20px var(--sport-shadow);
+    0 12px 28px rgba(0,0,0,.38),
+    0 0 16px var(--sport-shadow);
 }
 
 .sport-switcher-card.is-active::after {
@@ -79,15 +80,15 @@
 }
 
 .sport-switcher-icon {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   display: grid;
   place-items: center;
-  border-radius: 13px;
+  border-radius: 11px;
   background: rgba(0,0,0,.44);
   border: 1px solid rgba(255,255,255,.1);
-  font-size: 22px;
+  font-size: 19px;
   line-height: 1;
   box-shadow: inset 0 0 22px var(--sport-shadow);
 }
@@ -102,7 +103,7 @@
   display: block;
   color: #fff;
   font-family: 'Anton', 'Inter', sans-serif;
-  font-size: 20px;
+  font-size: 17px;
   line-height: .95;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -112,10 +113,10 @@
 .sport-switcher-subtitle {
   display: block;
   color: rgba(255,255,255,.68);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   line-height: 1.2;
-  margin-top: 5px;
+  margin-top: 4px;
   white-space: nowrap;
 }
 
@@ -156,10 +157,10 @@
 
   .sport-switcher {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     overflow-x: auto;
-    padding: 2px 2px 10px;
-    margin: 16px 0 20px;
+    padding: 2px 2px 9px;
+    margin: 14px 0 18px;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
   }
@@ -169,8 +170,8 @@
   }
 
   .sport-switcher-card {
-    width: 205px;
-    min-width: 205px;
+    width: 176px;
+    min-width: 176px;
     scroll-snap-align: start;
   }
 }

@@ -545,6 +545,115 @@
       white-space: nowrap;
     }
 
+    .market-panel {
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid rgba(114,255,0,.14);
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(114,255,0,.07), rgba(255,255,255,.025));
+    }
+
+    .market-panel-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 9px;
+    }
+
+    .market-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .market-metric {
+      min-height: 46px;
+      padding: 8px;
+      border-radius: 9px;
+      background: rgba(0,0,0,.24);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .market-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .35px;
+      margin-bottom: 4px;
+    }
+
+    .market-metric b {
+      display: block;
+      color: #fff;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .candidate-row {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 0;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .candidate-row:first-of-type {
+      border-top: 0;
+    }
+
+    .candidate-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: #000;
+      background: linear-gradient(135deg, #72ff00, #38bdf8);
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.16);
+    }
+
+    .candidate-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .candidate-name {
+      display: block;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    .candidate-meta {
+      display: block;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+
+    .candidate-note {
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 900;
+      text-align: right;
+      max-width: 92px;
+      line-height: 1.15;
+    }
+
     .analyze-btn {
       width: 100%;
       background: var(--green);
@@ -1270,6 +1379,10 @@ function pct(v) {
   return Number(v).toFixed(2) + '%';
 }
 
+function displayPct(v) {
+  return pct(v) === '?' ? 'No reliable data' : pct(v);
+}
+
 function val(...items) {
   for (const item of items) {
     if (item !== undefined && item !== null && item !== '') return item;
@@ -1298,6 +1411,19 @@ function translatePickValue(value) {
     .replace(/Ambos anotan/gi, 'Both Teams To Score')
     .replace(/Sí/gi, 'Yes')
     .replace(/No/gi, 'No');
+}
+
+function metricBlock(label, value) {
+  const clean = value === undefined || value === null || value === '' || value === 'N/A'
+    ? 'No reliable data'
+    : value;
+
+  return `
+    <div class="market-metric">
+      <span>${escapeHtml(label)}</span>
+      <b>${escapeHtml(clean)}</b>
+    </div>
+  `;
 }
 
 function normalizeSoccerMarketKey(key) {
@@ -1349,38 +1475,98 @@ function getSelectedSoccerMarketAnalysis(market, analysis, over25, btts) {
   );
 
   const fallback = 'No reliable recommendation for this market yet.';
+  const homeGoals = val(goals.home, goals.homeProjectedGoals);
+  const awayGoals = val(goals.away, goals.awayProjectedGoals);
+  const totalGoals = val(goals.total, goals.projectedTotal);
+  const over25Prob = val(a.over25Probability, a.markets?.over25Probability, a.totals?.over25Probability);
+  const bttsYesProb = val(a.bttsProbability, a.markets?.bttsProbability, a.bothTeamsToScoreProbability);
+  const bttsNoProb = Number(bttsYesProb) ? (100 - Number(bttsYesProb)).toFixed(2) : '';
+  const projectedScores = firstValidArray(
+    a.projectedScores,
+    a.topScores,
+    a.simulation?.topScores,
+    a.simulation?.scores,
+    a.correctScores
+  );
+  const scoreRows = projectedScores.length
+    ? projectedScores.slice(0, 3).map(item => typeof item === 'string'
+      ? item
+      : `${item.score || `${item.home ?? ''}-${item.away ?? ''}`}${item.probability ? ` · ${displayPct(item.probability)}` : ''}`
+    )
+    : [score];
+
   const analyses = {
     'winner': {
       recommendation: translatePickValue(a.pick || ''),
-      reason: 'Highest model edge in the current 1X2 probability split.'
+      reason: 'Highest model edge in the current 1X2 probability split.',
+      rows: [
+        ['Home probability', displayPct(homePct)],
+        ['Draw probability', displayPct(drawPct)],
+        ['Away probability', displayPct(awayPct)]
+      ]
     },
     'draw-no-bet': {
       recommendation: translatePickValue(val(markets.drawNoBet, markets.handicap, a.drawNoBet, topSide)),
-      reason: 'Uses the strongest side while reducing draw exposure.'
+      reason: 'Uses the strongest side while reducing draw exposure.',
+      rows: [
+        ['Home DNB', homeName],
+        ['Away DNB', awayName],
+        ['Safer side', topSide]
+      ]
     },
     'double-chance': {
       recommendation: translatePickValue(val(markets.doubleChance, a.doubleChance, markets.handicap, `${topSide} or ${secondSide}`)),
-      reason: 'Covers the two most likely outcomes from the model distribution.'
+      reason: 'Covers the two most likely outcomes from the model distribution.',
+      rows: [
+        ['1X', `${homeName} or Draw`],
+        ['X2', `Draw or ${awayName}`],
+        ['12', `${homeName} or ${awayName}`]
+      ]
     },
     'goals-total': {
       recommendation: translatePickValue(val(over25, markets.totalGoals, markets.overUnder)),
-      reason: 'Based on projected total goals and over/under model lean.'
+      reason: 'Based on projected total goals and over/under model lean.',
+      rows: [
+        ['Over 2.5 probability', displayPct(over25Prob)],
+        ['Under 2.5 probability', Number(over25Prob) ? displayPct(100 - Number(over25Prob)) : 'No reliable data'],
+        ['Expected goals', totalGoals]
+      ]
     },
     'btts': {
       recommendation: translatePickValue(val(btts, markets.btts)),
-      reason: 'Checks whether both attacks project enough scoring threat.'
+      reason: 'Checks whether both attacks project enough scoring threat.',
+      rows: [
+        ['Yes probability', displayPct(bttsYesProb)],
+        ['No probability', displayPct(bttsNoProb)],
+        ['Recommendation', translatePickValue(val(btts, markets.btts))]
+      ]
     },
     'first-half': {
       recommendation: translatePickValue(val(markets.firstHalf, a.firstHalf, a.firstHalfPick)),
-      reason: 'Requires reliable first-half split data before making a lean.'
+      reason: 'Requires reliable first-half split data before making a lean.',
+      rows: [
+        ['Home 1H', val(markets.firstHalfHome, a.firstHalfHome)],
+        ['Draw 1H', val(markets.firstHalfDraw, a.firstHalfDraw)],
+        ['Away 1H', val(markets.firstHalfAway, a.firstHalfAway)]
+      ]
     },
     'correct-score': {
       recommendation: translatePickValue(score),
-      reason: 'Uses projected scoreline when the model exposes one.'
+      reason: 'Uses projected scoreline when the model exposes one.',
+      rows: [
+        ['Projected score 1', scoreRows[0]],
+        ['Projected score 2', scoreRows[1]],
+        ['Projected score 3', scoreRows[2]]
+      ]
     },
     'team-total': {
       recommendation: translatePickValue(val(goals.total, goals.projectedTotal, markets.teamTotal, a.teamTotal)),
-      reason: 'Reads projected team goals when available.'
+      reason: 'Reads projected team goals when available.',
+      rows: [
+        [`${homeName} team total`, homeGoals],
+        [`${awayName} team total`, awayGoals],
+        ['Projected goals by team', homeGoals !== 'N/A' && awayGoals !== 'N/A' ? `${homeGoals} - ${awayGoals}` : 'No reliable data']
+      ]
     }
   };
 
@@ -1391,8 +1577,34 @@ function getSelectedSoccerMarketAnalysis(market, analysis, over25, btts) {
 
   return {
     recommendation,
-    reason: recommendation === fallback ? 'Market selected, but the current feed does not expose enough reliable data for this market yet.' : selected.reason
+    reason: recommendation === fallback ? 'Market selected, but the current feed does not expose enough reliable data for this market yet.' : selected.reason,
+    rows: selected.rows || []
   };
+}
+
+function renderSelectedMarketPanel(market, analysis, over25, btts) {
+  const marketAnalysis = getSelectedSoccerMarketAnalysis(market, analysis, over25, btts);
+  const rows = [
+    ...(marketAnalysis.rows || []),
+    ['Recommendation', marketAnalysis.recommendation],
+    ['Confidence', normalizeConfidence(analysis?.confidence)]
+  ];
+
+  return `
+    <div class="market-panel">
+      <div class="market-panel-title">
+        <span>Selected Market</span>
+        <span>${escapeHtml(market?.label || 'Moneyline / Winner')}</span>
+      </div>
+      <div class="market-metrics">
+        ${rows.map(([label, value]) => metricBlock(label, value)).join('')}
+      </div>
+      <div class="stat-row" style="margin-top:10px;border-top:1px solid rgba(255,255,255,.08);">
+        <span>Reason:</span>
+        <b>${escapeHtml(marketAnalysis.reason)}</b>
+      </div>
+    </div>
+  `;
 }
 
 function isPregameSoccerStatus(status) {
@@ -1553,7 +1765,7 @@ function renderLineups(lineupsObject, lineupsArray) {
   `;
 }
 
-function flattenSoccerPlayers(lineupsObject, lineupsArray) {
+function flattenSoccerPlayers(lineupsObject, lineupsArray, game = {}) {
   let homePlayers = [];
   let awayPlayers = [];
 
@@ -1569,8 +1781,8 @@ function flattenSoccerPlayers(lineupsObject, lineupsArray) {
   }
 
   return [
-    ...homePlayers.map(player => ({ ...player, teamSide: 'Home' })),
-    ...awayPlayers.map(player => ({ ...player, teamSide: 'Away' }))
+    ...homePlayers.map(player => ({ ...player, teamName: game.homeTeam || player.team || player.teamName || '' })),
+    ...awayPlayers.map(player => ({ ...player, teamName: game.awayTeam || player.team || player.teamName || '' }))
   ].filter(player => player.player || player.name);
 }
 
@@ -1588,25 +1800,71 @@ function playerCandidateReason(player, type) {
   const pos = String(player.pos || player.position || '').toUpperCase();
 
   if (type === 'assist') {
-    if (['AM', 'CAM', 'LM', 'RM', 'LW', 'RW'].includes(pos)) return 'Set-piece involvement';
-    if (isCreativeSoccerRole(pos)) return 'Creative midfield role';
-    return 'Support role in projected attack';
+    if (['AM', 'CAM', 'LM', 'RM', 'LW', 'RW'].includes(pos)) return 'Chance creation';
+    if (isCreativeSoccerRole(pos)) return 'Service provider';
+    return 'Final-third support';
   }
 
-  if (['ST', 'CF', 'FW', 'F'].includes(pos)) return 'Forward profile';
+  if (['ST', 'CF', 'FW', 'F'].includes(pos)) return 'Goal threat';
   if (['LW', 'RW', 'SS', 'AM', 'CAM'].includes(pos)) return 'Attacking role';
-  return 'High team goal projection';
+  return 'Box presence';
 }
 
-function buildSoccerCandidates(props, lineupsObject, lineupsArray, type) {
+function soccerPositionLabel(position) {
+  const pos = String(position || '').toUpperCase();
+  const labels = {
+    G: 'Goalkeeper',
+    GK: 'Goalkeeper',
+    D: 'Defender',
+    CB: 'Defender',
+    LB: 'Defender',
+    RB: 'Defender',
+    LWB: 'Wing-back',
+    RWB: 'Wing-back',
+    M: 'Midfielder',
+    CM: 'Midfielder',
+    CDM: 'Midfielder',
+    AM: 'Attacking Midfielder',
+    CAM: 'Attacking Midfielder',
+    LM: 'Wide Midfielder',
+    RM: 'Wide Midfielder',
+    F: 'Forward',
+    FW: 'Forward',
+    ST: 'Forward',
+    CF: 'Forward',
+    LW: 'Winger',
+    RW: 'Winger',
+    SS: 'Second Striker'
+  };
+
+  return labels[pos] || position || '';
+}
+
+function getSoccerPlayerPhoto(player) {
+  const id = player.playerId || player.id || player.player?.id;
+  return player.photo || player.image || player.player?.photo || (id ? `https://media.api-sports.io/football/players/${id}.png` : '');
+}
+
+function getInitials(name) {
+  return String(name || 'DM')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0])
+    .join('')
+    .toUpperCase() || 'DM';
+}
+
+function buildSoccerCandidates(props, lineupsObject, lineupsArray, type, game = {}) {
   const realProps = props
     .filter(p => Number(type === 'assist' ? p.assistChance : (p.goalChance || p.probability || 0)) > 0)
     .map(p => ({
       name: p.player || p.name || 'Player',
       team: p.team || p.teamName || '',
-      position: p.pos || p.position || '',
+      position: soccerPositionLabel(p.pos || p.position || ''),
       confidence: type === 'assist' ? p.assistChance : (p.goalChance || p.probability),
       reason: playerCandidateReason(p, type),
+      photo: getSoccerPlayerPhoto(p),
       score: Number(type === 'assist' ? p.assistChance : (p.goalChance || p.probability || 0))
     }));
 
@@ -1616,7 +1874,7 @@ function buildSoccerCandidates(props, lineupsObject, lineupsArray, type) {
       .slice(0, 3);
   }
 
-  return flattenSoccerPlayers(lineupsObject, lineupsArray)
+  return flattenSoccerPlayers(lineupsObject, lineupsArray, game)
     .filter(player => type === 'assist'
       ? isCreativeSoccerRole(player.pos || player.position)
       : isAttackingSoccerRole(player.pos || player.position)
@@ -1624,10 +1882,11 @@ function buildSoccerCandidates(props, lineupsObject, lineupsArray, type) {
     .slice(0, 3)
     .map((player, index) => ({
       name: player.player || player.name || 'Player',
-      team: player.team || player.teamName || player.teamSide || '',
-      position: player.pos || player.position || '',
+      team: player.teamName || player.team || '',
+      position: soccerPositionLabel(player.pos || player.position || ''),
       confidence: '',
       reason: playerCandidateReason(player, type),
+      photo: getSoccerPlayerPhoto(player),
       score: 3 - index
     }));
 }
@@ -1638,28 +1897,31 @@ function renderPlayerCandidates(title, candidates) {
   return `
     <div class="prop-title">${escapeHtml(title)}</div>
     ${candidates.map(p => `
-      <div class="stat-row">
-        <span>
-          ${escapeHtml(p.name)}
-          <small style="display:block;color:var(--muted);font-size:9px;margin-top:2px;">
-            ${escapeHtml([p.team, p.position].filter(Boolean).join(' · '))}
-          </small>
-        </span>
-        <b>${escapeHtml(p.confidence ? `${p.confidence}%` : p.reason)}</b>
+      <div class="candidate-row">
+        <div class="candidate-avatar">
+          ${p.photo
+            ? `<img src="${escapeHtml(p.photo)}" alt="" onerror="this.remove();this.parentElement.textContent='${escapeHtml(getInitials(p.name))}'">`
+            : escapeHtml(getInitials(p.name))}
+        </div>
+        <div>
+          <span class="candidate-name">${escapeHtml(p.name)}</span>
+          <span class="candidate-meta">${escapeHtml([p.team, p.position].filter(Boolean).join(' · '))}</span>
+        </div>
+        <div class="candidate-note">${escapeHtml(p.confidence ? `${p.confidence}%` : p.reason)}</div>
       </div>
     `).join('')}
   `;
 }
 
-function renderTopGoalCandidates(props, lineupsObject, lineupsArray) {
-  const list = buildSoccerCandidates(props, lineupsObject, lineupsArray, 'goal')
+function renderTopGoalCandidates(props, lineupsObject, lineupsArray, game) {
+  const list = buildSoccerCandidates(props, lineupsObject, lineupsArray, 'goal', game)
     .slice(0, 3);
 
   return renderPlayerCandidates('Top 3 Goal Scorer Candidates', list);
 }
 
-function renderTopAssistCandidates(props, lineupsObject, lineupsArray) {
-  const list = buildSoccerCandidates(props, lineupsObject, lineupsArray, 'assist')
+function renderTopAssistCandidates(props, lineupsObject, lineupsArray, game) {
+  const list = buildSoccerCandidates(props, lineupsObject, lineupsArray, 'assist', game)
     .slice(0, 3);
 
   return renderPlayerCandidates('Top 3 Assist Candidates', list);
@@ -1683,6 +1945,8 @@ async function analyze(btn, matchId, leagueKey) {
     const data = await res.json();
     const a = data.analysis || data;
     const game = data.game || {};
+    if (!a.homeTeam && game.homeTeam) a.homeTeam = game.homeTeam;
+    if (!a.awayTeam && game.awayTeam) a.awayTeam = game.awayTeam;
 
     const trackingStatus = await saveTrackedSoccerPick({
       date,
@@ -1771,8 +2035,8 @@ async function analyze(btn, matchId, leagueKey) {
     );
 
     const lineupsHtml = renderLineups(lineupsObject, lineupsArray);
-    const goalCandidatesHtml = renderTopGoalCandidates(props, lineupsObject, lineupsArray);
-    const assistCandidatesHtml = renderTopAssistCandidates(props, lineupsObject, lineupsArray);
+    const goalCandidatesHtml = renderTopGoalCandidates(props, lineupsObject, lineupsArray, game);
+    const assistCandidatesHtml = renderTopAssistCandidates(props, lineupsObject, lineupsArray, game);
     const detailHref = buildSoccerDetailHref(matchId, leagueKey, game.fixtureId || matchId);
 
     if (lineupBox) {
@@ -1797,29 +2061,11 @@ async function analyze(btn, matchId, leagueKey) {
 
       ${trackingStatusHtml(trackingStatus)}
 
+      ${renderSelectedMarketPanel(selectedMarket, a, over25, btts)}
+
       <div class="stat-row" style="margin-top:8px; border-top:1px solid var(--border)">
         <span>Main 1X2 Pick:</span>
         <b>${translatePickValue(a.pick || 'N/A')}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Selected Market:</span>
-        <b>${escapeHtml(selectedMarket.label)}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Recommendation:</span>
-        <b>${escapeHtml(selectedRecommendation)}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Confidence:</span>
-        <b>${normalizeConfidence(a.confidence)}</b>
-      </div>
-
-      <div class="stat-row">
-        <span>Reason:</span>
-        <b>${escapeHtml(selectedMarketAnalysis.reason)}</b>
       </div>
 
       <div class="stat-row">

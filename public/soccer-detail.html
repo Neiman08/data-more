@@ -312,6 +312,60 @@ body{
   font-weight:900;
 }
 
+.candidate-card{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.candidate-avatar{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  color:#000;
+  font-size:12px;
+  font-weight:900;
+  border:1px solid rgba(255,255,255,.14);
+}
+
+.candidate-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.candidate-name{
+  display:block;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.15;
+}
+
+.candidate-meta{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  margin-top:3px;
+}
+
+.candidate-note{
+  color:var(--green);
+  font-size:11px;
+  font-weight:900;
+  text-align:right;
+  max-width:112px;
+  line-height:1.15;
+}
+
 .mini-bar{
   width:100%;
   height:8px;
@@ -934,13 +988,13 @@ function renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime){
   `;
 }
 
-function flattenLineupPlayers(a){
+function flattenLineupPlayers(a,homeTeam='',awayTeam=''){
   const lineups=a.lineups||{};
   const home=lineups.home||lineups.local||[];
   const away=lineups.away||lineups.visitante||[];
   return [
-    ...home.map(player=>({...player,teamSide:'Home'})),
-    ...away.map(player=>({...player,teamSide:'Away'}))
+    ...home.map(player=>({...player,teamName:homeTeam||player.team||player.teamName||''})),
+    ...away.map(player=>({...player,teamName:awayTeam||player.team||player.teamName||''}))
   ].filter(player=>player.player||player.name);
 }
 
@@ -957,25 +1011,64 @@ function isCreativeRole(position){
 function candidateReason(player,type){
   const pos=String(player.pos||player.position||'').toUpperCase();
   if(type==='assist'){
-    if(['AM','CAM','LM','RM','LW','RW'].includes(pos)) return 'Set-piece involvement';
-    if(isCreativeRole(pos)) return 'Creative midfield role';
-    return 'Support role in projected attack';
+    if(['AM','CAM','LM','RM','LW','RW'].includes(pos)) return 'Chance creation';
+    if(isCreativeRole(pos)) return 'Service provider';
+    return 'Final-third support';
   }
-  if(['ST','CF','FW','F'].includes(pos)) return 'Forward profile';
+  if(['ST','CF','FW','F'].includes(pos)) return 'Goal threat';
   if(['LW','RW','SS','AM','CAM'].includes(pos)) return 'Attacking role';
-  return 'High team goal projection';
+  return 'Box presence';
 }
 
-function buildCandidates(a,type){
+function positionLabel(position){
+  const pos=String(position||'').toUpperCase();
+  const labels={
+    G:'Goalkeeper',
+    GK:'Goalkeeper',
+    D:'Defender',
+    CB:'Defender',
+    LB:'Defender',
+    RB:'Defender',
+    LWB:'Wing-back',
+    RWB:'Wing-back',
+    M:'Midfielder',
+    CM:'Midfielder',
+    CDM:'Midfielder',
+    AM:'Attacking Midfielder',
+    CAM:'Attacking Midfielder',
+    LM:'Wide Midfielder',
+    RM:'Wide Midfielder',
+    F:'Forward',
+    FW:'Forward',
+    ST:'Forward',
+    CF:'Forward',
+    LW:'Winger',
+    RW:'Winger',
+    SS:'Second Striker'
+  };
+  return labels[pos]||position||'';
+}
+
+function playerPhoto(player){
+  const id=player.playerId||player.id||player.player?.id;
+  return player.photo||player.image||player.player?.photo||(id?`https://media.api-sports.io/football/players/${id}.png`:'');
+}
+
+function initials(name){
+  return String(name||'DM').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'DM';
+}
+
+function buildCandidates(a,type,homeTeam='',awayTeam=''){
   const props=(type==='assist'?a.assistProps:a.goalProps)||a.playerProps||[];
   const realProps=Array.isArray(props)?props
     .filter(p=>hasRealValue(type==='assist'?p.assistChance:(p.goalChance||p.probability)))
     .map(p=>({
       name:p.player||p.name||'Player',
       team:p.team||p.teamName||'',
-      position:p.pos||p.position||'',
+      position:positionLabel(p.pos||p.position||''),
       confidence:type==='assist'?p.assistChance:(p.goalChance||p.probability),
       reason:candidateReason(p,type),
+      photo:playerPhoto(p),
       score:num(type==='assist'?p.assistChance:(p.goalChance||p.probability))
     })):[];
 
@@ -983,26 +1076,33 @@ function buildCandidates(a,type){
     return realProps.sort((x,y)=>y.score-x.score).slice(0,3);
   }
 
-  return flattenLineupPlayers(a)
+  return flattenLineupPlayers(a,homeTeam,awayTeam)
     .filter(player=>type==='assist'?isCreativeRole(player.pos||player.position):isAttackingRole(player.pos||player.position))
     .slice(0,3)
     .map((player,index)=>({
       name:player.player||player.name||'Player',
-      team:player.team||player.teamName||player.teamSide||'',
-      position:player.pos||player.position||'',
+      team:player.teamName||player.team||'',
+      position:positionLabel(player.pos||player.position||''),
       confidence:'',
       reason:candidateReason(player,type),
+      photo:playerPhoto(player),
       score:3-index
     }));
 }
 
-function renderCandidates(a,type){
-  const candidates=buildCandidates(a,type);
+function renderCandidates(a,type,homeTeam='',awayTeam=''){
+  const candidates=buildCandidates(a,type,homeTeam,awayTeam);
   if(!candidates.length) return '';
   return candidates.map(p=>`
-    <div class="stat">
-      <span>${p.name}<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px;">${[p.team,p.position].filter(Boolean).join(' · ')}</small></span>
-      <b>${p.confidence?`${p.confidence}%`:p.reason}</b>
+    <div class="candidate-card">
+      <div class="candidate-avatar">
+        ${p.photo?`<img src="${p.photo}" alt="" onerror="this.remove();this.parentElement.textContent='${initials(p.name)}'">`:initials(p.name)}
+      </div>
+      <div>
+        <span class="candidate-name">${p.name}</span>
+        <span class="candidate-meta">${[p.team,p.position].filter(Boolean).join(' · ')}</span>
+      </div>
+      <div class="candidate-note">${p.confidence?`${p.confidence}%`:p.reason}</div>
     </div>
   `).join('');
 }
@@ -1311,13 +1411,63 @@ function renderBettingRecommendationsPro(a){
 function renderSelectedMarketAnalysis(a){
   const selectedLabel=soccerMarketLabel(selectedSoccerMarket);
   const selectedRecommendation=soccerMarketRecommendation(selectedSoccerMarket,a);
-  const hasRecommendation=hasRealValue(selectedRecommendation);
-  const html=hasRecommendation
+  const markets=a.markets||{};
+  const oneX2=a.oneX2||a.probabilities||a.market1x2||{};
+  const goals=a.expectedGoals||a.goals||{};
+  const sim=buildSimulation(a);
+  const key=normalizeSoccerMarketKey(selectedSoccerMarket);
+  const rows={
+    winner:[
+      statLine('Home probability',pct(firstValid(oneX2.home,oneX2.local,oneX2.homeWin,a.homeWinPct,a.homeProbability))),
+      statLine('Draw probability',pct(firstValid(oneX2.draw,oneX2.empate,oneX2.tie,a.drawPct,a.drawProbability))),
+      statLine('Away probability',pct(firstValid(oneX2.away,oneX2.visitante,oneX2.awayWin,a.awayWinPct,a.awayProbability)))
+    ],
+    'draw-no-bet':[
+      statLine('Home DNB',markets.drawNoBetHome||markets.handicap),
+      statLine('Away DNB',markets.drawNoBetAway||markets.handicap),
+      statLine('Safer side',selectedRecommendation)
+    ],
+    'double-chance':[
+      statLine('1X',markets.oneX),
+      statLine('X2',markets.xTwo),
+      statLine('12',markets.oneTwo)
+    ],
+    'goals-total':[
+      statLine('Over 2.5 probability',hasRealValue(markets.over25Probability)?pct(markets.over25Probability):''),
+      statLine('Under 2.5 probability',hasRealValue(markets.over25Probability)?pct(100-num(markets.over25Probability)):''),
+      statLine('Expected goals',goals.total||goals.projectedTotal)
+    ],
+    btts:[
+      statLine('Yes probability',hasRealValue(markets.bttsProbability)?pct(markets.bttsProbability):''),
+      statLine('No probability',hasRealValue(markets.bttsProbability)?pct(100-num(markets.bttsProbability)):''),
+      statLine('Recommendation',selectedRecommendation)
+    ],
+    'first-half':[
+      statLine('Home 1H',markets.firstHalfHome),
+      statLine('Draw 1H',markets.firstHalfDraw),
+      statLine('Away 1H',markets.firstHalfAway)
+    ],
+    'correct-score':[
+      statLine('Projected score 1',sim.topScores?.[0]?.score),
+      statLine('Projected score 2',sim.topScores?.[1]?.score),
+      statLine('Projected score 3',sim.topScores?.[2]?.score)
+    ],
+    'team-total':[
+      statLine('Home team total lean',goals.home||goals.homeProjectedGoals),
+      statLine('Away team total lean',goals.away||goals.awayProjectedGoals),
+      statLine('Projected goals by team',hasRealValue(goals.home||goals.homeProjectedGoals)&&hasRealValue(goals.away||goals.awayProjectedGoals)?`${goals.home||goals.homeProjectedGoals} - ${goals.away||goals.awayProjectedGoals}`:'')
+    ]
+  };
+
+  const marketRows=(rows[key]||rows.winner).join('');
+  const html=hasRealValue(marketRows)||hasRealValue(selectedRecommendation)
     ? [
         statLine('Selected Market',selectedLabel),
-        statLine('Recommendation',selectedRecommendation)
+        marketRows,
+        statLine('Recommendation',selectedRecommendation),
+        statLine('Confidence',safe(a.confidence,''))
       ].join('')
-    : `<p class="commentary-sub">Market selected, but no reliable data available yet.</p>`;
+    : `<p class="commentary-sub">No reliable recommendation for this market yet.</p>`;
 
   return panel('SELECTED MARKET ANALYSIS',html,'pro-card span-6');
 }
@@ -1453,8 +1603,8 @@ async function loadMatch(){
     const teamForm=data.teamForm||a.teamForm||a.form||null;
     const headToHead=data.headToHead||a.headToHead||null;
     const events=Array.isArray(data.events)?data.events:[];
-    const goalCandidatesHtml=renderCandidates(a,'goal');
-    const assistCandidatesHtml=renderCandidates(a,'assist');
+    const goalCandidatesHtml=renderCandidates(a,'goal',homeTeam,awayTeam);
+    const assistCandidatesHtml=renderCandidates(a,'assist',homeTeam,awayTeam);
     const keyPlayersHtml=renderKeyPlayers(a);
     const lineupsHtml=renderLineups(a,homeTeam,awayTeam);
     const liveAvailable=Boolean(a.live?.available||data.live?.available);
