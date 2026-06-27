@@ -1320,10 +1320,24 @@ function normalizeSoccerMarketKey(key) {
 }
 
 function getSelectedSoccerMarketRecommendation(market, analysis, over25, btts) {
+  return getSelectedSoccerMarketAnalysis(market, analysis, over25, btts).recommendation;
+}
+
+function getSelectedSoccerMarketAnalysis(market, analysis, over25, btts) {
   const key = normalizeSoccerMarketKey(market?.key);
   const a = analysis || {};
   const markets = a.markets || {};
   const goals = a.expectedGoals || a.goals || {};
+  const oneX2 = a.oneX2 || a.probabilities || a.market1x2 || {};
+  const homePct = Number(val(oneX2.home, oneX2.local, oneX2.homeWin, a.homeWin, a.homeWinPct, a.localWinPct, a.homeProbability, 0));
+  const drawPct = Number(val(oneX2.draw, oneX2.empate, oneX2.tie, a.draw, a.drawPct, a.tieProbability, 0));
+  const awayPct = Number(val(oneX2.away, oneX2.visitante, oneX2.awayWin, a.awayWin, a.awayWinPct, a.visitWinPct, a.awayProbability, 0));
+  const homeName = a.homeTeam || a.home || 'Home';
+  const awayName = a.awayTeam || a.away || 'Away';
+  const topSide = homePct >= awayPct ? homeName : awayName;
+  const secondSide = drawPct >= Math.min(homePct, awayPct)
+    ? 'Draw'
+    : (homePct >= awayPct ? awayName : homeName);
   const score = val(
     a.correctScore,
     a.mostLikelyScore,
@@ -1334,21 +1348,51 @@ function getSelectedSoccerMarketRecommendation(market, analysis, over25, btts) {
     markets.correctScore
   );
 
-  const recommendations = {
-    'winner': translatePickValue(a.pick || ''),
-    'draw-no-bet': translatePickValue(val(markets.drawNoBet, markets.handicap, a.drawNoBet)),
-    'double-chance': translatePickValue(val(markets.doubleChance, a.doubleChance, markets.handicap)),
-    'goals-total': translatePickValue(val(over25, markets.totalGoals, markets.overUnder)),
-    'btts': translatePickValue(val(btts, markets.btts)),
-    'first-half': translatePickValue(val(markets.firstHalf, a.firstHalf, a.firstHalfPick)),
-    'correct-score': translatePickValue(score),
-    'team-total': translatePickValue(val(goals.total, goals.projectedTotal, markets.teamTotal, a.teamTotal))
+  const fallback = 'No reliable recommendation for this market yet.';
+  const analyses = {
+    'winner': {
+      recommendation: translatePickValue(a.pick || ''),
+      reason: 'Highest model edge in the current 1X2 probability split.'
+    },
+    'draw-no-bet': {
+      recommendation: translatePickValue(val(markets.drawNoBet, markets.handicap, a.drawNoBet, topSide)),
+      reason: 'Uses the strongest side while reducing draw exposure.'
+    },
+    'double-chance': {
+      recommendation: translatePickValue(val(markets.doubleChance, a.doubleChance, markets.handicap, `${topSide} or ${secondSide}`)),
+      reason: 'Covers the two most likely outcomes from the model distribution.'
+    },
+    'goals-total': {
+      recommendation: translatePickValue(val(over25, markets.totalGoals, markets.overUnder)),
+      reason: 'Based on projected total goals and over/under model lean.'
+    },
+    'btts': {
+      recommendation: translatePickValue(val(btts, markets.btts)),
+      reason: 'Checks whether both attacks project enough scoring threat.'
+    },
+    'first-half': {
+      recommendation: translatePickValue(val(markets.firstHalf, a.firstHalf, a.firstHalfPick)),
+      reason: 'Requires reliable first-half split data before making a lean.'
+    },
+    'correct-score': {
+      recommendation: translatePickValue(score),
+      reason: 'Uses projected scoreline when the model exposes one.'
+    },
+    'team-total': {
+      recommendation: translatePickValue(val(goals.total, goals.projectedTotal, markets.teamTotal, a.teamTotal)),
+      reason: 'Reads projected team goals when available.'
+    }
   };
 
-  const recommendation = recommendations[key];
-  return recommendation && recommendation !== 'N/A'
-    ? recommendation
-    : 'No reliable recommendation for this market yet.';
+  const selected = analyses[key] || analyses.winner;
+  const recommendation = selected.recommendation && selected.recommendation !== 'N/A'
+    ? selected.recommendation
+    : fallback;
+
+  return {
+    recommendation,
+    reason: recommendation === fallback ? 'Market selected, but the current feed does not expose enough reliable data for this market yet.' : selected.reason
+  };
 }
 
 function isPregameSoccerStatus(status) {
@@ -1509,40 +1553,116 @@ function renderLineups(lineupsObject, lineupsArray) {
   `;
 }
 
-function renderTopGoalProps(props) {
-  const list = props
-    .filter(p => Number(p.goalChance || p.probability || 0) > 0)
-    .sort((a, b) => Number(b.goalChance || b.probability || 0) - Number(a.goalChance || a.probability || 0))
-    .slice(0, 3);
+function flattenSoccerPlayers(lineupsObject, lineupsArray) {
+  let homePlayers = [];
+  let awayPlayers = [];
 
-  if (!list.length) {
-    return `<div style="font-size:10px; color:var(--muted)">Goal scorer props not available</div>`;
+  if (lineupsObject) {
+    homePlayers = lineupsObject.home || lineupsObject.local || [];
+    awayPlayers = lineupsObject.away || lineupsObject.visitante || [];
   }
 
-  return list.map(p => `
-    <div class="stat-row">
-      <span>${escapeHtml(p.player || p.name || 'Player')}</span>
-      <b>Goal ${p.goalChance || p.probability}%</b>
-    </div>
-  `).join('');
+  if ((!homePlayers.length && !awayPlayers.length) && lineupsArray.length) {
+    const half = Math.ceil(lineupsArray.length / 2);
+    homePlayers = lineupsArray.slice(0, half);
+    awayPlayers = lineupsArray.slice(half);
+  }
+
+  return [
+    ...homePlayers.map(player => ({ ...player, teamSide: 'Home' })),
+    ...awayPlayers.map(player => ({ ...player, teamSide: 'Away' }))
+  ].filter(player => player.player || player.name);
 }
 
-function renderTopAssistProps(props) {
-  const list = props
-    .filter(p => Number(p.assistChance || 0) > 0)
-    .sort((a, b) => Number(b.assistChance || 0) - Number(a.assistChance || 0))
-    .slice(0, 3);
+function isAttackingSoccerRole(position) {
+  const pos = String(position || '').toUpperCase();
+  return ['F', 'FW', 'ST', 'CF', 'LW', 'RW', 'SS', 'AM', 'CAM', 'LM', 'RM'].includes(pos);
+}
 
-  if (!list.length) {
-    return `<div style="font-size:10px; color:var(--muted)">Assist props not available</div>`;
+function isCreativeSoccerRole(position) {
+  const pos = String(position || '').toUpperCase();
+  return ['M', 'CM', 'AM', 'CAM', 'LM', 'RM', 'LW', 'RW', 'WB', 'LWB', 'RWB'].includes(pos);
+}
+
+function playerCandidateReason(player, type) {
+  const pos = String(player.pos || player.position || '').toUpperCase();
+
+  if (type === 'assist') {
+    if (['AM', 'CAM', 'LM', 'RM', 'LW', 'RW'].includes(pos)) return 'Set-piece involvement';
+    if (isCreativeSoccerRole(pos)) return 'Creative midfield role';
+    return 'Support role in projected attack';
   }
 
-  return list.map(p => `
-    <div class="stat-row">
-      <span>${escapeHtml(p.player || p.name || 'Player')}</span>
-      <b>Assist ${p.assistChance}%</b>
-    </div>
-  `).join('');
+  if (['ST', 'CF', 'FW', 'F'].includes(pos)) return 'Forward profile';
+  if (['LW', 'RW', 'SS', 'AM', 'CAM'].includes(pos)) return 'Attacking role';
+  return 'High team goal projection';
+}
+
+function buildSoccerCandidates(props, lineupsObject, lineupsArray, type) {
+  const realProps = props
+    .filter(p => Number(type === 'assist' ? p.assistChance : (p.goalChance || p.probability || 0)) > 0)
+    .map(p => ({
+      name: p.player || p.name || 'Player',
+      team: p.team || p.teamName || '',
+      position: p.pos || p.position || '',
+      confidence: type === 'assist' ? p.assistChance : (p.goalChance || p.probability),
+      reason: playerCandidateReason(p, type),
+      score: Number(type === 'assist' ? p.assistChance : (p.goalChance || p.probability || 0))
+    }));
+
+  if (realProps.length) {
+    return realProps
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  }
+
+  return flattenSoccerPlayers(lineupsObject, lineupsArray)
+    .filter(player => type === 'assist'
+      ? isCreativeSoccerRole(player.pos || player.position)
+      : isAttackingSoccerRole(player.pos || player.position)
+    )
+    .slice(0, 3)
+    .map((player, index) => ({
+      name: player.player || player.name || 'Player',
+      team: player.team || player.teamName || player.teamSide || '',
+      position: player.pos || player.position || '',
+      confidence: '',
+      reason: playerCandidateReason(player, type),
+      score: 3 - index
+    }));
+}
+
+function renderPlayerCandidates(title, candidates) {
+  if (!candidates.length) return '';
+
+  return `
+    <div class="prop-title">${escapeHtml(title)}</div>
+    ${candidates.map(p => `
+      <div class="stat-row">
+        <span>
+          ${escapeHtml(p.name)}
+          <small style="display:block;color:var(--muted);font-size:9px;margin-top:2px;">
+            ${escapeHtml([p.team, p.position].filter(Boolean).join(' · '))}
+          </small>
+        </span>
+        <b>${escapeHtml(p.confidence ? `${p.confidence}%` : p.reason)}</b>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderTopGoalCandidates(props, lineupsObject, lineupsArray) {
+  const list = buildSoccerCandidates(props, lineupsObject, lineupsArray, 'goal')
+    .slice(0, 3);
+
+  return renderPlayerCandidates('Top 3 Goal Scorer Candidates', list);
+}
+
+function renderTopAssistCandidates(props, lineupsObject, lineupsArray) {
+  const list = buildSoccerCandidates(props, lineupsObject, lineupsArray, 'assist')
+    .slice(0, 3);
+
+  return renderPlayerCandidates('Top 3 Assist Candidates', list);
 }
 
 async function analyze(btn, matchId, leagueKey) {
@@ -1620,7 +1740,8 @@ async function analyze(btn, matchId, leagueKey) {
       a.markets?.btts
     );
 
-    const selectedRecommendation = getSelectedSoccerMarketRecommendation(selectedMarket, a, over25, btts);
+    const selectedMarketAnalysis = getSelectedSoccerMarketAnalysis(selectedMarket, a, over25, btts);
+    const selectedRecommendation = selectedMarketAnalysis.recommendation;
 
     const props = firstValidArray(
       a.playerProps,
@@ -1650,8 +1771,8 @@ async function analyze(btn, matchId, leagueKey) {
     );
 
     const lineupsHtml = renderLineups(lineupsObject, lineupsArray);
-    const goalPropsHtml = renderTopGoalProps(props);
-    const assistPropsHtml = renderTopAssistProps(props);
+    const goalCandidatesHtml = renderTopGoalCandidates(props, lineupsObject, lineupsArray);
+    const assistCandidatesHtml = renderTopAssistCandidates(props, lineupsObject, lineupsArray);
     const detailHref = buildSoccerDetailHref(matchId, leagueKey, game.fixtureId || matchId);
 
     if (lineupBox) {
@@ -1697,6 +1818,11 @@ async function analyze(btn, matchId, leagueKey) {
       </div>
 
       <div class="stat-row">
+        <span>Reason:</span>
+        <b>${escapeHtml(selectedMarketAnalysis.reason)}</b>
+      </div>
+
+      <div class="stat-row">
         <span>1X2 %:</span>
         <b>${pct(homePct)} | ${pct(drawPct)} | ${pct(awayPct)}</b>
       </div>
@@ -1711,11 +1837,8 @@ async function analyze(btn, matchId, leagueKey) {
         <b>${translatePickValue(btts)}</b>
       </div>
 
-      <div class="prop-title">Top 3 Goal Scorer Props</div>
-      ${goalPropsHtml}
-
-      <div class="prop-title">Top 3 Assist Props</div>
-      ${assistPropsHtml}
+      ${goalCandidatesHtml}
+      ${assistCandidatesHtml}
 
       <a class="detail-link" href="${escapeHtml(detailHref)}">View Detail</a>
     `;
@@ -1749,10 +1872,20 @@ function buildSoccerDetailHref(matchId, leagueKey, fixtureId){
 
 async function analyzeAll() {
   const btns = document.querySelectorAll('.analyze-btn');
+  const feedback = document.getElementById('soccerMarketFeedback');
+  const selectedMarket = getSelectedSoccerMarket();
+
+  if (feedback) {
+    feedback.textContent = `Running AI analysis for ${selectedMarket.label}...`;
+  }
 
   for (let b of btns) {
     b.click();
     await new Promise(r => setTimeout(r, 1200));
+  }
+
+  if (feedback) {
+    feedback.textContent = `${selectedMarket.label} applied to the current board.`;
   }
 }
 

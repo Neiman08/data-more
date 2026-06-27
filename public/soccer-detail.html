@@ -934,25 +934,77 @@ function renderSoccerLive(a,homeTeam,awayTeam,homeWin,awayWin,matchTime){
   `;
 }
 
-function renderGoalProps(a){
-  const props=a.goalProps||a.playerProps||[];
-  if(!Array.isArray(props)||!props.length) return '';
-  return props
-    .filter(p=>hasRealValue(p.goalChance||p.probability))
-    .slice(0,5)
-    .map(p=>`<div class="stat"><span>${p.player||p.name||'Player'}</span><b>${p.goalChance||p.probability}%</b></div>`)
-    .join('');
+function flattenLineupPlayers(a){
+  const lineups=a.lineups||{};
+  const home=lineups.home||lineups.local||[];
+  const away=lineups.away||lineups.visitante||[];
+  return [
+    ...home.map(player=>({...player,teamSide:'Home'})),
+    ...away.map(player=>({...player,teamSide:'Away'}))
+  ].filter(player=>player.player||player.name);
 }
 
-function renderAssistProps(a){
-  const props=a.assistProps||a.playerProps||[];
-  if(!Array.isArray(props)||!props.length) return '';
-  return props
-    .filter(p=>hasRealValue(p.assistChance))
-    .sort((x,y)=>num(y.assistChance)-num(x.assistChance))
-    .slice(0,5)
-    .map(p=>`<div class="stat"><span>${p.player||p.name||'Player'}</span><b>${p.assistChance}%</b></div>`)
-    .join('');
+function isAttackingRole(position){
+  const pos=String(position||'').toUpperCase();
+  return ['F','FW','ST','CF','LW','RW','SS','AM','CAM','LM','RM'].includes(pos);
+}
+
+function isCreativeRole(position){
+  const pos=String(position||'').toUpperCase();
+  return ['M','CM','AM','CAM','LM','RM','LW','RW','WB','LWB','RWB'].includes(pos);
+}
+
+function candidateReason(player,type){
+  const pos=String(player.pos||player.position||'').toUpperCase();
+  if(type==='assist'){
+    if(['AM','CAM','LM','RM','LW','RW'].includes(pos)) return 'Set-piece involvement';
+    if(isCreativeRole(pos)) return 'Creative midfield role';
+    return 'Support role in projected attack';
+  }
+  if(['ST','CF','FW','F'].includes(pos)) return 'Forward profile';
+  if(['LW','RW','SS','AM','CAM'].includes(pos)) return 'Attacking role';
+  return 'High team goal projection';
+}
+
+function buildCandidates(a,type){
+  const props=(type==='assist'?a.assistProps:a.goalProps)||a.playerProps||[];
+  const realProps=Array.isArray(props)?props
+    .filter(p=>hasRealValue(type==='assist'?p.assistChance:(p.goalChance||p.probability)))
+    .map(p=>({
+      name:p.player||p.name||'Player',
+      team:p.team||p.teamName||'',
+      position:p.pos||p.position||'',
+      confidence:type==='assist'?p.assistChance:(p.goalChance||p.probability),
+      reason:candidateReason(p,type),
+      score:num(type==='assist'?p.assistChance:(p.goalChance||p.probability))
+    })):[];
+
+  if(realProps.length){
+    return realProps.sort((x,y)=>y.score-x.score).slice(0,3);
+  }
+
+  return flattenLineupPlayers(a)
+    .filter(player=>type==='assist'?isCreativeRole(player.pos||player.position):isAttackingRole(player.pos||player.position))
+    .slice(0,3)
+    .map((player,index)=>({
+      name:player.player||player.name||'Player',
+      team:player.team||player.teamName||player.teamSide||'',
+      position:player.pos||player.position||'',
+      confidence:'',
+      reason:candidateReason(player,type),
+      score:3-index
+    }));
+}
+
+function renderCandidates(a,type){
+  const candidates=buildCandidates(a,type);
+  if(!candidates.length) return '';
+  return candidates.map(p=>`
+    <div class="stat">
+      <span>${p.name}<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px;">${[p.team,p.position].filter(Boolean).join(' · ')}</small></span>
+      <b>${p.confidence?`${p.confidence}%`:p.reason}</b>
+    </div>
+  `).join('');
 }
 
 function renderKeyPlayers(a){
@@ -1401,8 +1453,8 @@ async function loadMatch(){
     const teamForm=data.teamForm||a.teamForm||a.form||null;
     const headToHead=data.headToHead||a.headToHead||null;
     const events=Array.isArray(data.events)?data.events:[];
-    const goalPropsHtml=renderGoalProps(a);
-    const assistPropsHtml=renderAssistProps(a);
+    const goalCandidatesHtml=renderCandidates(a,'goal');
+    const assistCandidatesHtml=renderCandidates(a,'assist');
     const keyPlayersHtml=renderKeyPlayers(a);
     const lineupsHtml=renderLineups(a,homeTeam,awayTeam);
     const liveAvailable=Boolean(a.live?.available||data.live?.available);
@@ -1500,8 +1552,8 @@ async function loadMatch(){
         ${renderBettingRecommendations(a)}
         ${renderRiskAnalysis(a)}
         ${panel('Key Players',keyPlayersHtml)}
-        ${panel('Top Goal Probability',goalPropsHtml)}
-        ${panel('Top Assist Probability',assistPropsHtml)}
+        ${panel('Top 3 Goal Scorer Candidates',goalCandidatesHtml)}
+        ${panel('Top 3 Assist Candidates',assistCandidatesHtml)}
 
         <section class="panel">
           <h3>Live Possession</h3>
@@ -1525,8 +1577,8 @@ async function loadMatch(){
         ${renderHeadToHead(headToHead,homeTeam,awayTeam)}
         ${attackHtml}
         ${liveHtml ? liveHtml.replace('class="live-card"', 'class="live-card span-6"') : ''}
-        ${panel('Top Goal Scorer Probability',goalPropsHtml,'pro-card span-6')}
-        ${panel('Top Assist Probability',assistPropsHtml,'pro-card span-6')}
+        ${panel('Top 3 Goal Scorer Candidates',goalCandidatesHtml,'pro-card span-6')}
+        ${panel('Top 3 Assist Candidates',assistCandidatesHtml,'pro-card span-6')}
         ${renderGoalProjection(a)}
         ${renderEvents(events)}
         ${renderRiskAnalysisPro(a,teamForm,homeTeam,awayTeam)}
